@@ -9,8 +9,10 @@ const example = (page: import('@playwright/test').Page, n = 0) =>
 
 test('colours brackets by nesting depth', async ({ page }) => {
   const block = example(page);
-  await expect(block.locator('.scb-brackets-1')).toHaveCount(2);
+  // Four levels deep, so the outermost and innermost calls both land on colour 1.
+  await expect(block.locator('.scb-brackets-1')).toHaveCount(4);
   await expect(block.locator('.scb-brackets-2')).toHaveCount(2);
+  await expect(block.locator('.scb-brackets-3')).toHaveCount(2);
 });
 
 test('each depth shows its own colour, different from the plain text', async ({ page }) => {

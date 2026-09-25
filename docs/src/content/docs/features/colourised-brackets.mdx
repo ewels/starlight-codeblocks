@@ -9,13 +9,13 @@ A line with several levels of nested brackets is hard to scan: every `(`, `[` an
 
 export const basic = `
 \`\`\`js brackets
-const total = items.reduce((sum, { price, qty }) => sum + price * qty, 0);
+const slug = encodeURIComponent(kebabCase(trim(title.toLowerCase())));
 \`\`\`
 `;
 
 <Example code={basic} />
 
-The outer parentheses of `reduce(...)` are one colour, and the `{ price, qty }` destructuring inside the callback is another. Hover over a bracket to outline it and its partner.
+The colour cycles every three levels, so the outermost call and the innermost call share a colour. Hover over a bracket to outline it and its partner, so you can tell the two pairs apart even when their colour repeats.
 
 ## Syntax
 
@@ -48,15 +48,21 @@ codeblocks({
 
 ## Examples
 
-Colourised brackets works well on the dense, single-line calls that functional JavaScript produces:
+Nested brackets do not have to sit on the same line. In a multi-line call, colour keeps an opening bracket connected to its closing partner, however far apart they fall:
 
-export const chained = `
+export const multiline = `
 \`\`\`js brackets
-const byId = Object.fromEntries(users.map((u) => [u.id, u]));
+const server = createServer({
+  routes: [
+    route('/users/:id', (req) => {
+      return db.users.find({ id: req.params.id });
+    }),
+  ],
+});
 \`\`\`
 `;
 
-<Example code={chained} />
+<Example code={multiline} />
 
 Brackets inside a string stay the normal string colour:
 
