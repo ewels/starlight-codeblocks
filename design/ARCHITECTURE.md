@@ -369,6 +369,8 @@ Only if static HTML cannot do the job.
 2. The build (`tsdown.config.ts`) turns each top-level file in `src/client/` into `dist/client/scb-<name>.<hash>.js`, minified, with every import bundled in. Put shared browser helpers in `src/client/shared/`.
 3. Add `jsModules: clientJsModules` to the plugin. The loader imports `scb-<name>` on pages where an element has `data-scb-<name>`. So the Expressive Code plugin must set that attribute on each block that needs the module, and only then. Do not use a `data-scb-<name>` attribute for anything else.
 4. `test/client-modules.test.ts` fails if the module is over 3 kB gzipped.
+   The build bundles a module's npm dependencies into it (`deps.alwaysBundle`).
+   To follow the reader's placeholder values, read the copy button's `data-code` when you need the code, and listen for `scb-placeholders-change`, which the placeholder module fires on the block after each change.
 5. Popovers and hover cards: give the element the `scb-float` class, keep it inside the block's `.expressive-code` element (it holds the theme variables; ARCHITECTURE Q8), and call `place(floating, anchor)` from `src/client/shared/position.ts` when it opens. Call the function it returns when it closes.
 6. Read the current theme from `document.documentElement.dataset.theme` if the script needs it.
 

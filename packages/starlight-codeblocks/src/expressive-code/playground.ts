@@ -1,5 +1,6 @@
 import { type Element, h, select } from '@expressive-code/core/hast';
-import LZString from 'lz-string';
+import { typescriptPlaygroundUrl } from '../client/shared/typescript-playground.ts';
+import { clientJsModules } from '../client-modules.ts';
 import type { PlaygroundDefinition } from '../options.ts';
 import { addTitleBarControl, type CodeblocksPlugin, warn } from './core.ts';
 import { PREFIX } from './styles.ts';
@@ -7,7 +8,7 @@ import { PREFIX } from './styles.ts';
 export const builtInPlaygrounds: Record<string, PlaygroundDefinition> = {
   typescript: {
     label: 'Open in TS Playground',
-    url: ({ code }) => `https://www.typescriptlang.org/play#code/${LZString.compressToEncodedURIComponent(code)}`,
+    url: ({ code }) => typescriptPlaygroundUrl(code),
   },
   rust: {
     label: 'Open in Rust Playground',
@@ -30,6 +31,7 @@ export function pluginPlayground(playgrounds: Record<string, PlaygroundDefinitio
   return {
     name: 'starlight-codeblocks:playground',
     baseStyles: `form.${PREFIX}-playground { display: contents; }`,
+    jsModules: clientJsModules,
     hooks: {
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
@@ -63,6 +65,10 @@ export function pluginPlayground(playgrounds: Record<string, PlaygroundDefinitio
             { class: `${PREFIX}-btn ${PREFIX}-playground`, href, target: '_blank', rel: 'noopener' },
             label,
           );
+          // Its compressed code cannot take placeholder values by text replacement, so a script rebuilds it.
+          if (playground === builtInPlaygrounds.typescript && select(`.${PREFIX}-placeholder`, renderData.blockAst)) {
+            control.properties.dataScbPlayground = '';
+          }
         } else {
           const { action, fields } = (playground.post as NonNullable<PlaygroundDefinition['post']>)(input);
           control = h('form', { class: `${PREFIX}-playground`, method: 'post', action, target: '_blank' }, [

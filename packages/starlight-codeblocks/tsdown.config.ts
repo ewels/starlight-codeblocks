@@ -14,6 +14,8 @@ export default defineConfig([
       format: 'esm',
       minify: true,
       dts: false,
+      // Browser files load on their own, so they carry their dependencies, such as lz-string.
+      deps: { alwaysBundle: [/.*/] },
       clean: false,
       outputOptions: { entryFileNames: '[name].[hash].js' },
     }),

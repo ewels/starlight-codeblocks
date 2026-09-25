@@ -1,5 +1,101 @@
 ---
 title: Fill-in placeholders
+description: Turn placeholders such as YOUR_TOKEN into fields, so readers type their own values into every block and the copied code.
 ---
 
-Not yet written
+import { Aside } from '@astrojs/starlight/components';
+import Example from '../../../components/Example.astro';
+
+Examples for an API often contain values that each reader has to change, such as `YOUR_TOKEN`. In a normal code block, readers copy the code and then edit it by hand. The `placeholder` attribute turns those values into fields. What a reader types fills every block on the site, and the copied code.
+
+export const basic = `
+\`\`\`sh placeholder="YOUR_TOKEN,WORKSPACE_ID"
+curl -H "Authorization: Bearer YOUR_TOKEN" \\
+  https://api.example.com/workspaces/WORKSPACE_ID/runs
+\`\`\`
+
+\`\`\`py placeholder="YOUR_TOKEN"
+from example import Client
+
+client = Client(token="YOUR_TOKEN")
+\`\`\`
+`;
+
+<Example code={basic} />
+
+Type a token into a `YOUR_TOKEN` field in one block, and the field in the other block shows it too. Each field is as wide as its text, and keeps the colour of the string it is in. The copy button copies the code with your values.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `placeholder="<A>,<B>"` | Fence line | `placeholder="YOUR_TOKEN,WORKSPACE_ID"` |
+
+The attribute lists the literal texts to turn into fields, separated by commas. Every match of each text in the block becomes a field. If one text contains another, the longer text wins where both match.
+
+## Behaviour
+
+- A field shows its placeholder text until the reader types. Its accessible name is the placeholder text.
+- A field is as wide as its placeholder text or its value, whichever is longer.
+- Typing in a field updates every field with the same text on the page. Pages that load later show the value too.
+- Escape in a field clears its value, in every field with the same text.
+- The copy button copies the code with the reader's values. An empty field copies its placeholder text.
+- A [playground](/starlight-codeblocks/features/open-in-playground/) button opens the code with the reader's values.
+- Values stay in the reader's browser. The plugin never sends them anywhere.
+- If a text in the attribute is not in the code, the build logs a warning.
+- Without JavaScript, fields are plain inputs. They do not update each other, and the copy button copies the placeholder text.
+
+<Aside type="danger">
+Tell readers where their values go. With the default `storage: 'local'`, the browser keeps the values after the reader closes the tab. On a shared computer, the next person can see them.
+</Aside>
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `placeholders.storage` | `'local' \| 'session' \| 'none'` | `'local'` | Where the browser keeps the values that readers type. |
+
+`'local'` keeps values across visits. `'session'` keeps them until the reader closes the tab. `'none'` keeps them only while the page is open. For a site where readers type secrets, such as API tokens, use `'session'`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  placeholders: { storage: 'session' },
+});
+```
+
+## Examples
+
+A field inside a URL works the same as a field inside a string:
+
+export const url = `
+\`\`\`http placeholder="WORKSPACE_ID"
+GET https://api.example.com/workspaces/WORKSPACE_ID/runs HTTP/1.1
+Accept: application/json
+\`\`\`
+`;
+
+<Example code={url} />
+
+This block combines fill-in placeholders with a playground button, to show that the playground gets the reader's value. Type a token, then select **Open in TS Playground**:
+
+export const playground = `
+\`\`\`ts placeholder="YOUR_TOKEN" playground="typescript"
+const response = await fetch('https://api.example.com/v1/runs', {
+  headers: { Authorization: 'Bearer YOUR_TOKEN' },
+});
+console.log(await response.json());
+\`\`\`
+`;
+
+<Example code={playground} />
+
+## Limitations
+
+- A field matches literal text only. A text that also appears in a place that is not a placeholder becomes a field there too. Choose texts such as `YOUR_TOKEN` that appear nowhere else.
+- A custom `url` playground gets the reader's values only if it puts the code in the URL with `encodeURIComponent()`. A custom `post` playground must put the code in a field as it is.
+- A manual selection of the code leaves out the text in fields. Use the copy button to copy the code with the values.
+
+## Related
+
+- [Open in playground](/starlight-codeblocks/features/open-in-playground/): open the code, with the reader's values, in an online playground.
+- [Hidden lines](/starlight-codeblocks/features/hidden-lines/): hide set-up lines, such as the line that reads a token from the environment.
