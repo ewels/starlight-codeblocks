@@ -1,5 +1,117 @@
 ---
 title: Footnotes
+description: Add numbered badges to lines, with the notes in a list under the block, where readers see them all without a click.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+A code block often comes with a list of notes in the prose after it, where each note names the line it is about. Footnotes put that list inside the block. Each line with a note gets a numbered badge, and the notes are a numbered list under the code.
+
+export const basic = `
+\`\`\`py title="app.py"
+from flask import Flask
+
+# [!ref] Creates the application object.
+app = Flask(__name__)
+
+# [!ref] Runs this function for \`GET /health\`.
+@app.get("/health")
+def health():
+    return {"ok": True}
+\`\`\`
+`;
+
+<Example code={basic} />
+
+The two `[!ref]` comment lines are gone from the output. Their lines have the badges 1 and 2, and the notes are in the list under the code. Select a badge to highlight its line and its note together. Select a note to do the same from the list.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `[!ref] note` | Comment on its own line | `# [!ref] Creates the application object.` |
+| `footnotes="sticky"` | Fence line | `footnotes="sticky"` |
+| `footnotes="static"` | Fence line | `footnotes="static"` |
+
+The directive goes on its own line, directly above the line it explains. The note can hold inline code, links and bold text. `footnotes="sticky"` keeps the list in view while the block scrolls past. `footnotes="static"` turns the sticky list off for one block, if the site turns it on for every block.
+
+## Behaviour
+
+- Badges are numbered from 1 in each block, in line order.
+- Selecting a badge highlights its whole line and its note. If the note is not on screen, the page scrolls to it.
+- Selecting a note highlights it and its line. If the line is not on screen, the page scrolls to it.
+- Selecting anywhere else clears the highlight.
+- With `footnotes="sticky"`, the list sticks to the bottom of the window while any part of the block is on screen.
+- The copy button leaves the badges and the notes out. A manual selection of the code leaves the badges out.
+- Each badge is a link with the label "Footnote N". The number in front of each note is a link back to its line, with the label "Footnote N, for line L".
+- Without JavaScript, the badges and the numbers are plain links to each other, so they still work, without the highlight.
+- Under reduced motion, the page jumps to the line or the note instead of scrolling smoothly.
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `footnotes.sticky` | `boolean` | `false` | Make the list sticky in every block. `footnotes="static"` turns it off for one block. |
+
+```js title="astro.config.mjs"
+codeblocks({
+  footnotes: { sticky: true },
+});
+```
+
+Turn the feature off with `footnotes: false`. The plugin then does not know the `[!ref]` directive. It leaves the comment in the code as written, and logs a build warning.
+
+## Examples
+
+A sticky list suits a long block, where the notes would otherwise be far from the lines they are about. Scroll past this block to see the list stay at the bottom of the window:
+
+export const sticky = `
+\`\`\`py title="count.py" footnotes="sticky"
+import argparse
+import logging
+from pathlib import Path
+
+# [!ref] A logger named after the module, so output shows where it came from.
+log = logging.getLogger(__name__)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Count lines in files.")
+    parser.add_argument("paths", nargs="+", type=Path)
+    # [!ref] \`-v\` can be repeated: \`-vv\` turns on debug output.
+    parser.add_argument("-v", "--verbose", action="count", default=0)
+    return parser.parse_args()
+
+
+def count_lines(path: Path) -> int:
+    with path.open() as fh:
+        return sum(1 for _ in fh)
+
+
+def main() -> None:
+    args = parse_args()
+    logging.basicConfig(level=logging.WARNING - 10 * args.verbose)
+    for path in args.paths:
+        log.debug("Reading %s", path)
+        print(f"{count_lines(path):>8}  {path}")
+
+
+# [!ref] Runs only when the file runs as a script, not when another module imports it.
+if __name__ == "__main__":
+    main()
+\`\`\`
+`;
+
+<Example code={sticky} />
+
+## Limitations
+
+- A footnote applies to one line. For a note about a range of lines, put it above the first line of the range.
+- A sticky list covers the bottom of the block while it is on screen. Keep the notes short, so the list stays small.
+
+## Related
+
+- [Annotations](/starlight-codeblocks/features/annotations/): numbered markers that open a note only when the reader asks for it.
+- [Side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/): the notes in a column beside the code, on wide screens.
+- [Inline callouts](/starlight-codeblocks/features/inline-callouts/): a short note above the line, with an arrow at one name.
+- [Choose an annotation style](/starlight-codeblocks/guides/choose-an-annotation-style/): a comparison of the four styles, with the same code.

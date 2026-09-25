@@ -7,6 +7,7 @@ import { pluginCallouts } from './callouts.ts';
 import { pluginCore } from './core.ts';
 import { pluginExpandable } from './expandable.ts';
 import { pluginFocus } from './focus.ts';
+import { pluginFootnotes } from './footnotes.ts';
 import { pluginHiddenLines } from './hidden-lines.ts';
 import { pluginLineStates } from './line-states.ts';
 import { pluginNotation } from './notation.ts';
@@ -21,6 +22,7 @@ export {
   pluginCore,
   pluginExpandable,
   pluginFocus,
+  pluginFootnotes,
   pluginHiddenLines,
   pluginLineStates,
   pluginNotation,
@@ -55,5 +57,6 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     // After hidden lines, which rebuilds the children of the code element.
     ...(options.callouts ? [pluginCallouts()] : []),
     ...(options.annotations ? [pluginAnnotations()] : []),
+    ...(options.footnotes ? [pluginFootnotes(options.footnotes)] : []),
   ];
 }
