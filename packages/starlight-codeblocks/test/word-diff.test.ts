@@ -29,7 +29,7 @@ test('highlights the changed words of a diff block, and keeps the underlying syn
     block('diff lang="js"', '-const timeout = 5000;', '+const timeout = options.timeout ?? 5000;'),
   );
   expect(worddiff(html)).toEqual(['scb-worddiff-ins']);
-  expect(html).toContain('<span class="scb-worddiff-ins"><span style=');
+  expect(html).toContain('<span class="scb-worddiff-ins" role="insertion"><span style=');
   expect(copyText).toBe('const timeout = 5000;\nconst timeout = options.timeout ?? 5000;');
   expect(warnings).toEqual([]);
 });
@@ -37,6 +37,7 @@ test('highlights the changed words of a diff block, and keeps the underlying syn
 test('highlights ins and del attributes the same way', async () => {
   const { html } = await render(block('js ins={2} del={1}', 'const port = 8080;', 'const port = env.PORT;'));
   expect(worddiff(html)).toEqual(['scb-worddiff-del', 'scb-worddiff-ins']);
+  expect(html).toContain('<span class="scb-worddiff-del" role="deletion">');
 });
 
 test('highlights [!code --] and [!code ++] the same way', async () => {

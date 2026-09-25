@@ -8,8 +8,23 @@ function highlight(block: HTMLElement, pairId: string) {
   for (const el of block.querySelectorAll(`[data-scb-pair="${pairId}"]`)) el.classList.add(ON);
 }
 
-/** Outlines a hovered bracket and its partner. Colours alone need no JavaScript (SPEC 6.11). */
+function outlineAtCaret() {
+  clear(document.body);
+  const selection = document.getSelection();
+  const node = selection?.isCollapsed ? selection.anchorNode : null;
+  const bracket = (node instanceof Element ? node : node?.parentElement)?.closest<HTMLElement>('[data-scb-pair]');
+  const block = bracket?.closest<HTMLElement>('[data-scb-brackets]');
+  if (block && bracket?.dataset.scbPair) highlight(block, bracket.dataset.scbPair);
+}
+
+let listening = false;
+
+/** Outlines the bracket pair under the pointer, or at the caret for caret browsing. Colours need no JavaScript. */
 export default function initBrackets() {
+  if (!listening) {
+    listening = true;
+    document.addEventListener('selectionchange', outlineAtCaret);
+  }
   for (const block of document.querySelectorAll<HTMLElement>('[data-scb-brackets]:not([data-scb-brackets-ready])')) {
     block.dataset.scbBracketsReady = '';
     block.addEventListener('mouseover', (event) => {

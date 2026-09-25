@@ -27,7 +27,13 @@ The default colours meet these targets against the code background of the dark t
 | Messages of line states | 5:1 |
 | Bars, underlines, markers, badges and focus rings | 3:1 |
 
-Three features fade lines or text on purpose: [focus](/starlight-codeblocks/features/focus/), [code mentions](/starlight-codeblocks/features/code-mentions/) and [scrollycoding](/starlight-codeblocks/features/scrollycoding/). The faded text is below 4.5:1 until the reader hovers, moves focus or scrolls to it. Keyboard readers can always clear the fade.
+Three features fade lines or text on purpose: [focus](/starlight-codeblocks/features/focus/), [code mentions](/starlight-codeblocks/features/code-mentions/) and [scrollycoding](/starlight-codeblocks/features/scrollycoding/). While it is faded, the text is below 4.5:1. This is a known exception to WCAG 1.4.3, and the plugin limits it in these ways:
+
+- The faded text stays in the page. Screen readers read it the same as the other text, and a copy gives it in full.
+- The reader can always bring the text back to full contrast. For focus, hover over the block or move keyboard focus into it. For code mentions, the fade lasts only while a mention link has hover or focus. For scrollycoding, scroll to the step, or move focus into the sticky block.
+- The fade does not hide information. It shows where to look.
+
+If your site must meet 4.5:1 in every state, set `codeblocksFocus.opacity` and `codeblocksMentions.fadeOpacity` to `1` and `codeblocksFocus.blur` to `0px` in the style settings. Do not use scrollycoding on that site.
 
 If you change a colour in the [style settings](/starlight-codeblocks/reference/style-settings/), check its contrast in both themes.
 
@@ -78,8 +84,9 @@ The plugin reads directives at build time and removes them from the page. Reader
 
 ### Word-level diff
 
-- The line markers of Expressive Code show which lines are removed and which are added. The stronger tint of the changed words is an extra reading aid on top of them.
-- The tint is the only mark of a changed word. Screen readers get the removed line and the added line in full, so a reader can compare the two.
+- The line markers of Expressive Code show which lines are removed and which are added. The changed words get a stronger tint on top of them.
+- An added word is underlined and a removed word has a line through it, so colour is not the only mark of a changed word.
+- Each changed word has the `insertion` or the `deletion` role. Screen readers that support these roles announce the change. All screen readers get the removed line and the added line in full, so a reader can compare the two.
 
 ### Visible whitespace
 
@@ -88,7 +95,8 @@ The glyphs are hidden from screen readers, which read the same code as in a bloc
 ### Colourised brackets
 
 - The colours are a reading aid. The brackets themselves stay in the code, so readers who cannot tell the colours apart lose no information.
-- Hover over a bracket to outline it and its partner, which shows the pair by shape. The outline needs a pointer, because brackets cannot take keyboard focus.
+- Hover over a bracket to outline it and its partner, which shows the pair by shape.
+- Brackets cannot take keyboard focus. With caret browsing (F7 in most browsers), move the caret onto a bracket to get the same outline.
 
 ### Token links
 

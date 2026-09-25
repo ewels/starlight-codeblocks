@@ -586,3 +586,11 @@ Use this format:
 - Step: 12.1
 - Decision: The code switcher tests wait until every switcher has `data-scb-ready` before they select a variant, and poll the clipboard after a copy.
 - Reason: The copy test failed once under load. A `change` event before the module starts is lost, and the clipboard write is asynchronous. 1,050 repeated runs pass.
+
+## Accessibility fixes after the docs review
+
+- Date: 2026-09-26
+- Step: 12.1 follow-up
+- Decision: Word-level diff underlines added words and puts a line through removed words (in the line's text colour), and gives each changed span the ARIA `insertion` or `deletion` role. Colourised brackets now also outline the pair at the caret, from one document `selectionchange` listener, which supersedes "Caret-based matching is not built" in the colourised brackets entry. The faded text of focus, code mentions and scrollycoding stays below 4.5:1 while faded; the accessibility page now calls it an exception to WCAG 1.4.3 and names the style settings that turn the fade off.
+- Reason: WCAG 1.4.1: the tint was the only mark of a changed word. The bracket outline was pointer-only; caret browsing is the only keyboard path to a character that cannot take focus, and it costs a few lines. De-emphasis is the point of the three fading features, so the page states the exception plainly instead of claiming conformance.
+- Alternatives: `<ins>`/`<del>` elements (Expressive Code's text markers style them as inline markers inside code). Screen-reader-only "changed" text (it would appear in a manual copy). Making every bracket focusable (dozens of tab stops per block).

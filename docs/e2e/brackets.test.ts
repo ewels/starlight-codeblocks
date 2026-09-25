@@ -55,3 +55,17 @@ test('the outline appears instantly, with or without reduced motion', async ({ p
   await open.hover();
   expect(await open.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
 });
+
+test('outlines a bracket and its partner when the caret is on it, for caret browsing', async ({ page }) => {
+  const block = example(page);
+  const open = block.locator('.scb-brackets-1').first();
+  const close = block.locator('.scb-brackets-1').last();
+  await open.evaluate((el) => {
+    const text = el.firstChild as Text;
+    document.getSelection()?.collapse(text, 1);
+  });
+  await expect(open).toHaveClass(/scb-brackets-on/);
+  await expect(close).toHaveClass(/scb-brackets-on/);
+  await page.evaluate(() => document.getSelection()?.removeAllRanges());
+  await expect(open).not.toHaveClass(/scb-brackets-on/);
+});

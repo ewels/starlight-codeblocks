@@ -114,13 +114,15 @@ export function wordDiff(a: string, b: string, minSimilarity: number): WordDiffR
 
 class ChangedTokenAnnotation extends ExpressiveCodeAnnotation {
   constructor(
-    private readonly className: string,
+    private readonly type: 'ins' | 'del',
     inlineRange: { columnStart: number; columnEnd: number },
   ) {
     super({ inlineRange });
   }
   render({ nodesToTransform }: AnnotationRenderOptions) {
-    return nodesToTransform.map((node) => h('span', { class: this.className }, [node]));
+    // Not <ins>/<del>: Expressive Code's text markers style those as inline markers.
+    const role = this.type === 'ins' ? 'insertion' : 'deletion';
+    return nodesToTransform.map((node) => h('span', { class: `${PREFIX}-worddiff-${this.type}`, role }, [node]));
   }
 }
 
@@ -139,8 +141,8 @@ export function pluginWordDiff({ minSimilarity = 0.4 }: { minSimilarity?: number
     name: 'starlight-codeblocks:word-diff',
     styleSettings,
     baseStyles: ({ cssVar }) => `
-.${PREFIX}-worddiff-ins { background: ${cssVar('codeblocksWordDiff.insBackground')}; border-radius: 2px; }
-.${PREFIX}-worddiff-del { background: ${cssVar('codeblocksWordDiff.delBackground')}; border-radius: 2px; }`,
+.${PREFIX}-worddiff-ins { background: ${cssVar('codeblocksWordDiff.insBackground')}; border-radius: 2px; text-decoration: underline 1px; text-underline-offset: 0.2em; }
+.${PREFIX}-worddiff-del { background: ${cssVar('codeblocksWordDiff.delBackground')}; border-radius: 2px; text-decoration: line-through 1px; }`,
     hooks: {
       // Runs after the text-markers plugin has annotated diff-syntax, `ins`/`del` and `[!code ++/--]` lines.
       annotateCode({ codeBlock }) {
@@ -168,14 +170,10 @@ export function pluginWordDiff({ minSimilarity = 0.4 }: { minSimilarity?: number
             const diff = wordDiff(del.text, add.text, minSimilarity);
             if (!diff) continue;
             for (const [start, end] of diff.a) {
-              del.addAnnotation(
-                new ChangedTokenAnnotation(`${PREFIX}-worddiff-del`, { columnStart: start, columnEnd: end }),
-              );
+              del.addAnnotation(new ChangedTokenAnnotation('del', { columnStart: start, columnEnd: end }));
             }
             for (const [start, end] of diff.b) {
-              add.addAnnotation(
-                new ChangedTokenAnnotation(`${PREFIX}-worddiff-ins`, { columnStart: start, columnEnd: end }),
-              );
+              add.addAnnotation(new ChangedTokenAnnotation('ins', { columnStart: start, columnEnd: end }));
             }
           }
         }
