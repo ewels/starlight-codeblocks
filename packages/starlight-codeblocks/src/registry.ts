@@ -7,6 +7,8 @@ export interface Registry {
   plugins: ExpressiveCodePlugin[];
   /** True when `codeblocks()` emits the client modules as assets. The loader imports them inline otherwise. */
   clientAssets: boolean;
+  /** Astro's `base`, which site-relative links in code need. */
+  base?: string;
 }
 
 // A global, because Astro loads the config and renders pages through different module instances.

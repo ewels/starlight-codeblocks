@@ -44,7 +44,7 @@ interface Token {
   parts: Part[];
 }
 
-/** Reads `[!name …]` or `[\!name …]` at `start`. Text between slashes can hold spaces and `]`. */
+/** Reads `[!name …]` or `[\!name …]` at `start`. Text between the first pair of slashes can hold spaces and `]`. */
 function scanToken(s: string, start: number): Token | undefined {
   let i = start + 1;
   const escaped = s[i] === '\\';
@@ -60,7 +60,8 @@ function scanToken(s: string, start: number): Token | undefined {
       word = '';
       if (c === ']') return { start, end: i + 1, escaped, parts };
       i++;
-    } else if (c === '/' && word === '') {
+    } else if (c === '/' && word === '' && !parts.some((part) => 'literal' in part)) {
+      // Only the first `/…/` is literal text, so that a later word can be a path, as in `[!link /x/ /docs/]`.
       let literal = '';
       for (i++; i < s.length && s[i] !== '/'; i++) {
         if (s[i] === '\\' && s[i + 1] === '/') i++;

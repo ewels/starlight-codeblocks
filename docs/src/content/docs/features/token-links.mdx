@@ -1,5 +1,93 @@
 ---
 title: Token links
+description: Turn any text on a line of code into a link, with a directive in the comment above it.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+Readers who meet an unfamiliar function in an example often want its reference page. A code block in Starlight has no links, so the reader must search for it. The `[!link]` directive turns text on a line into a link to the page you choose.
+
+export const basic = `
+\`\`\`py
+import numpy as np
+
+# [!link /linspace/ https://numpy.org/doc/stable/reference/generated/numpy.linspace.html]
+x = np.linspace(0, 1, 50)
+y = np.sin(2 * np.pi * x)
+\`\`\`
+`;
+
+<Example code={basic} />
+
+The directive is on its own line, above the line it applies to. The plugin removes that line, and `linspace` on the next line becomes a link with a subtle underline. The rest of the line keeps its syntax colours.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `[!link /<text>/ <url>]` | Comment, on its own line | `# [!link /linspace/ https://numpy.org/doc/stable/]` |
+
+`<text>` is literal text, not a regular expression. The plugin links its first match on the line below. `<url>` is any URL without spaces. A URL that starts with `/` is a link inside the site.
+
+Several `[!link]` lines can stack above one line of code, one for each text to link.
+
+## Behaviour
+
+- The linked text keeps its syntax colours, with an underline in the accent colour. Hover over the link to see a faint background.
+- The link is a normal link. Readers can focus it with the keyboard, and it opens in the same tab.
+- A URL that starts with `/` gets Astro's `base` in front of it, unless it already starts with the base. On this site, `/reference/directives/` becomes `/starlight-codeblocks/reference/directives/`.
+- The copied text leaves out the directive line.
+- If the text has no match on the line below, the build logs a warning and the line renders without the link. A directive without a URL gets a warning too.
+- Token links work without JavaScript.
+
+## Options
+
+Token links have no options. Turn the feature off for the whole site with `tokenLinks: false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  tokenLinks: false,
+});
+```
+
+With `tokenLinks: false`, a `[!link]` directive is an unknown directive. The build logs a warning and leaves the comment in the code.
+
+## Examples
+
+Two `[!link]` lines above one line link two names on it:
+
+export const stacked = `
+\`\`\`py title="notes.py"
+from pathlib import Path
+
+# [!link /Path/ https://docs.python.org/3/library/pathlib.html#pathlib.Path]
+# [!link /read_text/ https://docs.python.org/3/library/pathlib.html#pathlib.Path.read_text]
+notes = Path("notes.txt").read_text()
+\`\`\`
+`;
+
+<Example code={stacked} />
+
+A link inside the site starts with `/`. The plugin adds the site's base:
+
+export const internal = `
+\`\`\`js title="astro.config.mjs"
+export default defineConfig({
+  // [!link /codeblocks/ /reference/options/]
+  integrations: [starlight({ plugins: [codeblocks()] })],
+});
+\`\`\`
+`;
+
+<Example code={internal} />
+
+## Limitations
+
+- A directive links the first match only. To link a later match, make the text longer, so that it matches only there.
+- Languages with no comment syntax, such as JSON, cannot use `[!link]`. Use `jsonc` instead.
+- A link cannot span two lines.
+
+## Related
+
+- [API auto-linking](/starlight-codeblocks/features/api-auto-linking/): link every name that an adapter knows, with no directive in the code. Token links are for one-off links.
+- [Comment notation](/starlight-codeblocks/features/comment-notation/): the directive syntax that `[!link]` uses.
