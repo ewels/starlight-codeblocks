@@ -299,7 +299,7 @@ src/expressive-code/<name>.ts         the feature's Expressive Code plugin (new)
 src/client/<name>.ts                  the feature's client module, if it needs one (new)
 src/client/shared/                    browser helpers bundled into each module: position.ts (place())
 src/satteri/index.ts                  mdastPlugins(): the Sätteri plugin (duplicate ids, mention links, :::code-switcher)
-src/components/                       CodeSteps, Scrollycoding (later)
+src/components/                       CodeSteps, Scrollycoding, Step (shipped as source, `starlight-codeblocks/components`)
 test/<name>.test.ts                   unit tests through render()
 docs/e2e/<name>.test.ts               Playwright tests against the docs page
 docs/src/content/docs/features/<name>.mdx   the feature page (DOCS-SITE.md template)

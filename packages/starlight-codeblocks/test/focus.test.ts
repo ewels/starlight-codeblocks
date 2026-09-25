@@ -62,7 +62,7 @@ test('blurs by default and only fades with style: dim', async () => {
   };
   const blur = await css();
   expect(blur).toMatch(/\.scb-focus-out\{[^}]*filter:blur\(var\(--ec-codeblocksFocus-blur\)\)/);
-  expect(blur).toMatch(/\.frame:hover \.scb-focus-out/);
+  expect(blur).toMatch(/\.frame:not\(\.scb-scrolly-frame\):hover \.scb-focus-out/);
   expect(blur).toMatch(/\.frame:focus-within \.scb-focus-out/);
   const dim = await css({ focus: { style: 'dim' } });
   expect(dim).toMatch(/\.scb-focus-out\{opacity:var\(--ec-codeblocksFocus-opa\);transition/);

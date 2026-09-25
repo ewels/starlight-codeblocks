@@ -1,0 +1,12 @@
+---
+interface Props {
+  /** The lines to focus in this step, as a range such as `6-8`. */
+  focus?: string;
+  /** The lines to mark in this step, as a range. */
+  mark?: string;
+}
+
+const { focus, mark } = Astro.props;
+---
+
+<div class="scb-scrolly-step" data-focus={focus} data-mark={mark}><slot /></div>

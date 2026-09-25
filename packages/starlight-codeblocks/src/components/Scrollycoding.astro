@@ -1,0 +1,65 @@
+---
+import { getRegistry } from '../registry.ts';
+import { scrollycoding } from './scrolly.ts';
+
+const html = scrollycoding(await Astro.slots.render('default'), getRegistry()?.options.scrollycoding !== false);
+---
+
+<Fragment set:html={html} />
+
+<script>
+  import './scrolly-client.ts';
+</script>
+
+<style is:global>
+  .scb-scrolly {
+    container-type: inline-size;
+  }
+  .scb-scrolly-step + .scb-scrolly-step {
+    margin-top: 1.5rem;
+  }
+  .scb-scrolly-text > :first-child {
+    margin-top: 0;
+  }
+  .scb-scrolly-text + .expressive-code {
+    margin-top: 0.75rem;
+  }
+  .scb-scrolly-code {
+    display: none;
+  }
+  @media (scripting: enabled) {
+    @container (min-width: 600px) {
+      [data-scb-scrolly] .scb-scrolly-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
+        gap: 22px;
+      }
+      [data-scb-scrolly] .scb-scrolly-steps {
+        padding-block-end: 20vh;
+      }
+      [data-scb-scrolly] .scb-scrolly-step {
+        min-height: 30vh;
+        margin-top: 0;
+        opacity: 0.38;
+      }
+      [data-scb-scrolly] .scb-scrolly-step.scb-scrolly-on {
+        opacity: 1;
+      }
+      [data-scb-scrolly] .scb-scrolly-step > .expressive-code {
+        display: none;
+      }
+      [data-scb-scrolly] .scb-scrolly-code {
+        display: block;
+        position: sticky;
+        top: calc(var(--sl-nav-height, 0px) + var(--sl-mobile-toc-height, 0px) + 1rem);
+        align-self: start;
+        margin-top: 0;
+      }
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .scb-scrolly-step {
+      transition: opacity 0.25s;
+    }
+  }
+</style>

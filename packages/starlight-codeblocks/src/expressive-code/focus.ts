@@ -54,7 +54,8 @@ pre > code[tabindex]:focus-visible {
   outline: 3px solid ${cssVar('focusBorder')};
   outline-offset: -3px;
 }
-.frame:hover .${OUT}, .frame:focus-within .${OUT} {
+/* The sticky block of scrollycoding sits under the pointer while the reader scrolls, so hover must not clear it. */
+.frame:not(.${PREFIX}-scrolly-frame):hover .${OUT}, .frame:focus-within .${OUT} {
   opacity: 1;
   filter: none;
 }`,
