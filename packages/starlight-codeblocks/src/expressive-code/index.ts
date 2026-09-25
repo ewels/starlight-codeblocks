@@ -11,6 +11,7 @@ import { pluginFootnotes } from './footnotes.ts';
 import { pluginHiddenLines } from './hidden-lines.ts';
 import { pluginLineStates } from './line-states.ts';
 import { pluginNotation } from './notation.ts';
+import { pluginShellCopy } from './shell-copy.ts';
 import { pluginWhitespace } from './whitespace.ts';
 import { pluginWordDiff } from './word-diff.ts';
 
@@ -26,6 +27,7 @@ export {
   pluginHiddenLines,
   pluginLineStates,
   pluginNotation,
+  pluginShellCopy,
   pluginWhitespace,
   pluginWordDiff,
 };
@@ -52,6 +54,7 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.wordDiff ? [pluginWordDiff(options.wordDiff)] : []),
     ...(options.whitespace ? [pluginWhitespace()] : []),
     ...(options.brackets ? [pluginBrackets(options.brackets)] : []),
+    ...(options.shellCopy ? [pluginShellCopy(options.shellCopy)] : []),
     ...(options.hiddenLines ? [pluginHiddenLines()] : []),
     ...(options.expandable ? [pluginExpandable(options.expandable)] : []),
     // After hidden lines, which rebuilds the children of the code element.

@@ -42,6 +42,9 @@ importers:
       '@expressive-code/core':
         specifier: ^0.44.2
         version: 0.44.2
+      '@expressive-code/plugin-frames':
+        specifier: ^0.44.2
+        version: 0.44.2
     devDependencies:
       '@astrojs/starlight':
         specifier: 0.42.4

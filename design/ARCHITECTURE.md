@@ -340,6 +340,7 @@ export function pluginFocus({ style = 'blur' } = {}): CodeblocksPlugin {
 
 - A rendered line is `div.ec-line > div.code > spans`. Add classes to `renderData.lineAst`, and extra nodes (labels, buttons) inside `select('.code', lineAst)`. Extra nodes never change the copied text, which comes from the code, not the HTML. Give decorations `user-select: none` so that a manual selection leaves them out too, and put text for screen readers in a `scb-sr-only` span.
 - Expressive Code's own script removes `tabindex` from a `pre` that does not scroll. To make the code area focusable, put `tabindex="0"` on `pre > code` and give it a focus style (as `focus.ts` does).
+- Never use `instanceof` on Expressive Code classes. `<Code>` renders through a second instance of `@expressive-code/core` in Vite, so the check fails there and passes in the unit tests. Use the core's type guards, such as `isInlineStyleAnnotation()`.
 - Once a feature is in the preset, its directives are known. A test elsewhere that uses them as an unknown directive must change.
 
 ### 3. Attributes and directives

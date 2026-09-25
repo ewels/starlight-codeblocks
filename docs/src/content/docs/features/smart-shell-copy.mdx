@@ -1,5 +1,100 @@
 ---
 title: Smart shell copy
+description: Show prompts and output in terminal blocks, while the copy button copies only the commands.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+A terminal block in Starlight often shows a session: commands after a prompt, and the output they print. Readers who copy that block get the prompts and the output too, and the paste fails in their shell. Smart shell copy reads the prompts, and makes the copy button copy the commands only.
+
+export const basic = `
+\`\`\`sh frame="terminal"
+$ uv tool install ruff
+Resolved 1 package in 180ms
+Installed 1 executable: ruff
+$ ruff check src/ \\
+    --fix
+Found 3 errors (3 fixed, 0 remaining).
+\`\`\`
+`;
+
+<Example code={basic} />
+
+The two lines that start with `$ ` are commands, and `--fix` continues the command above it. The other lines are output, in a muted colour. The copy button copies the two commands without the prompts, with the continuation line kept.
+
+## Syntax
+
+Smart shell copy has no attribute or directive. It applies to every block with a terminal frame that has at least one prompt line.
+
+| Block | Terminal frame |
+|---|---|
+| A shell language, such as `sh`, `bash`, `zsh` or `powershell` | Yes, from Expressive Code's automatic frame |
+| Any language with `frame="terminal"` | Yes |
+| A shell language with `frame="code"` or `frame="none"` | No |
+
+A prompt is text at the start of a line. The default prompts are `$ ` and `> `, each with a space after it.
+
+## Behaviour
+
+- A line that starts with a prompt is a command. The prompt has its own colour, and a manual selection leaves it out.
+- A command line that ends with `\` continues on the next line. That line is part of the command too.
+- Every other line is output. Output lines have no syntax colours, and use a muted colour.
+- The copy button's label is **Copy commands**. It copies each command without its prompt, one command on each line.
+- Hidden lines that are commands are part of the copied text. Hidden output lines are not.
+- A terminal block with no prompt line renders and copies as Expressive Code shows it.
+- The copy button needs JavaScript, as in Expressive Code. Without JavaScript, readers can select the code by hand. The selection leaves out the prompts, but includes the output.
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `shellCopy.prompts` | `string[]` | `['$ ', '> ']` | Line starts that mark a command. |
+
+The default prompts do not include `#`, because `#` also starts a comment in shell code. If your examples use a root prompt, add it:
+
+```js title="astro.config.mjs"
+codeblocks({
+  shellCopy: { prompts: ['$ ', '# '] },
+});
+```
+
+With `shellCopy: false`, terminal blocks copy their text the way Expressive Code copies it.
+
+## Examples
+
+A PowerShell session uses its own prompt. This site adds `PS> ` to `shellCopy.prompts`, so the block below copies two commands:
+
+export const powershell = `
+\`\`\`powershell
+PS> Get-ChildItem -Name
+report.csv
+summary.txt
+PS> Get-Content summary.txt
+Rows: 1204
+\`\`\`
+`;
+
+<Example code={powershell} />
+
+A block in any language can show a session, if it has `frame="terminal"`:
+
+export const python = `
+\`\`\`txt frame="terminal" title="Install the package"
+$ python -m pip install example-client
+Collecting example-client
+Successfully installed example-client-2.1.0
+\`\`\`
+`;
+
+<Example code={python} />
+
+## Limitations
+
+- A prompt must be the first text on the line. The plugin does not find a prompt after spaces.
+- Output lines lose their syntax colours, so output that contains code shows in one colour.
+- `#` is not a default prompt. A line such as `# apt install curl` is output, unless you add `# ` to the prompts.
+
+## Related
+
+- [Hidden lines](/starlight-codeblocks/features/hidden-lines/): hide set-up commands that readers need to copy but not to read.
+- [Fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/): let readers type their own values into a command before they copy it.
