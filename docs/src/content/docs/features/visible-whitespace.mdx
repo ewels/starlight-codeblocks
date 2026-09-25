@@ -1,5 +1,81 @@
 ---
 title: Visible whitespace
+description: Show spaces and tabs as faint glyphs, for the blocks where indentation changes the meaning of the code.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+A code block usually renders whitespace as empty space. That is fine for most languages, but some depend on the exact character. Make needs a tab at the start of a recipe, and Python needs consistent indentation. The `whitespace` attribute shows spaces and tabs as glyphs, so readers see which character is there.
+
+export const basic = `
+\`\`\`make title="Makefile" whitespace
+build:
+\tcargo build --release
+
+test:
+    cargo test  # [!code error] Recipes must start with a tab
+\`\`\`
+`;
+
+<Example code={basic} />
+
+The first recipe starts with an arrow, for the tab that Make needs. The second starts with four dots, for the four spaces that Make rejects. Copying the block gives the real characters, not the glyphs.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `whitespace` | Fence line | Shows the leading whitespace of every line |
+| `whitespace="all"` | Fence line | Shows every space and tab in the block |
+
+## Behaviour
+
+- A space renders as a middle dot, and a tab as an arrow that fills the width of the tab.
+- By default, the plugin shows only the leading whitespace of each line, where indentation usually matters. `whitespace="all"` shows every space and tab, including the ones between words.
+- The glyphs are drawn with CSS on top of the real character. A manual copy or the copy button gives the actual spaces and tabs.
+- Screen readers do not hear the glyphs. They read the same code as a block without the attribute.
+- Visible whitespace needs no JavaScript in the browser.
+
+## Options
+
+Visible whitespace has no options. Turn it off for the whole site with `whitespace: false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  whitespace: false,
+});
+```
+
+## Examples
+
+`whitespace="all"` shows every space, which is useful when trailing whitespace is part of what you are explaining:
+
+export const trailing = `
+\`\`\`text title="diff.patch" whitespace="all"
+-  const width = 10; 
++  const width = 12;
+\`\`\`
+`;
+
+<Example code={trailing} />
+
+Leading whitespace alone is usually enough to show an indentation error:
+
+export const python = `
+\`\`\`py title="script.py" whitespace
+def greet(name):
+    print(f"Hello, {name}")
+   return None  # [!code error] Indented with 3 spaces, not 4
+\`\`\`
+`;
+
+<Example code={python} />
+
+## Limitations
+
+- The glyphs add visual noise on a block with a lot of whitespace. Use `whitespace="all"` only where the extra detail matters, and leave the default, leading-only view for everything else.
+
+## Related
+
+- [Line states](/starlight-codeblocks/features/line-states/): mark the line that has the indentation problem, with a message that explains it.
+- [Comment notation](/starlight-codeblocks/features/comment-notation/): the directive syntax that the examples on this page also use.

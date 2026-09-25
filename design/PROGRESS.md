@@ -22,7 +22,7 @@ Update this file after each step in `PLAN.md`. Use one of these states: not star
 | 4.1 Focus | done | `src/expressive-code/focus.ts`, CSS only (no client module). `tabindex` goes on `pre > code` (DECISIONS.md). Unit tests, Playwright tests (pointer, keyboard, reduced motion, copy), docs page. Screenshots match the mockup in both themes. |
 | 4.2 Line states, including custom states | done | `src/expressive-code/line-states.ts`: built-in and custom states, messages as labels, hidden prefixes, derived colours with a contrast test. Name rules in `options.ts`. Docs site defines `todo`. Playwright tests check the copied text and a manual selection. ARCHITECTURE.md guide updated with what 4.1 and 4.2 taught. |
 | 4.3 Word-level diff | done | `src/expressive-code/word-diff.ts`: pairs `del`/`ins` runs by reading text-markers' own line annotations, tokenises with a word/whitespace/punctuation split, highlights the LCS-changed ranges with `ExpressiveCodeAnnotation`, no client module. Covers `diff` blocks, `ins`/`del` attributes and `[!code ++/--]`. Unit tests, contrast test, docs page. |
-| 4.4 Visible whitespace | not started | |
+| 4.4 Visible whitespace | done | `src/expressive-code/whitespace.ts`: leading-only or `whitespace="all"`, dot and arrow glyphs via an `aria-hidden` marker element over the real character, no client module. Found and fixed a platform issue: `astro-expressive-code` expands tabs to spaces by default, so the docs site now sets `expressiveCode: { tabWidth: 0 }` (DECISIONS.md). Unit tests, docs page. |
 | 4.5 Colourised brackets | not started | |
 | 4.6 Hidden lines | not started | |
 | 4.7 Expandable blocks | not started | |

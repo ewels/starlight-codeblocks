@@ -11,6 +11,9 @@ export default defineConfig({
       title: 'starlight-codeblocks',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/ewels/starlight-codeblocks' }],
       disable404Route: true,
+      // Astro Expressive Code expands tabs to 2 spaces by default. A real tab must survive for
+      // visible whitespace to show it as a tab, and for a Makefile block to copy correctly.
+      expressiveCode: { tabWidth: 0 },
       plugins: [
         codeblocks({
           // Markdown blocks on this site show the source that authors write, so their directives must stay as text.
