@@ -1,5 +1,105 @@
 ---
 title: Word-level diff
+description: Highlight only the words that changed in a diff, not the whole line, so readers see the change at a glance.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+Expressive Code tints a `diff` block's added and removed lines. Word-level diff goes further. It highlights the exact words that changed inside each pair of lines, so a one-word edit in a long line stands out.
+
+export const basic = `
+\`\`\`diff lang="js"
+-const timeout = 5000;
++const timeout = options.timeout ?? 5000;
+const client = createClient({
+-  retries: 3,
++  retries: options.retries,
+});
+\`\`\`
+`;
+
+<Example code={basic} />
+
+Only `5000` and `retries: 3` changed. The plugin pairs each removed line with the added line below it, compares them word by word, and gives the changed words a stronger tint. The rest of the line keeps the plain diff tint, and the syntax colours stay in place throughout.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| A `diff` block | Fence line | `diff lang="js"` |
+| `ins={range}`, `del={range}` | Fence line | `ins={2} del={1}` |
+| `[!code ++]`, `[!code --]` | Comment | `retries: 3, // [!code --]` |
+| `wordDiff=false` | Fence line | Turns the feature off for one block |
+
+Word-level diff applies automatically to every removed line directly followed by an added line, from any of these sources. You do not turn it on.
+
+## Behaviour
+
+- The plugin pairs a run of removed lines with the run of added lines directly below it, one by one.
+- Each pair is compared token by token: words, runs of whitespace and single punctuation characters.
+- The changed tokens get a stronger tint. Whitespace between two changed tokens is part of the highlight, so a run of changed words tints as one block.
+- If a pair is less than 40% similar, it is too different to compare usefully. The plugin leaves the whole-line tints in place and adds no word highlight.
+- The underlying syntax highlighting stays visible under the tint.
+- Word-level diff needs no JavaScript in the browser.
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `wordDiff` | `false \| object` | on | Set to `false` to turn word-level diff off everywhere. |
+| `wordDiff.minSimilarity` | `number` | `0.4` | The similarity, from 0 to 1, below which a pair keeps whole-line tints only. |
+
+Some codebases rewrite lines often enough that the word-level highlight adds noise more often than it helps. Raise the threshold to show it only for close edits:
+
+```js title="astro.config.mjs"
+codeblocks({
+  wordDiff: { minSimilarity: 0.7 },
+});
+```
+
+## Examples
+
+The `ins` and `del` attributes give the same result as a `diff` block, without changing the language of the block:
+
+export const attributes = `
+\`\`\`js title="server.js" ins={2} del={1}
+const port = 3000;
+const port = Number(process.env.PORT ?? 3000);
+\`\`\`
+`;
+
+<Example code={attributes} />
+
+`[!code --]` and `[!code ++]` move with their line when you edit the code:
+
+export const directives = `
+\`\`\`py title="config.py"
+DEBUG = True  # [!code --]
+DEBUG = os.environ.get("DEBUG") == "1"  # [!code ++]
+\`\`\`
+`;
+
+<Example code={directives} />
+
+A rewritten line is too different to compare, so it keeps a plain diff tint:
+
+export const different = `
+\`\`\`diff lang="js"
+-const total = a + b;
++export function computeGrandTotal(items) {
++  return items.reduce((sum, item) => sum + item.price, 0);
++}
+\`\`\`
+`;
+
+<Example code={different} />
+
+## Limitations
+
+- Pairing is by position. The first removed line pairs with the first added line, the second with the second, and each later pair the same way. A block that adds or removes a different number of lines can pair the wrong lines.
+- The comparison works on the visible text of the line. It does not parse the language, so it cannot tell that `foo` and `bar` mean the same thing in different words.
+
+## Related
+
+- [Line states](/starlight-codeblocks/features/line-states/): tint a line as an error, a warning or a note, instead of a change.
+- [Comment notation](/starlight-codeblocks/features/comment-notation/): the `[!code ++]` and `[!code --]` directives that word-level diff reads.
