@@ -1,5 +1,113 @@
 ---
 title: Write an API link adapter
+description: Add API auto-linking for another language or library, with an adapter that finds names in code and resolves them to reference pages.
 ---
 
-Not yet written
+import { Code } from '@astrojs/starlight/components';
+import adapterSource from '../../../adapters/codeblocks-api.mjs?raw';
+
+[API auto-linking](/starlight-codeblocks/features/api-auto-linking/) links names in code blocks through adapters. The plugin has adapters for Python and Nextflow. A site can add its own adapter for another language, or for its own library, in the `apiLinks.adapters` option.
+
+## The interface
+
+An adapter is an object with a name, a list of languages and three functions:
+
+```ts
+interface ApiLinkAdapter {
+  name: string;
+  languages: string[];
+  setup(context: AdapterContext): Promise<void>;
+  findSymbols(code: string, language: string): SymbolRef[];
+  resolve(symbol: SymbolRef): Resolution | null;
+}
+
+interface SymbolRef {
+  start: number;
+  end: number;
+  name: string;
+  context?: unknown;
+}
+
+interface Resolution {
+  href: string;
+  name?: string;
+  kind?: string;
+  signature?: string;
+  summary?: string;
+  source: string;
+}
+```
+
+| Property | Description |
+|---|---|
+| `name` | The name of the adapter. Build warnings start with it. |
+| `languages` | The languages of the code blocks that the adapter reads, as written on the fence line, such as `py`. |
+| `setup` | Loads the indexes. The plugin calls it once, before the first code block in one of the languages. |
+| `findSymbols` | Returns the names in the code that can be links. |
+| `resolve` | Returns the link and the card text for one name, or `null`. |
+
+A `SymbolRef` gives the position of a name in `code`. `start` is the index of its first character, and `end` is the index after its last character. `name` is the name that `resolve` looks up. `context` is free for the adapter, for example for data that `findSymbols` already found.
+
+A `Resolution` is the link and the text of the card:
+
+| Property | Description |
+|---|---|
+| `href` | The URL of the reference page. A URL that starts with `/` gets Astro's `base` in front of it. |
+| `name` | The qualified name, such as `pathlib.Path`. The default is the `name` of the symbol. |
+| `kind` | The kind of object, such as `function`, `class` or `process`. |
+| `signature` | The first line of the card. Without a signature, the card shows the kind and the name. |
+| `summary` | One sentence under the signature. |
+| `source` | Where the link comes from, at the bottom of the card. |
+
+## The adapter context
+
+`setup()` gets a context with these properties:
+
+| Property | Description |
+|---|---|
+| `root` | The project root, as an absolute path. |
+| `cacheDir` | Astro's cache folder, where other integrations keep their data. |
+| `fetch(url)` | Gets a URL once, and keeps the body on disk. Returns the body as a `Uint8Array`, or `null`. |
+| `warn(message)` | Logs a build warning with the name of the adapter. |
+
+Use `fetch` from the context to load an index from another site. The body stays in `node_modules/.cache/starlight-codeblocks/`, so later builds read it from disk and work without the network. If the request fails and there is no copy on disk, `fetch` logs a warning and returns `null`. Continue without that index:
+
+```js
+async setup(context) {
+  const data = await context.fetch('https://example.com/docs/index.json');
+  if (data) index = JSON.parse(new TextDecoder().decode(data));
+},
+```
+
+## An example adapter
+
+This site links the names that a JavaScript block imports from starlight-codeblocks to their reference pages. The adapter reads the `import` lines, then finds each imported name outside strings and comments:
+
+<Code code={adapterSource} lang="js" title="src/adapters/codeblocks-api.mjs" />
+
+To use an adapter, add it to `apiLinks.adapters`. Keep the built-in adapters in the list, because the list replaces the default:
+
+```js title="astro.config.mjs"
+import codeblocks from 'starlight-codeblocks';
+import { nextflow } from 'starlight-codeblocks/adapters/nextflow';
+import { python } from 'starlight-codeblocks/adapters/python';
+import { codeblocksApi } from './src/adapters/codeblocks-api.mjs';
+
+codeblocks({
+  apiLinks: { adapters: [python(), nextflow(), codeblocksApi()] },
+});
+```
+
+The code block above shows the result: `codeblocks`, `nextflow` and `python` are links.
+
+## Rules
+
+- Return `null` from `resolve` when you are not certain. A wrong link is worse than no link.
+- Never return names inside strings or comments from `findSymbols`.
+- Give positions in the `code` that `findSymbols` gets. The plugin ignores a name that spans two lines.
+- Keep `findSymbols` and `resolve` synchronous. Do all slow work, such as a fetch, in `setup`.
+- Return the same result for the same code. The functions run at build time, so they cannot read anything from the browser.
+- Do not throw in `setup` for a missing index. Log a warning with `context.warn` and continue. If `setup` throws, the build logs a warning, and the adapter links nothing.
+- Use `http` or `https` URLs, or URLs inside the site. The plugin drops a link with any other scheme, such as `javascript:`.
+
+If two adapters return the same name, or names that overlap, the first adapter in the list wins.

@@ -1,7 +1,10 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import codeblocks from 'starlight-codeblocks';
+import { nextflow } from 'starlight-codeblocks/adapters/nextflow';
+import { python } from 'starlight-codeblocks/adapters/python';
 import starlightLinksValidator from 'starlight-links-validator';
+import { codeblocksApi } from './src/adapters/codeblocks-api.mjs';
 
 export default defineConfig({
   site: 'https://ewels.github.io',
@@ -35,6 +38,19 @@ export default defineConfig({
                 },
               }),
             },
+          },
+          apiLinks: {
+            adapters: [
+              python(),
+              nextflow({
+                modules: ({ name }) => ({
+                  href: `https://nf-co.re/modules/${name.toLowerCase()}`,
+                  kind: 'process',
+                  source: 'nf-core modules',
+                }),
+              }),
+              codeblocksApi(),
+            ],
           },
           lineStates: { states: { todo: { label: 'To do', colour: { dark: '#c792ea', light: '#7c3aed' } } } },
         }),

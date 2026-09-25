@@ -298,6 +298,7 @@ src/expressive-code/styles.ts         shared style settings, base styles, PREFIX
 src/expressive-code/<name>.ts         the feature's Expressive Code plugin (new)
 src/client/<name>.ts                  the feature's client module, if it needs one (new)
 src/client/shared/                    browser helpers bundled into each module: position.ts (place())
+src/adapters/                         API link adapters, one subpath export each (python, nextflow)
 src/satteri/index.ts                  mdastPlugins(): the Sätteri plugin (duplicate ids, mention links, :::code-switcher)
 src/components/                       CodeSteps, Scrollycoding, Step (shipped as source, `starlight-codeblocks/components`)
 test/<name>.test.ts                   unit tests through render()
@@ -383,6 +384,7 @@ With `codeblocks()`, the integration emits the modules next to `ec.<hash>.js`. W
 - Unit tests in `packages/starlight-codeblocks/test/<name>.test.ts` with `render(markdown, options?, extraPlugins?)` from `test/render.ts`. It returns `{ html, copyText, warnings }`. Cover every attribute and directive, the copied text, the warnings, and that a block that does not use the feature renders the same with the feature off (`render(md, { <feature>: false })`).
 - Playwright tests in `docs/e2e/<name>.test.ts`, against the example on the feature's docs page (`page.goto('./features/<name>/')`). Use the keyboard and the pointer, and check the `reduced-motion` project. `docs/e2e/client.test.ts` shows how to test browser code on its own routed origin.
 - `pnpm test` builds the package first, because the tests read `dist/client`.
+- Unit tests cannot reach the network. `test/setup.ts` replaces `fetch` and serves the standard library inventory fixture; stub `fetch` in a test for other responses. `test/global-setup.ts` clears the fetch cache before each run.
 - Screenshots for the mockup comparison: build the docs, run `astro preview` in `docs/`, and use `agent-browser` (or Playwright). Set the theme with `document.documentElement.dataset.theme = 'dark'` or `'light'`. Scroll with `window.scrollTo({ top, behavior: 'instant' })`, because the mockup page and Starlight scroll smoothly. Save the files in the scratchpad.
 
 ### 7. Docs

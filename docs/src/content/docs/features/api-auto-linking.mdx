@@ -1,5 +1,177 @@
 ---
 title: API auto-linking
+description: Link the names in code examples to their reference pages, with a card that shows the signature and a summary.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+A code example uses names from libraries: modules, functions, classes and their methods. In a normal code block, a reader who wants the reference page of a name must search for it. API auto-linking finds these names and links them to their reference pages. You write nothing in the code block.
+
+export const basic = `
+\`\`\`py title="report.py"
+import json
+from pathlib import Path
+
+run = json.loads(Path("run.json").read_text())
+print(run["status"])
+\`\`\`
+`;
+
+<Example code={basic} />
+
+The Python adapter reads the two imports. It links `json.loads`, `Path` and `read_text` to the Python documentation, and it knows that `read_text` belongs to `Path`, because the code calls `Path` first. Hover over a link, or move keyboard focus to it, to see a card with the kind, the qualified name and the source.
+
+## Syntax
+
+API auto-linking has no syntax. It runs on every code block in a language that has an adapter.
+
+| Syntax | Where | Effect |
+|---|---|---|
+| `apiLinks=false` | Fence line | Turns the feature off for one code block |
+
+## Behaviour
+
+An adapter finds the names in a code block and resolves each one against its indexes. It links a name only when it is certain about the name. All other names stay plain text.
+
+- A link has a dotted underline. On hover and on focus, the underline is solid and the link gets a faint background.
+- After 150 ms of hover, or at once on keyboard focus, a card opens under the link. It shows the signature, or the kind and the qualified name. Under that, it shows a summary, if the index has one, and the source of the link.
+- The card stays open while the pointer is on the link or on the card. Press <kbd>Escape</kbd> to close it. The card closes when the link loses focus.
+- Screen readers get the text of the card as the description of the link.
+- Names inside strings and comments never link.
+- The copied text is the same as the code. Links and cards are not part of it.
+- Without JavaScript, the links work, but there is no card.
+
+Adapters load their indexes once for each build. An index that the build fetches from another site stays on disk in `node_modules/.cache/starlight-codeblocks/`, so later builds do not fetch it again. If a fetch fails and there is no copy on disk, the build logs a warning, and the names from that index stay plain text. The build does not fail.
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `apiLinks.adapters` | `ApiLinkAdapter[]` | `[python(), nextflow()]` | The adapters that find and resolve names. |
+
+A list in `adapters` replaces the default list. To change one adapter, put all the adapters that you want in the list:
+
+```js title="astro.config.mjs"
+import codeblocks from 'starlight-codeblocks';
+import { nextflow } from 'starlight-codeblocks/adapters/nextflow';
+import { python } from 'starlight-codeblocks/adapters/python';
+
+codeblocks({
+  apiLinks: {
+    adapters: [python({ inventories: ['https://numpy.org/doc/stable/objects.inv'] }), nextflow()],
+  },
+});
+```
+
+Turn the feature off for the whole site with `apiLinks: false`. To add an adapter for another language or library, see [Write an API link adapter](/starlight-codeblocks/extend/write-an-api-link-adapter/).
+
+### Python adapter
+
+The Python adapter runs on `py` and `python` code blocks. It reads `import x`, `import x as y` and `from a import b as c` in the block. Then it links the names that those imports bind, and chains of attributes on them, such as `os.path.join`.
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `stdlib` | `boolean` | `true` | Link names from the Python standard library, through `https://docs.python.org/3/objects.inv`. |
+| `inventories` | `(string \| { url: string; base?: string })[]` | `[]` | More Sphinx `objects.inv` files. `base` is the URL that relative links start from, if it is not the folder of `url`. |
+| `pydocs` | `{ package: string; base?: string; dump?: string }[]` | `[]` | Packages that the site documents with starlight-pydocs. |
+
+An `objects.inv` file has no signatures and no summaries. For its names, the card shows the kind, the qualified name and the documentation that it comes from.
+
+For packages in `pydocs`, the adapter reads the data that starlight-pydocs makes when the site builds. The card then has the signature and the first sentence of the docstring. Give the same `base` that you give starlight-pydocs. The default is `api/<package>`, the same as the starlight-pydocs default:
+
+```js title="astro.config.mjs"
+starlight({
+  plugins: [
+    starlightPydocs({ packages: [{ name: 'myproject', base: 'reference/myproject' }] }),
+    codeblocks({
+      apiLinks: {
+        adapters: [python({ pydocs: [{ package: 'myproject', base: 'reference/myproject' }] }), nextflow()],
+      },
+    }),
+  ],
+});
+```
+
+A name from a `pydocs` package links to the site's own page, also if an inventory has the same name. If the adapter finds no starlight-pydocs data, the build logs a warning. Use `dump` to give the path of a Griffe dump file, relative to the project root.
+
+### Nextflow adapter
+
+The Nextflow adapter runs on `nextflow` and `nf` code blocks. It has the channel factories and operators of the Nextflow reference, so it needs no network. It links:
+
+- Channel factories, such as `channel.of` and `channel.fromPath`.
+- Operators in a chain after a channel factory, such as `.map` and `.view`.
+- Operators on a variable that holds a channel in every assignment in the block.
+- Processes and workflows from `include` statements, if you give the `modules` option.
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `modules` | `({ name, path }) => string \| object \| undefined` | none | The reference page of an included process or workflow. |
+
+`modules` gets the name in the module and the path after `from`. It returns the URL of the page, or an object with `href` and, if you want them, `kind`, `signature`, `summary` and `source`. It returns `undefined` for a name that must stay plain text. This site links nf-core modules to their pages on the nf-core site:
+
+```js title="astro.config.mjs"
+nextflow({
+  modules: ({ name }) => ({
+    href: `https://nf-co.re/modules/${name.toLowerCase()}`,
+    kind: 'process',
+    source: 'nf-core modules',
+  }),
+});
+```
+
+## Examples
+
+A Nextflow workflow gets links for the channel factory and for the process from nf-core:
+
+export const nextflowExample = `
+\`\`\`nextflow title="main.nf"
+include { FASTQC } from './modules/nf-core/fastqc/main'
+
+workflow {
+    reads = channel.fromFilePairs(params.reads)
+    FASTQC(reads)
+}
+\`\`\`
+`;
+
+<Example code={nextflowExample} />
+
+A site can link its own names with an adapter of its own. This site links the names that a block imports from starlight-codeblocks:
+
+export const siteAdapter = `
+\`\`\`js title="astro.config.mjs"
+import codeblocks from 'starlight-codeblocks';
+import { python } from 'starlight-codeblocks/adapters/python';
+
+codeblocks({ apiLinks: { adapters: [python()] } });
+\`\`\`
+`;
+
+<Example code={siteAdapter} />
+
+With `apiLinks=false`, the same Python block has no links:
+
+export const off = `
+\`\`\`py title="report.py" apiLinks=false
+import json
+
+run = json.loads(text)
+\`\`\`
+`;
+
+<Example code={off} />
+
+## Limitations
+
+- The Python adapter does not follow assignments. After `p = Path("run.json")`, the name `p.read_text` stays plain text.
+- The Python adapter does not link built-in names, such as `print` and `len`.
+- A name that the block binds again, for example with `json = {}` or as a function parameter, does not link anywhere in the block.
+- The Nextflow adapter does not link operators after a process output, such as `FASTQC.out.html.map`, or after the `|` operator.
+- The files in `node_modules/.cache/starlight-codeblocks/` do not expire. Delete the folder to fetch the indexes again.
+- A link cannot span two lines.
+- Names on a line with a `[!link]` directive do not link, so that a link is never inside another link.
+
+## Related
+
+- [Token links](/starlight-codeblocks/features/token-links/): link one piece of text to a URL that you choose. Use them for names that no adapter knows.
+- [Write an API link adapter](/starlight-codeblocks/extend/write-an-api-link-adapter/): add links for another language or library.
