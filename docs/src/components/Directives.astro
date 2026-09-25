@@ -1,0 +1,53 @@
+---
+import AnchorHeading from '@astrojs/starlight/components/AnchorHeading.astro';
+import { getEntry } from 'astro:content';
+import Example from './Example.astro';
+import { directives } from './directives.ts';
+import { inlineCode } from './inline-code.ts';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const sections = await Promise.all(
+  directives.map(async (directive) => ({
+    ...directive,
+    feature: (await getEntry('docs', directive.docs.page))?.data.title ?? directive.docs.page,
+  })),
+);
+---
+
+{
+  sections.map(({ id, label, placement, docs, feature }) => (
+    <>
+      <AnchorHeading level={2} id={id} class="directive-name"><code>{label}</code></AnchorHeading>
+      <p set:html={inlineCode(docs.description)} />
+      <dl>
+        <dt>Placement</dt>
+        <dd>{placement === 'own' ? 'Own line' : 'End of line'}</dd>
+        <dt>Arguments</dt>
+        <dd set:html={docs.args ? inlineCode(docs.args) : 'None'} />
+        <dt>Feature</dt>
+        <dd><a href={`${base}/${docs.page}/`}>{feature}</a></dd>
+      </dl>
+      <Example code={`\`\`\`${docs.example.lang}\n${docs.example.code}\n\`\`\``} layout="side" />
+    </>
+  ))
+}
+
+<style>
+  :global(.directive-name) code {
+    font-size: 0.75em;
+    background: none;
+    padding: 0;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.25rem 1rem;
+  }
+  dl > dt,
+  dl > dd {
+    margin: 0;
+  }
+  dt {
+    font-weight: 600;
+  }
+</style>

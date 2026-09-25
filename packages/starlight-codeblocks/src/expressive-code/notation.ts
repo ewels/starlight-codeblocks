@@ -8,7 +8,14 @@ export interface DirectiveSpec {
   /** The directive takes the text after it, up to the next directive or the end of the comment. */
   text?: boolean;
   /** For the directives reference page. */
-  docs?: { description: string; example: string; page: string };
+  docs?: {
+    description: string;
+    /** What goes after the name, if anything. */
+    args?: string;
+    /** A small code block that shows only this directive. */
+    example: { lang: string; code: string };
+    page: string;
+  };
 }
 
 /** Directive specs by name: `code <name>` for `[!code <name>]`, the bare name for the others. */
@@ -263,7 +270,7 @@ const markerSpec = (name: string, marker: string, change: string): DirectiveSpec
   placement: 'end',
   docs: {
     description: `Marks the line as ${change}, like the \`${marker}\` attribute of Expressive Code.`,
-    example: `const port = 8080 // [!code ${name}]`,
+    example: { lang: 'js', code: `const host = 'localhost'\nconst port = 8080 // [!code ${name}]` },
     page: 'features/comment-notation',
   },
 });

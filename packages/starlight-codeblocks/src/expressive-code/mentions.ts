@@ -37,7 +37,8 @@ export function pluginMentions(): CodeblocksPlugin {
         placement: 'end',
         docs: {
           description: 'Tags the line with a name. A link to `#mention:<name>` in the prose highlights it.',
-          example: 'return 1  # [!mention base]',
+          args: 'A name for the line.',
+          example: { lang: 'js', code: 'const base = 1 // [!mention base]' },
           page: 'features/code-mentions',
         },
       },

@@ -80,7 +80,8 @@ export function pluginLineStates({
       text: true,
       docs: {
         description: `Marks the line with the "${label}" state. Text after the directive becomes the message.`,
-        example: `retries: -1, // [!code ${name}] Must be 0 or more`,
+        args: 'Optional. The message.',
+        example: { lang: 'js', code: `const retries = -1 // [!code ${name}] Must be 0 or more` },
         page: 'features/line-states',
       },
     };

@@ -7,9 +7,11 @@ interface Props {
    * prose or a directive, put the same Markdown between the tags too. `scripts/examples.test.mjs` checks that they match.
    */
   code: string;
+  /** `side` puts the two panes next to each other when there is room. */
+  layout?: 'stack' | 'side';
 }
 
-const { code } = Astro.props;
+const { code, layout = 'stack' } = Astro.props;
 const live = Astro.slots.has('default');
 const blocks = [...code.matchAll(/^(`{3,}|~{3,})([^\s`]*)[ \t]*(.*)\n([\s\S]*?)\n?^\1[ \t]*$/gm)].map(
   ([, , lang, meta, body]) => ({ lang, meta, code: body }),
@@ -17,7 +19,7 @@ const blocks = [...code.matchAll(/^(`{3,}|~{3,})([^\s`]*)[ \t]*(.*)\n([\s\S]*?)\
 if (!live && blocks.length === 0) throw new Error(`<Example> found no fenced code block in:\n${code}`);
 ---
 
-<div class="example">
+<div class:list={['example', layout]}>
   <div class="pane not-content">
     <p class="label">You write</p>
     <Code code={code.trim()} lang="md" />
@@ -34,6 +36,16 @@ if (!live && blocks.length === 0) throw new Error(`<Example> found no fenced cod
   }
   .pane + .pane {
     margin-top: 1rem;
+  }
+  .side {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .side > .pane {
+    flex: 1 1 17rem;
+    min-width: 0;
+    margin-top: 0;
   }
   .pane > :global(* + *) {
     margin-top: 0.875rem;

@@ -49,7 +49,7 @@ export function pluginHiddenLines(): CodeblocksPlugin {
         placement: 'end',
         docs: {
           description: 'Hides the line behind a marker that shows it again.',
-          example: 'import unused_helper  // [!code hide]',
+          example: { lang: 'js', code: "const host = 'localhost' // [!code hide]\nconst port = 8080" },
           page: 'features/hidden-lines',
         },
       },

@@ -59,7 +59,8 @@ export function pluginCallouts(): CodeblocksPlugin {
         text: true,
         docs: {
           description: 'Shows the text in a bubble above the next line, pointing at `/text/` on that line.',
-          example: '// [!callout /signal/] Aborts the request if the reader leaves the page.',
+          args: 'Optional. `/text/` to point at. Then the text of the bubble.',
+          example: { lang: 'js', code: '// [!callout /signal/] Stops the request.\nfetch(url, { signal })' },
           page: 'features/inline-callouts',
         },
       },

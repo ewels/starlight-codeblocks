@@ -54,7 +54,8 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
         text: true,
         docs: {
           description: 'Adds a numbered badge to the next line, and the text to a list under the block.',
-          example: '# [!ref] Creates the application object.',
+          args: 'The text of the footnote.',
+          example: { lang: 'js', code: '// [!ref] Read from the environment.\nconst port = process.env.PORT' },
           page: 'features/footnotes',
         },
       },

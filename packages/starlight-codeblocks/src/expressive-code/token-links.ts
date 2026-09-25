@@ -60,7 +60,11 @@ export function pluginTokenLinks({ base }: { base?: string } = {}): CodeblocksPl
         placement: 'own',
         docs: {
           description: 'Links the first match of `/text/` on the next line to the URL.',
-          example: '# [!link /linspace/ https://numpy.org/doc/stable/]',
+          args: '`/text/` to link, then the URL.',
+          example: {
+            lang: 'js',
+            code: '// [!link /const/ https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const]\nconst port = 8080',
+          },
           page: 'features/token-links',
         },
       },

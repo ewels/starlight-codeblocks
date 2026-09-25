@@ -11,6 +11,7 @@ export default defineConfig({
       title: 'starlight-codeblocks',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/ewels/starlight-codeblocks' }],
       disable404Route: true,
+      routeMiddleware: './src/route-data.ts',
       plugins: [
         codeblocks({
           // Markdown blocks on this site show the source that authors write, so their directives must stay as text.

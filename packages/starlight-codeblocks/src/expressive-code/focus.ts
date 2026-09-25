@@ -38,7 +38,10 @@ export function pluginFocus({ style = 'blur' }: { style?: 'blur' | 'dim' } = {})
         placement: 'end',
         docs: {
           description: 'Focuses the line. The other lines are blurred.',
-          example: 'retries: 2, // [!code focus]',
+          example: {
+            lang: 'js',
+            code: "const host = 'localhost'\nconst port = 8080 // [!code focus]\nconst debug = false",
+          },
           page: 'features/focus',
         },
       },

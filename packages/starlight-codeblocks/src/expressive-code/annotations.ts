@@ -40,7 +40,8 @@ export function pluginAnnotations(): CodeblocksPlugin {
         text: true,
         docs: {
           description: 'Adds a numbered marker after the code. Selecting it opens the text in a popover.',
-          example: 'with path.open() as fh:  # [!annotate] Closes the file when the block ends.',
+          args: 'The text of the annotation.',
+          example: { lang: 'js', code: 'const port = 8080 // [!annotate] The default port.' },
           page: 'features/annotations',
         },
       },
