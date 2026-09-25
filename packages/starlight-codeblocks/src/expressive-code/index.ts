@@ -11,6 +11,7 @@ import { pluginFootnotes } from './footnotes.ts';
 import { pluginHiddenLines } from './hidden-lines.ts';
 import { pluginLineStates } from './line-states.ts';
 import { pluginNotation } from './notation.ts';
+import { pluginPlayground } from './playground.ts';
 import { pluginShellCopy } from './shell-copy.ts';
 import { pluginWhitespace } from './whitespace.ts';
 import { pluginWordDiff } from './word-diff.ts';
@@ -27,6 +28,7 @@ export {
   pluginHiddenLines,
   pluginLineStates,
   pluginNotation,
+  pluginPlayground,
   pluginShellCopy,
   pluginWhitespace,
   pluginWordDiff,
@@ -57,6 +59,8 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.shellCopy ? [pluginShellCopy(options.shellCopy)] : []),
     ...(options.hiddenLines ? [pluginHiddenLines()] : []),
     ...(options.expandable ? [pluginExpandable(options.expandable)] : []),
+    // After shell copy, which changes the copied text that the playground gets.
+    ...(options.playgrounds ? [pluginPlayground(options.playgrounds)] : []),
     // After hidden lines, which rebuilds the children of the code element.
     ...(options.callouts ? [pluginCallouts()] : []),
     ...(options.annotations ? [pluginAnnotations()] : []),

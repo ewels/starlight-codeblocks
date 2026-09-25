@@ -16,6 +16,25 @@ export default defineConfig({
           // Markdown blocks on this site show the source that authors write, so their directives must stay as text.
           notation: { comments: { md: [], markdown: [], mdx: [] } },
           shellCopy: { prompts: ['$ ', '> ', 'PS> '] },
+          playgrounds: {
+            pythontutor: {
+              label: 'Open in Python Tutor',
+              url: ({ code }) =>
+                `https://pythontutor.com/visualize.html#mode=edit&py=3&code=${encodeURIComponent(code)}`,
+            },
+            stackblitz: {
+              label: 'Open in StackBlitz',
+              post: ({ code, title }) => ({
+                action: 'https://stackblitz.com/run',
+                fields: {
+                  'project[title]': title ?? 'Example',
+                  'project[template]': 'javascript',
+                  'project[files][index.js]': code,
+                  'project[files][index.html]': '<script type="module" src="index.js"></script>',
+                },
+              }),
+            },
+          },
           lineStates: { states: { todo: { label: 'To do', colour: { dark: '#c792ea', light: '#7c3aed' } } } },
         }),
         starlightLinksValidator({ exclude: ({ link }) => link.startsWith('#mention:') }),

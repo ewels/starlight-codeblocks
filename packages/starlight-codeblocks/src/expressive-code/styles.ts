@@ -82,19 +82,46 @@ export function baseStyles({ cssVar }: ResolverContext) {
   white-space: nowrap;
   border: 0;
 }
+.${PREFIX}-tools {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  gap: 6px;
+  margin-inline-start: auto;
+  padding-inline: 8px;
+}
+.is-terminal .${PREFIX}-tools {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+}
+/* Without a title or a terminal frame, Expressive Code hides the header. Give it a minimal bar for the controls. */
+.frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools) {
+  --button-spacing: 2.1rem;
+}
+.frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools) .header {
+  display: flex;
+  align-items: center;
+  min-height: 1.9rem;
+  padding-inline: ${cssVar('uiPaddingInline')} 0;
+  background: color-mix(in srgb, ${cssVar('codeForeground')} 5%, ${cssVar('codeBackground')});
+  border-bottom: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
+}
 .${PREFIX}-btn {
-  border: 1px solid ${cssVar('borderColor')};
+  display: inline-block;
+  text-decoration: none;
+  line-height: 1.4;
+  border: 1px solid color-mix(in srgb, ${cssVar('codeForeground')} 16%, transparent);
   border-radius: 4px;
-  padding: 0.2rem 0.6rem;
-  background: color-mix(in srgb, ${cssVar('codeForeground')} 8%, transparent);
+  padding: 3px 8px;
+  background: color-mix(in srgb, ${cssVar('codeForeground')} 6%, transparent);
   cursor: pointer;
   font: inherit;
   font-size: 0.75rem;
-  color: ${cssVar('codeblocks.mutedForeground')};
+  color: ${cssVar('codeForeground')};
 }
 .${PREFIX}-btn:hover, .${PREFIX}-btn:focus-visible {
-  color: ${cssVar('codeForeground')};
-  background: color-mix(in srgb, ${cssVar('codeForeground')} 14%, transparent);
+  background: color-mix(in srgb, ${cssVar('codeForeground')} 13%, transparent);
 }
 :where([class^='${PREFIX}-'], [class*=' ${PREFIX}-']):focus-visible {
   outline: 2px solid ${cssVar('codeblocks.focusRing')};

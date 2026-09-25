@@ -1,5 +1,120 @@
 ---
 title: Open in playground
+description: Add a title bar button that opens the example in an online playground, with the code already filled in.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+A code block in Starlight shows code that readers can copy, but not run. Many languages have an online playground that runs code in the browser. The `playground` attribute adds a button to the title bar that opens the example in one, with the code already filled in.
+
+export const basic = `
+\`\`\`ts playground="typescript"
+type Status = 'queued' | 'running' | 'done';
+
+function label(s: Status): string {
+  return s === 'done' ? 'Finished' : s;
+}
+
+console.log(label('done'));
+\`\`\`
+`;
+
+<Example code={basic} />
+
+The block has no title, so the plugin adds a title bar for the button. Select **Open in TS Playground** to open the TypeScript Playground in a new tab, with this code in the editor.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `playground="<name>"` | Fence line | `playground="typescript"` |
+
+The name is a built-in playground, or a playground that the site adds in its configuration.
+
+| Name | Label | Code goes in |
+|---|---|---|
+| `typescript` | **Open in TS Playground** | The URL, compressed with lz-string |
+| `rust` | **Open in Rust Playground** | The URL |
+
+## Behaviour
+
+- A playground that takes the code in its URL renders as a link with the look of a button. It opens in a new tab.
+- A playground that takes the code in a form post renders as a form with hidden fields. It opens in a new tab too.
+- Screen readers announce "opens in a new tab" after the label.
+- The playground gets the copied text of the block. Directives are removed, hidden lines are kept, and a terminal session sends only its commands.
+- If a URL is longer than 8,000 characters, the build logs a warning, because some browsers cut long URLs.
+- If the name is not a known playground, the build logs a warning and the block has no button.
+- The button works without JavaScript. Only the values that readers type into [fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/) need JavaScript to reach the playground.
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `playgrounds` | `false \| object` | on | Set to `false` to turn the feature off. `playground` attributes then have no effect. |
+| `playgrounds.<name>` | `{ label, url }` or `{ label, post }` | none | A custom playground. A custom playground with a built-in name replaces the built-in one. |
+
+A custom playground has a label and one function. `url` returns the URL to open. `post` returns a form action and its fields. This site adds Python Tutor, which takes the code in its URL:
+
+```js title="astro.config.mjs"
+codeblocks({
+  playgrounds: {
+    pythontutor: {
+      label: 'Open in Python Tutor',
+      url: ({ code }) => `https://pythontutor.com/visualize.html#mode=edit&py=3&code=${encodeURIComponent(code)}`,
+    },
+  },
+});
+```
+
+The guide to [adding a playground](/starlight-codeblocks/extend/add-a-playground/) describes both functions and the form post.
+
+## Examples
+
+A Rust example opens in the Rust Playground, on the stable channel with the 2024 edition:
+
+export const rust = `
+\`\`\`rust title="main.rs" playground="rust"
+fn main() {
+    let sizes = [3, 1, 4, 1, 5];
+    let total: i32 = sizes.iter().sum();
+    println!("Total: {total}");
+}
+\`\`\`
+`;
+
+<Example code={rust} />
+
+A Python example opens in Python Tutor, the custom playground from the configuration above:
+
+export const python = `
+\`\`\`py playground="pythontutor"
+from statistics import median
+
+print(median([3, 1, 4, 1, 5]))
+\`\`\`
+`;
+
+<Example code={python} />
+
+A JavaScript example opens in StackBlitz. StackBlitz takes a project in a form post, so the button is part of a form:
+
+export const post = `
+\`\`\`js title="index.js" playground="stackblitz"
+const words = ['queued', 'running', 'done'];
+document.body.textContent = words.join(' then ');
+\`\`\`
+`;
+
+<Example code={post} />
+
+## Limitations
+
+- The playground runs the copied text only. The code must be complete, or it fails in the playground. Put the imports and set-up in [hidden lines](/starlight-codeblocks/features/hidden-lines/) if they distract from the example.
+- A block can open one playground.
+- The plugin cannot check that a custom playground accepts the code. Test each custom playground once in a browser.
+
+## Related
+
+- [Hidden lines](/starlight-codeblocks/features/hidden-lines/): keep the code complete for the playground, while readers see only the part you explain.
+- [Fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/): send the values that readers type to the playground.
+- [Add a playground](/starlight-codeblocks/extend/add-a-playground/): the interface for custom playgrounds.

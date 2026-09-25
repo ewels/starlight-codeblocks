@@ -9,7 +9,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, type ElementContent, h, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { type CodeblocksPlugin, resolveRange } from './core.ts';
+import { addTitleBarControl, type CodeblocksPlugin, resolveRange } from './core.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
 
@@ -81,22 +81,6 @@ export function pluginHiddenLines(): CodeblocksPlugin {
 .${PREFIX}-hidden-marker:hover, .${PREFIX}-hidden-marker:focus-visible {
   color: ${cssVar('codeForeground')};
 }
-.${PREFIX}-hidden-toggle {
-  margin-inline-start: auto;
-}
-/* Without a title or a terminal frame, the header is collapsed (display: none). A hidden-lines
-   block still needs it for the toggle button, so give it a minimal bar of its own. */
-.frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-hidden-toggle) {
-  --button-spacing: 2.1rem;
-}
-.frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-hidden-toggle) .header {
-  display: flex;
-  align-items: center;
-  min-height: 1.9rem;
-  padding-inline: ${cssVar('uiPaddingInline')};
-  background: color-mix(in srgb, ${cssVar('codeForeground')} 5%, ${cssVar('codeBackground')});
-  border-bottom: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
-}
 @media print {
   .${PREFIX}-hidden-line { display: none !important; }
 }`,
@@ -153,21 +137,19 @@ export function pluginHiddenLines(): CodeblocksPlugin {
         }
         code.children = children;
         figure.properties.dataScbHiddenLines = '';
-        const header = select('.header', figure);
-        if (header) {
-          header.children.push(
-            h(
-              'button',
-              {
-                type: 'button',
-                class: `${PREFIX}-btn ${PREFIX}-hidden-toggle`,
-                ariaPressed: 'false',
-                ariaControls: markerIds.join(' '),
-              },
-              `Show ${plural(hidden.size)}`,
-            ),
-          );
-        }
+        addTitleBarControl(
+          figure,
+          h(
+            'button',
+            {
+              type: 'button',
+              class: `${PREFIX}-btn ${PREFIX}-hidden-toggle`,
+              ariaPressed: 'false',
+              ariaControls: markerIds.join(' '),
+            },
+            `Show ${plural(hidden.size)}`,
+          ),
+        );
       },
     },
   };

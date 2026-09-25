@@ -6,9 +6,10 @@ import {
   type ExpressiveCodeLine,
   type ExpressiveCodePlugin,
 } from '@expressive-code/core';
+import { type Element, h, select } from '@expressive-code/core/hast';
 import type { DirectiveSpecs } from './notation.ts';
 import { parseRange, RangeSyntaxError } from './ranges.ts';
-import { baseStyles, styleSettings } from './styles.ts';
+import { baseStyles, PREFIX, styleSettings } from './styles.ts';
 
 /** An Expressive Code plugin that can declare directives for the notation plugin. */
 export interface CodeblocksPlugin extends ExpressiveCodePlugin {
@@ -78,4 +79,16 @@ export function resolveRange(context: Context, key: string): ExpressiveCodeLine[
     );
   }
   return numbers.flatMap((n) => lines[n - 1] ?? []);
+}
+
+/** Adds a control, such as an `scb-btn` button, to the group of controls at the end of the title bar. */
+export function addTitleBarControl(blockAst: Element, control: Element) {
+  const header = select('.header', blockAst);
+  if (!header) return;
+  let tools = select(`.${PREFIX}-tools`, header);
+  if (!tools) {
+    tools = h('span', { class: `${PREFIX}-tools` });
+    header.children.push(tools);
+  }
+  tools.children.push(control);
 }

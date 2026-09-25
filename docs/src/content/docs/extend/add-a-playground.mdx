@@ -1,5 +1,91 @@
 ---
 title: Add a playground
+description: Add a custom playground to the site, for any online playground that takes code in its URL or in a form post.
 ---
 
-Not yet written
+The plugin has two built-in playgrounds: `typescript` and `rust`. A site can add its own playgrounds in the `playgrounds` option. After that, a code block opens one with `playground="<name>"`, the same as a built-in playground.
+
+## The interface
+
+A playground is an object with a label and one of two functions:
+
+```ts
+interface PlaygroundDefinition {
+  label: string;
+  // One of these two:
+  url?: (input: { code: string; lang: string; title?: string }) => string;
+  post?: (input: { code: string; lang: string; title?: string }) => {
+    action: string;
+    fields: Record<string, string>;
+  };
+}
+```
+
+| Property | Description |
+|---|---|
+| `label` | The text of the button, such as **Open in Python Tutor**. |
+| `url` | Returns the URL that opens the playground. The button is a link. |
+| `post` | Returns the address of a form and the values of its fields. The button submits the form. |
+
+The input of both functions has three properties:
+
+| Property | Description |
+|---|---|
+| `code` | The copied text of the block. Directives are removed, hidden lines are kept, and a terminal session has only its commands. |
+| `lang` | The language of the block, as written on the fence line, such as `py`. |
+| `title` | The `title` attribute of the block, if it has one. |
+
+The plugin calls the function once for each block, when the site builds. Both kinds of button open the playground in a new tab.
+
+## Add a URL playground
+
+Use `url` for a playground that reads the code from its address. This site adds Python Tutor:
+
+1. Open `astro.config.mjs`.
+2. Add an entry to `playgrounds` in the options of `codeblocks()`.
+3. Put the code in the URL with `encodeURIComponent()`.
+
+```js title="astro.config.mjs"
+codeblocks({
+  playgrounds: {
+    pythontutor: {
+      label: 'Open in Python Tutor',
+      url: ({ code }) => `https://pythontutor.com/visualize.html#mode=edit&py=3&code=${encodeURIComponent(code)}`,
+    },
+  },
+});
+```
+
+A code block with `playground="pythontutor"` now has the button. The [open in playground](/starlight-codeblocks/features/open-in-playground/#examples) page shows it.
+
+## Add a form post playground
+
+Use `post` for a playground that takes a project in a form, such as StackBlitz. The plugin renders a form with one hidden field for each entry in `fields`. This site adds StackBlitz with this configuration:
+
+```js title="astro.config.mjs"
+codeblocks({
+  playgrounds: {
+    stackblitz: {
+      label: 'Open in StackBlitz',
+      post: ({ code, title }) => ({
+        action: 'https://stackblitz.com/run',
+        fields: {
+          'project[title]': title ?? 'Example',
+          'project[template]': 'javascript',
+          'project[files][index.js]': code,
+          'project[files][index.html]': '<script type="module" src="index.js"></script>',
+        },
+      }),
+    },
+  },
+});
+```
+
+## Rules
+
+- Give each playground one of `url` or `post`. The build fails if a playground has both, or neither.
+- Return the same result for the same input. The function runs at build time, so it cannot read anything from the browser.
+- Keep URLs under 8,000 characters. The build logs a warning for a longer URL, because some browsers cut it. Use `post` for playgrounds that take long code.
+- Put the code in the URL with `encodeURIComponent()`, and put it in a form field as it is. The plugin can then put the values of [fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/) into the code when readers type.
+- Name the playground after the site that runs the code. A custom playground with the name `typescript` or `rust` replaces the built-in one.
+- Test each playground in a browser once. The plugin cannot check that the playground accepts the code.

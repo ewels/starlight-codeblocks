@@ -27,7 +27,8 @@
   },
   "dependencies": {
     "@expressive-code/core": "^0.44.2",
-    "@expressive-code/plugin-frames": "^0.44.2"
+    "@expressive-code/plugin-frames": "^0.44.2",
+    "lz-string": "^1.5.0"
   },
   "devDependencies": {
     "@astrojs/starlight": "0.42.4",
