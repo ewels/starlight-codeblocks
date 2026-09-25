@@ -1,4 +1,5 @@
 import type { AstroIntegration } from 'astro';
+import { readClientModules } from './client-modules.ts';
 
 type VitePlugin = {
   name: string;
@@ -21,8 +22,8 @@ export function codeblocksIntegration({ ecConfigOverride }: IntegrationOptions):
   return {
     name: 'starlight-codeblocks',
     hooks: {
-      'astro:config:setup'({ updateConfig }) {
-        const plugins: VitePlugin[] = [];
+      'astro:config:setup'({ config, updateConfig }) {
+        const plugins = clientModulePlugins(config.build.assets);
         if (ecConfigOverride) plugins.push(ecConfigPlugin(ecConfigOverride.file));
         updateConfig({ vite: { plugins: plugins as never } });
       },
@@ -43,4 +44,24 @@ const { plugins } = globalThis[Symbol.for('starlight-codeblocks')];
 export default { ...user, plugins: [...(user.plugins ?? []), ...plugins] };`
         : undefined,
   };
+}
+
+/** Serves the feature modules next to `ec.<hash>.js` in dev, and emits them there in the build. */
+export function clientModulePlugins(assetsDir: string): VitePlugin[] {
+  const files = new Map(readClientModules().map((m) => [`/${assetsDir}/${m.fileName}`, m.source]));
+  const prefix = '\0starlight-codeblocks:client:';
+  return [
+    {
+      name: 'starlight-codeblocks:client',
+      resolveId: (id) => (files.has(id.split('?')[0] as string) ? prefix + id.split('?')[0] : undefined),
+      load: (id) => (id.startsWith(prefix) ? files.get(id.slice(prefix.length)) : undefined),
+    },
+    {
+      name: 'starlight-codeblocks:client-build',
+      apply: 'build',
+      buildEnd() {
+        for (const [path, source] of files) this.emitFile({ type: 'asset', fileName: path.slice(1), source });
+      },
+    },
+  ];
 }

@@ -14,9 +14,20 @@ export interface CodeblocksPlugin extends ExpressiveCodePlugin {
   directives?: DirectiveSpecs;
 }
 
+/** Popovers and hover cards. `place()` in `src/client/shared/position.ts` positions them. */
+export const floatStyles = `.scb-float {
+  position: fixed;
+  inset: auto;
+  margin-block: 6px;
+  margin-inline: 0;
+  max-width: min(340px, calc(100vw - 16px));
+  position-area: block-end span-inline-end;
+  position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+}`;
+
 /** Shared parts that every feature needs. The preset adds it first. */
 export function pluginCore(): CodeblocksPlugin {
-  return { name: 'starlight-codeblocks:core' };
+  return { name: 'starlight-codeblocks:core', baseStyles: floatStyles };
 }
 
 type Context = Pick<ExpressiveCodeHookContextBase, 'codeBlock' | 'config'>;
