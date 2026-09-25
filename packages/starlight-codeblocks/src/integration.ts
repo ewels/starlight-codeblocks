@@ -2,6 +2,7 @@ import type { AstroIntegration } from 'astro';
 import { readClientModules } from './client-modules.ts';
 import type { ResolvedOptions } from './options.ts';
 import { mdastPlugins } from './satteri/index.ts';
+import { INLINE_CSS_ID, inlineStyles } from './satteri/inline-code.ts';
 
 type VitePlugin = {
   name: string;
@@ -31,6 +32,7 @@ export function codeblocksIntegration({ options, ecConfigOverride }: Integration
         processor?.options?.mdastPlugins?.push(...mdastPlugins(options, logger));
         const plugins = clientModulePlugins(config.build.assets);
         if (ecConfigOverride) plugins.push(ecConfigPlugin(ecConfigOverride.file));
+        if (options.inlineHighlighting) plugins.push(inlineCssPlugin());
         updateConfig({ vite: { plugins: plugins as never } });
       },
     },
@@ -49,6 +51,15 @@ function ecConfigPlugin(file: string | undefined): VitePlugin {
 const { plugins } = globalThis[Symbol.for('starlight-codeblocks')];
 export default { ...user, plugins: [...(user.plugins ?? []), ...plugins] };`
         : undefined,
+  };
+}
+
+/** The inline code theme styles. They need the site engine's themes, so they build on first load. */
+function inlineCssPlugin(): VitePlugin {
+  return {
+    name: 'starlight-codeblocks:inline-css',
+    resolveId: (id) => (id === INLINE_CSS_ID ? `\0${INLINE_CSS_ID}` : undefined),
+    load: (id) => (id === `\0${INLINE_CSS_ID}` ? inlineStyles() : undefined),
   };
 }
 

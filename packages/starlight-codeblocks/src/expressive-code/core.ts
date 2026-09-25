@@ -7,6 +7,7 @@ import {
   type ExpressiveCodePlugin,
 } from '@expressive-code/core';
 import { type Element, h, select } from '@expressive-code/core/hast';
+import { getRegistry } from '../registry.ts';
 import type { DirectiveSpecs } from './notation.ts';
 import { parseRange, RangeSyntaxError } from './ranges.ts';
 import { baseStyles, PREFIX, styleSettings } from './styles.ts';
@@ -18,7 +19,15 @@ export interface CodeblocksPlugin extends ExpressiveCodePlugin {
 
 /** Shared parts that every feature needs: style settings and base styles. The preset adds it first. */
 export function pluginCore(): CodeblocksPlugin {
-  return { name: 'starlight-codeblocks:core', styleSettings, baseStyles };
+  return {
+    name: 'starlight-codeblocks:core',
+    styleSettings,
+    baseStyles(context) {
+      const registry = getRegistry();
+      if (registry) registry.styleVariants = context.styleVariants;
+      return baseStyles(context);
+    },
+  };
 }
 
 type Context = Pick<ExpressiveCodeHookContextBase, 'codeBlock' | 'config'>;

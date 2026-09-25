@@ -1,4 +1,4 @@
-import type { ExpressiveCodePlugin } from '@expressive-code/core';
+import type { ExpressiveCodePlugin, StyleVariant } from '@expressive-code/core';
 import type { ResolvedOptions } from './options.ts';
 
 export interface Registry {
@@ -12,6 +12,10 @@ export interface Registry {
   /** Astro's `root` and `cacheDir`, as paths, for API link adapters. */
   root?: string;
   cacheDir?: string;
+  /** The site's Expressive Code options that inline highlighting copies: theme selectors and `shiki`. */
+  expressiveCode?: Record<string, unknown>;
+  /** The site engine's themes and resolved style settings, set when it creates its base styles. */
+  styleVariants?: StyleVariant[];
 }
 
 // A global, because Astro loads the config and renders pages through different module instances.

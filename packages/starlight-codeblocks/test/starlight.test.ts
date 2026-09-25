@@ -8,12 +8,12 @@ import { getRegistry, setRegistry } from '../src/registry.ts';
 
 afterEach(() => setRegistry(undefined));
 
-async function setup(ecConfig?: string, expressiveCode: unknown = {}) {
+async function setup(ecConfig?: string, expressiveCode: unknown = {}, options = {}) {
   const root = mkdtempSync(join(tmpdir(), 'scb-'));
   if (ecConfig) writeFileSync(join(root, 'ec.config.mjs'), ecConfig);
   const updates: Record<string, unknown>[] = [];
   const integrations: { name: string }[] = [];
-  const hook = codeblocks().hooks['config:setup'];
+  const hook = codeblocks(options).hooks['config:setup'];
   await hook?.({
     config: { expressiveCode },
     updateConfig: (update: Record<string, unknown>) => updates.push(update),
@@ -55,12 +55,22 @@ test('keeps a tabWidth the site already chose', async () => {
   expect((updates[0] as { expressiveCode: { tabWidth: number } }).expressiveCode.tabWidth).toBe(4);
 });
 
-test('leaves the Starlight config alone when ec.config.mjs has the preset', async () => {
+test('adds only the inline code stylesheet when ec.config.mjs has the preset', async () => {
   const { updates, integrations } = await setup(
     "export default { plugins: [[{ name: 'starlight-codeblocks:core' }]] };",
   );
-  expect(updates).toHaveLength(0);
+  expect(updates).toEqual([{ customCss: ['virtual:starlight-codeblocks/inline-code.css'] }]);
   expect(integrations).toHaveLength(1);
+});
+
+test('adds no stylesheet with inline highlighting off', async () => {
+  const { updates } = await setup(undefined, {}, { inlineHighlighting: false });
+  expect(updates[0]).not.toHaveProperty('customCss');
+});
+
+test('keeps the site Expressive Code options for inline highlighting', async () => {
+  await setup('export default { themeCssRoot: "html" };', { useStarlightDarkModeSwitch: false });
+  expect(getRegistry()?.expressiveCode).toEqual({ themeCssRoot: 'html', useStarlightDarkModeSwitch: false });
 });
 
 test('fails when Expressive Code is off', async () => {

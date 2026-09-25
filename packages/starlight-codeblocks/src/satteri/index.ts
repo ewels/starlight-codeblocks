@@ -12,6 +12,7 @@ import type {
 import { bundledLanguagesInfo } from 'shiki/langs';
 import { encodeVariant, SWITCHER_META } from '../expressive-code/code-switcher.ts';
 import type { ResolvedOptions } from '../options.ts';
+import { inlineCode } from './inline-code.ts';
 
 type ContainerDirective = Parameters<NonNullable<MdastPluginDefinition['containerDirective']>>[0];
 
@@ -113,6 +114,10 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
       containerDirective(node) {
         if (options.codeSwitcher && node.name === 'code-switcher') return codeSwitcher(node, fileName(fileURL));
       },
+      ...(options.inlineHighlighting && {
+        inlineCode: (node, ctx) =>
+          inlineCode(node, ctx, (message) => logger.warn(`${fileName(fileURL)}: ${message}`)) as never,
+      }),
     }),
   ];
 }
