@@ -594,3 +594,11 @@ Use this format:
 - Decision: Word-level diff underlines added words and puts a line through removed words (in the line's text colour), and gives each changed span the ARIA `insertion` or `deletion` role. Colourised brackets now also outline the pair at the caret, from one document `selectionchange` listener, which supersedes "Caret-based matching is not built" in the colourised brackets entry. The faded text of focus, code mentions and scrollycoding stays below 4.5:1 while faded; the accessibility page now calls it an exception to WCAG 1.4.3 and names the style settings that turn the fade off.
 - Reason: WCAG 1.4.1: the tint was the only mark of a changed word. The bracket outline was pointer-only; caret browsing is the only keyboard path to a character that cannot take focus, and it costs a few lines. De-emphasis is the point of the three fading features, so the page states the exception plainly instead of claiming conformance.
 - Alternatives: `<ins>`/`<del>` elements (Expressive Code's text markers style them as inline markers inside code). Screen-reader-only "changed" text (it would appear in a manual copy). Making every bracket focusable (dozens of tab stops per block).
+
+## Logo and favicon
+
+- Date: 2026-09-26
+- Step: 12 (user request)
+- Decision: One SVG, a terminal window (indigo frame, three title bar dots, dark body) with a yellow four-pointed star inside, in `docs/src/assets/logo.svg` (Starlight `logo`), `docs/public/favicon.svg` (Starlight `favicon`) and `.github/assets/logo.svg` (for the README). Fixed colours, no light and dark variants. `docs/public/apple-touch-icon.png` (180 px, logo on the body colour) through `head`. No share card image, because the site has no og:image set-up yet.
+- Reason: The window carries its own background, so it reads on white and on the dark Starlight background without `prefers-color-scheme` rules; checked at 16, 32, 180 and 512 px on both. At 16 px the dots merge into a light title bar and the star stays clear.
+- Alternatives: `currentColor` line art (the star loses contrast on a stroke-only window at 16 px). Separate light and dark logos (the same file already works on both).
