@@ -96,6 +96,7 @@ function proseLines(text) {
   let frontMatter = text.startsWith('---\n');
   let comment = false;
   let tag = null;
+  let literal = false;
   return text.split('\n').map((line, i) => {
     if (frontMatter) {
       if (i > 0 && line.trim() === '---') frontMatter = false;
@@ -103,6 +104,10 @@ function proseLines(text) {
     }
     if (tag) {
       if (scanTag(line, tag)) tag = null;
+      return '';
+    }
+    if (literal) {
+      if (/^`;?\s*$/.test(line)) literal = false;
       return '';
     }
     if (fence) {
@@ -122,7 +127,11 @@ function proseLines(text) {
       comment = !line.includes('-->');
       return '';
     }
-    if (/^(import|export)\s/.test(line)) return '';
+    if (/^(import|export)\s/.test(line)) {
+      // An example in `export const x = \``: its escaped fences do not start a code block.
+      literal = /=\s*`$/.test(line.trimEnd());
+      return '';
+    }
     if (/^\s*<\/?[A-Za-z]/.test(line)) {
       const state = { depth: 0, quote: null };
       if (!scanTag(line.slice(line.indexOf('<') + 1), state)) tag = state;

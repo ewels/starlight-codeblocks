@@ -1,5 +1,93 @@
 ---
 title: Inline callouts
+description: Put a short note in a bubble above a line, with an arrow that points at the word it explains.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+A code block shows the code, and the prose around it explains it. When the explanation is about one name on one line, a reader must find that name themselves. An inline callout puts the note in a bubble directly above the line, with an arrow that points down at the name.
+
+export const basic = `
+\`\`\`js
+const controller = new AbortController();
+// [!callout /signal/] Aborts the request if the reader leaves the page.
+const res = await fetch(url, { signal: controller.signal });
+const data = await res.json();
+\`\`\`
+`;
+
+<Example code={basic} />
+
+The comment line with `[!callout /signal/]` is gone from the output. The bubble takes its place, and its arrow points at the middle of the first `signal` on the line below.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `[!callout /text/] note` | Comment on its own line | `// [!callout /signal/] Aborts the request.` |
+| `[!callout] note` | Comment on its own line | `# [!callout] Runs once at start-up.` |
+
+The directive goes on its own line, directly above the line it explains. `/text/` is literal text, not a regular expression. The arrow points at the first match on the line below. Without `/text/`, the arrow points at the first character that is not a space. The note can hold inline code, links and bold text.
+
+## Behaviour
+
+- The plugin removes the directive line. The bubble is in its place, above the target line.
+- The bubble starts 40 px to the left of the arrow, but never closer than 8 px to the edge of the block.
+- The bubble is at most 60 characters wide, or 90% of the block. Longer notes wrap inside the bubble, so the block does not get wider.
+- On a narrow screen, the target text can be past the right edge of the block. The bubble and its arrow then stay at the right edge, where the reader can see them.
+- Two callout lines above one line give two bubbles, in the order you wrote them.
+- The copy button leaves callouts out. A manual selection of the code leaves them out too.
+- Screen readers read the bubble before its line. The bubble has the `note` role.
+- Callouts are plain HTML and CSS. They work without JavaScript, and they have no animation.
+
+## Options
+
+Inline callouts have no options. Turn the feature off for the whole site with `callouts: false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  callouts: false,
+});
+```
+
+With `callouts: false`, the plugin does not know the `[!callout]` directive. It leaves the directive line in the code as written, and logs a build warning.
+
+## Examples
+
+A callout without `/text/` points at the start of the line. This suits a note about the whole statement:
+
+export const noMatch = `
+\`\`\`py
+import sqlite3
+
+# [!callout] Creates the file if it does not exist yet.
+db = sqlite3.connect("notes.db")
+db.execute("CREATE TABLE IF NOT EXISTS notes (body TEXT)")
+\`\`\`
+`;
+
+<Example code={noMatch} />
+
+Two callouts above one line explain two parts of it. The bubbles stack in source order:
+
+export const stacked = `
+\`\`\`ts
+// [!callout /retries/] How many times to try again after the first attempt.
+// [!callout /backoffMs/] The wait before each retry, in milliseconds.
+const client = createClient({ retries: 3, backoffMs: 250 });
+\`\`\`
+`;
+
+<Example code={stacked} />
+
+## Limitations
+
+- The plugin counts columns in characters. A tab counts to the next multiple of 8 columns, which is the browser default. If your site sets another `tab-size`, arrows on lines with tabs after other characters point at the wrong place.
+- With Expressive Code's `wrap` attribute, a long line can wrap below its callout. The arrow then points at the first row of the line.
+- A callout explains one line. For a note about several lines, use [annotations](/starlight-codeblocks/features/annotations/) or [footnotes](/starlight-codeblocks/features/footnotes/).
+
+## Related
+
+- [Annotations](/starlight-codeblocks/features/annotations/): numbered markers that open a note only when the reader asks for it.
+- [Footnotes](/starlight-codeblocks/features/footnotes/): numbered notes listed under the block, all visible at once.
+- [Choose an annotation style](/starlight-codeblocks/guides/choose-an-annotation-style/): a comparison of the four styles, with the same code.
