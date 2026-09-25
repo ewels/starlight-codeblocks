@@ -1,5 +1,114 @@
 ---
 title: Focus
+description: Blur the lines outside a range, so that readers look at the lines that you name first.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+A code block often shows a whole file, but the text around it is about a few lines. Focus blurs and fades every other line, so readers find those lines at once. The other lines stay in the block, because readers need them for context.
+
+export const basic = `
+\`\`\`js title="src/config.js" focus={4-7}
+import { defineConfig } from './lib.js';
+
+export default defineConfig({
+  cache: {
+    dir: '.cache',
+    maxAge: 3600,
+  },
+  retries: 2,
+  verbose: false,
+});
+\`\`\`
+`;
+
+<Example code={basic} />
+
+Lines 4 to 7 are sharp, and the other lines are blurred. Hover over the block, or move keyboard focus into it, to make every line sharp. The copy button copies the whole file.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `focus={range}` | Fence line | `focus={4-7}` |
+| `[!code focus]` | Comment | `retries: 2, // [!code focus]` |
+| `[!code focus:N]` | Comment | `cache: { // [!code focus:4]` |
+
+`focus={range}` takes a [range](/starlight-codeblocks/features/comment-notation/#line-numbers), such as `{2}` or `{1, 4-6}`. `[!code focus:N]` focuses its own line and the next N-1 lines. You can use the attribute and directives in the same block.
+
+## Behaviour
+
+- Lines outside the focus are blurred and faded. Focused lines look the same as in a block without focus.
+- When the reader hovers over the block, or moves keyboard focus into it, every line becomes clear. The change takes 250 ms.
+- The code area takes keyboard focus, so keyboard readers can see every line. Tab moves focus into it.
+- When the reader's system asks for reduced motion, the lines change without the transition.
+- Screen readers read every line, because the blurred lines stay in the page.
+- The copy button copies every line, focused or not.
+- If no line is in focus, the block is the same as a block without the plugin.
+- Focus needs no JavaScript in the browser.
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `focus` | `false \| object` | on | Set to `false` to turn focus off. `[!code focus]` then stays in the code as written. |
+| `focus.style` | `'blur' \| 'dim'` | `'blur'` | `'blur'` blurs and fades the other lines. `'dim'` only fades them. |
+
+Blur makes the other lines hard to read for some readers. If your site does not need the blur, use the `dim` style:
+
+```js title="astro.config.mjs"
+codeblocks({
+  focus: { style: 'dim' },
+});
+```
+
+To change the amount of blur, the opacity or the duration of the transition, use the `codeblocksFocus` style settings in `styleOverrides`:
+
+```js title="ec.config.mjs"
+export default {
+  styleOverrides: {
+    codeblocksFocus: { blur: '2px', opacity: '0.6', transitionDuration: '150ms' },
+  },
+};
+```
+
+## Examples
+
+A directive moves with its line when you edit the code. Use one when the block can change:
+
+export const directive = `
+\`\`\`py title="app.py"
+import os
+
+token = os.environ["API_TOKEN"]  # [!code focus]
+url = "https://api.example.com/v1/items"
+\`\`\`
+`;
+
+<Example code={directive} />
+
+Focus combines with the other line markers. Here the focused lines also show a change:
+
+export const diff = `
+\`\`\`ts title="server.ts" focus={3-4}
+import { createServer } from 'node:http';
+
+const port = 3000; // [!code --]
+const port = Number(process.env.PORT ?? 3000); // [!code ++]
+
+createServer(handler).listen(port);
+\`\`\`
+`;
+
+<Example code={diff} />
+
+## Limitations
+
+- Focus applies to whole lines. To point at a word on a line, use an [inline callout](/starlight-codeblocks/features/inline-callouts/).
+- Every line becomes clear while the pointer is over the block. Readers who use a touch screen see every line after they touch the block.
+
+## Related
+
+- [Line states](/starlight-codeblocks/features/line-states/): tint a line as an error, a warning or a note, with a message.
+- [Hidden lines](/starlight-codeblocks/features/hidden-lines/): remove lines from view but keep them in the copied text.
+- [Scrollycoding](/starlight-codeblocks/features/scrollycoding/): move the focus of one block as the reader scrolls through steps.

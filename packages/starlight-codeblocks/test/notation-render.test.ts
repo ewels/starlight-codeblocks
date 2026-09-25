@@ -87,6 +87,6 @@ test('leaves directives alone when notation is off', async () => {
 
 test('keeps diff syntax working', async () => {
   const { copyText, html } = await render(block('diff lang="js"', '-a() // [!code focus]', '+b() // [!code ++]'));
-  expect(copyText).toBe('a() // [!code focus]\nb()');
+  expect(copyText).toBe('a()\nb()');
   expect(html).toContain('ec-line highlight ins');
 });
