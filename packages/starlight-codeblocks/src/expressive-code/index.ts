@@ -10,6 +10,7 @@ import { pluginFocus } from './focus.ts';
 import { pluginFootnotes } from './footnotes.ts';
 import { pluginHiddenLines } from './hidden-lines.ts';
 import { pluginLineStates } from './line-states.ts';
+import { pluginMentions } from './mentions.ts';
 import { pluginNotation } from './notation.ts';
 import { pluginPermalinks } from './permalinks.ts';
 import { pluginPlaceholders } from './placeholders.ts';
@@ -30,6 +31,7 @@ export {
   pluginFootnotes,
   pluginHiddenLines,
   pluginLineStates,
+  pluginMentions,
   pluginNotation,
   pluginPermalinks,
   pluginPlaceholders,
@@ -65,6 +67,7 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.shellCopy ? [pluginShellCopy(options.shellCopy)] : []),
     ...(options.tokenLinks ? [pluginTokenLinks()] : []),
     ...(options.placeholders ? [pluginPlaceholders(options.placeholders)] : []),
+    ...(options.mentions ? [pluginMentions()] : []),
     ...(options.permalinks ? [pluginPermalinks()] : []),
     ...(options.hiddenLines ? [pluginHiddenLines()] : []),
     ...(options.expandable ? [pluginExpandable(options.expandable)] : []),

@@ -1,5 +1,115 @@
 ---
 title: Code mentions
+description: Link a phrase in the prose to lines of the code block below it, so that readers see which lines the text is about.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+Prose often explains a code block line by line: "the base case stops the recursion". A reader must then find the base case in the block on their own. Code mentions tag the lines in the block with a name, and a link in the prose with that name highlights them.
+
+export const basic = `
+The [base case](#mention:base) stops the recursion. The [recursive step](#mention:step) calls the function again with a smaller number.
+
+\`\`\`py title="factorial.py"
+def factorial(n):
+    if n == 0:  # [!mention base]
+        return 1  # [!mention base]
+    return n * factorial(n - 1)  # [!mention step]
+\`\`\`
+`;
+
+<Example code={basic}>
+
+The [base case](#mention:base) stops the recursion. The [recursive step](#mention:step) calls the function again with a smaller number.
+
+```py title="factorial.py"
+def factorial(n):
+    if n == 0:  # [!mention base]
+        return 1  # [!mention base]
+    return n * factorial(n - 1)  # [!mention step]
+```
+
+</Example>
+
+Hover over "base case", or move keyboard focus to it, to highlight lines 2 and 3. The other lines of the block fade. The page stays plain Markdown: the tags are comments, and the links are normal links.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `[!mention <name>]` | Comment, at the end of a line | `return 1  # [!mention base]` |
+| `[text](#mention:<name>)` | Prose | `[base case](#mention:base)` |
+
+Tag each line that belongs to a name. A name is one word, such as `base` or `parse-args`. One line can have more than one tag. The plugin removes the tags from the code and from the copied text.
+
+## Behaviour
+
+- A link pairs with the next code block in the same section that has lines with its name. A section ends at the next heading. If no block follows in the section, the link pairs with the nearest block before it.
+- Hovering over the link, or moving keyboard focus to it, highlights the tagged lines with a tint and a bar. The other lines of the block fade to 42% opacity.
+- Selecting the link keeps the highlight, and scrolls the block into view if it is not fully visible. The address of the page does not change.
+- The links have a dotted underline, which becomes solid on hover and focus.
+- Screen readers read the tagged lines as the description of the link.
+- The fade and the scroll happen without animation when the reader's system asks for reduced motion.
+- A link with no matching block shows as plain text, and the build logs a warning with the file name.
+- Without JavaScript, the links do nothing, and they look like other links.
+
+## Options
+
+Code mentions have no options. Turn the feature off for the whole site with `mentions: false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  mentions: false,
+});
+```
+
+With `mentions: false`, `[!mention]` tags stay in the code, and `#mention:` links go nowhere.
+
+### Links validator
+
+The `starlight-links-validator` plugin reports `#mention:` links as broken, because no heading has that id. Exclude them in `astro.config.mjs`:
+
+```js title="astro.config.mjs"
+starlightLinksValidator({
+  exclude: ({ link }) => link.startsWith('#mention:'),
+}),
+```
+
+## Examples
+
+Two names can share a line. Here, the call to `fetch` is part of the request and of the error handling:
+
+export const shared = `
+The [request](#mention:request) sends the form data. The [error handling](#mention:errors) turns a failed response into an exception.
+
+\`\`\`js title="submit.js"
+const response = await fetch('/api/signup', { method: 'POST', body: form }); // [!mention request] [!mention errors]
+if (!response.ok) { // [!mention errors]
+  throw new Error(\`Sign-up failed: \${response.status}\`); // [!mention errors]
+}
+\`\`\`
+`;
+
+<Example code={shared}>
+
+The [request](#mention:request) sends the form data. The [error handling](#mention:errors) turns a failed response into an exception.
+
+```js title="submit.js"
+const response = await fetch('/api/signup', { method: 'POST', body: form }); // [!mention request] [!mention errors]
+if (!response.ok) { // [!mention errors]
+  throw new Error(`Sign-up failed: ${response.status}`); // [!mention errors]
+}
+```
+
+</Example>
+
+## Limitations
+
+- The build check reads links and tags in Markdown only. It does not see tags in a block from the `<Code>` component, so a link to that block shows as plain text.
+- The tint and the fade show which lines a link names. A reader on a touch screen sees them after they select the link.
+
+## Related
+
+- [Focus](/starlight-codeblocks/features/focus/): blur every line outside a range for every reader, without a link.
+- [Line permalinks](/starlight-codeblocks/features/line-permalinks/): let readers link to lines, instead of the author.
+- [Side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/): notes next to the block that highlight their line on hover.

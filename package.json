@@ -9,7 +9,7 @@
   "scripts": {
     "build": "pnpm --filter starlight-codeblocks build",
     "docs:build": "pnpm build && pnpm --filter docs build",
-    "test": "pnpm build && pnpm --filter starlight-codeblocks test && node --test scripts/lint-docs.test.mjs",
+    "test": "pnpm build && pnpm --filter starlight-codeblocks test && node --test scripts/lint-docs.test.mjs scripts/examples.test.mjs",
     "test:e2e": "pnpm docs:build && pnpm --filter docs test:e2e",
     "lint": "pnpm build && biome check && pnpm -r typecheck",
     "lint:docs": "node scripts/lint-docs.mjs"
