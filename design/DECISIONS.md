@@ -149,3 +149,51 @@ Use this format:
 - Decision: `pnpm lint` and `pnpm test` at the root run `pnpm build` first.
 - Reason: On a fresh clone, `astro check` in `docs/` cannot resolve `starlight-codeblocks` until `dist/` exists, and the unit tests read the built client modules. The first CI run failed on this.
 - Alternatives: A `prepare` script (pnpm 11 does not run it for every install), or a separate CI step (a fresh local clone would still fail).
+
+## Notation runs before Expressive Code reads its own markers
+
+- Date: 2026-09-25
+- Step: 3.2
+- Decision: The notation plugin parses directives in `preprocessLanguage`, the first hook. It adds `[!code highlight]`, `[!code ++]` and `[!code --]` to `codeBlock.props.mark`, `ins` and `del` as line numbers, so the text markers plugin renders them. In `preprocessMetadata` it moves line annotations from other plugins so that they count the lines that readers see, and in `preprocessCode` it removes the directives and the own-line directive lines. `resolveRange()` counts the same lines.
+- Reason: SPEC section 4 says all line numbers count the lines readers see. Expressive Code allows no code edits before `preprocessCode`, and the text markers plugin attaches `{2}` and `ins={3}` to source lines in `preprocessMetadata`, before our plugin runs. Without the move, `{3}` and `focus={3}` could point at different lines in the same block.
+- Alternatives: Leave Expressive Code's ranges counting source lines (two numbering schemes in one block). Build our own marker annotations (the text markers annotation class is not exported, and the styles would differ).
+
+## Ranges ignore startLineNumber
+
+- Date: 2026-09-25
+- Step: 3.2
+- Decision: A range counts lines from 1 at the top of the block. `startLineNumber` does not shift it.
+- Reason: Expressive Code's own ranges work the same way, and one block must not have two meanings for `{3}`.
+- Alternatives: Shift ranges by `startLineNumber` (differs from `mark`, `ins` and `del`).
+
+## Unknown and misplaced directives stay in the code
+
+- Date: 2026-09-25
+- Step: 3.2
+- Decision: A directive with an unknown name, a bad `:N`, or an own-line directive at the end of a line of code, gives a build warning and stays in the rendered and copied code as written. A directive with `/<text>/` that does not match its target line gives a warning and has no effect. Directives of features that are turned off are unknown.
+- Reason: "Render the line without that directive's effect" (SPEC section 4). The author sees the typo on the page as well as in the build log.
+- Alternatives: Remove unknown directives silently (hides typos).
+
+## Features declare their directives on their plugin
+
+- Date: 2026-09-25
+- Step: 3.2
+- Decision: A feature's Expressive Code plugin has a `directives` property (name to placement and text). The notation plugin collects them from `config.plugins`, so it knows every directive of the plugins in use. Directive text runs to the next directive or to the end of the comment. A line that holds an own-line directive and no code is removed.
+- Reason: Features stay self-contained, and a standalone feature plugin works with `pluginNotation()` in any order after it.
+- Alternatives: A central directive list in the notation plugin (every feature edits one file).
+
+## Warnings name the block, not the source line
+
+- Date: 2026-09-25
+- Step: 3.2
+- Decision: Build warnings read `<file>, <language> code block "<title>", line <n>: <message>`, where the line counts from the top of the block.
+- Reason: Expressive Code does not know where the fence sits in the source file. The file, the title and the line in the block find it.
+- Alternatives: Look up the fence position from the Markdown AST (not available in Expressive Code hooks).
+
+## Comment syntax option
+
+- Date: 2026-09-25
+- Step: 3.2
+- Decision: `notation.comments` maps a language to a list of comment syntaxes, such as `['//', '/* */']`. An entry with a space is a block comment. The option replaces the entry for that language in the built-in map, and `[]` removes the language. C-family languages also accept `/* */`, and Vue, Svelte and Astro also accept `//` and `/* */`, for their script parts.
+- Reason: The option type in SPEC section 3 is `Record<string, string[]>`, which is a list of syntaxes for each language. Script blocks in component files use JavaScript comments.
+- Alternatives: One syntax for each language (breaks directives in `<script>` parts).
