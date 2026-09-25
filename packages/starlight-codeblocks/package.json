@@ -16,6 +16,10 @@
       "types": "./dist/adapters/python.d.mts",
       "default": "./dist/adapters/python.mjs"
     },
+    "./adapters/nextflow": {
+      "types": "./dist/adapters/nextflow.d.mts",
+      "default": "./dist/adapters/nextflow.mjs"
+    },
     "./components": {
       "types": "./src/components/index.ts",
       "default": "./src/components/index.ts"

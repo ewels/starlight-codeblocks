@@ -1,3 +1,4 @@
+import { nextflow } from './adapters/nextflow.ts';
 import { python } from './adapters/python.ts';
 
 export interface LineStateDefinition {
@@ -228,8 +229,8 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     fields: {
       adapters: {
         type: 'ApiLinkAdapter[]',
-        default: () => [python()],
-        defaultText: '`[python()]`',
+        default: () => [python(), nextflow()],
+        defaultText: '`[python(), nextflow()]`',
         description: 'Adapters that find and resolve names.',
         valid: (value) => Array.isArray(value) && value.every((adapter) => isObject(adapter) && isString(adapter.name)),
       },

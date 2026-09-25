@@ -259,7 +259,7 @@ test('firstSentence takes the first sentence of the first paragraph', () => {
   expect(firstSentence('Use v1.2 here. Next.')).toBe('Use v1.2 here.');
 });
 
-test('the default options link the standard library with python()', () => {
+test('the default options have python() and nextflow()', () => {
   const options = resolveOptions();
-  expect(options.apiLinks ? options.apiLinks.adapters.map((a) => a.name) : []).toEqual(['python']);
+  expect(options.apiLinks ? options.apiLinks.adapters.map((a) => a.name) : []).toEqual(['python', 'nextflow']);
 });
