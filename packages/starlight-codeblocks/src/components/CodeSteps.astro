@@ -1,0 +1,28 @@
+---
+import { getRegistry } from '../registry.ts';
+import { codeSteps } from './steps.ts';
+
+const html = await Astro.slots.render('default');
+const on = getRegistry()?.options.transitions !== false;
+---
+
+<Fragment set:html={on ? codeSteps(html) : html} />
+
+<script>
+  import '@shikijs/magic-move/style.css';
+  import './code-steps-client.ts';
+</script>
+
+<style is:global>
+  .scb-steps {
+    container-type: inline-size;
+  }
+  @media (scripting: enabled) {
+    .scb-steps > .expressive-code {
+      margin-top: 0;
+    }
+    .scb-steps > .expressive-code:not(.scb-steps-current) {
+      display: none;
+    }
+  }
+</style>

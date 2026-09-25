@@ -96,10 +96,10 @@ export function baseStyles({ cssVar }: ResolverContext) {
   inset-inline-end: 0;
 }
 /* Without a title or a terminal frame, Expressive Code hides the header. Give it a minimal bar for the controls. */
-.frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools) {
+.frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools, .${PREFIX}-steps-head) {
   --button-spacing: 2.1rem;
 }
-.frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools) .header {
+.frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools, .${PREFIX}-steps-head) .header {
   display: flex;
   align-items: center;
   min-height: 1.9rem;

@@ -18,6 +18,7 @@ import { pluginPlaceholders } from './placeholders.ts';
 import { pluginPlayground } from './playground.ts';
 import { pluginShellCopy } from './shell-copy.ts';
 import { pluginTokenLinks } from './token-links.ts';
+import { pluginTransitions } from './transitions.ts';
 import { pluginWhitespace } from './whitespace.ts';
 import { pluginWordDiff } from './word-diff.ts';
 
@@ -40,6 +41,7 @@ export {
   pluginPlayground,
   pluginShellCopy,
   pluginTokenLinks,
+  pluginTransitions,
   pluginWhitespace,
   pluginWordDiff,
 };
@@ -76,6 +78,7 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     // After shell copy, which changes the copied text that the playground gets, and after placeholders.
     ...(options.playgrounds ? [pluginPlayground(options.playgrounds)] : []),
     ...(options.codeSwitcher ? [pluginCodeSwitcher()] : []),
+    ...(options.transitions ? [pluginTransitions()] : []),
     // After hidden lines, which rebuilds the children of the code element.
     ...(options.callouts ? [pluginCallouts()] : []),
     ...(options.annotations ? [pluginAnnotations()] : []),

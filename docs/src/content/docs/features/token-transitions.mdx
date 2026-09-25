@@ -1,5 +1,212 @@
 ---
 title: Token transitions
+description: Step through versions of one code block, and watch the code move from each version to the next, so readers see what changed.
 ---
 
-Not yet written
+import { CodeSteps } from 'starlight-codeblocks/components';
+import Example from '../../../components/Example.astro';
+
+A tutorial often shows the same file several times, with a few lines more each time. Readers must compare the blocks line by line to find the change. Token transitions put the versions in one block with numbered steps in the title bar. When the reader changes step, unchanged code moves to its new place, and new code fades in.
+
+export const basic = `
+<CodeSteps>
+
+\`\`\`js title="server.js" step="Create the app"
+const app = express();
+
+app.listen(3000);
+\`\`\`
+
+\`\`\`js title="server.js" step="Parse JSON bodies"
+const app = express();
+app.use(express.json());
+
+app.listen(3000);
+\`\`\`
+
+\`\`\`js title="server.js" step="Add a health route"
+const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ ok: true });
+});
+
+app.listen(3000);
+\`\`\`
+
+</CodeSteps>
+`;
+
+<Example code={basic}>
+
+<CodeSteps>
+
+```js title="server.js" step="Create the app"
+const app = express();
+
+app.listen(3000);
+```
+
+```js title="server.js" step="Parse JSON bodies"
+const app = express();
+app.use(express.json());
+
+app.listen(3000);
+```
+
+```js title="server.js" step="Add a health route"
+const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ ok: true });
+});
+
+app.listen(3000);
+```
+
+</CodeSteps>
+
+</Example>
+
+Select **Next**, and `app.listen(3000);` moves down while the new line fades in. Each numbered step shows one version of the file. The label of the current step shows next to the numbers.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `<CodeSteps>` ... `</CodeSteps>` | Around the code blocks, in an MDX file | `<CodeSteps>` |
+| `step="<label>"` | Fence line of each step | `step="Parse JSON bodies"` |
+
+Import the component at the top of the MDX file:
+
+```mdx
+import { CodeSteps } from 'starlight-codeblocks/components';
+```
+
+Put two or more code blocks between the tags, with an empty line after `<CodeSteps>` and before `</CodeSteps>`. Each code block is one step, in order. The `step` attribute is optional. Each step keeps its other attributes, such as `title`.
+
+## Behaviour
+
+- The title bar shows the title, the numbered steps, the label of the current step, and the **Previous** and **Next** buttons.
+- The steps up to the current step are filled. The current step is solid.
+- Select a number to go to that step. You cannot select **Previous** on the first step, or **Next** on the last step.
+- When a numbered step has keyboard focus, the left and right arrow keys go to the previous and the next step.
+- The animation takes 500 ms. Code that is in both versions moves. Removed code fades out, and new code fades in.
+- When the reader's system asks for reduced motion, the steps change without the animation.
+- Screen readers announce the number and the label of the new step.
+- The copy button copies the code of the current step.
+- On screens narrower than 640 px, the label is hidden. The name of each numbered step still gives the label to screen readers.
+- Without JavaScript, each step shows as a separate code block, in order, with its label after the title.
+
+## Options
+
+Token transitions have no options. To turn the feature off for the whole site, set `transitions` to `false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  transitions: false,
+});
+```
+
+With `transitions: false`, `<CodeSteps>` shows each step as a separate code block, as it does without JavaScript.
+
+The style settings in the `codeblocksTransitions` group change the colours of the steps and the length of the animation. For example, `codeblocksTransitions.duration` sets the length of the animation.
+
+## Examples
+
+A configuration file grows one section at a time. The steps have no titles, so the title bar shows the steps only:
+
+export const config = `
+<CodeSteps>
+
+\`\`\`yaml step="Name the site"
+site:
+  name: Example Docs
+\`\`\`
+
+\`\`\`yaml step="Add a search index"
+site:
+  name: Example Docs
+search:
+  index: true
+\`\`\`
+
+</CodeSteps>
+`;
+
+<Example code={config}>
+
+<CodeSteps>
+
+```yaml step="Name the site"
+site:
+  name: Example Docs
+```
+
+```yaml step="Add a search index"
+site:
+  name: Example Docs
+search:
+  index: true
+```
+
+</CodeSteps>
+
+</Example>
+
+A refactor changes the code inside a function. Code that stays moves to its new place, so readers follow the rename:
+
+export const refactor = `
+<CodeSteps>
+
+\`\`\`py title="prices.py" step="Before"
+def total(items):
+    result = 0
+    for item in items:
+        result += item.price
+    return result
+\`\`\`
+
+\`\`\`py title="prices.py" step="With sum()"
+def total(items):
+    return sum(item.price for item in items)
+\`\`\`
+
+</CodeSteps>
+`;
+
+<Example code={refactor}>
+
+<CodeSteps>
+
+```py title="prices.py" step="Before"
+def total(items):
+    result = 0
+    for item in items:
+        result += item.price
+    return result
+```
+
+```py title="prices.py" step="With sum()"
+def total(items):
+    return sum(item.price for item in items)
+```
+
+</CodeSteps>
+
+</Example>
+
+## Limitations
+
+- `<CodeSteps>` works in MDX files only, because Markdown files cannot contain components.
+- During the animation, the block shows the syntax colours only. Line numbers, line states and other decorations show again when the animation ends.
+- A jump over several steps animates from the first version to the last. Code that exists in both only through a middle step fades out and in again.
+- The page loads the animation library, about 3 kB, only on pages with `<CodeSteps>`.
+
+## Related
+
+- [Scrollycoding](/starlight-codeblocks/features/scrollycoding/): one block that changes its focus as the reader scrolls through prose steps.
+- [Word-level diff](/starlight-codeblocks/features/word-level-diff/): one block that marks the changed words between two versions.
+- [Code switcher](/starlight-codeblocks/features/code-switcher/): versions that are alternatives, such as package managers, and not steps in an order.
