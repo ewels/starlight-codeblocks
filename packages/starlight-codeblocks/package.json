@@ -1,6 +1,30 @@
 {
   "name": "starlight-codeblocks",
   "version": "0.0.0",
+  "description": "A Starlight plugin that adds focus, line states, comment notation, annotations, API auto-linking and more features to code blocks, on top of Expressive Code.",
+  "keywords": [
+    "withastro",
+    "starlight-plugin",
+    "expressive-code",
+    "astro",
+    "starlight",
+    "code-blocks",
+    "syntax-highlighting",
+    "documentation"
+  ],
+  "author": {
+    "name": "Phil Ewels",
+    "url": "https://github.com/ewels"
+  },
+  "homepage": "https://ewels.github.io/starlight-codeblocks/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ewels/starlight-codeblocks.git",
+    "directory": "packages/starlight-codeblocks"
+  },
+  "bugs": {
+    "url": "https://github.com/ewels/starlight-codeblocks/issues"
+  },
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -31,7 +55,9 @@
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "!src/reference.ts",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsdown",
