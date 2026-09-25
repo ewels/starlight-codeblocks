@@ -1,5 +1,99 @@
 ---
 title: Choose an annotation style
+description: Compare inline callouts, annotations, footnotes and side-by-side annotations on the same code, and pick the style that suits each block.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+The plugin has four ways to attach an explanation to a line of code. All four keep the explanation out of the copied code, and all four take their text from a comment in the block. They differ in when the reader sees the text, and where it goes on the page.
+
+Each example below uses the same code and the same two notes, so you can compare the four styles.
+
+## Compare the styles
+
+| Style | Directive | Reader sees the note | Note goes | Best for |
+|---|---|---|---|---|
+| [Inline callout](/starlight-codeblocks/features/inline-callouts/) | `[!callout /text/]` above the line | At once | Above the line, with an arrow at one name | One short sentence about one name |
+| [Annotation](/starlight-codeblocks/features/annotations/) | `[!annotate]` at the end of the line | After a selection | In a popover under a marker | Notes that most readers can skip |
+| [Footnote](/starlight-codeblocks/features/footnotes/) | `[!ref]` above the line | At once | In a list under the block | Notes that every reader needs, on any screen |
+| [Side-by-side annotation](/starlight-codeblocks/features/side-by-side-annotations/) | `[!annotate]`, with `annotations="side"` | At once | In a column beside the code | A walk-through of a longer block on a wide screen |
+
+## Inline callouts
+
+Use a callout for a note of one short sentence that is about one word or name on a line. The bubble is always visible, so keep callouts to one or two in a block.
+
+export const callout = `
+\`\`\`py title="fetch.py"
+import httpx
+
+URL = "https://api.example.com/items"
+# [!callout /timeout/] Gives up after 5 seconds without a reply.
+response = httpx.get(URL, timeout=5.0)
+# [!callout] Raises an error for a 4xx or 5xx status.
+response.raise_for_status()
+items = response.json()
+\`\`\`
+`;
+
+<Example code={callout} />
+
+## Annotations
+
+Use an annotation when the note is longer, or when the line needs no visual interruption until the reader asks. The code stays as compact as a plain block.
+
+export const annotation = `
+\`\`\`py title="fetch.py"
+import httpx
+
+URL = "https://api.example.com/items"
+response = httpx.get(URL, timeout=5.0)  # [!annotate] Gives up after 5 seconds without a reply.
+response.raise_for_status()  # [!annotate] Raises an error for a 4xx or 5xx status.
+items = response.json()
+\`\`\`
+`;
+
+<Example code={annotation} />
+
+## Footnotes
+
+Use footnotes when every reader needs every note, and the block is short enough that the list stays close to the lines. The list works the same on a phone and on a desktop.
+
+export const footnote = `
+\`\`\`py title="fetch.py"
+import httpx
+
+URL = "https://api.example.com/items"
+# [!ref] Gives up after 5 seconds without a reply.
+response = httpx.get(URL, timeout=5.0)
+# [!ref] Raises an error for a 4xx or 5xx status.
+response.raise_for_status()
+items = response.json()
+\`\`\`
+`;
+
+<Example code={footnote} />
+
+## Side-by-side annotations
+
+Use side-by-side annotations for a longer block that you explain step by step. On a wide screen, each note is beside the code. On a narrow screen, the notes are a list under the block, as footnotes are.
+
+export const side = `
+\`\`\`py title="fetch.py" annotations="side"
+import httpx
+
+URL = "https://api.example.com/items"
+response = httpx.get(URL, timeout=5.0)  # [!annotate] Gives up after 5 seconds without a reply.
+response.raise_for_status()  # [!annotate] Raises an error for a 4xx or 5xx status.
+items = response.json()
+\`\`\`
+`;
+
+<Example code={side} />
+
+## Choose a style
+
+- If the note is about one name and fits in one short sentence, use a callout.
+- If most readers can skip the note, use an annotation.
+- If readers need every note, use footnotes for short blocks and side-by-side annotations for long blocks.
+- To change the style of a block later, change its directives. Annotations and side-by-side annotations use the same directive, so for those two only the fence line changes.
+- Use one style in a block, so that readers find every note in the same way.
