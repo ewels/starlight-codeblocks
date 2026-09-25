@@ -1,5 +1,80 @@
 ---
 title: Colourised brackets
+description: Colour matching brackets by nesting depth, so a dense line of code stays easy to read.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+A line with several levels of nested brackets is hard to scan: every `(`, `[` and `{` looks the same. The `brackets` attribute colours each bracket by how deep it is nested, cycling through three colours. A reader can then follow a pair by its colour.
+
+export const basic = `
+\`\`\`js brackets
+const total = items.reduce((sum, { price, qty }) => sum + price * qty, 0);
+\`\`\`
+`;
+
+<Example code={basic} />
+
+The outer parentheses of `reduce(...)` are one colour, and the `{ price, qty }` destructuring inside the callback is another. Hover over a bracket to outline it and its partner.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `brackets` | Fence line | `js brackets` |
+
+## Behaviour
+
+- `()`, `[]` and `{}` cycle through three colours by nesting depth.
+- Brackets inside a string or a comment keep the normal syntax colour, so they do not compete with the real structure of the code.
+- A bracket with no partner, such as one from an incomplete example, keeps its normal colour.
+- Hovering over a bracket outlines it and its matching partner with a solid line. The pair then stands out by shape, not only by colour.
+- The colours work without JavaScript. The hover outline needs JavaScript, and does nothing without it.
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `brackets` | `false \| object` | on | Set to `false` to turn colourised brackets off everywhere. |
+| `brackets.languages` | `string[]` | `[]` | Languages that get colourised brackets on every block, without the `brackets` attribute. |
+
+A site that writes a lot of deeply nested JavaScript or JSON can turn colourised brackets on for those languages by default:
+
+```js title="astro.config.mjs"
+codeblocks({
+  brackets: { languages: ['js', 'json'] },
+});
+```
+
+## Examples
+
+Colourised brackets works well on the dense, single-line calls that functional JavaScript produces:
+
+export const chained = `
+\`\`\`js brackets
+const byId = Object.fromEntries(users.map((u) => [u.id, u]));
+\`\`\`
+`;
+
+<Example code={chained} />
+
+Brackets inside a string stay the normal string colour:
+
+export const strings = `
+\`\`\`js brackets
+const pattern = "(group)";
+\`\`\`
+`;
+
+<Example code={strings} />
+
+## Limitations
+
+- On a short line with only one level of nesting, the colours add little. Use the attribute for lines that are hard to scan, or turn it on for a whole language with `brackets.languages` when it is usually dense.
+- The plugin finds strings and comments with the comment syntax of the block's language, not a full parser. A language with unusual string syntax can colour a bracket that is inside a string.
+- Matching the partner of a hovered bracket needs JavaScript. Following the caret does not, and is not part of this release.
+
+## Related
+
+- [Focus](/starlight-codeblocks/features/focus/): blur everything except the lines with the brackets you are explaining.
+- [Comment notation](/starlight-codeblocks/features/comment-notation/): the comment syntax map that colourised brackets reads to skip comments.

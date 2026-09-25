@@ -1,6 +1,7 @@
 import type { ExpressiveCodePlugin } from '@expressive-code/core';
 import { type CodeblocksOptions, type ResolvedOptions, resolveOptions } from '../options.ts';
 import { getRegistry } from '../registry.ts';
+import { pluginBrackets } from './brackets.ts';
 import { pluginCore } from './core.ts';
 import { pluginFocus } from './focus.ts';
 import { pluginLineStates } from './line-states.ts';
@@ -9,7 +10,7 @@ import { pluginWhitespace } from './whitespace.ts';
 import { pluginWordDiff } from './word-diff.ts';
 
 export type * from '../options.ts';
-export { pluginCore, pluginFocus, pluginLineStates, pluginNotation, pluginWhitespace, pluginWordDiff };
+export { pluginBrackets, pluginCore, pluginFocus, pluginLineStates, pluginNotation, pluginWhitespace, pluginWordDiff };
 
 /** Plugin names start with this, so `codeblocks()` can find its plugins in `ec.config.mjs`. */
 export const PLUGIN_PREFIX = 'starlight-codeblocks:';
@@ -32,5 +33,6 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.lineStates ? [pluginLineStates(options.lineStates)] : []),
     ...(options.wordDiff ? [pluginWordDiff(options.wordDiff)] : []),
     ...(options.whitespace ? [pluginWhitespace()] : []),
+    ...(options.brackets ? [pluginBrackets(options.brackets)] : []),
   ];
 }
