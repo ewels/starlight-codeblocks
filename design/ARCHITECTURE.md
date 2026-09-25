@@ -298,7 +298,8 @@ src/expressive-code/styles.ts         shared style settings, base styles, PREFIX
 src/expressive-code/<name>.ts         the feature's Expressive Code plugin (new)
 src/client/<name>.ts                  the feature's client module, if it needs one (new)
 src/client/shared/                    browser helpers bundled into each module: position.ts (place())
-src/satteri/, src/components/         code switcher, inline highlighting, CodeSteps, Scrollycoding (later)
+src/satteri/index.ts                  mdastPlugins(): the Sätteri plugin (duplicate ids, mention links, :::code-switcher)
+src/components/                       CodeSteps, Scrollycoding (later)
 test/<name>.test.ts                   unit tests through render()
 docs/e2e/<name>.test.ts               Playwright tests against the docs page
 docs/src/content/docs/features/<name>.mdx   the feature page (DOCS-SITE.md template)
@@ -341,6 +342,7 @@ export function pluginFocus({ style = 'blur' } = {}): CodeblocksPlugin {
 - A rendered line is `div.ec-line > div.code > spans`. Add classes to `renderData.lineAst`, and extra nodes (labels, buttons) inside `select('.code', lineAst)`. Extra nodes never change the copied text, which comes from the code, not the HTML. Give decorations `user-select: none` so that a manual selection leaves them out too, and put text for screen readers in a `scb-sr-only` span.
 - Expressive Code's own script removes `tabindex` from a `pre` that does not scroll. To make the code area focusable, put `tabindex="0"` on `pre > code` and give it a focus style (as `focus.ts` does).
 - Never use `instanceof` on Expressive Code classes. `<Code>` renders through a second instance of `@expressive-code/core` in Vite, so the check fails there and passes in the unit tests. Use the core's type guards, such as `isInlineStyleAnnotation()`.
+- A block with line permalinks has a gutter. Anything placed inside `code` that must line up with the code text (markers, callouts) adds `var(--scb-gutter, 0px)` to its start offset. The variable is in `ch` of the code font.
 - Once a feature is in the preset, its directives are known. A test elsewhere that uses them as an unknown directive must change.
 
 ### 3. Attributes and directives
@@ -422,6 +424,8 @@ function codeblocksIntegration(): AstroIntegration {   // src/integration.ts
 - A container directive plugin must return a replacement node (or set `node.data`), otherwise `starlight-directives-restoration` turns it back into text.
 - In `.md`, return `{ type: 'html', value }` for inline HTML. `{ raw }` is parsed as Markdown and gets wrapped in `<p>`.
 - Report problems through the Astro logger. `ctx.report` is not shown.
+- Page-level checks go in the `before(root, ctx)` hook of the plugin in `src/satteri/index.ts`, which walks the whole tree once. `test/mentions.test.ts` shows how to run it with `markdownToHtml` from `satteri` in a unit test.
+- In the docs, `<Example code={x}>…</Example>` renders the Markdown between the tags live, for prose and directives; `scripts/examples.test.mjs` checks that it matches `x`.
 - A plugin object is reused across compiles. Use a factory entry (`(ctx) => plugin`) for per-document state.
 
 ### MDX components (Q6)

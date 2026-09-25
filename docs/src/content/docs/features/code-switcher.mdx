@@ -1,5 +1,174 @@
 ---
 title: Code switcher
+description: Show one code block with several variants, such as package managers or languages, and a menu in the title bar to switch between them.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+Install commands and API examples often come in several versions: npm, pnpm and Yarn, or Python and JavaScript. Stacked one after the other, they fill the page with code that most readers skip. The code switcher shows them as one block, with a menu in the title bar that picks the variant.
+
+export const basic = `
+:::code-switcher{sync="pm"}
+\`\`\`sh label="npm"
+npm install starlight-codeblocks
+\`\`\`
+\`\`\`sh label="pnpm"
+pnpm add starlight-codeblocks
+\`\`\`
+\`\`\`sh label="Yarn"
+yarn add starlight-codeblocks
+\`\`\`
+:::
+`;
+
+<Example code={basic}>
+
+:::code-switcher{sync="pm"}
+```sh label="npm"
+npm install starlight-codeblocks
+```
+```sh label="pnpm"
+pnpm add starlight-codeblocks
+```
+```sh label="Yarn"
+yarn add starlight-codeblocks
+```
+:::
+
+</Example>
+
+Select **pnpm** in the menu, and the block shows the pnpm command. The choice stays for every block with `sync="pm"`, on this page and on the other pages of the site.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `:::code-switcher` ... `:::` | Around the code blocks | `:::code-switcher` |
+| `sync="<key>"` | After `:::code-switcher`, in braces | `:::code-switcher{sync="pm"}` |
+| `label="<text>"` | Fence line of each variant | `label="pnpm"` |
+
+Put two or more fenced code blocks between the `:::code-switcher` line and the `:::` line. The directive can contain only code blocks. Anything else, such as a paragraph, fails the build with a message that names the file.
+
+Each variant keeps its own attributes, such as `title`. A variant with no `label` shows the name of its language in the menu, such as "Python" for `py`.
+
+## Behaviour
+
+- Only one variant shows at a time. The title bar shows the `title` of that variant, if it has one, and the menu on the right.
+- Selecting a menu entry shows that variant. Keyboard focus stays on the menu.
+- Blocks with the same `sync` key switch together, matched by label. The browser keeps the choice for each key in `localStorage`, so it applies across the site and on the next visit.
+- If a block does not have the saved label, it shows its first variant.
+- A block with no `sync` key switches on its own, and the browser does not keep the choice.
+- The copy button copies the variant that shows.
+- The menu is a native `select` element with the accessible name "Variant", so it works with a keyboard and with screen readers.
+- Without JavaScript, the first variant shows, and the menu is hidden.
+
+## Options
+
+The code switcher has no options. Turn the feature off for the whole site with `codeSwitcher: false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  codeSwitcher: false,
+});
+```
+
+With `codeSwitcher: false`, the directive shows as text, and each code block renders on its own.
+
+## Examples
+
+Two blocks with the same `sync` key and no labels switch together by language. Select **JavaScript** in one menu, and the other block changes too:
+
+export const languages = `
+:::code-switcher{sync="lang"}
+\`\`\`py
+import json
+
+with open("config.json") as fh:
+    config = json.load(fh)
+\`\`\`
+\`\`\`js
+import { readFile } from 'node:fs/promises';
+
+const config = JSON.parse(await readFile('config.json', 'utf8'));
+\`\`\`
+:::
+
+:::code-switcher{sync="lang"}
+\`\`\`py
+with open("config.json", "w") as fh:
+    json.dump(config, fh, indent=2)
+\`\`\`
+\`\`\`js
+await writeFile('config.json', JSON.stringify(config, null, 2));
+\`\`\`
+:::
+`;
+
+<Example code={languages}>
+
+:::code-switcher{sync="lang"}
+```py
+import json
+
+with open("config.json") as fh:
+    config = json.load(fh)
+```
+```js
+import { readFile } from 'node:fs/promises';
+
+const config = JSON.parse(await readFile('config.json', 'utf8'));
+```
+:::
+
+:::code-switcher{sync="lang"}
+```py
+with open("config.json", "w") as fh:
+    json.dump(config, fh, indent=2)
+```
+```js
+await writeFile('config.json', JSON.stringify(config, null, 2));
+```
+:::
+
+</Example>
+
+Variants with a `title` show it in the title bar, so each variant can name its own file. Here, a tool reads its settings from YAML or TOML:
+
+export const titles = `
+:::code-switcher
+\`\`\`yaml title="config.yml"
+server:
+  port: 8080
+\`\`\`
+\`\`\`toml title="config.toml"
+[server]
+port = 8080
+\`\`\`
+:::
+`;
+
+<Example code={titles}>
+
+:::code-switcher
+```yaml title="config.yml"
+server:
+  port: 8080
+```
+```toml title="config.toml"
+[server]
+port = 8080
+```
+:::
+
+</Example>
+
+## Limitations
+
+- The directive works in Markdown and MDX files. It does not work around a `<Code>` component.
+- Labels match by their exact text. "npm" and "NPM" are two different labels.
+- A saved choice applies after the page loads, so a block can show its first variant for a moment.
+
+## Related
+
+- [Code switcher or tabs](/starlight-codeblocks/guides/code-switcher-or-tabs/): when to use this feature, and when to use Starlight's `<Tabs>`.
+- [Fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/): one block with fields for the values that differ, instead of one variant for each value.

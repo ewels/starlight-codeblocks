@@ -4,6 +4,7 @@ import { getRegistry } from '../registry.ts';
 import { pluginAnnotations } from './annotations.ts';
 import { pluginBrackets } from './brackets.ts';
 import { pluginCallouts } from './callouts.ts';
+import { pluginCodeSwitcher } from './code-switcher.ts';
 import { pluginCore } from './core.ts';
 import { pluginExpandable } from './expandable.ts';
 import { pluginFocus } from './focus.ts';
@@ -25,6 +26,7 @@ export {
   pluginAnnotations,
   pluginBrackets,
   pluginCallouts,
+  pluginCodeSwitcher,
   pluginCore,
   pluginExpandable,
   pluginFocus,
@@ -73,6 +75,7 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.expandable ? [pluginExpandable(options.expandable)] : []),
     // After shell copy, which changes the copied text that the playground gets, and after placeholders.
     ...(options.playgrounds ? [pluginPlayground(options.playgrounds)] : []),
+    ...(options.codeSwitcher ? [pluginCodeSwitcher()] : []),
     // After hidden lines, which rebuilds the children of the code element.
     ...(options.callouts ? [pluginCallouts()] : []),
     ...(options.annotations ? [pluginAnnotations()] : []),

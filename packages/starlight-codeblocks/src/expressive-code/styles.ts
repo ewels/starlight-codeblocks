@@ -105,7 +105,10 @@ export function baseStyles({ cssVar }: ResolverContext) {
   min-height: 1.9rem;
   padding-inline: ${cssVar('uiPaddingInline')} 0;
   background: color-mix(in srgb, ${cssVar('codeForeground')} 5%, ${cssVar('codeBackground')});
-  border-bottom: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
+  /* The top border of the code is the line under the bar. */
+  border: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
+  border-bottom: 0;
+  border-radius: ${cssVar('borderRadius')} ${cssVar('borderRadius')} 0 0;
 }
 .${PREFIX}-btn {
   display: inline-block;

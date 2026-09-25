@@ -48,6 +48,9 @@ importers:
       lz-string:
         specifier: ^1.5.0
         version: 1.5.0
+      shiki:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@astrojs/starlight':
         specifier: 0.42.4

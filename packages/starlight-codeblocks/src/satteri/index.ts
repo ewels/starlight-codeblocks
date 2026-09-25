@@ -2,8 +2,18 @@ import { relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MetaOptions } from '@expressive-code/core';
 import type { Code, Link, Nodes } from 'mdast';
-import type { MdastPluginDefinition, MdastPluginEntry, MdastVisitorContext, PluginFactoryContext } from 'satteri';
+import type {
+  MdastNode,
+  MdastPluginDefinition,
+  MdastPluginEntry,
+  MdastVisitorContext,
+  PluginFactoryContext,
+} from 'satteri';
+import { bundledLanguagesInfo } from 'shiki/langs';
+import { encodeVariant, SWITCHER_META } from '../expressive-code/code-switcher.ts';
 import type { ResolvedOptions } from '../options.ts';
+
+type ContainerDirective = Parameters<NonNullable<MdastPluginDefinition['containerDirective']>>[0];
 
 export interface Logger {
   warn(message: string): void;
@@ -51,6 +61,33 @@ function checkMentions(events: Event[], ctx: MdastVisitorContext, file: string, 
   });
 }
 
+function languageName(lang: string | null | undefined) {
+  if (!lang) return 'Plain text';
+  return bundledLanguagesInfo.find((info) => info.id === lang || info.aliases?.includes(lang))?.name ?? lang;
+}
+
+/** Turns `:::code-switcher{sync="…"}` into a wrapper whose code blocks each carry the variant menu. */
+function codeSwitcher(node: ContainerDirective, file: string): MdastNode {
+  const codes = node.children;
+  if (codes.length === 0 || codes.some((child) => child.type !== 'code')) {
+    throw new Error(`${file}: \`:::code-switcher\` can contain only fenced code blocks, and needs at least one.`);
+  }
+  const labels = (codes as Code[]).map(
+    (code) => new MetaOptions(code.meta ?? '').getString('label') ?? languageName(code.lang),
+  );
+  return {
+    type: 'paragraph',
+    data: {
+      hName: 'div',
+      hProperties: { className: ['scb-switcher'], dataScbCodeSwitcher: node.attributes?.sync ?? '' },
+    },
+    children: (codes as Code[]).map((code, index) => ({
+      ...code,
+      meta: `${code.meta ?? ''} ${SWITCHER_META}="${encodeVariant({ index, labels })}"`.trim(),
+    })),
+  } as unknown as MdastNode;
+}
+
 /** The Sätteri plugins for syntax outside code blocks, one instance for each document. */
 export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPluginEntry[] {
   return [
@@ -72,6 +109,9 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
         });
         if (options.permalinks) checkIds(codes, fileName(fileURL), logger);
         if (options.mentions) checkMentions(events, ctx, fileName(fileURL), logger);
+      },
+      containerDirective(node) {
+        if (options.codeSwitcher && node.name === 'code-switcher') return codeSwitcher(node, fileName(fileURL));
       },
     }),
   ];
