@@ -5,8 +5,10 @@ description: Add a Run button that runs the example in the browser and shows the
 
 import Example from '../../../components/Example.astro';
 
+A code block in Starlight shows code, but readers must copy it to a terminal to see what it does. The `runnable` attribute adds a **Run** button to the title bar. The button runs the code in the browser and shows the output under the block.
+
 export const basic = `
-\`\`\`py runnable
+\`\`\`py runnable apiLinks=false
 from statistics import mean, stdev
 
 reads = [1520, 1610, 1480, 1575]
@@ -16,29 +18,96 @@ print(f"mean {mean(reads):.0f}, sd {stdev(reads):.1f}")
 
 <Example code={basic} />
 
+Select **Run**. The first time, the browser downloads Python (Pyodide, a build of Python for the browser), which takes a few seconds. The output panel shows "Loading the Python runtime…" until it is ready, then the output of the code.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `runnable` | Fence line | ` ```py runnable ` |
+
+The language of the block chooses the runtime. The plugin has a runtime for Python, and a site can add runtimes for other languages in the configuration. A language name or its alias works: `py` and `python` both use the Python runtime.
+
+## Behaviour
+
+- The runtime loads only when a reader selects **Run** for the first time. A page with runnable blocks loads a script of less than 1 kB, and no runtime.
+- After the first run, the button reads **Run again**. Each run replaces the output of the run before it.
+- The code that runs is the copied text of the block. Directives are removed, and hidden lines are kept. The values that readers type into [fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/) are part of it too.
+- The output panel has the label "Output". Standard output shows in green. Standard error shows in red, with a bar at its start, so the colour is not the only difference.
+- A run stops after 10 seconds, with a message in the panel. The download of the runtime does not count towards this time.
+- The Python runtime runs in a web worker, so the page stays responsive while code runs. Each run starts with no names from earlier runs.
+- The output panel is a polite live region. Screen readers announce the loading message and the output when they change.
+- The button keeps the keyboard focus during a run, so readers can run the code again with <kbd>Enter</kbd> or <kbd>Space</kbd>.
+- The Run button does not print. Without JavaScript, the Run button is hidden.
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `runnable` | `false \| object` | on | Set to `false` to turn the feature off. `runnable` attributes then have no effect. |
+| `runnable.runtimes` | `Record<string, string>` | `{ python: 'starlight-codeblocks/runtimes/pyodide' }` | Runtime modules by language. The entries of the site are added to the Python runtime. An entry for `python` replaces it. |
+| `runnable.timeout` | `number` | `10000` | The time in milliseconds before a run stops. |
+
+A runtime module is a package path, or a path from the project root. This site adds a runtime for JavaScript, and gives runs 5 seconds:
+
+```js title="astro.config.mjs"
+codeblocks({
+  runnable: {
+    runtimes: { javascript: './src/runtimes/javascript.ts' },
+    timeout: 5000,
+  },
+});
+```
+
+The guide to [adding a runtime](/starlight-codeblocks/extend/add-a-runtime/) shows this runtime in full.
+
+## Examples
+
+A JavaScript example runs with the runtime from the configuration above. `console.log()` goes to standard output and `console.error()` to standard error:
+
 export const js = `
 \`\`\`js runnable
 const sizes = [3, 1, 4, 1, 5];
-console.log('Total:', sizes.reduce((a, b) => a + b, 0));
-console.error('A warning');
+const total = sizes.reduce((sum, size) => sum + size, 0);
+console.log('Total:', total);
+console.error('Sizes of 1 are deprecated.');
 \`\`\`
 `;
 
 <Example code={js} />
 
+An error in Python shows the traceback, from the line of the example that failed:
+
+export const error = `
+\`\`\`py runnable
+counts = {"passed": 3, "failed": 0}
+print(counts["passed"] / counts["failed"])
+\`\`\`
+`;
+
+<Example code={error} />
+
+Code that never ends stops at the timeout. This loop waits for a value that never changes, so the panel shows the timeout message after 5 seconds:
+
 export const loop = `
 \`\`\`js runnable
-while (true) {}
+let ready = false;
+while (!ready) {}
 \`\`\`
 `;
 
 <Example code={loop} />
 
-export const error = `
-\`\`\`py runnable
-counts = {"a": 3, "b": 0}
-print(counts["a"] / counts["b"])
-\`\`\`
-`;
+## Limitations
 
-<Example code={error} />
+- The code must be complete to run. Put the imports and set-up in [hidden lines](/starlight-codeblocks/features/hidden-lines/) if they distract from the example.
+- The Python runtime has no standard input, so `input()` fails.
+- Python packages outside the standard library must be part of Pyodide. The runtime installs them from the `import` lines of the example.
+- The Python runtime loads Pyodide from the jsDelivr CDN, and runs its worker from a `blob:` URL. A Content Security Policy must allow both.
+- To stop a Python run, the runtime ends its worker. The next run downloads the runtime again, from the browser cache if the browser kept it.
+
+## Related
+
+- [Open in playground](/starlight-codeblocks/features/open-in-playground/): send the code to an online playground, for languages that cannot run in the browser.
+- [Hidden lines](/starlight-codeblocks/features/hidden-lines/): keep the code complete for the Run button, while readers see only the part you explain.
+- [Add a runtime](/starlight-codeblocks/extend/add-a-runtime/): the interface for runtimes, with a complete JavaScript runtime.

@@ -5,8 +5,8 @@ const example = (page: Page, n: number) =>
 
 const PYTHON = 0;
 const JS = 1;
-const LOOP = 2;
-const ERROR = 3;
+const ERROR = 2;
+const LOOP = 3;
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/run-in-the-browser/');
@@ -31,7 +31,7 @@ test('the Run button runs the code and shows stdout and stderr', async ({ page }
   await button.click();
   await expect(panel.locator('.scb-run-label')).toHaveText('Output');
   await expect(panel.locator('.scb-run-stdout')).toHaveText('Total: 14');
-  await expect(panel.locator('.scb-run-stderr')).toHaveText('Error: A warning');
+  await expect(panel.locator('.scb-run-stderr')).toHaveText('Error: Sizes of 1 are deprecated.');
   await expect(button).toHaveText('Run again');
   await expect(button).not.toHaveAttribute('aria-disabled');
 });
@@ -61,13 +61,13 @@ test('the output colours meet the contrast target and differ for errors', async 
 });
 
 test('a run stops after the timeout, with a message', async ({ page }, info) => {
-  test.skip(info.project.name !== 'desktop-dark', 'the timeout takes 10 seconds, so one project is enough');
+  test.skip(info.project.name !== 'desktop-dark', 'the timeout takes 5 seconds, so one project is enough');
   test.setTimeout(30_000);
   const block = example(page, LOOP);
   const button = block.locator('.scb-run');
   await button.click();
   await expect(button).toHaveAttribute('aria-disabled', 'true');
-  await expect(block.locator('.scb-run-stderr')).toHaveText('Error: The run stopped after 10 seconds.', {
+  await expect(block.locator('.scb-run-stderr')).toHaveText('Error: The run stopped after 5 seconds.', {
     timeout: 15_000,
   });
   await expect(button).toHaveText('Run again');
