@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { lintText } from './lint-docs.mjs';
 
@@ -76,4 +77,13 @@ test('skips examples in export template literals', () => {
     'Prose, simply.',
   ];
   assert.deepEqual(rules(text.join('\n')), ['7:banned-word']);
+});
+
+test('the package README is a copy of the root README', () => {
+  const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
+  assert.equal(
+    read('packages/starlight-codeblocks/README.md'),
+    read('README.md'),
+    'Run `cp README.md packages/starlight-codeblocks/`.',
+  );
 });
