@@ -34,6 +34,14 @@ describe('resolveOptions', () => {
     [{ expandable: { lines: 0 } }, '`expandable.lines` must be number, got 0'],
     [{ wordDiff: { minSimilarity: 2 } }, '`wordDiff.minSimilarity`'],
     [{ lineStates: { states: { todo: { label: 'To do', colour: '#fff' } } } }, '`lineStates.states` must be'],
+    [
+      { lineStates: { states: { focus: { label: 'F', colour: { dark: '#fff', light: '#000' } } } } },
+      '`lineStates.states`',
+    ],
+    [
+      { lineStates: { states: { 'To do': { label: 'F', colour: { dark: '#fff', light: '#000' } } } } },
+      '`lineStates.states`',
+    ],
     [{ notation: { comments: { nextflow: '//' } } }, '`notation.comments` must be'],
     [{ playgrounds: { go: { label: 'Go' } } }, '`playgrounds.go` must be'],
     [{ runnable: { timeout: '10s' } }, '`runnable.timeout`'],

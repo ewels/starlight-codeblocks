@@ -20,7 +20,7 @@ Update this file after each step in `PLAN.md`. Use one of these states: not star
 | 3.4 Style settings and theme handling: the shared tokens, light and… | done | `src/expressive-code/styles.ts`: `codeblocks` style settings group (dark and light pairs), base styles for `scb-float`, `scb-sr-only`, `scb-no-print`, focus ring and reduced motion. Prefix `scb`. Contrast test in `test/styles.test.ts`. |
 | 3.5 Docs: the getting started page, the configuration reference page… | done | Getting started, Configuration, Comment notation (feature template), Options and Directives reference pages (tables generated from the source). Playwright test for the comment notation examples, including the copied text. `pnpm lint:docs` passes; pages read against the WRITING-STYLE checklist. ARCHITECTURE.md has a "How to add a feature" section. |
 | 4.1 Focus | done | `src/expressive-code/focus.ts`, CSS only (no client module). `tabindex` goes on `pre > code` (DECISIONS.md). Unit tests, Playwright tests (pointer, keyboard, reduced motion, copy), docs page. Screenshots match the mockup in both themes. |
-| 4.2 Line states, including custom states | not started | |
+| 4.2 Line states, including custom states | done | `src/expressive-code/line-states.ts`: built-in and custom states, messages as labels, hidden prefixes, derived colours with a contrast test. Name rules in `options.ts`. Docs site defines `todo`. Playwright tests check the copied text and a manual selection. ARCHITECTURE.md guide updated with what 4.1 and 4.2 taught. |
 | 4.3 Word-level diff | not started | |
 | 4.4 Visible whitespace | not started | |
 | 4.5 Colourised brackets | not started | |

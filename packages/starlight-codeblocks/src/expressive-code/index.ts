@@ -3,10 +3,11 @@ import { type CodeblocksOptions, type ResolvedOptions, resolveOptions } from '..
 import { getRegistry } from '../registry.ts';
 import { pluginCore } from './core.ts';
 import { pluginFocus } from './focus.ts';
+import { pluginLineStates } from './line-states.ts';
 import { pluginNotation } from './notation.ts';
 
 export type * from '../options.ts';
-export { pluginCore, pluginFocus, pluginNotation };
+export { pluginCore, pluginFocus, pluginLineStates, pluginNotation };
 
 /** Plugin names start with this, so `codeblocks()` can find its plugins in `ec.config.mjs`. */
 export const PLUGIN_PREFIX = 'starlight-codeblocks:';
@@ -26,5 +27,6 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     pluginCore(),
     ...(options.notation ? [pluginNotation(options.notation)] : []),
     ...(options.focus ? [pluginFocus(options.focus)] : []),
+    ...(options.lineStates ? [pluginLineStates(options.lineStates)] : []),
   ];
 }

@@ -105,6 +105,13 @@ const oneOf =
   (value: unknown) =>
     values.includes(value as string);
 
+// Attributes and directives of other features, which a custom state name would clash with.
+const reservedStateNames = new Set(
+  'title frame mark ins del collapse wrap lang focus hidden hide highlight whitespace brackets expandable playground id placeholder annotations footnotes label step runnable'.split(
+    ' ',
+  ),
+);
+
 /** Every option, with its type, default and description. The docs reference tables read this. */
 export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   focus: {
@@ -124,15 +131,18 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       states: {
         type: 'Record<string, { label: string; colour: { dark: string; light: string } }>',
         default: {},
-        description: 'Custom states, in addition to error, warning and info.',
-        valid: isRecordOf(
-          (state) =>
-            isObject(state) &&
-            isString(state.label) &&
-            isObject(state.colour) &&
-            isString(state.colour.dark) &&
-            isString(state.colour.light),
-        ),
+        description:
+          'Custom states by name, in addition to `error`, `warning` and `info`. A name uses lower-case letters, digits and hyphens.',
+        valid: (value) =>
+          isRecordOf(
+            (state) =>
+              isObject(state) &&
+              isString(state.label) &&
+              isObject(state.colour) &&
+              isString(state.colour.dark) &&
+              isString(state.colour.light),
+          )(value) &&
+          Object.keys(value as object).every((name) => /^[a-z][a-z0-9-]*$/.test(name) && !reservedStateNames.has(name)),
       },
     },
   },

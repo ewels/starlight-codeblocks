@@ -1,5 +1,116 @@
 ---
 title: Line states
+description: Tint lines as errors, warnings or notes, with an optional message after the code, like the diagnostics in a code editor.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+Expressive Code can mark a line, but a mark does not say what is wrong with the line. A line state tints the line as an error, a warning or a note. It can also show a message after the code, as a code editor does.
+
+export const basic = `
+\`\`\`py title="loop.py" info={1}
+import sys
+
+for name in sys.argv[1:]  # [!code error] SyntaxError: expected ':'
+    print(name)
+
+count = len(sys.argv)  # [!code warning] Includes the script name
+\`\`\`
+`;
+
+<Example code={basic} />
+
+Each state has its own colour and a bar on the left edge. The text after the directive becomes the message. The copy button copies the code without the messages.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `error={range}`, `warning={range}`, `info={range}` | Fence line | `error={3}` |
+| `[!code error] <message>` | Comment | `# [!code error] Must be 0 or more` |
+| `[!code warning] <message>` | Comment | `# [!code warning] Slow` |
+| `[!code info] <message>` | Comment | `# [!code info] Added in 2.0` |
+| `[!code <state>:N] <message>` | Comment | `// [!code info:3] Defaults` |
+| `<state>={range}`, `[!code <state>]` | Both | `todo={9}` |
+
+The message is optional. An attribute tints the lines and shows no message. `[!code <state>:N]` tints its own line and the next N-1 lines, and shows the message on the first line.
+
+Inline code, links and bold in a message render as HTML. Other Markdown stays as text.
+
+## Behaviour
+
+- Each state has a background tint and a 3 px bar on the left edge.
+- A message shows after the code, as a small label. The label starts with the name of the state in bold: **Error**, **Warning** or **Note**.
+- Screen readers hear the name of the state before the line, for example "Error:". A screen reader reads the message after the code.
+- The copy button leaves out the messages. The names of the states and the messages are also not part of a manual text selection.
+- A line can have more than one state. The line then shows the colour of the last state in the configuration.
+- Line states need no JavaScript in the browser.
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `lineStates` | `false \| object` | on | Set to `false` to turn line states off. The directives then stay in the code as written. |
+| `lineStates.states` | `Record<string, { label, colour }>` | `{}` | Custom states by name. `label` is the text in the label. `colour` has a `dark` and a `light` value. |
+
+### Add a custom state
+
+A custom state works in the same way as a built-in state. Its name is the attribute and the directive.
+
+1. Add the state to `lineStates.states`. Give it a label, and a colour for the dark and the light theme.
+
+   ```js title="astro.config.mjs"
+   codeblocks({
+     lineStates: {
+       states: {
+         todo: { label: 'To do', colour: { dark: '#c792ea', light: '#7c3aed' } },
+       },
+     },
+   });
+   ```
+
+2. Use the name as an attribute, such as `todo={9}`, or as a directive, such as `[!code todo]`.
+
+A name uses lower-case letters, digits and hyphens. It cannot be the name of another attribute, such as `title` or `focus`. To change the label or the colour of a built-in state, add a state with its name, for example `info`.
+
+The plugin makes the tint and the label colours from the colour that you give. Each colour must have a contrast of 3:1 or more against the background of the code, so that readers can see the bar.
+
+## Examples
+
+This site defines the `todo` state from the options example. Use it to show readers the parts of a file that they must complete:
+
+export const todo = `
+\`\`\`ts title="handler.ts"
+export async function handler(request: Request) {
+  const body = await request.json(); // [!code todo] Check the body against a schema
+  return Response.json({ ok: true });
+}
+\`\`\`
+`;
+
+<Example code={todo} />
+
+An attribute marks lines without a message. Use it when the text around the block explains the problem:
+
+export const attribute = `
+\`\`\`js title="retry.js" warning={2-4}
+export async function fetchWithRetry(url) {
+  while (true) {
+    try { return await fetch(url); } catch {}
+  }
+}
+\`\`\`
+`;
+
+<Example code={attribute} />
+
+## Limitations
+
+- A message is one line of text. A long message makes the line wider, and the block scrolls sideways.
+- `[!code <state>]` marks the line that it is on. On a line with only a comment, it marks an empty line.
+
+## Related
+
+- [Focus](/starlight-codeblocks/features/focus/): blur the other lines, so readers look at a few lines first.
+- [Inline callouts](/starlight-codeblocks/features/inline-callouts/): show a longer note in a bubble above a line.
+- [Annotations](/starlight-codeblocks/features/annotations/): add a numbered marker that opens a note.

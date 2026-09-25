@@ -310,29 +310,37 @@ The keys and their types are already in `CodeblocksOptions` and `optionsReferenc
 
 ### 2. The Expressive Code plugin
 
-Write `pluginX(settings)` in `src/expressive-code/<name>.ts`. It returns a `CodeblocksPlugin` named `starlight-codeblocks:<name>`. `codeblocks()` finds its plugins by that prefix. Add it to `createPlugins()` in `src/expressive-code/index.ts` behind `options.<feature>`, after `pluginCore()` and `pluginNotation()`, and export it from that file. Store state for a block with `AttachedPluginData`, never on `codeBlock.props`.
+Write `pluginX(settings)` in `src/expressive-code/<name>.ts`. It returns a `CodeblocksPlugin` named `starlight-codeblocks:<name>`. `codeblocks()` finds its plugins by that prefix. Add it to `createPlugins()` in `src/expressive-code/index.ts` behind `options.<feature>`, after `pluginCore()` and `pluginNotation()`, and export it from that file. Store state for a block with `AttachedPluginData`, never on `codeBlock.props`. `src/expressive-code/focus.ts` is the smallest complete example; `line-states.ts` shows directive text, per-option style settings and extra nodes in a line.
 
 ```ts
-export function pluginFocus(settings: { style: 'blur' | 'dim' }): CodeblocksPlugin {
+const focusData = new AttachedPluginData<{ lines: Set<ExpressiveCodeLine> }>(() => ({ lines: new Set() }));
+
+export function pluginFocus({ style = 'blur' } = {}): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:focus',
     directives: { 'code focus': { placement: 'end', docs: { description, example, page: 'features/focus' } } },
     styleSettings,                 // the codeblocksFocus group, see step 4
-    baseStyles,                    // ({ cssVar }) => css, scoped to .expressive-code by Expressive Code
-    jsModules: clientJsModules,    // only if the feature has a client module, see step 5
+    baseStyles: ({ cssVar }) => css, // scoped to .expressive-code by Expressive Code; can depend on settings
     hooks: {
       preprocessMetadata(context) {
-        const lines = resolveRange(context, 'focus') ?? [];            // focus={4-7}
-        for (const d of getDirectives(context.codeBlock, 'code focus')) lines.push(...d.lines);
+        const { lines } = focusData.getOrCreateFor(context.codeBlock);
+        for (const line of resolveRange(context, 'focus') ?? []) lines.add(line);            // focus={4-7}
+        for (const d of getDirectives(context.codeBlock, 'code focus')) for (const l of d.lines) lines.add(l);
       },
-      postprocessRenderedLine({ renderData }) {},                     // classes on renderData.lineAst
-      postprocessRenderedBlock({ renderData }) {
-        renderData.blockAst.properties.dataScbFocus = '';              // data-scb-focus
+      postprocessRenderedLine({ codeBlock, line, renderData }) {
+        if (/* line is out of focus */) addClassName(renderData.lineAst, 'scb-focus-out');
+      },
+      postprocessRenderedBlock({ codeBlock, renderData }) {
+        const code = select('pre > code', renderData.blockAst);   // hast helpers: '@expressive-code/core/hast'
       },
     },
   };
 }
 ```
+
+- A rendered line is `div.ec-line > div.code > spans`. Add classes to `renderData.lineAst`, and extra nodes (labels, buttons) inside `select('.code', lineAst)`. Extra nodes never change the copied text, which comes from the code, not the HTML. Give decorations `user-select: none` so that a manual selection leaves them out too, and put text for screen readers in a `scb-sr-only` span.
+- Expressive Code's own script removes `tabindex` from a `pre` that does not scroll. To make the code area focusable, put `tabindex="0"` on `pre > code` and give it a focus style (as `focus.ts` does).
+- Once a feature is in the preset, its directives are known. A test elsewhere that uses them as an unknown directive must change.
 
 ### 3. Attributes and directives
 
@@ -346,6 +354,8 @@ export function pluginFocus(settings: { style: 'blur' | 'dim' }): CodeblocksPlug
 
 - Classes start with `scb-<name>-`, data attributes with `data-scb-<name>`. `PREFIX` in `styles.ts` holds `scb`.
 - Declare the feature's style settings in its own group, `codeblocks<Feature>` (for example `codeblocksFocus.blur`), with a `declare module '@expressive-code/core' { interface StyleSettings { codeblocksFocus: … } }` block in the feature file. Every colour is a `[dark, light]` pair; every size is a setting. Reference them with `cssVar('codeblocksFocus.blur')`.
+- Type each setting as `UnresolvedStyleValue`. Settings that depend on options, such as one colour for each custom line state, can use dynamic keys: add an index signature to the group interface and build the `PluginStyleSettings` inside `pluginX()`. Call `cssVar(\`group.${key}\` as never)` for those. A resolver function gets `Parameters<StyleResolverFn>[0]` (`ResolverContext` has no `resolveSetting`), and the colour helpers (`setAlpha`, `mix`, `onBackground`, `ensureColorContrastOnBackground`) come from `@expressive-code/core`.
+- Expressive Code shortens words in CSS variable names: `codeblocksFocus.opacity` becomes `--ec-codeblocksFocus-opa`, `…Background` becomes `…Bg`. Tests that match CSS must use the short names (`getCssVarName()` gives them).
 - Reuse the shared settings where they fit: `codeblocks.accent`, `accentForeground`, `mutedForeground`, `focusRing` and the `popover…` settings. A resolver can read them: `({ resolveSetting }) => resolveSetting('codeblocks.accent')`.
 - The core plugin already gives every `scb-` element a focus ring, stops transitions and animations of `scb-` elements (and their descendants) under reduced motion, hides `scb-no-print` in print, and styles `scb-sr-only` and `scb-float`.
 - Add a contrast test for new colours in the feature's test, like `test/styles.test.ts`: text 4.5:1, bars, tints and outlines that carry meaning 3:1, against `#23262f`/`#24292e` (dark) and `#f6f7f9`/`#ffffff` (light).
@@ -356,7 +366,7 @@ Only if static HTML cannot do the job.
 
 1. Write `src/client/<name>.ts`. Its default export runs when the loader imports the module and again on every `astro:page-load`, so it must skip elements it has already set up (for example with a `data-scb-ready` attribute). No top-level side effects.
 2. The build (`tsdown.config.ts`) turns each top-level file in `src/client/` into `dist/client/scb-<name>.<hash>.js`, minified, with every import bundled in. Put shared browser helpers in `src/client/shared/`.
-3. Add `jsModules: clientJsModules` to the plugin. The loader imports `scb-<name>` on pages where an element has `data-scb-<name>`. So the Expressive Code plugin must set that attribute on each block that needs the module, and only then.
+3. Add `jsModules: clientJsModules` to the plugin. The loader imports `scb-<name>` on pages where an element has `data-scb-<name>`. So the Expressive Code plugin must set that attribute on each block that needs the module, and only then. Do not use a `data-scb-<name>` attribute for anything else.
 4. `test/client-modules.test.ts` fails if the module is over 3 kB gzipped.
 5. Popovers and hover cards: give the element the `scb-float` class, keep it inside the block's `.expressive-code` element (it holds the theme variables; ARCHITECTURE Q8), and call `place(floating, anchor)` from `src/client/shared/position.ts` when it opens. Call the function it returns when it closes.
 6. Read the current theme from `document.documentElement.dataset.theme` if the script needs it.
@@ -368,6 +378,7 @@ With `codeblocks()`, the integration emits the modules next to `ec.<hash>.js`. W
 - Unit tests in `packages/starlight-codeblocks/test/<name>.test.ts` with `render(markdown, options?, extraPlugins?)` from `test/render.ts`. It returns `{ html, copyText, warnings }`. Cover every attribute and directive, the copied text, the warnings, and that a block that does not use the feature renders the same with the feature off (`render(md, { <feature>: false })`).
 - Playwright tests in `docs/e2e/<name>.test.ts`, against the example on the feature's docs page (`page.goto('./features/<name>/')`). Use the keyboard and the pointer, and check the `reduced-motion` project. `docs/e2e/client.test.ts` shows how to test browser code on its own routed origin.
 - `pnpm test` builds the package first, because the tests read `dist/client`.
+- Screenshots for the mockup comparison: build the docs, run `astro preview` in `docs/`, and use `agent-browser` (or Playwright). Set the theme with `document.documentElement.dataset.theme = 'dark'` or `'light'`. Scroll with `window.scrollTo({ top, behavior: 'instant' })`, because the mockup page and Starlight scroll smoothly. Save the files in the scratchpad.
 
 ### 7. Docs
 

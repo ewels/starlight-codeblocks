@@ -12,8 +12,11 @@ export default defineConfig({
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/ewels/starlight-codeblocks' }],
       disable404Route: true,
       plugins: [
-        // Markdown blocks on this site show the source that authors write, so their directives must stay as text.
-        codeblocks({ notation: { comments: { md: [], markdown: [], mdx: [] } } }),
+        codeblocks({
+          // Markdown blocks on this site show the source that authors write, so their directives must stay as text.
+          notation: { comments: { md: [], markdown: [], mdx: [] } },
+          lineStates: { states: { todo: { label: 'To do', colour: { dark: '#c792ea', light: '#7c3aed' } } } },
+        }),
         starlightLinksValidator({ exclude: ({ link }) => link.startsWith('#mention:') }),
       ],
       sidebar: [
