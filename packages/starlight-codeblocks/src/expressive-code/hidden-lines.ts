@@ -1,9 +1,36 @@
-import { AttachedPluginData, type ExpressiveCodeLine } from '@expressive-code/core';
+import {
+  AttachedPluginData,
+  type ExpressiveCodeLine,
+  onBackground,
+  PluginStyleSettings,
+  type StyleResolverFn,
+  setAlpha,
+  type UnresolvedStyleValue,
+} from '@expressive-code/core';
 import { addClassName, type ElementContent, h, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { type CodeblocksPlugin, resolveRange } from './core.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
+
+export interface HiddenLinesStyleSettings {
+  badgeBackground: UnresolvedStyleValue;
+}
+
+declare module '@expressive-code/core' {
+  export interface StyleSettings {
+    codeblocksHiddenLines: HiddenLinesStyleSettings;
+  }
+}
+
+const styleSettings = new PluginStyleSettings({
+  defaultValues: {
+    codeblocksHiddenLines: {
+      badgeBackground: ({ resolveSetting }: Parameters<StyleResolverFn>[0]) =>
+        onBackground(setAlpha(resolveSetting('codeblocks.mutedForeground'), 0.1), resolveSetting('codeBackground')),
+    },
+  },
+});
 
 const hiddenData = new AttachedPluginData<{ lines: Set<ExpressiveCodeLine> }>(() => ({ lines: new Set() }));
 
@@ -27,31 +54,29 @@ export function pluginHiddenLines(): CodeblocksPlugin {
         },
       },
     },
+    styleSettings,
     baseStyles: ({ cssVar }) => `
 .${PREFIX}-hidden-line { display: none; }
 .${PREFIX}-hidden-line.${PREFIX}-hidden-open { display: grid; }
 .${PREFIX}-hidden-line.${PREFIX}-hidden-open .code {
   background: color-mix(in srgb, ${cssVar('codeForeground')} 4%, transparent);
 }
+/* Aligned with codePaddingInline, matching a block with no gutter. A block with line numbers
+   (line permalinks, not yet built) would need the gutter's own width added here too. */
 .${PREFIX}-hidden-marker {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  width: 100%;
-  height: 1.5em;
-  margin: 1px 0;
-  padding: 0;
+  margin: 2px 0;
+  margin-inline-start: ${cssVar('codePaddingInline')};
+  padding: 0.05em 0.65em;
   border: 0;
-  background: none;
+  border-radius: 999px;
+  background: ${cssVar('codeblocksHiddenLines.badgeBackground')};
+  color: ${cssVar('codeblocks.mutedForeground')};
   cursor: pointer;
   font: inherit;
-  color: ${cssVar('codeblocks.mutedForeground')};
-  text-align: left;
-}
-.${PREFIX}-hidden-marker::after {
-  content: '';
-  flex: 1;
-  margin-inline-start: 0.75rem;
-  border-top: 1px dashed ${cssVar('codeblocks.mutedForeground')};
+  font-size: 0.8125em;
+  line-height: 1.6;
 }
 .${PREFIX}-hidden-marker:hover, .${PREFIX}-hidden-marker:focus-visible {
   color: ${cssVar('codeForeground')};

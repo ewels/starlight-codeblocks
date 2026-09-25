@@ -1,4 +1,7 @@
+import { getColorContrast } from '@expressive-code/core';
+import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
+import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
@@ -70,4 +73,16 @@ test('leaves [!code hide] in the code when hidden lines are off', async () => {
 test('does nothing when the feature is off, even with the attribute', async () => {
   const { html } = await render(block('js hidden={1}', 'a()'), { hiddenLines: false });
   expect(html).not.toContain('scb-hidden');
+});
+
+test('the marker text meets 4.5:1 contrast on its badge background, in both themes', async () => {
+  const ec = new ExpressiveCode({ plugins: [pluginCodeblocks()] });
+  await ec.getBaseStyles();
+  expect(ec.styleVariants.map((v) => v.theme.type).sort()).toEqual(['dark', 'light']);
+  for (const variant of ec.styleVariants) {
+    const get = (key: string) => variant.resolvedStyleSettings.get(key as never) as string;
+    expect(
+      getColorContrast(get('codeblocks.mutedForeground'), get('codeblocksHiddenLines.badgeBackground')),
+    ).toBeGreaterThanOrEqual(4.5);
+  }
 });
