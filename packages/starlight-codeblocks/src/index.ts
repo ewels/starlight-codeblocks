@@ -23,7 +23,14 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
           );
         }
         const plugins = createPlugins(options);
-        setRegistry({ options, plugins, clientAssets: true, base: astroConfig.base });
+        setRegistry({
+          options,
+          plugins,
+          clientAssets: true,
+          base: astroConfig.base,
+          root: fileURLToPath(astroConfig.root),
+          cacheDir: fileURLToPath(astroConfig.cacheDir),
+        });
 
         const ecConfigUrl = new URL('./ec.config.mjs', astroConfig.root);
         const ecConfigFile = existsSync(ecConfigUrl) ? fileURLToPath(ecConfigUrl) : undefined;

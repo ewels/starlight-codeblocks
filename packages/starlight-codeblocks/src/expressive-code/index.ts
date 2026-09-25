@@ -2,6 +2,7 @@ import type { ExpressiveCodePlugin } from '@expressive-code/core';
 import { type CodeblocksOptions, type ResolvedOptions, resolveOptions } from '../options.ts';
 import { getRegistry } from '../registry.ts';
 import { pluginAnnotations } from './annotations.ts';
+import { pluginApiLinks } from './api-links.ts';
 import { pluginBrackets } from './brackets.ts';
 import { pluginCallouts } from './callouts.ts';
 import { pluginCodeSwitcher } from './code-switcher.ts';
@@ -25,6 +26,7 @@ import { pluginWordDiff } from './word-diff.ts';
 export type * from '../options.ts';
 export {
   pluginAnnotations,
+  pluginApiLinks,
   pluginBrackets,
   pluginCallouts,
   pluginCodeSwitcher,
@@ -70,6 +72,7 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.brackets ? [pluginBrackets(options.brackets)] : []),
     ...(options.shellCopy ? [pluginShellCopy(options.shellCopy)] : []),
     ...(options.tokenLinks ? [pluginTokenLinks()] : []),
+    ...(options.apiLinks ? [pluginApiLinks(options.apiLinks)] : []),
     ...(options.placeholders ? [pluginPlaceholders(options.placeholders)] : []),
     ...(options.mentions ? [pluginMentions()] : []),
     ...(options.permalinks ? [pluginPermalinks()] : []),

@@ -18,7 +18,7 @@ async function setup(ecConfig?: string, expressiveCode: unknown = {}) {
     config: { expressiveCode },
     updateConfig: (update: Record<string, unknown>) => updates.push(update),
     addIntegration: (integration: { name: string }) => integrations.push(integration),
-    astroConfig: { root: pathToFileURL(`${root}/`) },
+    astroConfig: { root: pathToFileURL(`${root}/`), cacheDir: pathToFileURL(`${root}/node_modules/.astro/`) },
   } as never);
   return { updates, integrations };
 }
@@ -30,6 +30,7 @@ test('adds its plugins with only the name visible, and fills the registry', asyn
   expect(JSON.parse(JSON.stringify(plugins[1]))).toEqual({ name: 'starlight-codeblocks:core' });
   expect(getRegistry()?.plugins[0]?.name).toBe('starlight-codeblocks:core');
   expect(getRegistry()?.clientAssets).toBe(true);
+  expect(getRegistry()?.cacheDir).toMatch(/node_modules\/\.astro\/?$/);
   expect(integrations.map((i) => i.name)).toEqual(['starlight-codeblocks']);
 });
 

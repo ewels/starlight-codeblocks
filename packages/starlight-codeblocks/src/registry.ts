@@ -9,6 +9,9 @@ export interface Registry {
   clientAssets: boolean;
   /** Astro's `base`, which site-relative links in code need. */
   base?: string;
+  /** Astro's `root` and `cacheDir`, as paths, for API link adapters. */
+  root?: string;
+  cacheDir?: string;
 }
 
 // A global, because Astro loads the config and renders pages through different module instances.

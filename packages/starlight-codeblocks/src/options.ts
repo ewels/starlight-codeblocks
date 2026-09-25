@@ -15,8 +15,20 @@ export interface PlaygroundDefinition {
   post?: (input: PlaygroundInput) => { action: string; fields: Record<string, string> };
 }
 
-// TODO: settle the adapter context with API auto-linking (plan step 9.1).
-export type AdapterContext = Record<string, unknown>;
+/** What an API link adapter gets in `setup()`. */
+export interface AdapterContext {
+  /** The project root, as an absolute path. */
+  root: string;
+  /** Astro's cache folder, where other integrations, such as starlight-pydocs, keep their data. */
+  cacheDir: string;
+  /**
+   * Gets a URL and keeps the body on disk, so that later builds do not fetch it again.
+   * Returns `null`, with a build warning, when the request fails and there is no copy on disk.
+   */
+  fetch(url: string): Promise<Uint8Array | null>;
+  /** Logs a build warning that names the adapter. */
+  warn(message: string): void;
+}
 
 export interface SymbolRef {
   start: number;
@@ -27,6 +39,8 @@ export interface SymbolRef {
 
 export interface Resolution {
   href: string;
+  /** The qualified name, shown with `kind` when there is no signature. The default is the symbol's name. */
+  name?: string;
   kind?: string;
   signature?: string;
   summary?: string;
