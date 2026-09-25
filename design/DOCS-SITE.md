@@ -72,6 +72,8 @@ Reference
 
 Every page in the three feature groups uses this structure and these headings. Leave out a section only if it would be empty.
 
+Every example on a feature page shows only that page's own feature. No example may trigger another feature by accident, such as word-level diff appearing in a comment notation example, or a line state appearing in a visible whitespace example. If a feature triggers automatically, pick different example code or turn it off for that block (for example `wordDiff=false`). Combining features is allowed only in an example whose explicit purpose is to show a combination, and the text next to it must say so.
+
 ```mdx
 ---
 title: <Feature name>
@@ -105,7 +107,7 @@ description: <One sentence, 25 words or fewer, that says what the feature does f
 
 ## The `Example` component
 
-Build an `Example` component for the docs site. It takes the Markdown for one or more code blocks as a string. It shows that source as a code block labelled "You write", and renders it with the plugin under the label "Readers see", as in the mockups.
+Build an `Example` component for the docs site. It takes the Markdown for one or more code blocks as a string. It shows the rendered result and the Markdown source as Starlight `<Tabs>`: an "Output" tab, selected by default, and a "Markdown" tab after it. Give `<Tabs>` no `syncKey`, so a reader's choice on one page never changes the tabs on another.
 
 Use Starlight's `<Code>` component for the rendering if the spike confirms that the plugin works with it. Features that need a directive or a component (code switcher, token transitions, scrollycoding) cannot render through `<Code>`. For those, write the source in a `md` or `mdx` code block, followed by the live version. Add a unit test that checks that the two stay the same.
 

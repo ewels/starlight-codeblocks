@@ -72,7 +72,7 @@ Starlight renders every code block with Expressive Code. The plugin adds its fea
 A directive is a marker in a code comment. The plugin reads it, applies it and removes it, so readers never see the marker and never copy it. The block below marks one line as added and one as removed:
 
 export const firstDirective = `
-\`\`\`js title="server.js"
+\`\`\`js title="server.js" wordDiff=false
 import express from 'express';
 
 const app = express();

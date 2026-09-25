@@ -13,7 +13,7 @@ build:
 \tcargo build --release
 
 test:
-    cargo test  # [!code error] Recipes must start with a tab
+    cargo test  # Recipes must start with a tab
 \`\`\`
 `;
 
@@ -65,7 +65,7 @@ export const python = `
 \`\`\`py title="script.py" whitespace
 def greet(name):
     print(f"Hello, {name}")
-   return None  # [!code error] Indented with 3 spaces, not 4
+   return None  # Indented with 3 spaces, not 4
 \`\`\`
 `;
 
