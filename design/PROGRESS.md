@@ -4,11 +4,11 @@ Update this file after each step in `PLAN.md`. Use one of these states: not star
 
 | Step | State | Notes |
 |---|---|---|
-| 0.1 If main has no commits, commit the design pack, AGENTS.md,… | not started | |
-| 0.2 Create the branch main, and push it | not started | |
-| 1.1 Work through ARCHITECTURE-QUESTIONS.md with small throwaway… | not started | |
-| 1.2 Write the answers to design/ARCHITECTURE.md | not started | |
-| 2.1 Create the pnpm workspace: packages/<name> (TypeScript, ESM, built… | not started | |
+| 0.1 If main has no commits, commit the design pack, AGENTS.md,… | done | main already had the design pack commits (f624beb, 7f19da9), pushed. |
+| 0.2 Create the branch main, and push it | done | Stale row: main exists and is the work branch (see DECISIONS.md). |
+| 1.1 Work through ARCHITECTURE-QUESTIONS.md with small throwaway… | done | Real Astro 7.3.5 / Starlight 0.42.4 / EC 0.44.2 / Sätteri 0.10.5 site in the scratchpad, not committed. |
+| 1.2 Write the answers to design/ARCHITECTURE.md | done | All nine answered. No step blocked. Phase 10 is feasible (Q5). Code switcher is a directive (Q2). Step 3.3 must also settle client files for preset-only sites (Q4). |
+| 2.1 Create the pnpm workspace: packages/<name> (TypeScript, ESM, built… | not started | See ARCHITECTURE.md "Other findings": pnpm allowBuilds, bare-Starlight build warnings to fix. |
 | 2.2 Set up Vitest with a render helper that runs a Markdown code block… | not started | |
 | 2.3 Set up Playwright against a production build of the docs site,… | not started | |
 | 2.4 Write scripts/lint-docs.mjs from the rules in WRITING-STYLE.md,… | not started | |
@@ -37,14 +37,14 @@ Update this file after each step in `PLAN.md`. Use one of these states: not star
 | 6.4 Fill-in placeholders, including playground links | not started | |
 | 7.1 Line permalinks | not started | |
 | 7.2 Code mentions | not started | |
-| 7.3 Code switcher | not started | |
+| 7.3 Code switcher | not started | Sätteri directive route confirmed (ARCHITECTURE.md Q2). |
 | 8.1 Token transitions | not started | |
 | 8.2 Scrollycoding | not started | |
 | 9.1 The adapter interface, the hover card and the build-time cache for… | not started | |
 | 9.2 The Python adapter, with the standard library inventory and… | not started | |
 | 9.3 The Nextflow adapter, with the bundled channel and operator map… | not started | |
 | 9.4 Docs: the feature page and a guide to writing an adapter | not started | |
-| 10.1 Inline code highlighting, through the hook the spike found | not started | |
+| 10.1 Inline code highlighting, through the hook the spike found | not started | Hook found: async mdast inlineCode visitor (ARCHITECTURE.md Q5). Not blocked. |
 | 11.1 The runtime interface, the Run button and the output panel | not started | |
 | 11.2 The Pyodide runtime, in a web worker | not started | |
 | 11.3 Docs: the feature page and a guide to adding a runtime | not started | |
