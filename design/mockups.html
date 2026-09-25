@@ -1,0 +1,1855 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Code block features for Starlight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f2f4f7;
+  --surface: #fbfcfd;
+  --ink: #17212d;
+  --muted: #586271;
+  --rule: #d3d9e1;
+  --accent: #1d5ea6;
+  --keep: #1d7a4e;
+  --maybe: #986200;
+  --drop: #9c3a3a;
+  --on-state: #ffffff;
+  --src-bg: #e6eaf0;
+  --src-ink: #1f2c3c;
+  --code-bg: #1d2130;
+  --code-hdr: #262b3b;
+  --code-border: #323a50;
+  --code-fg: #d6deeb;
+  --code-muted: #95a2b5;
+  --serif: Literata, Georgia, 'Times New Roman', serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151b; --surface: #161b23; --ink: #e2e7ee; --muted: #9ba5b3; --rule: #2a313c;
+    --accent: #80b1ee; --keep: #5dc18e; --maybe: #e3aa42; --drop: #e58282; --on-state: #0e141b;
+    --src-bg: #1a2029; --src-ink: #cbd4e0; --code-bg: #1b1f2c; --code-hdr: #222838; --code-border: #2f374b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151b; --surface: #161b23; --ink: #e2e7ee; --muted: #9ba5b3; --rule: #2a313c;
+  --accent: #80b1ee; --keep: #5dc18e; --maybe: #e3aa42; --drop: #e58282; --on-state: #0e141b;
+  --src-bg: #1a2029; --src-ink: #cbd4e0; --code-bg: #1b1f2c; --code-hdr: #222838; --code-border: #2f374b;
+  color-scheme: dark;
+}
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 16px); scroll-behavior: smooth; }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 18px/1.6 var(--serif); font-optical-sizing: auto;
+  -webkit-text-size-adjust: 100%;
+}
+a { color: var(--accent); }
+code { font-family: var(--mono); font-size: 0.84em; }
+p code, dd code, li code, .pitch code { background: var(--src-bg); color: var(--src-ink); padding: 1px 5px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- layout ---------- */
+.shell {
+  max-width: 1260px; margin: 0 auto; padding: 44px 28px 96px;
+  display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 56px;
+}
+.index {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); align-self: start;
+  max-height: calc(100vh - 40px); overflow: auto; font-size: 14.5px; line-height: 1.45;
+  padding-right: 6px;
+}
+main { max-width: 860px; min-width: 0; }
+@media (max-width: 980px) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 28px 18px 80px; }
+  .index { position: static; max-height: none; overflow: visible; padding: 0; }
+}
+
+/* ---------- index ---------- */
+.ix-list details > summary { cursor: pointer; margin: 0 0 4px; color: var(--muted); }
+@media (min-width: 981px) { .ix-list details > summary { display: none; } }
+.ix-h { margin: 18px 0 6px; color: var(--muted); font-style: italic; }
+.ix .ix-h:first-child { margin-top: 0; }
+.ix ul { list-style: none; margin: 0; padding: 0; }
+.ix li a { display: block; padding: 3px 0; color: var(--ink); text-decoration: none; }
+.ix li a:hover { color: var(--accent); }
+
+/* ---------- hero + prose ---------- */
+.hero h1 {
+  font-size: clamp(36px, 5.2vw, 54px); line-height: 1.06; letter-spacing: -0.018em;
+  font-weight: 640; margin: 0 0 18px; max-width: 16ch;
+}
+.lede { font-size: 20px; line-height: 1.55; color: var(--muted); max-width: 60ch; margin: 0 0 18px; }
+.change { border-left: 3px solid var(--accent); padding: 2px 0 2px 12px; margin: 0 0 20px; max-width: 62ch; font-size: 16.5px; }
+.hero .change { margin-bottom: 30px; }
+.lede strong { color: var(--ink); font-weight: 600; }
+.hero-cap { font-size: 15px; color: var(--muted); font-style: italic; margin: 10px 0 0; }
+h2 { font-size: 30px; line-height: 1.2; letter-spacing: -0.01em; font-weight: 620; margin: 0 0 10px; }
+.group { margin-top: 80px; }
+.group > .intro { color: var(--muted); max-width: 62ch; margin: 0 0 8px; }
+.assume { margin-top: 64px; }
+.assume p { max-width: 66ch; }
+.surfaces { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 10px 22px; margin: 22px 0 0; font-size: 16.5px; }
+.surfaces dt { font-weight: 600; }
+.surfaces dd { margin: 0; max-width: 58ch; }
+@media (max-width: 620px) { .surfaces { grid-template-columns: minmax(0, 1fr); gap: 2px; } .surfaces dd { margin-bottom: 12px; } }
+
+/* ---------- idea sections ---------- */
+.idea { margin-top: 52px; padding-top: 30px; border-top: 1px solid var(--rule); }
+.idea-h { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; }
+.idea h3 { font-size: 25px; line-height: 1.25; font-weight: 620; margin: 0; letter-spacing: -0.005em; }
+.pitch { font-size: 19px; margin: 10px 0 16px; max-width: 62ch; }
+.how { margin-top: 18px; }
+.how p { max-width: 66ch; margin: 0 0 10px; }
+.notes { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 5px 18px; font-size: 15.5px; line-height: 1.5; margin: 14px 0 0; }
+.notes dt { color: var(--muted); }
+.notes dd { margin: 0; max-width: 60ch; }
+@media (max-width: 620px) { .notes { grid-template-columns: minmax(0, 1fr); gap: 0; } .notes dd { margin-bottom: 8px; } }
+
+.pane + .pane { margin-top: 16px; }
+.lbl { font-size: 14.5px; color: var(--muted); font-style: italic; margin: 0 0 6px; }
+.src-pre {
+  margin: 0; background: var(--src-bg); color: var(--src-ink); border-radius: 6px;
+  padding: 13px 16px; font: 13px/1.62 var(--mono); overflow-x: auto; white-space: pre; tab-size: 4;
+}
+.src-pre .fence { color: var(--muted); }
+.src-pre .meta { color: var(--accent); }
+.src-pre mark.nt { background: color-mix(in srgb, var(--accent) 17%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
+.pane-out > :not(.lbl) + :not(.lbl) { margin-top: 14px; }
+
+/* ---------- code block mockups ---------- */
+.ec {
+  position: relative; margin: 0; background: var(--code-bg); color: var(--code-fg);
+  border: 1px solid var(--code-border); border-radius: 6px; overflow: hidden; overflow: clip;
+  font: 13.5px/1.65 var(--mono); text-align: left;
+}
+.ec .hdr { display: flex; align-items: stretch; min-height: 36px; background: var(--code-hdr); border-bottom: 1px solid var(--code-border); font-size: 12.5px; position: relative; }
+.ec .tab { padding: 7px 14px 8px; background: var(--code-bg); border-top: 2px solid #82aaff; margin-bottom: -1px; color: var(--code-fg); white-space: nowrap; }
+.ec.term .hdr { justify-content: center; align-items: center; }
+.ec .ttl { color: var(--code-muted); padding: 0 90px; }
+.ec .dots { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); display: flex; gap: 6px; }
+.ec .dots i { width: 10px; height: 10px; border-radius: 50%; background: #4a5266; display: block; }
+.ec .tools { margin-left: auto; display: flex; align-items: center; gap: 6px; padding: 0 8px; }
+.ec.term .tools { position: absolute; right: 0; top: 0; bottom: 0; }
+.ec .tool, .ec select.lang {
+  font: 12px/1.4 var(--mono); color: var(--code-fg); background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14); border-radius: 4px; padding: 3px 8px; cursor: pointer;
+}
+.ec .tool:hover { background: rgba(255,255,255,.13); }
+.ec .tool[disabled] { opacity: .45; cursor: default; }
+.ec .t-run[disabled] { cursor: progress; }
+.ec select.lang { background: var(--code-bg); }
+.ec .body { position: relative; overflow-x: auto; }
+.ec pre { margin: 0; padding: 12px 0; font: inherit; tab-size: 4; }
+.ec pre > code { font: inherit; display: block; min-width: max-content; background: none; padding: 0; color: inherit; }
+.ln { display: flex; min-height: 1.65em; padding-right: 18px; position: relative; }
+.ln .tx { white-space: pre; padding-left: 16px; flex: none; }
+.ln .gut { width: 4.2ch; flex: none; text-align: right; color: #66728a; text-decoration: none; user-select: none; }
+.ln a.gut { cursor: pointer; }
+.ln a.gut:hover { color: var(--code-fg); text-decoration: underline; }
+.ln .ind { width: 2.2ch; flex: none; text-align: right; user-select: none; color: var(--code-muted); }
+.ln.st-mark { background: rgba(130,170,255,.13); box-shadow: inset 3px 0 #82aaff; }
+.ln.st-ins { background: rgba(80,190,110,.15); box-shadow: inset 3px 0 #5fbf74; }
+.ln.st-ins .ind { color: #7fd694; }
+.ln.st-del { background: rgba(240,90,90,.15); box-shadow: inset 3px 0 #ef6b69; }
+.ln.st-del .ind { color: #f59290; }
+.ln.st-error { background: rgba(240,90,90,.17); box-shadow: inset 3px 0 #ff6b6b; }
+.ln.st-warning { background: rgba(245,185,66,.14); box-shadow: inset 3px 0 #f5b942; }
+.ln.st-info { background: rgba(100,180,255,.11); box-shadow: inset 3px 0 #6cb8ff; }
+.ln.st-target { background: rgba(255,203,139,.16); box-shadow: inset 3px 0 #ffcb8b; }
+.ln.lit, .ln.mhit { background: rgba(130,170,255,.17); box-shadow: inset 3px 0 #82aaff; }
+.msg { align-self: center; margin-left: 2.5ch; padding: 0 8px; border-radius: 3px; font-size: 12px; line-height: 1.55; white-space: nowrap; }
+.msg::before { margin-right: 6px; font-weight: 600; }
+.msg-error { background: rgba(255,107,107,.2); color: #ffc0bf; }
+.msg-error::before { content: "Error"; }
+.msg-warning { background: rgba(245,185,66,.18); color: #ffdc99; }
+.msg-warning::before { content: "Warning"; }
+.msg-info { background: rgba(108,184,255,.16); color: #b9dcff; }
+.msg-info::before { content: "Note"; }
+.anno {
+  align-self: center; flex: none; margin-left: 1.6ch; width: 1.55em; height: 1.55em; border-radius: 50%; border: 0; padding: 0;
+  background: #82aaff; color: #0e1628; font: 600 11px/1.55em var(--mono); text-align: center; cursor: pointer;
+}
+.anno:hover { background: #a9c3ff; }
+.anno-s { display: inline-block; cursor: default; }
+.fnb {
+  align-self: center; flex: none; margin-left: 1.6ch; min-width: 1.55em; height: 1.55em; border-radius: 50%;
+  border: 1px solid #c792ea; color: #d8b3f3; font: 600 11px/1.45em var(--mono); text-align: center; text-decoration: none;
+}
+.fnb:hover { background: rgba(199,146,234,.18); }
+.legend { margin: 0; padding: 10px 18px 12px 42px; border-top: 1px solid var(--code-border); font-size: 12.5px; line-height: 1.55; color: var(--code-muted); }
+.legend li::marker { color: #d8b3f3; font-weight: 600; }
+.legend li { padding: 1px 0; }
+.legend a.fnl { color: inherit; text-decoration: none; }
+.legend a.fnl:hover { color: var(--code-fg); text-decoration: underline; text-underline-offset: 3px; }
+.legend li.on, .legend li.on a.fnl { color: var(--code-fg); }
+.ln.fn-on { background: rgba(199,146,234,.17); box-shadow: inset 3px 0 #c792ea; }
+.ln.fn-on .fnb { background: #c792ea; color: #1b1f2c; }
+.ec.fn-sticky .legend { position: sticky; bottom: 0; z-index: 2; background: var(--code-hdr); box-shadow: 0 -8px 16px rgba(10,14,24,.35); }
+.legend code, .bub code, .pop code { background: rgba(255,255,255,.08); color: inherit; padding: 0 4px; border-radius: 3px; font-size: .95em; }
+
+.co { position: relative; display: flex; padding: 8px 18px 10px max(8px, calc(16px + var(--mid) * 1ch - 40px)); white-space: normal; }
+.co::after {
+  content: ""; position: absolute; left: calc(16px + var(--mid) * 1ch - 4.5px); bottom: 5.5px; width: 9px; height: 9px;
+  background: #2c3450; border-right: 1px solid #4b5783; border-bottom: 1px solid #4b5783; transform: rotate(45deg);
+}
+.co .bub {
+  position: relative; display: block; max-width: min(60ch, 90%);
+  background: #2c3450; border: 1px solid #4b5783; color: var(--code-fg); border-radius: 5px;
+  padding: 4px 10px; font-size: 12.5px; line-height: 1.5;
+}
+
+/* focus */
+.ec .has-focus .ln.dim { filter: blur(1.1px); opacity: .48; transition: filter .25s ease, opacity .25s ease; }
+.ec .has-focus:hover .ln.dim, .ec .has-focus:focus-within .ln.dim, .ec .has-focus:focus .ln.dim { filter: none; opacity: 1; }
+.scrolly .ec .has-focus:hover .ln.dim { filter: blur(1.1px); opacity: .48; }
+/* hidden lines */
+.ln.hid { display: none; }
+.ln.hid.open { display: flex; background: rgba(255,255,255,.035); }
+.ln.hid.open .tx { opacity: .75; }
+.hid-mark {
+  display: flex; align-items: center; width: 100%; height: 1.5em; margin: 1px 0; padding: 0 0 0 16px;
+  border: 0; background: none; cursor: pointer; font: 11.5px/1 var(--mono); color: var(--code-muted); text-align: left;
+}
+.hid-mark::after { content: ""; flex: 1; border-top: 1px dashed #56617c; margin: 0 16px 0 10px; }
+.hid-mark:hover, .hid-mark:focus-visible { color: var(--code-fg); }
+.hid-mark:hover::after { border-top-color: var(--code-muted); }
+.hid-mark[aria-expanded="true"]::after { border-top-color: #414b62; }
+/* expandable */
+.body.exp { max-height: calc(var(--rows) * 1.65em + 12px); overflow-y: hidden; }
+.body.exp::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3.6em; background: linear-gradient(rgba(29,33,48,0), var(--code-bg)); pointer-events: none; }
+.body.exp.open { max-height: none; }
+.body.exp.open::after { display: none; }
+.xbar { display: flex; justify-content: center; padding: 7px; border-top: 1px solid var(--code-border); }
+.foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 7px 16px; border-top: 1px solid var(--code-border); font-size: 12.5px; color: var(--code-muted); }
+.foot a, .ec a.fake { color: #9fbcff; }
+.runout { border-top: 1px solid var(--code-border); padding: 9px 16px; font-size: 12.5px; white-space: pre; color: #c3e88d; }
+.runout::before { content: "Output"; display: block; color: var(--code-muted); font-size: 11.5px; margin-bottom: 2px; }
+.copy {
+  position: absolute; right: 8px; top: 8px; font: 12px/1.4 var(--mono); color: var(--code-fg);
+  background: var(--code-hdr); border: 1px solid rgba(255,255,255,.16); border-radius: 4px; padding: 3px 9px;
+  cursor: pointer; opacity: 0; transition: opacity .15s;
+}
+.ec.has-hdr .copy { top: 44px; }
+.ec:hover .copy, .ec:focus-within .copy, .copy:focus-visible { opacity: 1; }
+@media (hover: none) { .copy { opacity: 1; } }
+
+/* tokens (approximating Night Owl) */
+.t-k { color: #c792ea; } .t-s { color: #ecc48d; } .t-n { color: #f78c6c; } .t-f { color: #82aaff; }
+.t-t { color: #ffcb8b; } .t-c { color: #8795a8; font-style: italic; } .t-p { color: #baebe2; } .t-v { color: #d6deeb; }
+.t-y { color: #7fdbca; } .t-a { color: #addb67; } .t-o { color: #a9b7cf; } .t-pr { color: #7fdbca; user-select: none; }
+.t-out { color: #8e9bb0; }
+.t-b1 { color: #ffd700; } .t-b2 { color: #da70d6; } .t-b3 { color: #3fb0ff; }
+.br.on { outline: 1px solid currentColor; outline-offset: 0; border-radius: 2px; }
+.wd-del { background: rgba(255,100,100,.4); border-radius: 2px; }
+.wd-ins { background: rgba(95,205,120,.36); border-radius: 2px; }
+.ws { color: #4f5b73; }
+.ws-tab { display: inline-block; width: 4ch; color: #4f5b73; }
+.tlink { color: inherit; text-decoration: underline; text-decoration-color: rgba(130,170,255,.7); text-underline-offset: 3px; }
+.tlink:hover { text-decoration-color: #82aaff; background: rgba(130,170,255,.12); }
+.api { color: inherit; text-decoration: underline dotted; text-decoration-color: rgba(214,222,235,.5); text-underline-offset: 3px; }
+.api:hover, .api:focus-visible { text-decoration-style: solid; text-decoration-color: #82aaff; background: rgba(130,170,255,.12); }
+input.ph {
+  font: inherit; color: #ecc48d; background: rgba(236,196,141,.1); border: 1px dashed rgba(236,196,141,.6);
+  border-radius: 3px; padding: 1px 3px; margin: 0; line-height: 1.35; height: auto; vertical-align: baseline;
+}
+input.ph::placeholder { color: #c9a878; }
+input.ph:focus { outline: 2px solid #ecc48d; outline-offset: 1px; border-style: solid; }
+.ec.mentioning .ln:not(.mhit) { opacity: .42; }
+.ec .ln { transition: opacity .2s ease; }
+
+/* extras around blocks */
+.clip { margin-top: 10px; }
+.clip pre { margin: 0; background: var(--src-bg); color: var(--src-ink); border-radius: 6px; padding: 10px 14px; font: 13px/1.6 var(--mono); white-space: pre; overflow-x: auto; }
+.addr { font: 13px/1.4 var(--mono); background: var(--src-bg); color: var(--muted); border-radius: 999px; padding: 7px 16px; margin-bottom: 10px; overflow-x: auto; white-space: nowrap; }
+.addr b { color: var(--ink); font-weight: 600; }
+.mention-prose { margin: 0 0 12px; max-width: 62ch; }
+.mention-prose a.mn { text-decoration: underline dotted; text-underline-offset: 3px; }
+.mention-prose a.mn:hover, .mention-prose a.mn:focus-visible { text-decoration-style: solid; }
+.stepbar { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.stepper { display: flex; align-items: center; }
+.stp {
+  width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #5d6a85; background: var(--code-bg);
+  color: var(--code-muted); font: 600 11px/1 var(--mono); cursor: pointer; padding: 0; display: grid; place-items: center;
+}
+.stp.done { border-color: #82aaff; color: #cfdcff; }
+.stp[aria-pressed="true"] { background: #82aaff; border-color: #82aaff; color: #0e1628; }
+.stp:hover { border-color: #a9c3ff; }
+.stp-line { width: 18px; height: 2px; background: #3f4860; }
+.stp-line.done { background: #82aaff; }
+.ec .hleft { display: flex; align-items: center; gap: 12px; padding: 0 14px; }
+.stp-label { color: var(--code-muted); font-size: 12px; white-space: nowrap; }
+@media (max-width: 640px) { .stp-label { display: none; } }
+.pill { font: inherit; font-size: 14.5px; border: 1px solid var(--rule); background: transparent; color: var(--ink); border-radius: 999px; padding: 4px 14px; cursor: pointer; }
+.pill[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.scrolly {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr); gap: 22px;
+  height: 460px; overflow-y: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); padding: 0 18px;
+}
+.scrolly .steps { padding: 150px 0 220px; }
+.scrolly .step { min-height: 190px; opacity: .38; transition: opacity .25s; }
+.scrolly .step.on { opacity: 1; }
+.scrolly .step p { margin: 0; font-size: 17px; }
+.scrolly .stick { position: sticky; top: 18px; align-self: start; padding-top: 18px; }
+@media (max-width: 640px) {
+  .scrolly { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 12px; }
+  .scrolly .stick { order: -1; top: 0; padding: 12px 0; background: var(--surface); z-index: 1; }
+  .scrolly .steps { padding: 20px 0 240px; }
+  .scrolly .step { min-height: 140px; }
+}
+.twopane.wide { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(190px, 1fr); gap: 18px; align-items: start; }
+.side-notes { list-style: none; margin: 12px 0 0; padding: 0; position: relative; font-size: 15px; line-height: 1.45; }
+.twopane.wide .side-notes { margin: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+.side-notes li { padding: 3px 0 3px 12px; border-left: 2px solid var(--rule); margin-bottom: 10px; transition: border-color .15s; }
+.side-notes li.on, .side-notes li:focus-visible { border-color: var(--accent); outline: none; }
+.side-notes .num { font: 600 12px var(--mono); color: var(--accent); margin-right: 5px; }
+.inl-row { margin: 0 0 10px; max-width: 70ch; display: grid; grid-template-columns: 9em minmax(0, 1fr); gap: 0 12px; align-items: baseline; }
+.inl-lbl { color: var(--muted); font-style: italic; font-size: 15px; }
+@media (max-width: 620px) { .inl-row { grid-template-columns: minmax(0, 1fr); } }
+code.ic { background: var(--code-bg); color: var(--code-fg); padding: 2px 6px; border-radius: 4px; font-size: .82em; }
+code.ic-plain { background: var(--src-bg); color: var(--src-ink); padding: 2px 6px; border-radius: 4px; font-size: .82em; }
+
+/* floating UI */
+.pop {
+  position: fixed; inset: auto; margin: 0; max-width: 340px; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 7px; padding: 10px 13px; font: 15px/1.5 var(--serif);
+  box-shadow: 0 8px 28px rgba(12,20,36,.2);
+}
+.pop p { margin: 0 0 6px; }
+.pop .pop-pre { margin: 0 0 8px; font: 12px/1.5 var(--mono); white-space: pre-wrap; background: var(--src-bg); color: var(--src-ink); padding: 8px 10px; border-radius: 5px; }
+.pop .pop-actions { display: flex; gap: 8px; }
+.pop .pbtn { font: inherit; font-size: 14px; border: 1px solid var(--rule); background: transparent; color: var(--ink); border-radius: 5px; padding: 3px 10px; cursor: pointer; }
+.pop .pbtn:hover { border-color: var(--accent); }
+#card {
+  position: fixed; z-index: 30; width: min(360px, calc(100vw - 24px)); background: var(--surface); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 7px; padding: 10px 13px; font: 15px/1.5 var(--serif);
+  box-shadow: 0 8px 28px rgba(12,20,36,.2); pointer-events: none;
+}
+#card .sig { display: block; font: 12.5px/1.5 var(--mono); background: none; padding: 0; color: var(--ink); margin-bottom: 6px; white-space: pre-wrap; }
+#card p { margin: 0 0 4px; }
+#card .src { color: var(--muted); font-size: 13.5px; font-style: italic; margin: 0; }
+#toast {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 22px); transform: translateX(-50%); z-index: 40;
+  background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 7px; font-size: 15.5px;
+  max-width: min(560px, calc(100vw - 32px)); box-shadow: 0 8px 28px rgba(12,20,36,.25);
+}
+footer.end { margin-top: 90px; padding-top: 22px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 15px; max-width: 66ch; }
+
+@media (max-width: 620px) {
+  body { font-size: 17px; }
+  .ec { font-size: 12.5px; }
+  .pitch { font-size: 18px; }
+  .idea h3 { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="index" aria-label="Index">
+  <div class="ix-list"><details open><summary>Show all features</summary><nav class="ix" id="ix" aria-label="Features"></nav></details></div>
+</aside>
+
+<main>
+<header class="hero">
+  <h1>Code block features for Starlight</h1>
+  <p class="lede">The agreed design for <code>starlight-codeblocks</code> (working name): 24 features for the first release. Each section shows what an author writes, what a reader sees and where the feature lives. The mockups are the visual and behavioural target for the build. Where this page and <code>SPEC.md</code> disagree, <code>SPEC.md</code> wins.</p>
+  <div id="hero-demo"></div>
+  <p class="hero-cap">This block is a working mockup. Hover or tab into it to bring the blurred lines back, and select the numbered marker to read its annotation.</p>
+</header>
+<script type="text/x-md" id="md-hero">
+```js title="astro.config.mjs" focus={9}
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
+import codeblocks from 'starlight-codeblocks';
+
+export default defineConfig({
+  integrations: [
+    starlight({
+      title: 'My docs',
+      plugins: [codeblocks()], // [!annotate] Working name. One line turns on whichever features you keep from this page.
+    }),
+  ],
+});
+```
+</script>
+
+<section class="assume" aria-labelledby="assume-h">
+  <h2 id="assume-h">Assumptions</h2>
+  <p>Astro 7 and Starlight 0.42 on the Sätteri Markdown pipeline, with Expressive Code 0.44 rendering code blocks. There are no remark or rehype plugins, and nothing relies on Shiki’s JavaScript transformers. Everything ships as one Starlight plugin that registers Expressive Code plugins, client scripts and components as needed. The package would also export the Expressive Code plugins on their own for sites that don’t use Starlight.</p>
+  <p>The mockups approximate Starlight’s default dark code style. Their syntax colours come from a small hand-written tokeniser, not the real highlighter, so treat colours as indicative.</p>
+  <dl class="surfaces">
+    <dt>Expressive Code plugin</dt>
+    <dd>Runs at build time on each code block. Output is static HTML and CSS, so it costs readers nothing and works without JavaScript.</dd>
+    <dt>Client script</dt>
+    <dd>A small script the Starlight plugin adds to pages, for behaviour static HTML can’t manage: syncing values, reacting to prose, remembering choices.</dd>
+    <dt>Sätteri plugin</dt>
+    <dd>An mdast or hast plugin on Astro’s Rust Markdown pipeline, for syntax outside code blocks such as directives and inline code. Whether a Starlight plugin can register one still needs checking.</dd>
+    <dt>Component</dt>
+    <dd>An Astro component used from MDX, for layouts that span several blocks or the page.</dd>
+    <dt>Effort</dt>
+    <dd>Small is one plugin hook and some CSS. Medium adds several hooks, a client script or tricky layout. Large means a new component, an external dependency or an open design question.</dd>
+  </dl>
+</section>
+
+<div class="group" id="g-block">
+<h2>Inside the code block</h2>
+<p class="intro">Build-time features that change how a single block renders.</p>
+
+<section class="idea" id="focus">
+  <div class="idea-h"><h3>Focus</h3></div>
+  <p class="pitch">Blur the lines that don’t matter so readers look at the ones that do. Hovering or tabbing into the block brings everything back.</p>
+  <div class="demo" data-md="md-focus"></div>
+  <div class="how"><p>Authors pick lines with <code>focus={…}</code> in the fence or <code>[!code focus]</code> in a comment. Readers see the focused lines sharp and the rest blurred and faded. The copy button still copies the whole block.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin.</dd>
+    <dt>Effort</dt><dd>Small. The prototype from earlier in this chat already works.</dd>
+    <dt>Seen in</dt><dd>VitePress, Mintlify, Code Hike.</dd>
+    <dt>Watch out for</dt><dd>Blur makes the other lines unreadable for some readers, so offer a dim-only style setting, and drop the transition under reduced motion.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-focus">
+```js title="src/config.js" focus={4-7}
+import { defineConfig } from './lib.js';
+
+export default defineConfig({
+  cache: {
+    dir: '.cache',
+    maxAge: 3600,
+  },
+  retries: 2,
+  verbose: false,
+});
+```
+</script>
+
+<section class="idea" id="line-states">
+  <div class="idea-h"><h3>Line states</h3></div>
+  <p class="pitch">Tint lines as errors, warnings or notes, with an optional message at the end of the line, like an editor’s diagnostics.</p>
+  <div class="demo" data-md="md-states"></div>
+  <div class="how"><p>The built-in states are <code>error</code>, <code>warning</code> and <code>info</code>, set by line number in the fence or by comment. Text after the comment marker becomes the message. Sites can define their own names and colours in config, such as <code>todo</code> or <code>deprecated</code>. Messages are left out of the copied text.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin.</dd>
+    <dt>Effort</dt><dd>Small.</dd>
+    <dt>Seen in</dt><dd>VitePress (error and warning), Docusaurus magic comments (custom names).</dd>
+    <dt>Watch out for</dt><dd>Colour alone can’t carry the meaning. Each state needs an icon or text label for colour-blind readers and screen readers, not just the tint.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-states">
+```py title="loop.py" info={1}
+import sys
+
+for name in sys.argv[1:]  # [!code error] SyntaxError: expected ':'
+    print(name)
+
+count = len(sys.argv)  # [!code warning] Includes the script name
+```
+</script>
+
+<section class="idea" id="notation">
+  <div class="idea-h"><h3>Comment notation</h3></div>
+  <p class="pitch">Put markers in the code instead of line numbers in the fence, so they move with the code when you edit it.</p>
+  <div class="demo" data-md="md-notation"></div>
+  <div class="how"><p>The plugin looks for <code>[!code …]</code> in the block’s own comment syntax (<code>//</code>, <code>#</code>, <code>--</code>, <code>&lt;!-- --&gt;</code>). It removes the comment from the rendered code and the copied text, then hands the line to the matching feature: highlight, <code>++</code>, <code>--</code>, focus, error, warning and so on. The syntax matches VitePress, so migrated pages work unchanged.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin, as a preprocessing step that feeds the other plugins.</dd>
+    <dt>Effort</dt><dd>Small to medium.</dd>
+    <dt>Seen in</dt><dd>VitePress, Shiki’s notation transformers, Code Hike.</dd>
+    <dt>Watch out for</dt><dd>Languages without comments, such as JSON; use <code>jsonc</code> or the fence meta there. It also needs an escape so docs can show the marker literally.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-notation">
+```js title="server.js"
+const app = express();
+app.use(cors()); // [!code --]
+app.use(cors({ origin: allowed })); // [!code ++]
+app.use(express.json());
+app.listen(port); // [!code highlight]
+```
+</script>
+
+<section class="idea" id="callouts">
+  <div class="idea-h"><h3>Inline callouts</h3></div>
+  <p class="pitch">A short note in a bubble directly above a line, pointing down at the token it explains.</p>
+  <div class="demo" data-md="md-callout"></div>
+  <div class="how"><p>A comment line names the token and gives the text. The callout applies only to the line directly below the comment. The comment disappears and the bubble takes its place, pointing down at the token’s column. The bubble is plain HTML and CSS, supports inline code and links, and stays out of the copied text.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin.</dd>
+    <dt>Effort</dt><dd>Medium. Column alignment has to cope with tabs, line numbers and word wrap.</dd>
+    <dt>Seen in</dt><dd>Code Hike.</dd>
+    <dt>Watch out for</dt><dd>Long bubbles on narrow screens. They should wrap within the block rather than widen it.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-callout">
+```js
+const controller = new AbortController();
+// [!callout /signal/] Aborts the request if the reader leaves the page.
+const res = await fetch(url, { signal: controller.signal });
+const data = await res.json();
+```
+</script>
+
+<section class="idea" id="annotations">
+  <div class="idea-h"><h3>Annotations</h3></div>
+  <p class="pitch">Numbered markers at the end of lines that open an explanation, keeping the code itself uncluttered.</p>
+  <div class="demo" data-md="md-anno"></div>
+  <div class="how"><p>Text after <code>[!annotate]</code> becomes a marker button. Selecting it opens a popover, and Escape or a click elsewhere closes it. Markers number themselves in order and are skipped by the copy button. The native <code>popover</code> attribute handles opening and closing, so the only script is a positioning fallback for browsers without CSS anchor positioning.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin, plus a tiny client script.</dd>
+    <dt>Effort</dt><dd>Medium.</dd>
+    <dt>Seen in</dt><dd>Material for MkDocs, where it is one of the flagship features.</dd>
+    <dt>Watch out for</dt><dd>The explanation lives in the comment, so long notes make long source lines. Material’s style, with the notes in a list after the block, would need a Sätteri plugin.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-anno">
+```yaml title=".github/workflows/test.yml"
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6  # [!annotate] Installs `uv` and caches its downloads between runs.
+      - run: uv run pytest
+```
+</script>
+
+<section class="idea" id="footnotes">
+  <div class="idea-h"><h3>Footnotes</h3></div>
+  <p class="pitch">Numbered badges on lines, with the explanations listed under the block where readers see them without clicking.</p>
+  <div class="demo" data-md="md-footnotes"></div>
+  <div class="how"><p>A comment line with <code>[!ref]</code> attaches its text to the line below. Selecting a badge highlights its whole line and its note, and scrolls the note into view if needed. Selecting a note does the same the other way round, scrolling to the line. Selecting anywhere else clears the highlight.</p><p>With <code>footnotes="sticky"</code>, the list stays pinned to the bottom of the viewport while the block is on screen. The default is not sticky. Scroll through the second block to see it.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin, plus a small client script for the highlight.</dd>
+    <dt>Effort</dt><dd>Small.</dd>
+    <dt>Seen in</dt><dd>Code Hike.</dd>
+    <dt>Watch out for</dt><dd>Overlap with annotations. One syntax with a display setting (popover, footnotes or side by side) may be better than three separate features.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-footnotes">
+```py title="app.py"
+from flask import Flask
+
+# [!ref] Creates the application object.
+app = Flask(__name__)
+
+# [!ref] Runs this function for `GET /health`.
+@app.get("/health")
+def health():
+    return {"ok": True}
+```
+
+```py title="count.py" footnotes="sticky"
+import argparse
+import logging
+from pathlib import Path
+
+# [!ref] A logger named after the module, so output shows where it came from.
+log = logging.getLogger(__name__)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Count lines in files.")
+    parser.add_argument("paths", nargs="+", type=Path)
+    # [!ref] `-v` can be repeated: `-vv` turns on debug output.
+    parser.add_argument("-v", "--verbose", action="count", default=0)
+    return parser.parse_args()
+
+
+def count_lines(path: Path) -> int:
+    with path.open() as fh:
+        return sum(1 for _ in fh)
+
+
+def main() -> None:
+    args = parse_args()
+    logging.basicConfig(level=logging.WARNING - 10 * args.verbose)
+    for path in args.paths:
+        log.debug("Reading %s", path)
+        print(f"{count_lines(path):>8}  {path}")
+
+
+# [!ref] Runs only when the file is executed, not when it is imported.
+if __name__ == "__main__":
+    main()
+```
+</script>
+
+<section class="idea" id="hidden-lines">
+  <div class="idea-h"><h3>Hidden lines</h3></div>
+  <p class="pitch">Hide the imports and set-up that readers need to run an example but not to understand it.</p>
+  <div class="demo" data-md="md-hidden"></div>
+  <div class="how"><p>Lines listed in <code>hidden={…}</code>, or marked with <code>[!code hide]</code>, are left out of the rendered block. A dashed marker shows where each run of hidden lines sits. Selecting a marker shows or hides that run only. The header button shows every run, or hides them all if they are all showing. The copy button always includes hidden lines, so pasted code still runs. Unlike Expressive Code’s collapsible sections, hidden lines take up no space until the reader asks for them.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin, with a few lines of script for the toggle.</dd>
+    <dt>Effort</dt><dd>Small.</dd>
+    <dt>Seen in</dt><dd>mdBook and rustdoc, which hide lines that start with <code>#&nbsp;</code>.</dd>
+    <dt>Watch out for</dt><dd>Readers pasting code they haven’t seen. The markers and the header button make it clear that lines are hidden.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-hidden">
+```py title="summary.py" hidden={1-3,6-7}
+import json
+from pathlib import Path
+
+config = json.loads(Path("config.json").read_text())
+for key, value in config.items():
+    if key.startswith("_"):
+        continue
+    print(f"{key} = {value}")
+```
+</script>
+
+<section class="idea" id="shell-copy">
+  <div class="idea-h"><h3>Smart shell copy</h3></div>
+  <p class="pitch">Terminal blocks can show prompts and output, but copying gives only the commands.</p>
+  <div class="demo" data-md="md-shell" data-clip></div>
+  <div class="how"><p>Lines that start with a prompt such as <code>$</code> are commands. Everything else is output and is dimmed. The copy button says Copy commands, strips the prompts and drops the output. Commands continued with a trailing backslash stay together. Try the button: the copied text appears underneath.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin, if a plugin can change the copy button’s payload. That needs checking; otherwise it takes a small script.</dd>
+    <dt>Effort</dt><dd>Small.</dd>
+    <dt>Seen in</dt><dd>A proposed mdBook change. Expressive Code’s terminal frames only drop comment lines when copying.</dd>
+    <dt>Watch out for</dt><dd><code>#</code> is both a root prompt and a comment, so prompts should be configurable per site.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-shell">
+```sh frame="terminal"
+$ uv tool install ruff
+Resolved 1 package in 180ms
+Installed 1 executable: ruff
+$ ruff check src/ \
+    --fix
+Found 3 errors (3 fixed, 0 remaining).
+```
+</script>
+
+<section class="idea" id="word-diff">
+  <div class="idea-h"><h3>Word-level diff</h3></div>
+  <p class="pitch">In a diff, highlight only the words that changed, not whole lines.</p>
+  <div class="demo" data-md="md-diff"></div>
+  <div class="how"><p>Removed and added lines next to each other are paired and compared token by token, and the changed tokens get a stronger tint. It applies automatically to <code>diff</code> blocks, and the underlying language is still highlighted.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin, building on its inline text markers.</dd>
+    <dt>Effort</dt><dd>Medium.</dd>
+    <dt>Seen in</dt><dd>GitHub and GitLab diffs.</dd>
+    <dt>Watch out for</dt><dd>Pairing gets unreliable when a change adds or removes several lines at once. Fall back to whole-line tints when paired lines differ too much.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-diff">
+```diff lang="js"
+-const timeout = 5000;
++const timeout = options.timeout ?? 5000;
+const client = createClient({
+-  retries: 3,
++  retries: options.retries,
+});
+```
+</script>
+
+<section class="idea" id="whitespace">
+  <div class="idea-h"><h3>Visible whitespace</h3></div>
+  <p class="pitch">Show spaces and tabs as faint glyphs where indentation changes the meaning.</p>
+  <div class="demo" data-md="md-ws"></div>
+  <div class="how"><p>With the <code>whitespace</code> flag, spaces render as dots and tabs as arrows. Leading whitespace is shown by default, or all of it with <code>whitespace="all"</code>. The example shows why it matters: the second recipe is indented with spaces, which Make rejects. Copying gives the real characters.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin.</dd>
+    <dt>Effort</dt><dd>Small.</dd>
+    <dt>Seen in</dt><dd>VS Code, and Shiki’s render-whitespace transformer.</dd>
+    <dt>Watch out for</dt><dd>Visual noise. Keep it opt-in per block.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-ws">
+```make title="Makefile" whitespace
+build:
+	cargo build --release
+
+test:
+    cargo test  # [!code error] Recipes must start with a tab
+```
+</script>
+
+<section class="idea" id="brackets">
+  <div class="idea-h"><h3>Colourised brackets</h3></div>
+  <p class="pitch">Colour matching brackets by nesting depth, as VS Code does, so dense one-liners are easier to read.</p>
+  <div class="demo" data-md="md-brackets"></div>
+  <div class="how"><p>The <code>brackets</code> flag cycles three colours by depth and ignores brackets inside strings and comments. Hovering a bracket outlines its partner. The colours would be tuned per theme.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin, reading the highlighted tokens.</dd>
+    <dt>Effort</dt><dd>Small to medium.</dd>
+    <dt>Seen in</dt><dd>VS Code, and Shiki’s colourised-brackets transformer, which can’t be used directly on this stack.</dd>
+    <dt>Watch out for</dt><dd>Noise in short snippets. Best as a per-block flag or limited to certain languages.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-brackets">
+```js brackets
+const total = items.reduce((sum, { price, qty }) => sum + price * qty, 0);
+const byId = Object.fromEntries(users.map((u) => [u.id, u]));
+```
+</script>
+
+<section class="idea" id="token-links">
+  <div class="idea-h"><h3>Token links</h3></div>
+  <p class="pitch">Turn any token into a link, from a comment above the line.</p>
+  <div class="demo" data-md="md-links"></div>
+  <div class="how"><p><code>[!link /token/ url]</code> links the first match of the token on the next line. The comment disappears and the token gets a subtle underline.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin.</dd>
+    <dt>Effort</dt><dd>Small.</dd>
+    <dt>Seen in</dt><dd>Code Hike.</dd>
+    <dt>Watch out for</dt><dd>Overlap with API auto-linking, which covers the common case with no markup. Token links are for one-offs.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-links">
+```py
+import numpy as np
+
+# [!link /linspace/ https://numpy.org/doc/stable/reference/generated/numpy.linspace.html]
+x = np.linspace(0, 1, 50)
+y = np.sin(2 * np.pi * x)
+```
+</script>
+
+<section class="idea" id="api-links">
+  <div class="idea-h"><h3>API auto-linking</h3></div>
+  <p class="pitch">Names in examples link to their reference pages automatically, with a hover card showing the signature and summary.</p>
+  <div class="demo" data-md="md-api" data-api></div>
+  <div class="how"><p>Authors write nothing extra. Each language has an adapter that finds names in a block and resolves them against one or more indexes. Names an adapter can’t resolve stay plain text.</p><p>The Python adapter reads the imports in each block. It resolves names against the project’s own starlight-pydocs pages, and against <code>objects.inv</code> inventories for other libraries, the same files Sphinx’s intersphinx uses. The Nextflow adapter resolves channel factories and operators against the Nextflow docs, and processes against the pipeline’s own module reference. Sites can register more adapters in config. Hover or focus a name in either block.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin with a language-adapter interface. The Python adapter shares an object index with starlight-pydocs.</dd>
+    <dt>Effort</dt><dd>Large. Each adapter needs a parser for its language at build time. Start with imports and attribute chains.</dd>
+    <dt>Seen in</dt><dd>sphinx-codeautolink.</dd>
+    <dt>Watch out for</dt><dd>A wrong link is worse than none, so adapters should only link names they can resolve with certainty.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-api">
+```py
+import json
+from pathlib import Path
+from myproject import summarise
+
+data = json.loads(Path("run.json").read_text())
+print(summarise(data))
+```
+
+```nextflow
+include { FASTQC } from './modules/fastqc'
+
+workflow {
+    reads = channel.fromFilePairs(params.reads)
+    FASTQC(reads)
+}
+```
+</script>
+
+<section class="idea" id="expandable">
+  <div class="idea-h"><h3>Expandable blocks</h3></div>
+  <p class="pitch">Long blocks show their first few lines with a fade and a button to reveal the rest.</p>
+  <div class="demo" data-md="md-expand"></div>
+  <div class="how"><p><code>expandable</code> caps the block at twelve lines, or <code>expandable={8}</code> at eight. The button says how many lines there are. Using <code>hidden="until-found"</code> where browsers support it means find-in-page still finds text in the collapsed part and expands the block.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin, plus a few lines of script.</dd>
+    <dt>Effort</dt><dd>Small.</dd>
+    <dt>Seen in</dt><dd>Mintlify.</dd>
+    <dt>Watch out for</dt><dd>Printing, which should expand everything.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-expand">
+```py title="report.py" expandable={8}
+import csv
+import sys
+from collections import Counter
+from pathlib import Path
+
+
+def read_rows(path: Path) -> list[dict]:
+    with path.open() as fh:
+        return list(csv.DictReader(fh))
+
+
+def summarise(rows: list[dict]) -> Counter:
+    return Counter(row["status"] for row in rows)
+
+
+def main() -> None:
+    rows = read_rows(Path(sys.argv[1]))
+    counts = summarise(rows)
+    for status, n in counts.most_common():
+        print(f"{status:<10} {n:>5}")
+
+
+if __name__ == "__main__":
+    main()
+```
+</script>
+
+
+<section class="idea" id="playground">
+  <div class="idea-h"><h3>Open in playground</h3></div>
+  <p class="pitch">A button in the frame that opens the example in an online playground with the code already filled in.</p>
+  <div class="demo" data-md="md-play" data-config="md-play-config"></div>
+  <div class="how"><p><code>playground="…"</code> adds the button. The TypeScript and Rust playgrounds are built in. Sites register their own in config, each with a label and one of two ways to send the code: a URL builder, for playgrounds that take code in the URL, or a form post, for playgrounds such as StackBlitz that take multi-file projects. URL playgrounds need no client script.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin, with one adapter per playground.</dd>
+    <dt>Effort</dt><dd>Small per playground.</dd>
+    <dt>Seen in</dt><dd>mdBook’s Rust examples, the TypeScript handbook.</dd>
+    <dt>Watch out for</dt><dd>Code has to be complete to run. This pairs well with hidden lines.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-play">
+```ts playground="typescript"
+type Status = 'queued' | 'running' | 'done';
+
+function label(s: Status): string {
+  return s === 'done' ? 'Finished' : s;
+}
+
+console.log(label('done'));
+```
+
+```py playground="sandbox"
+from statistics import median
+
+print(median([3, 1, 4, 1, 5]))
+```
+</script>
+<script type="text/x-md" id="md-play-config">
+// astro.config.mjs
+starlight({
+  plugins: [
+    codeblocks({
+      playgrounds: {
+        sandbox: {
+          label: 'Try in Sandbox',
+          url: ({ code, lang }) =>
+            `https://sandbox.example.com/new?lang=${lang}&code=${encodeURIComponent(code)}`,
+        },
+      },
+    }),
+  ],
+});
+</script>
+
+</div>
+
+<div class="group" id="g-page">
+<h2>Across the page</h2>
+<p class="intro">Features that connect a block to the prose around it, to other blocks or to the reader’s own input.</p>
+
+<section class="idea" id="mentions">
+  <div class="idea-h"><h3>Code mentions</h3></div>
+  <p class="pitch">Hovering a phrase in the prose highlights the lines it refers to.</p>
+  <div class="demo" data-md="md-mentions" data-kind="mentions"></div>
+  <div class="how"><p>Lines are tagged with <code>[!mention name]</code> and the prose links to <code>#mention:name</code>, so the page stays plain Markdown. A client script pairs each link with the tagged lines in the next block and highlights them on hover or keyboard focus. Selecting a link scrolls the block into view.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin for the tags, plus a client script.</dd>
+    <dt>Effort</dt><dd>Medium.</dd>
+    <dt>Seen in</dt><dd>Code Hike.</dd>
+    <dt>Watch out for</dt><dd>starlight-links-validator may flag the <code>#mention:</code> links as broken anchors unless they are excluded.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-mentions">
+The [base case](#mention:base) stops the recursion. The [recursive step](#mention:step) calls the function again with a smaller number.
+
+```py
+def factorial(n):
+    if n == 0:  # [!mention base]
+        return 1  # [!mention base]
+    return n * factorial(n - 1)  # [!mention step]
+```
+</script>
+
+<section class="idea" id="permalinks">
+  <div class="idea-h"><h3>Line permalinks</h3></div>
+  <p class="pitch">Select a line number to get a link to that line. Opening the link scrolls to the line and highlights it.</p>
+  <div class="demo" data-md="md-perma" data-permalink></div>
+  <div class="how"><p>Blocks with an <code>id</code> get clickable line numbers, and Shift-click extends the selection to a range. On page load the script reads the address and highlights the lines. In the mockup, the address bar above the block updates instead of the real one.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin for ids and line numbers, plus a client script.</dd>
+    <dt>Effort</dt><dd>Small to medium.</dd>
+    <dt>Seen in</dt><dd>GitHub.</dd>
+    <dt>Watch out for</dt><dd>Ids have to stay stable when blocks are added to a page, so they should come from an explicit id or the title, never the block’s position.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-perma">
+```yaml title="config.yml" id="cfg" showLineNumbers
+server:
+  host: 0.0.0.0
+  port: 8080
+cache:
+  dir: .cache
+  max_age: 3600
+logging:
+  level: info
+```
+</script>
+
+<section class="idea" id="placeholders">
+  <div class="idea-h"><h3>Fill-in placeholders</h3></div>
+  <p class="pitch">Placeholders such as <code>YOUR_TOKEN</code> become input fields. What the reader types fills every block on the site and the copied text.</p>
+  <div class="demo" data-md="md-ph"></div>
+  <div class="how"><p>The fence lists the literal strings to treat as fields, so nothing in the code can clash with the syntax. Each field is as wide as its text and grows as the reader types. Values stay in the reader’s browser and are never sent anywhere. Type in one block and watch the other update, then try the copy button.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin for the fields, plus a client script.</dd>
+    <dt>Effort</dt><dd>Medium.</dd>
+    <dt>Seen in</dt><dd>API references that fill in the reader’s own keys.</dd>
+    <dt>Watch out for</dt><dd>Secrets saved in a shared browser. Offer a this-tab-only setting and a clear button.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-ph">
+```sh placeholder="YOUR_TOKEN,WORKSPACE_ID"
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  https://api.example.com/workspaces/WORKSPACE_ID/runs
+```
+
+```py placeholder="YOUR_TOKEN"
+from example import Client
+
+client = Client(token="YOUR_TOKEN")
+```
+</script>
+
+<section class="idea" id="switcher">
+  <div class="idea-h"><h3>Code switcher</h3></div>
+  <p class="pitch">One block holds several variants, switched from a menu in the title bar. The choice sticks across the site.</p>
+  <div class="demo" data-md="md-switch" data-kind="switcher"></div>
+  <div class="how"><p>Consecutive fences inside a <code>:::code-switcher</code> directive become one block. Each fence can set <code>label="…"</code> for its menu entry; without a label, the menu shows the language name. Blocks with the same <code>sync</code> key switch together and remember the choice, so a reader who picks pnpm once sees pnpm everywhere. It works like Starlight’s Tabs with <code>syncKey</code>, but takes one menu instead of a row of tabs. Try the menus below: the second and third blocks share a key.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>A Sätteri plugin for the directive, or an MDX component if that isn’t possible, plus a client script.</dd>
+    <dt>Effort</dt><dd>Medium.</dd>
+    <dt>Seen in</dt><dd>Code Hike, Mintlify.</dd>
+    <dt>Watch out for</dt><dd>Overlap with Tabs. The docs should say when to use which.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-switch">
+:::code-switcher{sync="pm"}
+```sh label="npm"
+npm install starlight-codeblocks
+```
+```sh label="pnpm"
+pnpm add starlight-codeblocks
+```
+```sh label="Yarn"
+yarn add starlight-codeblocks
+```
+:::
+
+:::code-switcher{sync="lang"}
+```py
+import json
+
+with open("config.json") as fh:
+    config = json.load(fh)
+```
+```js
+import { readFile } from 'node:fs/promises';
+
+const config = JSON.parse(await readFile('config.json', 'utf8'));
+```
+```rust
+let text = std::fs::read_to_string("config.json")?;
+let config: serde_json::Value = serde_json::from_str(&text)?;
+```
+:::
+
+:::code-switcher{sync="lang"}
+```py
+with open("config.json", "w") as fh:
+    json.dump(config, fh, indent=2)
+```
+```js
+await writeFile('config.json', JSON.stringify(config, null, 2));
+```
+```rust
+std::fs::write("config.json", serde_json::to_string_pretty(&config)?)?;
+```
+:::
+</script>
+
+<section class="idea" id="transitions">
+  <div class="idea-h"><h3>Token transitions</h3></div>
+  <p class="pitch">Step through versions of a block and watch the code move between them, so readers see what changed.</p>
+  <div class="demo" data-md="md-steps" data-kind="steps"></div>
+  <div class="how"><p>Successive fences inside a component become steps, each with an optional <code>step="…"</code> label. The numbered steps sit at the left of the title bar, joined by a line that fills in as the reader moves forward, with the current label beside them. Previous and Next buttons sit at the right. The arrow keys also move between steps when a step has focus. Unchanged lines slide to their new place and new lines fade in. The mockup animates whole lines; the real version animates tokens, using the precompiled mode of <code>@shikijs/magic-move</code> fed with Expressive Code’s tokens.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Component, plus a client script.</dd>
+    <dt>Effort</dt><dd>Large.</dd>
+    <dt>Seen in</dt><dd>Slidev, Code Hike.</dd>
+    <dt>Watch out for</dt><dd>Bundle size, and reduced motion, where steps should switch instantly.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-steps">
+<CodeSteps>
+
+```js title="server.js" step="Create the app"
+const app = express();
+
+app.listen(3000);
+```
+
+```js title="server.js" step="Parse JSON bodies"
+const app = express();
+app.use(express.json());
+
+app.listen(3000);
+```
+
+```js title="server.js" step="Add a health route"
+const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ ok: true });
+});
+
+app.listen(3000);
+```
+
+</CodeSteps>
+</script>
+
+<section class="idea" id="scrollycoding">
+  <div class="idea-h"><h3>Scrollycoding</h3></div>
+  <p class="pitch">Prose steps scroll past a sticky code block, and each step changes which lines are in focus.</p>
+  <div class="demo" data-md="md-scrolly" data-kind="scrolly"></div>
+  <div class="how"><p>A component holds one block and a list of steps, each naming the lines to focus. Scroll inside the frame to try it. On narrow screens the real version would fall back to a focused copy of the block under each step.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Component, plus a client script. It reuses Focus.</dd>
+    <dt>Effort</dt><dd>Large.</dd>
+    <dt>Seen in</dt><dd>Code Hike.</dd>
+    <dt>Watch out for</dt><dd>Starlight’s content column is narrow for two columns, so this may need the <code>splash</code> template or a wider layout.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-scrolly">
+<Scrollycoding>
+
+```js title="server.js"
+import express from 'express';
+
+const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ ok: true });
+});
+
+app.listen(3000);
+```
+
+<Step focus="1">Import Express. Nothing else is needed for a small server.</Step>
+<Step focus="3">Create the app object that holds routes and middleware.</Step>
+<Step focus="4">Parse JSON request bodies before any route sees them.</Step>
+<Step focus="6-8">Answer health checks with a small JSON payload.</Step>
+<Step focus="10">Start listening on port 3000.</Step>
+
+</Scrollycoding>
+</script>
+
+<section class="idea" id="side-by-side">
+  <div class="idea-h"><h3>Side-by-side annotations</h3></div>
+  <p class="pitch">Explanations sit in a column beside the code. Hovering a note highlights its line, and hovering a line highlights its note.</p>
+  <div class="demo" data-md="md-side" data-side></div>
+  <div class="how"><p>It uses the same <code>[!annotate]</code> syntax, with <code>annotations="side"</code> on the fence. The notes form a numbered column aligned to the top of the block, and the column sticks to the top of the viewport while the block scrolls past. Numbers on the lines match the numbers in the column. On narrow screens the notes drop below the block as a numbered list.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin and CSS, with a little script for the hover link.</dd>
+    <dt>Effort</dt><dd>Medium.</dd>
+    <dt>Seen in</dt><dd>GitHub Docs.</dd>
+    <dt>Watch out for</dt><dd>A column taller than the viewport can’t stick usefully. In that case it should scroll with the page.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-side">
+```py title="report.py" annotations="side"
+import csv
+import sys
+from collections import Counter
+from pathlib import Path
+
+
+def read_rows(path: Path) -> list[dict]:
+    with path.open() as fh:  # [!annotate] Opens the file and closes it when the block ends.
+        return list(csv.DictReader(fh))  # [!annotate] Each row becomes a dict keyed by the header line.
+
+
+def summarise(rows: list[dict]) -> Counter:
+    return Counter(row["status"] for row in rows)  # [!annotate] Counts rows per status value.
+
+
+def main() -> None:
+    rows = read_rows(Path(sys.argv[1]))
+    for status, n in summarise(rows).most_common():
+        print(f"{status:<10} {n:>5}")  # [!annotate] Pads the status and count into fixed-width columns.
+
+
+if __name__ == "__main__":
+    main()
+```
+</script>
+</div>
+
+<div class="group" id="g-hard">
+<h2>Build last</h2>
+<p class="intro">In the first release, but built after everything else. Inline highlighting has an open question, and running code needs the most new machinery.</p>
+
+<section class="idea" id="inline-highlight">
+  <div class="idea-h"><h3>Inline code highlighting</h3></div>
+  <p class="pitch">Syntax colours for inline code within a sentence.</p>
+  <div class="demo" data-md="md-inline" data-kind="inline"></div>
+  <div class="how"><p>A suffix marks the language, following rehype-pretty-code’s convention. Expressive Code only handles blocks, so this needs a Sätteri hast plugin with access to a highlighter. Sätteri runs its highlighter before hast plugins, so it isn’t yet clear where that plugin would get one.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Sätteri plugin.</dd>
+    <dt>Effort</dt><dd>Medium to large, and uncertain.</dd>
+    <dt>Seen in</dt><dd>rehype-pretty-code. There is also an open Expressive Code feature request for it.</dd>
+    <dt>Watch out for</dt><dd>Without a clean hook this could turn into maintaining a fork.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-inline">
+Call `await fetch(url)`{:js} and check `res.ok`{:js} before reading the body.
+</script>
+<section class="idea" id="run">
+  <div class="idea-h"><h3>Run in the browser</h3></div>
+  <p class="pitch">A Run button executes the example in the browser and shows the output below it.</p>
+  <div class="demo" data-md="md-run" data-run="mean 1546, sd 57.6"></div>
+  <div class="how"><p>The <code>runnable</code> flag adds the button. Each language has a runtime adapter with two jobs: load the runtime, and run code and return its output. The plugin ships a Pyodide adapter for Python. Sites register other runtimes in config, such as a sandboxed iframe for JavaScript or a remote execution service. The runtime loads on the first click, never with the page. The mockup fakes the output.</p></div>
+  <dl class="notes">
+    <dt>Lives in</dt><dd>Expressive Code plugin for the button, plus a client script with the runtime interface. The script loads only on pages with runnable blocks.</dd>
+    <dt>Effort</dt><dd>Large. Keep the adapter interface to those two functions.</dd>
+    <dt>Seen in</dt><dd>mdBook, JupyterLite.</dd>
+    <dt>Watch out for</dt><dd>Pyodide is a download of several megabytes, so it must never load before the reader asks.</dd>
+  </dl>
+</section>
+<script type="text/x-md" id="md-run">
+```py runnable
+from statistics import mean, stdev
+
+reads = [1520, 1610, 1480, 1575]
+print(f"mean {mean(reads):.0f}, sd {stdev(reads):.1f}")
+```
+</script>
+</div>
+
+<footer class="end">
+  <p>Design reference, 25 September 2026. Ideas drawn from VitePress, Code Hike, Material for MkDocs, Mintlify, mdBook, Docusaurus, GitHub Docs, sphinx-codeautolink and Shiki. Feasibility notes are best current guesses for Astro 7, Starlight 0.42 and Expressive Code 0.44; the ones marked as needing checking are the first things to verify.</p>
+</footer>
+</main>
+</div>
+<div id="card" hidden role="tooltip"></div>
+<div id="toast" hidden role="status" aria-live="polite"></div>
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&');
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+};
+const inlineMd = (s) => esc(s || '').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+/* ---------- toast, popovers, hover card ---------- */
+const toastEl = $('#toast'); let toastT;
+function toast(msg) { toastEl.textContent = msg; toastEl.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { toastEl.hidden = true; }, 3800); }
+const hasPopover = typeof HTMLElement !== 'undefined' && Object.prototype.hasOwnProperty.call(HTMLElement.prototype, 'popover');
+function place(el, anchor, maxW) {
+  const r = anchor.getBoundingClientRect();
+  const w = Math.min(maxW, window.innerWidth - 24);
+  el.style.width = w + 'px';
+  el.style.left = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), window.innerWidth - w - 12) + 'px';
+  el.style.top = (r.bottom + 8) + 'px';
+  const h = el.offsetHeight;
+  if (r.bottom + 8 + h > window.innerHeight - 12 && r.top - h - 8 > 12) el.style.top = (r.top - h - 8) + 'px';
+}
+document.addEventListener('toggle', (e) => {
+  const pop = e.target;
+  if (!(pop instanceof HTMLElement) || !pop.classList.contains('pop') || e.newState !== 'open') return;
+  const a = document.querySelector('[popovertarget="' + pop.id + '"]');
+  if (a) place(pop, a, 340);
+}, true);
+let scrollRaf = 0;
+window.addEventListener('scroll', () => {
+  if (scrollRaf) return;
+  scrollRaf = requestAnimationFrame(() => {
+    scrollRaf = 0;
+    $$('.pop').forEach((p) => {
+      let open = false; try { open = p.matches(':popover-open'); } catch (err) { /* unsupported */ }
+      const a = open && document.querySelector('[popovertarget="' + p.id + '"]');
+      if (a) place(p, a, 340);
+    });
+    if (!card.hidden && cardAnchor) place(card, cardAnchor, 360);
+  });
+}, { passive: true });
+function addPop(id, html) {
+  const d = document.createElement('div');
+  d.id = id; d.className = 'pop'; d.setAttribute('popover', ''); d.innerHTML = html;
+  document.body.append(d);
+}
+if (!hasPopover) {
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[popovertarget]'); if (!b) return;
+    const p = document.getElementById(b.getAttribute('popovertarget')); if (p) toast(p.textContent.replace(/\s+/g, ' ').trim());
+  });
+}
+const card = $('#card'); let cardAnchor = null;
+function showCard(a) {
+  cardAnchor = a;
+  const d = API[a.dataset.api]; if (!d) return;
+  card.innerHTML = '<code class="sig">' + esc(d.sig) + '</code><p>' + esc(d.sum) + '</p><p class="src">' + esc(d.src) + '</p>';
+  card.hidden = false; place(card, a, 360);
+}
+document.addEventListener('mouseover', (e) => { const a = e.target.closest && e.target.closest('.api'); if (a) showCard(a); });
+document.addEventListener('mouseout', (e) => { const a = e.target.closest && e.target.closest('.api'); if (a && !a.contains(e.relatedTarget)) card.hidden = true; });
+document.addEventListener('focusin', (e) => { const a = e.target.closest && e.target.closest('.api'); if (a) showCard(a); });
+document.addEventListener('focusout', (e) => { if (e.target.closest && e.target.closest('.api')) card.hidden = true; });
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-toast]'); if (t) { toast(t.dataset.toast); return; }
+  const a = e.target.closest('a.api, a.fake');
+  if (a) { e.preventDefault(); toast('Would open ' + (a.dataset.href || a.getAttribute('href'))); return; }
+  const f = e.target.closest('a.fnb, a.fnl');
+  $$('.ln.fn-on, .legend li.on').forEach((x) => x.classList.remove('fn-on', 'on'));
+  if (f) {
+    e.preventDefault();
+    const fig = f.closest('figure.ec'); const n = f.dataset.fn;
+    const badge = fig.querySelector('.fnb[data-fn="' + n + '"]'); const li = fig.querySelector('.legend li[data-fn="' + n + '"]');
+    const ln = badge && badge.closest('.ln');
+    if (ln) ln.classList.add('fn-on');
+    if (li) li.classList.add('on');
+    const target = f.classList.contains('fnb') ? li : ln;
+    if (target) target.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
+  }
+});
+
+/* ---------- tokeniser ---------- */
+const words = (s) => new Set(s.split(' ').filter(Boolean));
+const JSKW = 'import export from default const let var function return async await new if else for of in while class extends try catch throw typeof null undefined true false this';
+const LANG = {
+  js: { cm: '//', kw: words(JSKW) },
+  ts: { cm: '//', kw: words(JSKW + ' type interface string number boolean') },
+  py: { cm: '#', kw: words('import from as def return if elif else for in while class try except finally with lambda None True False and or not pass yield async await raise is') },
+  rust: { cm: '//', kw: words('let mut fn use pub struct impl match if else for in return Some None Ok Err true false') },
+  sh: { cm: '#', kw: words('export if then fi for do done in') },
+  yaml: { cm: '#', kw: words('true false null') },
+  make: { cm: '#', kw: words('') },
+  txt: { cm: null, kw: words('') },
+};
+LANG.javascript = LANG.js; LANG.python = LANG.py; LANG.bash = LANG.sh; LANG.shell = LANG.sh; LANG.yml = LANG.yaml; LANG.typescript = LANG.ts;
+LANG.nextflow = { cm: '//', kw: words('include from workflow process input output script emit take main') }; LANG.nf = LANG.nextflow;
+const LABEL = { py: 'Python', js: 'JavaScript', ts: 'TypeScript', rust: 'Rust', sh: 'Shell', nextflow: 'Nextflow' };
+const PLAYGROUNDS = {
+  typescript: { label: 'Open in TS Playground', toast: 'Would open the TypeScript Playground in a new tab, with this code compressed into the URL.' },
+  rust: { label: 'Open in Rust Playground', toast: 'Would open the Rust Playground in a new tab, with this code in the URL.' },
+  sandbox: { label: 'Try in Sandbox', toast: 'Would open sandbox.example.com/new with this code, using the URL builder from the site config.' },
+};
+const TOKRE = /\s+|"(?:[^"\\]|\\.)*"?|'(?:[^'\\]|\\.)*'?|`(?:[^`\\]|\\.)*`?|\d[\d_.]*|--?[A-Za-z][\w-]*|[A-Za-z_$][\w$]*|./gy;
+function tokLine(text, lang) {
+  const L = LANG[lang] || LANG.txt;
+  const shellish = lang === 'sh' || lang === 'make';
+  const out = []; const push = (t, c) => { if (t) out.push([t, c]); };
+  let i = 0; let cmdPos = shellish;
+  if (lang === 'yaml') {
+    const m = text.match(/^(\s*)(- )?([\w.-]+)(:)(?=\s|$)/);
+    if (m) { push(m[1] + (m[2] || ''), m[2] ? 'o' : ''); push(m[3], 'y'); push(m[4], 'o'); i = m[0].length; }
+  }
+  if (lang === 'make') {
+    const m = text.match(/^([\w.-]+)(:)/);
+    if (m) { push(m[1], 'f'); push(m[2], 'o'); i = m[0].length; cmdPos = false; }
+  }
+  while (i < text.length) {
+    if (L.cm && text.startsWith(L.cm, i) && (L.cm !== '#' || i === 0 || /\s/.test(text[i - 1]))) { push(text.slice(i), 'c'); break; }
+    TOKRE.lastIndex = i;
+    const t = TOKRE.exec(text)[0];
+    let c = 'o';
+    if (/^\s/.test(t)) c = '';
+    else if (/^["'`]/.test(t)) c = 's';
+    else if (/^\d/.test(t)) c = 'n';
+    else if (/^--?[A-Za-z]/.test(t)) {
+      if (!shellish) { push('-', 'o'); i += 1; continue; }
+      c = 'a';
+    } else if (/^[A-Za-z_$]/.test(t)) {
+      const after = text.slice(i + t.length);
+      if (L.kw.has(t)) c = 'k';
+      else if (shellish && cmdPos) c = 'f';
+      else if (/^\s*\(/.test(after) || (lang === 'rust' && after[0] === '!')) c = 'f';
+      else if (/^[A-Z]/.test(t)) c = 't';
+      else if (text[i - 1] === '.') c = 'p';
+      else c = 'v';
+    }
+    if (c !== '') cmdPos = shellish && /[|;&]/.test(t);
+    push(t, c);
+    i += t.length;
+  }
+  return out;
+}
+function toChars(toks) {
+  const a = [];
+  toks.forEach(([t, c]) => { for (const ch of t) a.push({ ch, c, d: '' }); });
+  for (const x of a) { if (x.ch === ' ' || x.ch === '\t') x.lead = true; else break; }
+  return a;
+}
+function runsHTML(seg, ws) {
+  let h = ''; let i = 0;
+  while (i < seg.length) {
+    const c = seg[i].c; const lead = !!(ws && seg[i].lead); let j = i; let s = '';
+    while (j < seg.length && seg[j].c === c && !!(ws && seg[j].lead) === lead) { s += seg[j].ch; j++; }
+    const inner = lead ? s.replace(/[ \t]/g, (x) => (x === '\t' ? '<span class="ws-tab">→</span>' : '<span class="ws">·</span>')) : esc(s);
+    h += c ? '<span class="t-' + c + '">' + inner + '</span>' : inner;
+    i = j;
+  }
+  return h;
+}
+const hl = (s, lang) => runsHTML(toChars(tokLine(s, lang)), false);
+
+/* ---------- decorations ---------- */
+const DECO = { 'wd-del': { type: 'wd', cls: 'wd-del' }, 'wd-ins': { type: 'wd', cls: 'wd-ins' } };
+function decoRange(chars, s, e, key) { for (let x = s; x < e && x < chars.length; x++) chars[x].d = key; }
+function charsHTML(chars, b) {
+  let h = ''; let i = 0;
+  while (i < chars.length) {
+    const d = chars[i].d; let j = i;
+    while (j < chars.length && chars[j].d === d) j++;
+    const seg = chars.slice(i, j); const inner = runsHTML(seg, b.ws); const D = d ? DECO[d] : null;
+    if (!D) h += inner;
+    else if (D.type === 'ph') h += '<input class="ph" data-ph="' + esc(D.name) + '" placeholder="' + esc(D.name) + '" aria-label="' + esc(D.name) + '" spellcheck="false" autocomplete="off">';
+    else if (D.type === 'link') h += '<a class="tlink" href="' + esc(D.href) + '" target="_blank" rel="noopener">' + inner + '</a>';
+    else if (D.type === 'api') h += '<a class="api" href="' + esc(API[D.api].href) + '" data-api="' + esc(D.api) + '">' + inner + '</a>';
+    else if (D.type === 'wd') h += '<span class="' + D.cls + '">' + inner + '</span>';
+    else if (D.type === 'br') h += '<span class="br" data-pair="' + D.pair + '">' + inner + '</span>';
+    else h += inner;
+    i = j;
+  }
+  return h;
+}
+const splitTok = (s) => s.match(/\w+|\s+|[^\w\s]/g) || [];
+function lcsMask(a, b) {
+  const n = a.length; const m = b.length;
+  const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const ka = new Array(n).fill(false); const kb = new Array(m).fill(false);
+  let i = 0; let j = 0;
+  while (i < n && j < m) {
+    if (a[i] === b[j]) { ka[i] = kb[j] = true; i++; j++; } else if (dp[i + 1][j] >= dp[i][j + 1]) i++; else j++;
+  }
+  return [ka, kb];
+}
+function markTok(L, toks, keep, key) {
+  let pos = 0;
+  toks.forEach((t, k) => {
+    const changed = /\S/.test(t)
+      ? !keep[k]
+      : (k > 0 && k < toks.length - 1 && !keep[k - 1] && !keep[k + 1] && /\S/.test(toks[k - 1]) && /\S/.test(toks[k + 1]));
+    if (changed) decoRange(L.chars, pos, pos + t.length, key);
+    pos += t.length;
+  });
+}
+function wordDiff(lines) {
+  let i = 0;
+  while (i < lines.length) {
+    if (!lines[i].st.has('del')) { i++; continue; }
+    const dels = []; while (i < lines.length && lines[i].st.has('del')) dels.push(lines[i++]);
+    const ins = []; while (i < lines.length && lines[i].st.has('ins')) ins.push(lines[i++]);
+    for (let k = 0; k < Math.min(dels.length, ins.length); k++) {
+      const a = splitTok(dels[k].text); const c = splitTok(ins[k].text);
+      const [ka, kc] = lcsMask(a, c);
+      markTok(dels[k], a, ka, 'wd-del'); markTok(ins[k], c, kc, 'wd-ins');
+    }
+  }
+}
+function colourBrackets(b) {
+  const stack = []; let n = 0;
+  b.lines.forEach((L) => L.chars.forEach((ch) => {
+    if (ch.c !== 'o') return;
+    if ('([{'.includes(ch.ch)) {
+      const pid = 'p' + b.uid + '_' + (n++);
+      ch.c = 'b' + ((stack.length % 3) + 1); stack.push(pid);
+      ch.d = 'br:' + pid; DECO[ch.d] = { type: 'br', pair: pid };
+    } else if (')]}'.includes(ch.ch)) {
+      const pid = stack.pop();
+      ch.c = 'b' + ((stack.length % 3) + 1);
+      if (pid) ch.d = 'br:' + pid;
+    }
+  }));
+}
+const API = {
+  'json.loads': { lang: 'py', re: /\bjson\.loads\b/g, sig: 'json.loads(s, *, cls=None, object_hook=None, parse_float=None, …)', sum: 'Parse a JSON document from a string, bytes or bytearray into Python objects.', src: 'docs.python.org, found through its objects.inv', href: 'https://docs.python.org/3/library/json.html#json.loads' },
+  read_text: { lang: 'py', re: /\bread_text\b/g, sig: 'Path.read_text(encoding=None, errors=None, newline=None)', sum: 'Return the decoded contents of the file as a string.', src: 'docs.python.org, found through its objects.inv', href: 'https://docs.python.org/3/library/pathlib.html#pathlib.Path.read_text' },
+  Path: { lang: 'py', re: /\bPath\b/g, sig: 'class pathlib.Path(*pathsegments)', sum: 'A filesystem path, with methods to read, write and query it.', src: 'docs.python.org, found through its objects.inv', href: 'https://docs.python.org/3/library/pathlib.html#pathlib.Path' },
+  pathlib: { lang: 'py', re: /\bpathlib\b/g, sig: 'module pathlib', sum: 'Object-oriented filesystem paths.', src: 'docs.python.org, found through its objects.inv', href: 'https://docs.python.org/3/library/pathlib.html' },
+  summarise: { lang: 'py', re: /\bsummarise\b/g, sig: 'myproject.summarise(data: dict, *, top: int = 5) -> str', sum: 'Summarise a run as a short text report.', src: 'Your API reference, generated by starlight-pydocs', href: '/reference/myproject/#summarise' },
+  json: { lang: 'py', re: /\bjson\b/g, sig: 'module json', sum: 'JSON encoder and decoder.', src: 'docs.python.org, found through its objects.inv', href: 'https://docs.python.org/3/library/json.html' },
+};
+API['channel.fromFilePairs'] = { lang: 'nextflow', re: /\bchannel\.fromFilePairs\b/g, sig: 'channel.fromFilePairs(pattern, [options])', sum: 'Create a channel of file pairs that match a glob pattern, grouped by their shared prefix.', src: 'nextflow.io docs, through the Nextflow adapter', href: 'https://www.nextflow.io/docs/latest/reference/channel.html#fromfilepairs' };
+API.FASTQC = { lang: 'nextflow', re: /\bFASTQC\b/g, sig: 'process FASTQC\n  input:  tuple val(meta), path(reads)\n  output: html, zip', sum: 'Run FastQC on sequencing reads and emit HTML and zip reports.', src: 'Your pipeline’s module reference, through the Nextflow adapter', href: '/reference/modules/fastqc/' };
+const API_ORDER = ['json.loads', 'read_text', 'Path', 'pathlib', 'summarise', 'json', 'channel.fromFilePairs', 'FASTQC'];
+const PH = store.get('cbi-ph', {});
+function sizePh(inp) { inp.style.width = 'calc(' + Math.max(inp.placeholder.length, inp.value.length, 3) + 'ch + 8px)'; }
+document.addEventListener('input', (e) => {
+  const inp = e.target.closest && e.target.closest('input.ph'); if (!inp) return;
+  const n = inp.dataset.ph; PH[n] = inp.value; store.set('cbi-ph', PH);
+  $$('input.ph').forEach((x) => { if (x.dataset.ph === n && x !== inp) x.value = inp.value; sizePh(x); });
+});
+
+/* ---------- fences and meta ---------- */
+function fences(md) {
+  const re = /^(`{3,})([\w-]*)[ \t]*(.*)\n([\s\S]*?)^\1[ \t]*$/gm; const out = []; let m;
+  while ((m = re.exec(md))) out.push({ lang: m[2], meta: m[3], code: m[4], index: m.index });
+  return out;
+}
+function parseRanges(v) {
+  const s = new Set();
+  String(v).split(',').forEach((p) => { p = p.trim(); if (!p) return; const [a, z] = p.split('-').map(Number); for (let i = a; i <= (z || a); i++) s.add(i); });
+  return s;
+}
+function parseMeta(meta) {
+  const M = { ranges: {}, str: {}, flags: new Set() };
+  let rest = meta.replace(/([\w-]+)=\{([^}]*)\}/g, (_, k, v) => { M.ranges[k] = parseRanges(v); return ' '; });
+  rest = rest.replace(/([\w-]+)="([^"]*)"/g, (_, k, v) => { M.str[k] = v; return ' '; });
+  rest = rest.replace(/\{([^}]*)\}/g, (_, v) => { M.ranges.mark = parseRanges(v); return ' '; });
+  rest.split(/\s+/).filter(Boolean).forEach((f) => M.flags.add(f));
+  return M;
+}
+
+/* ---------- block renderer ---------- */
+let UID = 0;
+function renderBlock(f, opts = {}) {
+  const uid = ++UID;
+  const M = parseMeta(f.meta || '');
+  const lang = (f.lang || 'txt').toLowerCase();
+  const code = f.code.replace(/\n$/, '');
+  const title = M.str.title || '';
+  const isDiff = lang === 'diff';
+  const cl = isDiff ? (M.str.lang || 'txt') : lang;
+  const term = M.str.frame === 'terminal';
+  const cq = reEsc((LANG[cl] || LANG.txt).cm || '//');
+  const ownRe = new RegExp('^\\s*' + cq + '\\s*\\[!(callout|ref|link)([^\\]]*)\\]\\s*(.*)$');
+  const eolRe = new RegExp('\\s*' + cq + '\\s*\\[!(code|annotate|mention)([^\\]]*)\\]\\s*(.*)$');
+  const lines = []; const pend = [];
+  for (let raw of code.split('\n')) {
+    const st = new Set();
+    if (isDiff && (raw[0] === '+' || raw[0] === '-')) { st.add(raw[0] === '+' ? 'ins' : 'del'); raw = raw.slice(1); }
+    let m = raw.match(ownRe);
+    if (m) { pend.push({ kind: m[1], arg: m[2].trim(), text: m[3] }); continue; }
+    const L = { text: raw, st };
+    m = raw.match(eolRe);
+    if (m) {
+      L.text = raw.slice(0, m.index);
+      const kind = m[1]; const arg = m[2].trim(); const text = m[3].trim();
+      if (kind === 'code') {
+        const [name, cnt] = arg.split(':');
+        const s = ({ '++': 'ins', '--': 'del', highlight: 'mark' })[name] || name;
+        if (s === 'focus') L.focusN = +(cnt || 1); else st.add(s);
+        if (text) L.msg = text;
+      } else if (kind === 'annotate') L.anno = text;
+      else if (kind === 'mention') L.mention = arg;
+    }
+    pend.forEach((p) => {
+      if (p.kind === 'callout') { const mm = p.arg.match(/^\/(.+?)\/$/); L.callout = { tok: mm ? mm[1] : '', text: p.text }; }
+      else if (p.kind === 'ref') L.ref = p.text || p.arg;
+      else if (p.kind === 'link') { const mm = p.arg.match(/^\/(.+?)\/\s+(\S+)$/); if (mm) (L.links = L.links || []).push({ tok: mm[1], href: mm[2] }); }
+    });
+    pend.length = 0;
+    lines.push(L);
+  }
+  lines.forEach((L, i) => { L.n = i + 1; });
+  lines.forEach((L, i) => { if (L.focusN) for (let k = 0; k < L.focusN && lines[i + k]; k++) lines[i + k].focused = true; });
+  const R = M.ranges;
+  ['mark', 'ins', 'del', 'error', 'warning', 'info'].forEach((k) => { if (R[k]) R[k].forEach((n) => { if (lines[n - 1]) lines[n - 1].st.add(k); }); });
+  if (R.hidden) R.hidden.forEach((n) => { if (lines[n - 1]) lines[n - 1].st.add('hid'); });
+  if (R.focus) R.focus.forEach((n) => { if (lines[n - 1]) lines[n - 1].focused = true; });
+  if (opts.focus) opts.focus.forEach((n) => { if (lines[n - 1]) lines[n - 1].focused = true; });
+
+  const b = { uid, lines, lang: cl, term, title, id: M.str.id || ('b' + uid), M, opts, pops: [] };
+  b.hasFocus = lines.some((L) => L.focused);
+  b.hasInd = lines.some((L) => L.st.has('ins') || L.st.has('del'));
+  b.showNums = M.flags.has('showLineNumbers');
+  b.ws = M.flags.has('whitespace') || M.str.whitespace === 'all';
+
+  let cont = false;
+  lines.forEach((L) => {
+    if (term) {
+      if (/^\$ /.test(L.text)) { L.cmd = L.text.slice(2); L.chars = toChars([['$ ', 'pr']].concat(tokLine(L.cmd, 'sh'))); cont = /\\\s*$/.test(L.cmd); return; }
+      if (cont) { L.cmd = L.text; L.chars = toChars(tokLine(L.text, 'sh')); cont = /\\\s*$/.test(L.text); return; }
+      L.out = true; L.chars = toChars([[L.text, 'out']]); return;
+    }
+    L.chars = toChars(tokLine(L.text, cl));
+  });
+  if (isDiff) wordDiff(lines);
+  if (M.flags.has('brackets')) colourBrackets(b);
+  lines.forEach((L) => (L.links || []).forEach((lk, k) => {
+    const i = L.text.indexOf(lk.tok); if (i < 0) return;
+    const key = 'lk' + uid + '_' + L.n + '_' + k; DECO[key] = { type: 'link', href: lk.href }; decoRange(L.chars, i, i + lk.tok.length, key);
+  }));
+  if (opts.api) lines.forEach((L) => API_ORDER.forEach((k) => {
+    const d = API[k]; if (d.lang !== cl) return; d.re.lastIndex = 0; let m;
+    while ((m = d.re.exec(L.text))) {
+      const s = m.index; const e = s + m[0].length;
+      if (L.chars.slice(s, e).some((c) => c.d || c.c === 's' || c.c === 'c')) continue;
+      const key = 'api' + uid + '_' + L.n + '_' + s; DECO[key] = { type: 'api', api: k }; decoRange(L.chars, s, e, key);
+    }
+  }));
+  b.ph = (M.str.placeholder || '').split(',').map((s) => s.trim()).filter(Boolean);
+  b.ph.forEach((name) => lines.forEach((L) => {
+    let i = -1;
+    while ((i = L.text.indexOf(name, i + 1)) >= 0) { const key = 'ph' + uid + '_' + L.n + '_' + i; DECO[key] = { type: 'ph', name }; decoRange(L.chars, i, i + name.length, key); }
+  }));
+  lines.forEach((L) => {
+    if (!L.callout) return;
+    const i = L.callout.tok ? L.text.indexOf(L.callout.tok) : -1;
+    const col = Math.max(0, i < 0 ? L.text.search(/\S/) : i);
+    L.calloutMid = col + (i < 0 ? 0.5 : L.callout.tok.length / 2);
+  });
+  let an = 0; let rn = 0;
+  lines.forEach((L) => { if (L.anno) L.annoN = ++an; if (L.ref) L.refN = ++rn; });
+  const hidN = lines.filter((L) => L.st.has('hid')).length;
+  let exp = R.expandable ? [...R.expandable][0] : (M.flags.has('expandable') ? 12 : 0);
+  if (exp && lines.length <= exp) exp = 0;
+
+  const tools = [];
+  if (hidN) tools.push('<button class="tool t-hid" type="button" aria-pressed="false">Show ' + hidN + ' hidden lines</button>');
+  const pg = M.str.playground ? (PLAYGROUNDS[M.str.playground] || { label: 'Open in ' + M.str.playground, toast: 'Would open the ' + M.str.playground + ' playground with this code.' }) : null;
+  if (pg) tools.push('<button class="tool t-play" type="button">' + esc(pg.label) + '</button>');
+  if (M.flags.has('runnable')) tools.push('<button class="tool t-run" type="button">Run</button>');
+  if (opts.switcher) tools.push(opts.switcher);
+  if (opts.stepper) tools.push(opts.stepper);
+  const hasHdr = !!(title || term || tools.length || opts.headLeft);
+  const hdr = hasHdr
+    ? '<div class="hdr">' + (term ? '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>' : '')
+      + (title ? '<span class="' + (term ? 'ttl' : 'tab') + '">' + esc(title) + '</span>' : '')
+      + (opts.headLeft ? '<span class="hleft">' + opts.headLeft + '</span>' : '')
+      + (tools.length ? '<span class="tools">' + tools.join('') + '</span>' : '') + '</div>'
+    : '';
+  const refs = lines.filter((L) => L.refN);
+  const legend = refs.length
+    ? '<ol class="legend">' + refs.map((L) => '<li id="fn' + uid + '_' + L.refN + '" data-fn="' + L.refN + '"><a class="fnl" href="#fr' + uid + '_' + L.refN + '" data-fn="' + L.refN + '" aria-label="Note ' + L.refN + ', for line ' + L.n + '">' + inlineMd(L.ref) + '</a></li>').join('') + '</ol>'
+    : '';
+  const plural = (n) => n + ' hidden line' + (n > 1 ? 's' : '');
+  let codeHTML = ''; let run = 0;
+  lines.forEach((L, i) => {
+    if (L.st.has('hid') && !(i > 0 && lines[i - 1].st.has('hid'))) {
+      let n = 0; run++;
+      for (let k = i; k < lines.length && lines[k].st.has('hid'); k++) { n++; lines[k].run = run; }
+      codeHTML += '<button class="hid-mark" type="button" data-run="' + run + '" data-n="' + n + '" aria-expanded="false"><span>' + plural(n) + '</span></button>';
+    }
+    codeHTML += lineHTML(L, b);
+  });
+  const copyLabel = term && lines.some((L) => L.cmd !== undefined) ? 'Copy commands' : 'Copy';
+  const bodyCls = ['body']; if (b.hasFocus) bodyCls.push('has-focus'); if (exp) bodyCls.push('exp');
+  const fig = document.createElement('figure');
+  fig.className = 'ec' + (term ? ' term' : '') + (hasHdr ? ' has-hdr' : '') + (M.str.footnotes === 'sticky' ? ' fn-sticky' : '');
+  fig.innerHTML = hdr
+    + '<div class="' + bodyCls.join(' ') + '" tabindex="0"' + (exp ? ' style="--rows:' + exp + '"' : '') + ' aria-label="Code' + (title ? ': ' + esc(title) : '') + '"><pre><code>'
+    + codeHTML + '</code></pre></div>'
+    + (exp ? '<div class="xbar"><button class="tool t-exp" type="button" aria-expanded="false">Show all ' + lines.length + ' lines</button></div>' : '')
+    + legend
+    + (M.flags.has('runnable') ? '<div class="runout" hidden></div>' : '')
+    + '<button class="copy" type="button">' + copyLabel + '</button>';
+  fig._b = b; b.fig = fig;
+
+  const q = (s) => fig.querySelector(s);
+  q('.copy').addEventListener('click', async (e) => {
+    const btn = e.currentTarget; const t = copyText(b);
+    try { await navigator.clipboard.writeText(t); } catch (err) { /* clipboard unavailable */ }
+    btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = copyLabel; }, 1600);
+    if (opts.onCopy) opts.onCopy(t);
+  });
+  const hb = q('.t-hid');
+  const marks = $$('.hid-mark', fig);
+  const setRun = (m, on) => {
+    const n = +m.dataset.n;
+    $$('.ln.hid', fig).forEach((l) => { if (l.dataset.run === m.dataset.run) l.classList.toggle('open', on); });
+    m.setAttribute('aria-expanded', String(on));
+    m.firstChild.textContent = on ? 'Hide ' + n + ' line' + (n > 1 ? 's' : '') : plural(n);
+  };
+  const syncHb = () => {
+    if (!hb) return;
+    const all = marks.every((m) => m.getAttribute('aria-expanded') === 'true');
+    hb.setAttribute('aria-pressed', String(all)); hb.textContent = all ? 'Hide ' + hidN + ' lines' : 'Show ' + hidN + ' hidden lines';
+  };
+  marks.forEach((m) => m.addEventListener('click', () => { setRun(m, m.getAttribute('aria-expanded') !== 'true'); syncHb(); }));
+  if (hb) hb.addEventListener('click', () => { const all = marks.every((m) => m.getAttribute('aria-expanded') === 'true'); marks.forEach((m) => setRun(m, !all)); syncHb(); });
+  const xb = q('.t-exp');
+  if (xb) xb.addEventListener('click', () => { const on = q('.body').classList.toggle('open'); xb.setAttribute('aria-expanded', String(on)); xb.textContent = on ? 'Show fewer lines' : 'Show all ' + lines.length + ' lines'; });
+  const pb = q('.t-play');
+  if (pb) pb.addEventListener('click', () => toast(pg.toast));
+  const rb = q('.t-run');
+  if (rb) rb.addEventListener('click', () => {
+    const out = q('.runout'); out.hidden = false; out.textContent = 'Loading the Python runtime…'; rb.disabled = true;
+    setTimeout(() => { out.textContent = opts.runOutput || ''; rb.disabled = false; rb.textContent = 'Run again'; }, reduced ? 50 : 1100);
+  });
+  if (opts.permalink) fig.addEventListener('click', (e) => { const g = e.target.closest('.gut'); if (!g) return; e.preventDefault(); opts.permalink(b, +g.dataset.n, e.shiftKey); });
+  if (M.flags.has('brackets')) {
+    fig.addEventListener('mouseover', (e) => {
+      const s = e.target.closest('.br'); $$('.br.on', fig).forEach((x) => x.classList.remove('on'));
+      if (s) $$('.br', fig).forEach((x) => { if (x.dataset.pair === s.dataset.pair) x.classList.add('on'); });
+    });
+    fig.addEventListener('mouseleave', () => $$('.br.on', fig).forEach((x) => x.classList.remove('on')));
+  }
+  $$('input.ph', fig).forEach((inp) => { inp.value = PH[inp.dataset.ph] || ''; sizePh(inp); });
+  b.pops.forEach((p) => addPop(p.id, p.html));
+  return fig;
+}
+function lineHTML(L, b) {
+  const cls = ['ln'];
+  L.st.forEach((s) => cls.push(s === 'hid' ? 'hid' : 'st-' + s));
+  if (b.hasFocus && !L.focused) cls.push('dim');
+  if (L.out) cls.push('out');
+  let h = L.callout ? '<div class="co" style="--mid:' + L.calloutMid + '"><span class="bub">' + inlineMd(L.callout.text) + '</span></div>' : '';
+  h += '<div class="' + cls.join(' ') + '" data-l="' + L.n + '"' + (L.mention ? ' data-mention="' + esc(L.mention) + '"' : '') + (L.annoN ? ' data-anno="' + L.annoN + '"' : '') + (L.run ? ' data-run="' + L.run + '"' : '') + '>';
+  if (b.showNums) h += '<a class="gut" href="#' + b.id + '-L' + L.n + '" data-n="' + L.n + '" aria-label="Link to line ' + L.n + '">' + L.n + '</a>';
+  if (b.hasInd) h += '<span class="ind" aria-hidden="true">' + (L.st.has('ins') ? '+' : L.st.has('del') ? '−' : '') + '</span>';
+  h += '<span class="tx">' + (charsHTML(L.chars, b) || ' ') + '</span>';
+  const state = ['error', 'warning', 'info'].find((s) => L.st.has(s));
+  if (L.msg) h += '<span class="msg msg-' + (state || 'info') + '">' + esc(L.msg) + '</span>';
+  if (L.annoN) {
+    if (b.opts.side) h += '<span class="anno anno-s" aria-hidden="true">' + L.annoN + '</span>';
+    else {
+      const pid = 'an' + b.uid + '_' + L.annoN;
+      h += '<button class="anno" type="button" popovertarget="' + pid + '" aria-label="Annotation ' + L.annoN + '">' + L.annoN + '</button>';
+      b.pops.push({ id: pid, html: '<p>' + inlineMd(L.anno) + '</p>' });
+    }
+  }
+  if (L.refN) h += '<a class="fnb" href="#fn' + b.uid + '_' + L.refN + '" id="fr' + b.uid + '_' + L.refN + '" data-fn="' + L.refN + '" aria-label="Note ' + L.refN + '">' + L.refN + '</a>';
+  h += '</div>';
+  return h;
+}
+function copyText(b) {
+  if (b.term) return b.lines.filter((L) => L.cmd !== undefined).map((L) => L.cmd).join('\n');
+  let t = b.lines.map((L) => L.text).join('\n');
+  (b.ph || []).forEach((n) => { if (PH[n]) t = t.split(n).join(PH[n]); });
+  return t;
+}
+
+/* ---------- source view ---------- */
+function srcHTML(md) {
+  return md.replace(/\n$/, '').split('\n').map((line) => {
+    const fm = line.match(/^(`{3,}|:::)(.*)$/);
+    if (fm) return '<span class="fence">' + esc(fm[1]) + '</span><span class="meta">' + esc(fm[2]) + '</span>';
+    return esc(line)
+      .replace(/\[!(?:code [^\]]+|annotate|callout[^\]]*|ref|link[^\]]*|mention[^\]]*)\]/g, (x) => '<mark class="nt">' + x + '</mark>')
+      .replace(/\(#mention:[\w-]+\)/g, (x) => '<mark class="nt">' + x + '</mark>')
+      .replace(/`\{:\w+\}/g, (x) => '`<mark class="nt">' + x.slice(1) + '</mark>');
+  }).join('\n');
+}
+function mdOf(id) { const el = document.getElementById(id); return el ? el.textContent.replace(/^\n/, '').replace(/\s+$/, '') + '\n' : ''; }
+function pane(label, inner, cls) {
+  const d = document.createElement('div'); d.className = 'pane ' + (cls || '');
+  d.innerHTML = '<p class="lbl">' + label + '</p>';
+  if (typeof inner === 'string') d.insertAdjacentHTML('beforeend', inner); else if (inner) d.append(inner);
+  return d;
+}
+const srcPane = (md) => pane('You write', '<pre class="src-pre" tabindex="0">' + srcHTML(md) + '</pre>', 'pane-src');
+
+/* ---------- section kinds ---------- */
+const SWITCH = [];
+const swLabel = (f) => parseMeta(f.meta || '').str.label || LABEL[f.lang] || f.lang;
+function renderSwitch(sw, focus) {
+  const labels = sw.fs.map(swLabel);
+  let idx = labels.indexOf(store.get('cbi-sw-' + sw.key, labels[0])); if (idx < 0) idx = 0;
+  const sel = '<label class="sw"><span class="vh">Variant</span><select class="lang">' + labels.map((l, k) => '<option value="' + k + '"' + (k === idx ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
+  const fig = renderBlock(sw.fs[idx], { switcher: sel });
+  sw.holder.replaceChildren(fig);
+  const selEl = fig.querySelector('select.lang');
+  selEl.addEventListener('change', (e) => {
+    store.set('cbi-sw-' + sw.key, labels[+e.target.value]);
+    SWITCH.forEach((o) => { if (o.key === sw.key) renderSwitch(o, o === sw); });
+  });
+  if (focus) selEl.focus();
+}
+function keyOf(l, seen) { const t = l.querySelector('.tx').textContent; seen[t] = (seen[t] || 0) + 1; return t + '#' + seen[t]; }
+
+const KIND = {
+  generic(el, md) {
+    el.append(srcPane(md));
+    if (el.dataset.config) el.append(pane('Site config', '<pre class="src-pre" tabindex="0">' + esc(mdOf(el.dataset.config).replace(/\n$/, '')) + '</pre>', 'pane-src'));
+    const out = pane('Readers see', null, 'pane-out');
+    const opts = {};
+    if ('api' in el.dataset) opts.api = true;
+    if ('run' in el.dataset) opts.runOutput = el.dataset.run;
+    if ('side' in el.dataset) opts.side = true;
+    let addr = null;
+    if ('permalink' in el.dataset) {
+      addr = document.createElement('div'); addr.className = 'addr';
+      addr.innerHTML = '<span>docs.example.com/guides/config/</span><b class="hash"></b>';
+      out.append(addr);
+      opts.permalink = (b, n, shift) => {
+        if (!shift || !b.anchor) b.anchor = n;
+        const s = Math.min(b.anchor, n); const e = Math.max(b.anchor, n);
+        $$('.ln', b.fig).forEach((x) => { const l = +x.dataset.l; x.classList.toggle('st-target', l >= s && l <= e); });
+        addr.querySelector('.hash').textContent = '#' + b.id + '-L' + s + (e > s ? '-L' + e : '');
+      };
+    }
+    let clip = null;
+    if ('clip' in el.dataset) {
+      clip = pane('Clipboard after copying', '<pre></pre>', 'clip'); clip.hidden = true;
+      opts.onCopy = (t) => { clip.hidden = false; clip.querySelector('pre').textContent = t; };
+    }
+    el.append(out);
+    fences(md).forEach((f) => {
+      const fig = renderBlock(f, opts);
+      if (opts.side) {
+        const wrap = document.createElement('div'); wrap.className = 'twopane';
+        const notes = document.createElement('ol'); notes.className = 'side-notes';
+        fig._b.lines.filter((L) => L.annoN).forEach((L) => {
+          const li = document.createElement('li'); li.dataset.anno = L.annoN; li.tabIndex = 0;
+          li.innerHTML = '<span class="num">' + L.annoN + '</span>' + inlineMd(L.anno); notes.append(li);
+        });
+        wrap.append(fig, notes); out.append(wrap);
+        const lit = (k) => {
+          $$('.ln', fig).forEach((l) => l.classList.toggle('lit', !!k && l.dataset.anno === k));
+          $$('li', notes).forEach((li) => li.classList.toggle('on', li.dataset.anno === k));
+        };
+        notes.addEventListener('mouseover', (e) => { const li = e.target.closest('li'); lit(li ? li.dataset.anno : null); });
+        notes.addEventListener('mouseleave', () => lit(null));
+        notes.addEventListener('focusin', (e) => { const li = e.target.closest('li'); lit(li ? li.dataset.anno : null); });
+        notes.addEventListener('focusout', () => lit(null));
+        fig.addEventListener('mouseover', (e) => { const ln = e.target.closest('.ln[data-anno]'); lit(ln ? ln.dataset.anno : null); });
+        fig.addEventListener('mouseleave', () => lit(null));
+        const go = () => wrap.classList.toggle('wide', wrap.clientWidth >= 640);
+        go();
+        if ('ResizeObserver' in window) new ResizeObserver(go).observe(wrap);
+      } else out.append(fig);
+    });
+    if (clip) out.append(clip);
+  },
+  mentions(el, md) {
+    el.append(srcPane(md));
+    const out = pane('Readers see', null, 'pane-out');
+    const f = fences(md)[0];
+    const p = document.createElement('p'); p.className = 'mention-prose';
+    p.innerHTML = esc(md.slice(0, f.index).trim()).replace(/\[([^\]]+)\]\(#mention:([\w-]+)\)/g, (_, t, n) => '<a href="#" class="mn" data-m="' + n + '">' + t + '</a>');
+    const fig = renderBlock(f);
+    out.append(p, fig); el.append(out);
+    const on = (n) => { fig.classList.add('mentioning'); $$('.ln', fig).forEach((l) => l.classList.toggle('mhit', l.dataset.mention === n)); };
+    const off = () => { fig.classList.remove('mentioning'); $$('.ln.mhit', fig).forEach((l) => l.classList.remove('mhit')); };
+    $$('.mn', p).forEach((a) => {
+      a.addEventListener('mouseenter', () => on(a.dataset.m)); a.addEventListener('mouseleave', off);
+      a.addEventListener('focus', () => on(a.dataset.m)); a.addEventListener('blur', off);
+      a.addEventListener('click', (e) => { e.preventDefault(); fig.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }); on(a.dataset.m); });
+    });
+  },
+  switcher(el, md) {
+    el.append(srcPane(md));
+    const out = pane('Readers see', null, 'pane-out');
+    for (const m of md.matchAll(/^:::code-switcher(?:\{sync="([^"]*)"\})?[ \t]*\n([\s\S]*?)^:::[ \t]*$/gm)) {
+      const sw = { key: m[1] || ('g' + (++UID)), fs: fences(m[2]), holder: document.createElement('div') };
+      out.append(sw.holder); SWITCH.push(sw);
+    }
+    el.append(out);
+    SWITCH.forEach((sw) => renderSwitch(sw, false));
+  },
+  steps(el, md) {
+    el.append(srcPane(md));
+    const out = pane('Readers see', null, 'pane-out');
+    const fs = fences(md); const holder = document.createElement('div'); out.append(holder); el.append(out);
+    const labels = fs.map((f) => parseMeta(f.meta || '').str.step || '');
+    const stepper = (k) => '<span class="stepper" role="group" aria-label="Steps">'
+      + fs.map((f, i) => (i ? '<span class="stp-line' + (i <= k ? ' done' : '') + '" aria-hidden="true"></span>' : '')
+        + '<button type="button" class="stp' + (i <= k ? ' done' : '') + '" data-k="' + i + '" aria-pressed="' + (i === k) + '" aria-label="Step ' + (i + 1) + (labels[i] ? ': ' + esc(labels[i]) : '') + '">' + (i + 1) + '</button>').join('')
+      + '</span><span class="stp-label" aria-live="polite">' + esc(labels[k]) + '</span>';
+    const nav = (k) => '<button type="button" class="tool stp-prev"' + (k === 0 ? ' disabled' : '') + '>Previous</button><button type="button" class="tool stp-next"' + (k === fs.length - 1 ? ' disabled' : '') + '>Next</button>';
+    let cur = -1;
+    const go = (k, focus) => {
+      if (k === cur || k < 0 || k >= fs.length) return;
+      const old = holder.firstElementChild; const before = new Map();
+      if (old) { const seen = {}; $$('.ln', old).forEach((l) => before.set(keyOf(l, seen), l.getBoundingClientRect().top)); }
+      const fig = renderBlock(fs[k], { headLeft: stepper(k), stepper: nav(k) }); holder.replaceChildren(fig);
+      $$('.stp', fig).forEach((bt) => bt.addEventListener('click', () => go(+bt.dataset.k, 'stp')));
+      fig.querySelector('.stp-prev').addEventListener('click', () => go(cur - 1, 'prev'));
+      fig.querySelector('.stp-next').addEventListener('click', () => go(cur + 1, 'next'));
+      fig.querySelector('.stepper').addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); go(cur + 1, 'stp'); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); go(cur - 1, 'stp'); }
+      });
+      if (focus) {
+        const want = focus === 'prev' ? fig.querySelector('.stp-prev') : focus === 'next' ? fig.querySelector('.stp-next') : null;
+        (want && !want.disabled ? want : fig.querySelector('.stp[data-k="' + k + '"]')).focus();
+      }
+      if (old && !reduced && fig.animate) {
+        const seen = {};
+        $$('.ln', fig).forEach((l) => {
+          const key = keyOf(l, seen); const top = l.getBoundingClientRect().top;
+          if (before.has(key)) {
+            const dy = before.get(key) - top;
+            if (Math.abs(dy) > 0.5) l.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.2,.7,.2,1)' });
+          } else if (l.textContent.trim()) {
+            l.animate([{ opacity: 0, backgroundColor: 'rgba(95,205,120,.3)' }, { opacity: 1, backgroundColor: 'rgba(95,205,120,.14)', offset: 0.55 }, { opacity: 1, backgroundColor: 'rgba(95,205,120,0)' }], { duration: 1000, easing: 'ease-out' });
+          }
+        });
+      }
+      cur = k;
+    };
+    go(0, false);
+  },
+  scrolly(el, md) {
+    el.append(srcPane(md));
+    const out = pane('Readers see (scroll inside the frame)', null, 'pane-out');
+    const f = fences(md)[0];
+    const steps = Array.from(md.matchAll(/<Step focus="([^"]+)">([\s\S]*?)<\/Step>/g)).map((m) => ({ focus: parseRanges(m[1]), text: m[2].trim() }));
+    const box = document.createElement('div'); box.className = 'scrolly'; box.tabIndex = 0; box.setAttribute('aria-label', 'Scrollycoding demo');
+    const col = document.createElement('div'); col.className = 'steps';
+    steps.forEach((s, k) => { const d = document.createElement('div'); d.className = 'step'; d.dataset.k = k; d.innerHTML = '<p>' + inlineMd(s.text) + '</p>'; col.append(d); });
+    const stick = document.createElement('div'); stick.className = 'stick';
+    const fig = renderBlock(f, { focus: steps[0].focus }); stick.append(fig);
+    box.append(col, stick); out.append(box); el.append(out);
+    const show = (k) => {
+      $$('.ln', fig).forEach((l) => l.classList.toggle('dim', !steps[k].focus.has(+l.dataset.l)));
+      $$('.step', col).forEach((d, i) => d.classList.toggle('on', i === k));
+    };
+    show(0);
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((ents) => ents.forEach((en) => { if (en.isIntersecting) show(+en.target.dataset.k); }), { root: box, rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+      $$('.step', col).forEach((d) => io.observe(d));
+    }
+  },
+  inline(el, md) {
+    el.append(srcPane(md));
+    const out = pane('Readers see', null, 'pane-out');
+    out.insertAdjacentHTML('beforeend',
+      '<p class="inl-row"><span class="inl-lbl">Today</span><span>Call <code class="ic-plain">await fetch(url)</code> and check <code class="ic-plain">res.ok</code> before reading the body.</span></p>'
+      + '<p class="inl-row"><span class="inl-lbl">With the feature</span><span>Call <code class="ic">' + hl('await fetch(url)', 'js') + '</code> and check <code class="ic">' + hl('res.ok', 'js') + '</code> before reading the body.</span></p>');
+    el.append(out);
+  },
+};
+
+/* ---------- index ---------- */
+function buildIndex() {
+  const nav = $('#ix');
+  $$('.group').forEach((grp) => {
+    const hdr = document.createElement('p'); hdr.className = 'ix-h'; hdr.textContent = grp.querySelector('h2').textContent;
+    const ul = document.createElement('ul');
+    $$('.idea', grp).forEach((sec) => { const li = document.createElement('li'); li.innerHTML = '<a href="#' + sec.id + '">' + esc(sec.querySelector('h3').textContent) + '</a>'; ul.append(li); });
+    nav.append(hdr, ul);
+  });
+  const det = $('.ix-list details'); const mq = window.matchMedia('(max-width: 980px)');
+  const syncDet = () => { det.open = !mq.matches; };
+  syncDet(); if (mq.addEventListener) mq.addEventListener('change', syncDet);
+}
+
+/* ---------- boot ---------- */
+const hero = $('#hero-demo');
+if (hero) hero.append(renderBlock(fences(mdOf('md-hero'))[0]));
+$$('.demo').forEach((el) => {
+  try { (KIND[el.dataset.kind || 'generic'])(el, mdOf(el.dataset.md)); }
+  catch (err) { el.insertAdjacentHTML('beforeend', '<p class="lbl">This mockup failed to render: ' + esc(err.message) + '</p>'); }
+});
+buildIndex();
+})();
+</script>
+</body>
+</html>
