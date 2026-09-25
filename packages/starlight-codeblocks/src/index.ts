@@ -33,6 +33,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
           plugins,
           clientAssets: true,
           base: astroConfig.base,
+          assets: astroConfig.build?.assets,
           root: fileURLToPath(astroConfig.root),
           cacheDir: fileURLToPath(astroConfig.cacheDir),
           expressiveCode: { ...ec, ...ecConfig },

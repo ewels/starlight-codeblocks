@@ -525,3 +525,26 @@ Use this format:
 - Decision: The "You write" pane shows `` `code`{:js} ``, and the live copy in the MDX page uses `` `code`\{:js} ``. `scripts/examples.test.mjs` treats `` `\{: `` in the live copy as `` `{: `` when it compares the two. The feature page has a caution about the MDX backslash.
 - Reason: The `.md` form is the syntax. MDX fails the build without the backslash, so the live copy must have it.
 - Alternatives: Show the MDX form in the source pane (wrong for `.md` files, which is where most prose lives).
+
+## Runtime modules: one chunk each, at a fixed path, loaded on the first click
+
+- Date: 2026-09-26
+- Step: 11.1
+- Decision: The integration's Vite plugin emits each entry of `runnable.runtimes` as its own chunk in Astro's client build, at `<build.assets>/scb-runtime-<language>.js` with `preserveSignature: 'strict'`. Paths that start with `.` resolve from the project root; others (package paths) resolve like any import. In dev, the same URL resolves to the module, so Vite serves it. A `runnable` block carries the URL in `data-scb-runnable`, the language's display name (from Shiki's language list, which also maps aliases such as `py` to `python`) and the timeout. The `scb-runnable` client module (under 1 kB) loads on pages with such a block and imports the runtime only when a reader selects Run. Without `codeblocks()`, nothing bundles the modules, so the values are used as URLs as written.
+- Reason: Runtime modules come from the site (TypeScript included) and from the package, so Vite has to bundle them, but the client module is prebuilt and cannot import through Vite. Code blocks render in the prerender build, before the client build, so the URL must be known in advance: the file name has no hash. The browser can cache an old runtime for as long as the host allows; runtimes change rarely.
+- Alternatives: A hashed file name read back in `generateBundle` (the HTML is already rendered by then). `injectScript('page')` with a map of `import()` calls (a script on every page, against SPEC 2).
+
+## Run button and output panel
+
+- Date: 2026-09-26
+- Step: 11.1
+- Decision: While a run is in progress, the Run button has `aria-disabled="true"` and ignores clicks, instead of `disabled`, so the keyboard focus stays on it. There is no Stop button; the timeout stops runs (SPEC names only the timeout). The timeout covers the run only, not the runtime download, which has no limit. The client races `run()` against the abort, so the button comes back even if a runtime ignores the signal; after a timeout the next run calls `load()` again and shows the loading message. The output panel is an empty `aria-live="polite"` element in the static HTML, with no box while it is empty, so that it is in the accessibility tree before its first update. It shows "Output", then standard output, then standard error. Standard error has a bar at its start and a hidden "Error:" prefix as well as its colour. The panel also shows "Running…" during a run and "The code ran with no output." after a silent run.
+- Reason: SPEC 5 and AGENTS.md: keyboard focus must not be lost, and colour must not carry meaning alone. A live region that appears together with its content is often not announced.
+- Alternatives: A Stop button (not in the spec or the mockup). A `hidden` panel (the live region then misses its first update).
+
+## The docs site's JavaScript runtime doubles as the test runtime
+
+- Date: 2026-09-26
+- Step: 11.1
+- Decision: `docs/src/runtimes/javascript.ts` runs JavaScript in a new web worker for each run, with `console.log` and `console.error` as the output. The feature page and the "Add a runtime" guide use it, and the Playwright tests for the button, the panel and the timeout run against it, with no network.
+- Reason: A real, small runtime is the best example for the guide, and it makes the interaction tests fast and deterministic. Only the Pyodide tests need the network.

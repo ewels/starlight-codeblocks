@@ -52,6 +52,7 @@ export default defineConfig({
               codeblocksApi(),
             ],
           },
+          runnable: { runtimes: { javascript: './src/runtimes/javascript.ts' } },
           lineStates: { states: { todo: { label: 'To do', colour: { dark: '#c792ea', light: '#7c3aed' } } } },
         }),
         starlightLinksValidator({ exclude: ({ link }) => link.startsWith('#mention:') }),

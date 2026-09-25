@@ -1,16 +1,23 @@
+import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
 import { readClientModules } from './client-modules.ts';
+import { runtimeFileName, runtimeModules } from './expressive-code/runnable.ts';
 import type { ResolvedOptions } from './options.ts';
 import { mdastPlugins } from './satteri/index.ts';
 import { INLINE_CSS_ID, inlineStyles } from './satteri/inline-code.ts';
+
+type EmittedFile =
+  | { type: 'asset'; fileName: string; source: string }
+  | { type: 'chunk'; id: string; fileName: string; preserveSignature: 'strict' };
 
 type VitePlugin = {
   name: string;
   enforce?: 'pre' | 'post';
   apply?: 'build' | 'serve';
-  resolveId?: (id: string) => string | undefined;
+  resolveId?: (this: unknown, id: string) => string | undefined | Promise<string | undefined>;
   load?: (id: string) => string | undefined;
-  buildEnd?: (this: { emitFile(file: { type: 'asset'; fileName: string; source: string }): void }) => void;
+  buildStart?: (this: { environment?: { name: string }; emitFile(file: EmittedFile): void }) => void;
+  buildEnd?: (this: { emitFile(file: EmittedFile): void }) => void;
 };
 
 const EC_CONFIG = 'virtual:astro-expressive-code/ec-config';
@@ -33,6 +40,9 @@ export function codeblocksIntegration({ options, ecConfigOverride }: Integration
         const plugins = clientModulePlugins(config.build.assets);
         if (ecConfigOverride) plugins.push(ecConfigPlugin(ecConfigOverride.file));
         if (options.inlineHighlighting) plugins.push(inlineCssPlugin());
+        if (options.runnable) {
+          plugins.push(...runtimePlugins(runtimeModules(options.runnable.runtimes), config.root, config.build.assets));
+        }
         updateConfig({ vite: { plugins: plugins as never } });
       },
     },
@@ -78,6 +88,38 @@ export function clientModulePlugins(assetsDir: string): VitePlugin[] {
       apply: 'build',
       buildEnd() {
         for (const [path, source] of files) this.emitFile({ type: 'asset', fileName: path.slice(1), source });
+      },
+    },
+  ];
+}
+
+/**
+ * Bundles each runtime module into its own chunk at a fixed path in the assets folder, where the Run
+ * button imports it on the first click. Code blocks render before the client build, so the path
+ * cannot carry a hash.
+ */
+export function runtimePlugins(runtimes: Record<string, string>, root: URL, assetsDir: string): VitePlugin[] {
+  const specifier = (s: string) => (s.startsWith('.') ? fileURLToPath(new URL(s, root)) : s);
+  const files = new Map(
+    Object.entries(runtimes).map(([language, s]) => [`/${assetsDir}/${runtimeFileName(language)}`, specifier(s)]),
+  );
+  return [
+    {
+      name: 'starlight-codeblocks:runtimes',
+      async resolveId(id) {
+        const file = files.get(id.split('?')[0] as string);
+        const context = this as { resolve(id: string): Promise<{ id: string } | null> };
+        return file ? (await context.resolve(file))?.id : undefined;
+      },
+    },
+    {
+      name: 'starlight-codeblocks:runtimes-build',
+      apply: 'build',
+      buildStart() {
+        if (this.environment?.name !== 'client') return;
+        for (const [path, id] of files) {
+          this.emitFile({ type: 'chunk', id, fileName: path.slice(1), preserveSignature: 'strict' });
+        }
       },
     },
   ];

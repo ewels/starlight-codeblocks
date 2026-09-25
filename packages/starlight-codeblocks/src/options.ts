@@ -84,6 +84,12 @@ export interface CodeblocksOptions {
   runnable?: false | { runtimes?: Record<string, string>; timeout?: number };
 }
 
+/** The default export of a runtime module, which runs code for the Run button. */
+export interface Runtime {
+  load(): Promise<void>;
+  run(code: string, options: { signal: AbortSignal }): Promise<{ stdout: string; stderr: string }>;
+}
+
 type Settings<T> = Exclude<T, false | undefined>;
 
 /** Options after validation: `false` for a feature that is off, its settings with defaults otherwise. */
@@ -281,7 +287,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       runtimes: {
         type: 'Record<string, string>',
         default: {},
-        description: 'Runtime modules by language.',
+        description: 'Runtime modules by language: a package path, or a path from the project root.',
         valid: isRecordOf(isString),
       },
       timeout: {

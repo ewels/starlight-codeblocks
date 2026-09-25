@@ -1,5 +1,24 @@
 ---
 title: Run in the browser
+description: Add a Run button that runs the example in the browser and shows the output under the block.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+export const js = `
+\`\`\`js runnable
+const sizes = [3, 1, 4, 1, 5];
+console.log('Total:', sizes.reduce((a, b) => a + b, 0));
+console.error('A warning');
+\`\`\`
+`;
+
+<Example code={js} />
+
+export const loop = `
+\`\`\`js runnable
+while (true) {}
+\`\`\`
+`;
+
+<Example code={loop} />

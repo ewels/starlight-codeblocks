@@ -17,6 +17,7 @@ import { pluginNotation } from './notation.ts';
 import { pluginPermalinks } from './permalinks.ts';
 import { pluginPlaceholders } from './placeholders.ts';
 import { pluginPlayground } from './playground.ts';
+import { pluginRunnable } from './runnable.ts';
 import { pluginShellCopy } from './shell-copy.ts';
 import { pluginTokenLinks } from './token-links.ts';
 import { pluginTransitions } from './transitions.ts';
@@ -41,6 +42,7 @@ export {
   pluginPermalinks,
   pluginPlaceholders,
   pluginPlayground,
+  pluginRunnable,
   pluginShellCopy,
   pluginTokenLinks,
   pluginTransitions,
@@ -80,6 +82,7 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.expandable ? [pluginExpandable(options.expandable)] : []),
     // After shell copy, which changes the copied text that the playground gets, and after placeholders.
     ...(options.playgrounds ? [pluginPlayground(options.playgrounds)] : []),
+    ...(options.runnable ? [pluginRunnable(options.runnable)] : []),
     ...(options.codeSwitcher ? [pluginCodeSwitcher()] : []),
     ...(options.transitions ? [pluginTransitions()] : []),
     // After hidden lines, which rebuilds the children of the code element.

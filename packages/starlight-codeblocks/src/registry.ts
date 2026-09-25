@@ -9,6 +9,8 @@ export interface Registry {
   clientAssets: boolean;
   /** Astro's `base`, which site-relative links in code need. */
   base?: string;
+  /** Astro's `build.assets` folder, where the runtime modules go. */
+  assets?: string;
   /** Astro's `root` and `cacheDir`, as paths, for API link adapters. */
   root?: string;
   cacheDir?: string;
