@@ -28,14 +28,19 @@ const styleSettings = new PluginStyleSettings({
   },
 });
 
+export const PYODIDE_RUNTIME = 'starlight-codeblocks/runtimes/pyodide';
+
 interface RunnableSettings {
   runtimes?: Record<string, string>;
   timeout?: number;
 }
 
-/** The runtime modules by language. Without `codeblocks()`, nothing bundles the modules, so the values are URLs as written. */
-export function runtimeModules(runtimes: Record<string, string> = {}) {
-  return runtimes;
+/**
+ * The runtime modules by language. Without `codeblocks()`, nothing bundles the modules, so the
+ * values are URLs as written and there is no built-in Python runtime.
+ */
+export function runtimeModules(runtimes: Record<string, string> = {}, bundled = !!getRegistry()?.clientAssets) {
+  return bundled ? { python: PYODIDE_RUNTIME, ...runtimes } : runtimes;
 }
 
 /** The file name of a bundled runtime module, in Astro's assets folder. */

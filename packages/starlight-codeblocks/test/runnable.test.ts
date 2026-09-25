@@ -2,7 +2,7 @@ import { getColorContrast } from '@expressive-code/core';
 import { ExpressiveCode } from 'expressive-code';
 import { afterEach, expect, test } from 'vitest';
 import { pluginCore } from '../src/expressive-code/core.ts';
-import { pluginRunnable, runtimeFileName } from '../src/expressive-code/runnable.ts';
+import { pluginRunnable, runtimeFileName, runtimeModules } from '../src/expressive-code/runnable.ts';
 import { runtimePlugins } from '../src/integration.ts';
 import { setRegistry } from '../src/registry.ts';
 import { render } from './render.ts';
@@ -48,15 +48,21 @@ test('a language without a runtime warns and gets no button', async () => {
 
 test('with codeblocks(), the block points at the bundled module in the assets folder', async () => {
   setRegistry({ options: {} as never, plugins: [], clientAssets: true, base: '/docs', assets: '_astro' });
-  const { html } = await render(block('js runnable', 'x'), js);
-  expect(html).toContain('data-scb-runnable="/docs/_astro/scb-runtime-javascript.js"');
+  const { html } = await render(block('py runnable', 'print(1)'), js);
+  expect(html).toContain('data-scb-runnable="/docs/_astro/scb-runtime-python.js"');
   setRegistry({ options: {} as never, plugins: [], clientAssets: true, base: '/', assets: '_assets' });
   expect((await render(block('js runnable', 'x'), js)).html).toContain(
     'data-scb-runnable="/_assets/scb-runtime-javascript.js"',
   );
 });
 
-test('runtime file names are safe for any language name', () => {
+test('the built-in Python runtime comes only with codeblocks(), and site runtimes can replace it', () => {
+  expect(runtimeModules({ js: './a.ts' }, false)).toEqual({ js: './a.ts' });
+  expect(runtimeModules({ js: './a.ts' }, true)).toEqual({
+    python: 'starlight-codeblocks/runtimes/pyodide',
+    js: './a.ts',
+  });
+  expect(runtimeModules({ python: './py.ts' }, true)).toEqual({ python: './py.ts' });
   expect(runtimeFileName('c++')).toBe('scb-runtime-c__.js');
 });
 

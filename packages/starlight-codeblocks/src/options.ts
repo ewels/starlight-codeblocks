@@ -287,7 +287,9 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       runtimes: {
         type: 'Record<string, string>',
         default: {},
-        description: 'Runtime modules by language: a package path, or a path from the project root.',
+        defaultText: "`{ python: 'starlight-codeblocks/runtimes/pyodide' }`",
+        description:
+          'Runtime modules by language: a package path, or a path from the project root. The site entries are added to the built-in Python runtime, or replace it.',
         valid: isRecordOf(isString),
       },
       timeout: {

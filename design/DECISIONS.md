@@ -548,3 +548,11 @@ Use this format:
 - Step: 11.1
 - Decision: `docs/src/runtimes/javascript.ts` runs JavaScript in a new web worker for each run, with `console.log` and `console.error` as the output. The feature page and the "Add a runtime" guide use it, and the Playwright tests for the button, the panel and the timeout run against it, with no network.
 - Reason: A real, small runtime is the best example for the guide, and it makes the interaction tests fast and deterministic. Only the Pyodide tests need the network.
+
+## Pyodide runtime: a factory for the CDN URL, a blob worker, a fresh namespace for each run
+
+- Date: 2026-09-26
+- Step: 11.2
+- Decision: `starlight-codeblocks/runtimes/pyodide` exports `pyodide({ url })` and a default `pyodide()`. The default URL is `https://cdn.jsdelivr.net/pyodide/v314.0.7/full/` (the current `pyodide` release on npm). A site that wants another URL writes a one-line module, `export default pyodide({ url })`, and maps `python` to it. The worker is a module worker from a `blob:` URL, so the package ships one file and needs no bundler support for workers. It imports `pyodide.mjs` from the URL on the first `load()`. Runs wait in a queue in the worker, because standard output and standard error belong to the whole interpreter. Each run gets new globals, installs the packages that its imports name (`loadPackagesFromImports`), and drops Pyodide's own frames from a traceback. Stopping a run ends the worker, because Python cannot be interrupted without cross-origin isolation; the next `load()` starts a new one. With `codeblocks()`, `python` maps to this runtime unless the site maps it to another module.
+- Reason: SPEC 8.2 fixes the interface to `load()` and `run()`, so the URL cannot be a per-call option; a factory keeps the interface and lets sites change the URL. GitHub Pages and most hosts do not send the cross-origin isolation headers that `SharedArrayBuffer` interrupts need.
+- Alternatives: A `runnable.pyodideUrl` option (an option the spec does not name). `new Worker(new URL('./worker.js', import.meta.url))` (depends on the site bundler handling the pattern inside a prebuilt package). A shared namespace between runs (one block's names would leak into the next).

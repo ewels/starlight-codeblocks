@@ -6,7 +6,13 @@ const clientModules = existsSync('src/client') ? readdirSync('src/client').filte
 
 export default defineConfig([
   {
-    entry: ['src/index.ts', 'src/expressive-code/index.ts', 'src/adapters/python.ts', 'src/adapters/nextflow.ts'],
+    entry: [
+      'src/index.ts',
+      'src/expressive-code/index.ts',
+      'src/adapters/python.ts',
+      'src/adapters/nextflow.ts',
+      'src/runtimes/pyodide.ts',
+    ],
     format: 'esm',
     dts: true,
   },

@@ -20,6 +20,10 @@
       "types": "./dist/adapters/nextflow.d.mts",
       "default": "./dist/adapters/nextflow.mjs"
     },
+    "./runtimes/pyodide": {
+      "types": "./dist/runtimes/pyodide.d.mts",
+      "default": "./dist/runtimes/pyodide.mjs"
+    },
     "./components": {
       "types": "./src/components/index.ts",
       "default": "./src/components/index.ts"

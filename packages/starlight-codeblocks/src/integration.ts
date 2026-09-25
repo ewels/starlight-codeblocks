@@ -41,7 +41,9 @@ export function codeblocksIntegration({ options, ecConfigOverride }: Integration
         if (ecConfigOverride) plugins.push(ecConfigPlugin(ecConfigOverride.file));
         if (options.inlineHighlighting) plugins.push(inlineCssPlugin());
         if (options.runnable) {
-          plugins.push(...runtimePlugins(runtimeModules(options.runnable.runtimes), config.root, config.build.assets));
+          plugins.push(
+            ...runtimePlugins(runtimeModules(options.runnable.runtimes, true), config.root, config.build.assets),
+          );
         }
         updateConfig({ vite: { plugins: plugins as never } });
       },

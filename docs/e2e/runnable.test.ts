@@ -3,8 +3,10 @@ import { expect, type Page, test } from '@playwright/test';
 const example = (page: Page, n: number) =>
   page.locator('.example').nth(n).locator('.pane').nth(1).locator('.expressive-code');
 
-const JS = 0;
-const LOOP = 1;
+const PYTHON = 0;
+const JS = 1;
+const LOOP = 2;
+const ERROR = 3;
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/run-in-the-browser/');
@@ -15,7 +17,7 @@ test('no runtime loads before a reader selects Run', async ({ page }) => {
   page.on('request', (r) => requests.push(r.url()));
   await page.reload();
   await page.waitForLoadState('networkidle');
-  expect(requests.filter((u) => u.includes('scb-runtime-'))).toEqual([]);
+  expect(requests.filter((u) => u.includes('scb-runtime-') || u.includes('pyodide'))).toEqual([]);
   expect(requests.some((u) => u.includes('scb-runnable.'))).toBe(true);
 });
 
@@ -79,6 +81,47 @@ test('runs the copied text as it is at the time of the click', async ({ page }) 
   });
   await block.locator('.scb-run').click();
   await expect(block.locator('.scb-run-stdout')).toHaveText('changed');
+});
+
+test('shows a runtime error in the error colour', async ({ page }) => {
+  const block = example(page, ERROR);
+  await block.locator('.scb-run').click();
+  const stderr = block.locator('.scb-run-stderr');
+  await expect(stderr).toContainText('ZeroDivisionError', { timeout: 120_000 });
+  await expect(stderr).toContainText('File "<exec>", line 2');
+  await expect(stderr).not.toContainText('_pyodide');
+});
+
+test('runs Python with Pyodide in a web worker', async ({ page }) => {
+  // Pyodide comes from a CDN, so this test needs the network and can take a while.
+  test.setTimeout(150_000);
+  const block = example(page, PYTHON);
+  const panel = block.locator('.scb-run-output');
+  await block.locator('.scb-run').click();
+  await expect(panel.locator('.scb-run-status')).toHaveText('Loading the Python runtime…');
+  await expect(panel.locator('.scb-run-stdout')).toHaveText('mean 1546, sd 57.6', { timeout: 120_000 });
+  // The page stays responsive while Python runs.
+  expect(await page.evaluate(() => 1 + 1)).toBe(2);
+  await block.locator('.scb-run').click();
+  await expect(panel.locator('.scb-run-stdout')).toHaveText('mean 1546, sd 57.6');
+  await expect(panel.locator('.scb-run-status')).toHaveCount(0);
+});
+
+test('stopping a Python run ends the worker, and the next run loads Pyodide again', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop-dark', 'needs the network, so one project is enough');
+  test.setTimeout(240_000);
+  const result = await page.evaluate(async () => {
+    const url = document.querySelector<HTMLElement>('[data-scb-runnable*="python"]')?.dataset.scbRunnable as string;
+    const runtime = (await import(url)).default;
+    await runtime.load();
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(new Error('stopped')), 500);
+    const stopped = await runtime.run('while True: pass', { signal: controller.signal }).catch((e: Error) => e.message);
+    await runtime.load();
+    const again = await runtime.run('print(6 * 7)', { signal: new AbortController().signal });
+    return { stopped, again };
+  });
+  expect(result).toEqual({ stopped: 'stopped', again: { stdout: '42', stderr: '' } });
 });
 
 test('without JavaScript, the Run button is hidden', async ({ browser }) => {

@@ -5,6 +5,17 @@ description: Add a Run button that runs the example in the browser and shows the
 
 import Example from '../../../components/Example.astro';
 
+export const basic = `
+\`\`\`py runnable
+from statistics import mean, stdev
+
+reads = [1520, 1610, 1480, 1575]
+print(f"mean {mean(reads):.0f}, sd {stdev(reads):.1f}")
+\`\`\`
+`;
+
+<Example code={basic} />
+
 export const js = `
 \`\`\`js runnable
 const sizes = [3, 1, 4, 1, 5];
@@ -22,3 +33,12 @@ while (true) {}
 `;
 
 <Example code={loop} />
+
+export const error = `
+\`\`\`py runnable
+counts = {"a": 3, "b": 0}
+print(counts["a"] / counts["b"])
+\`\`\`
+`;
+
+<Example code={error} />
