@@ -5,7 +5,7 @@ import { defineConfig, type UserConfig } from 'tsdown';
 const clientModules = existsSync('src/client') ? readdirSync('src/client').filter((f) => f.endsWith('.ts')) : [];
 
 export default defineConfig([
-  { entry: ['src/index.ts', 'src/expressive-code/index.ts'], format: 'esm', dts: true },
+  { entry: ['src/index.ts', 'src/expressive-code/index.ts', 'src/adapters/python.ts'], format: 'esm', dts: true },
   ...clientModules.map(
     (file): UserConfig => ({
       entry: { [`scb-${file.slice(0, -3)}`]: `src/client/${file}` },

@@ -1,3 +1,5 @@
+import { python } from './adapters/python.ts';
+
 export interface LineStateDefinition {
   label: string;
   colour: { dark: string; light: string };
@@ -94,6 +96,7 @@ export type ResolvedOptions = {
 
 interface Field {
   type: string;
+  /** A function makes a fresh default for each call, for values that `structuredClone()` cannot copy. */
   default: unknown;
   /** Shown in the docs when the default value does not print well. */
   defaultText?: string;
@@ -225,8 +228,8 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     fields: {
       adapters: {
         type: 'ApiLinkAdapter[]',
-        default: [],
-        defaultText: 'the built-in adapters',
+        default: () => [python()],
+        defaultText: '`[python()]`',
         description: 'Adapters that find and resolve names.',
         valid: (value) => Array.isArray(value) && value.every((adapter) => isObject(adapter) && isString(adapter.name)),
       },
@@ -345,7 +348,7 @@ function resolveFields(key: string, fields: Record<string, Field>, value: Record
     if (given !== undefined && !field.valid(given)) {
       throw new OptionsError(`\`${key}.${name}\` must be ${field.type}, got ${show(given)}.`);
     }
-    result[name] = given ?? structuredClone(field.default);
+    result[name] = given ?? (typeof field.default === 'function' ? field.default() : structuredClone(field.default));
   }
   return result;
 }

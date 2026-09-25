@@ -12,6 +12,10 @@
       "types": "./dist/expressive-code/index.d.mts",
       "default": "./dist/expressive-code/index.mjs"
     },
+    "./adapters/python": {
+      "types": "./dist/adapters/python.d.mts",
+      "default": "./dist/adapters/python.mjs"
+    },
     "./components": {
       "types": "./src/components/index.ts",
       "default": "./src/components/index.ts"

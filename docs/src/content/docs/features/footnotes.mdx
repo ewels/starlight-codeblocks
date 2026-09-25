@@ -8,7 +8,7 @@ import Example from '../../../components/Example.astro';
 A code block often comes with a list of notes in the prose after it, where each note names the line it is about. Footnotes put that list inside the block. Each line with a note gets a numbered badge, and the notes are a numbered list under the code.
 
 export const basic = `
-\`\`\`py title="app.py"
+\`\`\`py title="app.py" apiLinks=false
 from flask import Flask
 
 # [!ref] Creates the application object.
@@ -66,7 +66,7 @@ Turn the feature off with `footnotes: false`. The plugin then does not know the 
 A sticky list suits a long block, where the notes would otherwise be far from the lines they are about. Scroll past this block to see the list stay at the bottom of the window:
 
 export const sticky = `
-\`\`\`py title="count.py" footnotes="sticky"
+\`\`\`py title="count.py" footnotes="sticky" apiLinks=false
 import argparse
 import logging
 from pathlib import Path

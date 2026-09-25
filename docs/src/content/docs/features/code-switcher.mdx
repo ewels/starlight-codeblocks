@@ -80,7 +80,7 @@ Two blocks with the same `sync` key and no labels switch together by language. S
 
 export const languages = `
 :::code-switcher{sync="lang"}
-\`\`\`py
+\`\`\`py apiLinks=false
 import json
 
 with open("config.json") as fh:
@@ -107,7 +107,7 @@ await writeFile('config.json', JSON.stringify(config, null, 2));
 <Example code={languages}>
 
 :::code-switcher{sync="lang"}
-```py
+```py apiLinks=false
 import json
 
 with open("config.json") as fh:

@@ -8,7 +8,7 @@ import Example from '../../../components/Example.astro';
 Readers who meet an unfamiliar function in an example often want its reference page. A code block in Starlight has no links, so the reader must search for it. The `[!link]` directive turns text on a line into a link to the page you choose.
 
 export const basic = `
-\`\`\`py
+\`\`\`py apiLinks=false
 import numpy as np
 
 # [!link /linspace/ https://numpy.org/doc/stable/reference/generated/numpy.linspace.html]
@@ -57,7 +57,7 @@ With `tokenLinks: false`, a `[!link]` directive is an unknown directive. The bui
 Two `[!link]` lines above one line link two names on it:
 
 export const stacked = `
-\`\`\`py title="notes.py"
+\`\`\`py title="notes.py" apiLinks=false
 from pathlib import Path
 
 # [!link /Path/ https://docs.python.org/3/library/pathlib.html#pathlib.Path]

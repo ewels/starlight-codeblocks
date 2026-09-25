@@ -1,0 +1,195 @@
+{
+  "myproject": {
+    "docstring": {
+      "value": "Tools to summarise runs."
+    },
+    "exports": ["summarise", "Report"],
+    "imports": {
+      "Report": "myproject.report.Report"
+    },
+    "is_private": false,
+    "is_public": true,
+    "kind": "module",
+    "members": {
+      "Report": {
+        "inherited": false,
+        "is_private": false,
+        "is_public": true,
+        "kind": "alias",
+        "name": "Report",
+        "path": "myproject.Report",
+        "target_path": "myproject.report.Report"
+      },
+      "__all__": {
+        "is_private": false,
+        "is_public": false,
+        "kind": "attribute",
+        "labels": ["module-attribute"],
+        "name": "__all__",
+        "path": "myproject.__all__",
+        "value": {
+          "cls": "ExprList",
+          "elements": ["'summarise'", "'Report'"]
+        }
+      },
+      "report": {
+        "docstring": {
+          "value": "Reports."
+        },
+        "is_private": false,
+        "is_public": true,
+        "kind": "module",
+        "members": {
+          "Report": {
+            "bases": [],
+            "decorators": [],
+            "docstring": {
+              "value": "A run report. It has sections."
+            },
+            "is_private": false,
+            "is_public": true,
+            "kind": "class",
+            "members": {
+              "__init__": {
+                "decorators": [],
+                "is_private": false,
+                "is_public": true,
+                "kind": "function",
+                "name": "__init__",
+                "parameters": [
+                  {
+                    "annotation": null,
+                    "default": null,
+                    "kind": "positional or keyword",
+                    "name": "self"
+                  },
+                  {
+                    "annotation": {
+                      "cls": "ExprName",
+                      "member": "__init__",
+                      "name": "str"
+                    },
+                    "default": null,
+                    "kind": "positional or keyword",
+                    "name": "title"
+                  }
+                ],
+                "path": "myproject.report.Report.__init__",
+                "returns": "None"
+              },
+              "render": {
+                "decorators": [],
+                "docstring": {
+                  "value": "Render the report as text."
+                },
+                "is_private": false,
+                "is_public": true,
+                "kind": "function",
+                "name": "render",
+                "parameters": [
+                  {
+                    "annotation": null,
+                    "default": null,
+                    "kind": "positional or keyword",
+                    "name": "self"
+                  },
+                  {
+                    "annotation": {
+                      "cls": "ExprBinOp",
+                      "left": {
+                        "cls": "ExprName",
+                        "member": "render",
+                        "name": "int"
+                      },
+                      "operator": "|",
+                      "right": "None"
+                    },
+                    "default": "None",
+                    "kind": "keyword-only",
+                    "name": "width"
+                  }
+                ],
+                "path": "myproject.report.Report.render",
+                "returns": {
+                  "cls": "ExprName",
+                  "member": "render",
+                  "name": "str"
+                }
+              },
+              "title": {
+                "is_private": false,
+                "is_public": true,
+                "kind": "attribute",
+                "labels": ["instance-attribute"],
+                "name": "title",
+                "path": "myproject.report.Report.title",
+                "value": {
+                  "cls": "ExprName",
+                  "member": null,
+                  "name": "title"
+                }
+              }
+            },
+            "name": "Report",
+            "path": "myproject.report.Report"
+          },
+          "_private": {
+            "decorators": [],
+            "docstring": {
+              "value": "Hidden."
+            },
+            "is_private": true,
+            "is_public": false,
+            "kind": "function",
+            "name": "_private",
+            "parameters": [],
+            "path": "myproject.report._private",
+            "returns": "None"
+          }
+        },
+        "name": "report",
+        "path": "myproject.report"
+      },
+      "summarise": {
+        "decorators": [],
+        "docstring": {
+          "value": "Summarise a run as a short text report.\n\nLonger text here."
+        },
+        "is_private": false,
+        "is_public": true,
+        "kind": "function",
+        "name": "summarise",
+        "parameters": [
+          {
+            "annotation": {
+              "cls": "ExprName",
+              "member": "summarise",
+              "name": "dict"
+            },
+            "default": null,
+            "kind": "positional or keyword",
+            "name": "data"
+          },
+          {
+            "annotation": {
+              "cls": "ExprName",
+              "member": "summarise",
+              "name": "int"
+            },
+            "default": "5",
+            "kind": "keyword-only",
+            "name": "top"
+          }
+        ],
+        "path": "myproject.summarise",
+        "returns": {
+          "cls": "ExprName",
+          "member": "summarise",
+          "name": "str"
+        }
+      }
+    },
+    "name": "myproject",
+    "path": "myproject"
+  }
+}
