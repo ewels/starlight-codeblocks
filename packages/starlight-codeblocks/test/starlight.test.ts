@@ -1,0 +1,61 @@
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { afterEach, expect, test } from 'vitest';
+import codeblocks from '../src/index.ts';
+import { getRegistry, setRegistry } from '../src/registry.ts';
+
+afterEach(() => setRegistry(undefined));
+
+async function setup(ecConfig?: string, expressiveCode: unknown = {}) {
+  const root = mkdtempSync(join(tmpdir(), 'scb-'));
+  if (ecConfig) writeFileSync(join(root, 'ec.config.mjs'), ecConfig);
+  const updates: Record<string, unknown>[] = [];
+  const integrations: { name: string }[] = [];
+  const hook = codeblocks().hooks['config:setup'];
+  await hook?.({
+    config: { expressiveCode },
+    updateConfig: (update: Record<string, unknown>) => updates.push(update),
+    addIntegration: (integration: { name: string }) => integrations.push(integration),
+    astroConfig: { root: pathToFileURL(`${root}/`) },
+  } as never);
+  return { updates, integrations };
+}
+
+test('adds its plugins with only the name visible, and fills the registry', async () => {
+  const { updates, integrations } = await setup(undefined, { plugins: [{ name: 'other' }] });
+  const plugins = (updates[0] as { expressiveCode: { plugins: object[] } }).expressiveCode.plugins;
+  expect(plugins[0]).toEqual({ name: 'other' });
+  expect(JSON.parse(JSON.stringify(plugins[1]))).toEqual({ name: 'starlight-codeblocks:core' });
+  expect(getRegistry()?.plugins[0]?.name).toBe('starlight-codeblocks:core');
+  expect(getRegistry()?.clientAssets).toBe(true);
+  expect(integrations.map((i) => i.name)).toEqual(['starlight-codeblocks']);
+});
+
+test('adds its plugins when ec.config.mjs has no plugins list', async () => {
+  const { updates } = await setup('export default { styleOverrides: {} };');
+  expect(updates).toHaveLength(1);
+});
+
+test('fails when ec.config.mjs has a plugins list without the preset', async () => {
+  await expect(setup("export default { plugins: [{ name: 'other' }] };")).rejects.toThrow(
+    '`ec.config.mjs` has its own `plugins` list',
+  );
+});
+
+test('leaves the Starlight config alone when ec.config.mjs has the preset', async () => {
+  const { updates, integrations } = await setup(
+    "export default { plugins: [[{ name: 'starlight-codeblocks:core' }]] };",
+  );
+  expect(updates).toHaveLength(0);
+  expect(integrations).toHaveLength(1);
+});
+
+test('fails when Expressive Code is off', async () => {
+  await expect(setup(undefined, false)).rejects.toThrow('needs Expressive Code');
+});
+
+test('validates options when the plugin is created', () => {
+  expect(() => codeblocks({ fokus: {} } as never)).toThrow('unknown option `fokus`');
+});

@@ -125,3 +125,27 @@ Use this format:
 - Decision: `docs/src/components/Example.astro` takes `code` (Markdown with one or more fenced blocks). It shows the source under "You write" with `<Code lang="md">`, and each block under "Readers see" with `<Code lang meta>`.
 - Reason: DOCS-SITE.md asks for `<Code>` where the plugin works with it, and ARCHITECTURE.md Q1 shows it does once step 3.1 adds the ec-config override. Pages with directives or components (code switcher, token transitions, scrollycoding) use a source block and the live version instead.
 - Alternatives: Render with a second Expressive Code engine in the component (duplicates the site config).
+
+## Options: validation and one source for the reference tables
+
+- Date: 2026-09-25
+- Step: 3.1
+- Decision: `codeblocks(options)` and `pluginCodeblocks(options)` validate options at once with a small hand-written validator in `src/options.ts`. Keys follow SPEC section 3 exactly: a feature with settings takes `false` or an object, and a feature with no settings takes only `false`. `true` is an error with a message that says what to write. The same file exports `optionsReference` (type, default and description of every option), which the docs reference pages read.
+- Reason: Clear build errors for unknown keys and wrong types, without a schema dependency in the `/expressive-code` subpath (which must work without Astro). One data source means the options reference cannot drift from the code.
+- Alternatives: `astro/zod` (ties the preset to Astro). Accepting `true` (not in the spec type, and two ways to write the default).
+
+## astro is a peer dependency
+
+- Date: 2026-09-25
+- Step: 3.1
+- Decision: The package lists `astro` (>=7) as a peer dependency next to `@astrojs/starlight`.
+- Reason: `codeblocks()` imports `AstroError` from `astro/errors` at run time. Every Starlight site has Astro already.
+- Alternatives: Plain `Error` (loses Astro's hint line in the error overlay).
+
+## Root lint and test scripts build the package first
+
+- Date: 2026-09-25
+- Step: 3.1
+- Decision: `pnpm lint` and `pnpm test` at the root run `pnpm build` first.
+- Reason: On a fresh clone, `astro check` in `docs/` cannot resolve `starlight-codeblocks` until `dist/` exists, and the unit tests read the built client modules. The first CI run failed on this.
+- Alternatives: A `prepare` script (pnpm 11 does not run it for every install), or a separate CI step (a fresh local clone would still fail).
