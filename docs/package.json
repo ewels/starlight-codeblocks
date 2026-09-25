@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "node -e \"require('fs').rmSync('node_modules/.astro',{recursive:true,force:true})\" && astro build",
     "preview": "astro preview",
-    "typecheck": "astro check --minimumSeverity warning"
+    "typecheck": "astro check --minimumSeverity warning",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@astrojs/starlight": "0.42.4",
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
+    "@playwright/test": "1.63.0",
     "typescript": "6.0.3"
   }
 }
