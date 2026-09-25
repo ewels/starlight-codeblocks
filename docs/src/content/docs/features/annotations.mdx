@@ -1,5 +1,93 @@
 ---
 title: Annotations
+description: Add numbered markers to lines. Each marker opens a note in a popover, so the code stays clean until a reader asks.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+A comment in a code block explains a line. But it takes space in the code, and readers copy it with the code. An annotation moves the explanation out of the code. The line gets a small numbered marker, and the note opens in a popover when a reader selects the marker.
+
+export const basic = `
+\`\`\`yaml title=".github/workflows/test.yml"
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6  # [!annotate] Installs \`uv\` and caches its downloads between runs.
+      - run: uv run pytest
+\`\`\`
+`;
+
+<Example code={basic} />
+
+Each `[!annotate]` comment is gone from the output. A numbered marker is in its place, after the code on the line. Select a marker to open its note, and press Escape or select anywhere else to close it.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `[!annotate] note` | Comment at the end of a line | `run: uv run pytest  # [!annotate] Runs the tests.` |
+
+The directive goes at the end of the line it explains. The note is the rest of the comment. It can hold inline code, links and bold text.
+
+## Behaviour
+
+- Markers are numbered from 1 in each block, in line order.
+- Selecting a marker opens its note under the marker, or above it if there is no room below. Opening a note closes any other open note.
+- Escape, or a selection outside the note, closes it.
+- The copy button leaves the markers and the notes out. A manual selection leaves the markers out.
+- Each marker is a button with the label "Annotation N", where N is its number. Screen readers read the note directly after its marker.
+- When the page prints, the markers are hidden and the notes print as a numbered list under the block.
+- The browser's `popover` attribute opens and closes the notes, so they work without JavaScript. Without JavaScript, the popover appears where the browser puts it by default, in browsers that do not support CSS anchor positioning.
+- Under reduced motion, the marker changes colour at once.
+
+## Options
+
+Annotations have no options. Turn the feature off for the whole site with `annotations: false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  annotations: false,
+});
+```
+
+With `annotations: false`, the plugin does not know the `[!annotate]` directive. It leaves the comment in the code as written, and logs a build warning.
+
+## Examples
+
+A note can hold a link, for a line that needs more explanation than a sentence:
+
+export const link = `
+\`\`\`ts title="retry.ts"
+export async function retry<T>(task: () => Promise<T>, attempts = 3): Promise<T> {
+  for (let i = 1; ; i++) {
+    try {
+      return await task();
+    } catch (error) {
+      if (i >= attempts) throw error; // [!annotate] Gives up and passes on the last error. See [Error handling](https://example.com/errors).
+      await new Promise((done) => setTimeout(done, 2 ** i * 100)); // [!annotate] Waits 200, 400, 800 ms: an exponential backoff.
+    }
+  }
+}
+\`\`\`
+`;
+
+<Example code={link} />
+
+## Limitations
+
+- The note is part of the source line. Long notes make long lines in the Markdown file.
+- An annotation applies to one line. For a note about a range of lines, put it on the first line of the range.
+- Readers see a note only when they open it. If readers need every note to follow the code, use [footnotes](/starlight-codeblocks/features/footnotes/) or [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/).
+
+## Related
+
+- [Inline callouts](/starlight-codeblocks/features/inline-callouts/): a short, always visible note above the line, with an arrow at one name.
+- [Footnotes](/starlight-codeblocks/features/footnotes/): numbered notes listed under the block, all visible at once.
+- [Side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/): the same notes in a column beside the code.
+- [Choose an annotation style](/starlight-codeblocks/guides/choose-an-annotation-style/): a comparison of the four styles, with the same code.

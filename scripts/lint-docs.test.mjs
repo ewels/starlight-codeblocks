@@ -66,6 +66,14 @@ test('each rule reports the right line', () => {
 });
 
 test('skips examples in export template literals', () => {
-  const text = ['export const basic = `', '\\`\\`\\`py', '# [!callout] Creates the file.', '\\`\\`\\`', '`;', '', 'Prose, simply.'];
+  const text = [
+    'export const basic = `',
+    '\\`\\`\\`py',
+    '# [!callout] Creates the file.',
+    '\\`\\`\\`',
+    '`;',
+    '',
+    'Prose, simply.',
+  ];
   assert.deepEqual(rules(text.join('\n')), ['7:banned-word']);
 });

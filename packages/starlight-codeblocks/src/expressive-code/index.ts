@@ -1,6 +1,7 @@
 import type { ExpressiveCodePlugin } from '@expressive-code/core';
 import { type CodeblocksOptions, type ResolvedOptions, resolveOptions } from '../options.ts';
 import { getRegistry } from '../registry.ts';
+import { pluginAnnotations } from './annotations.ts';
 import { pluginBrackets } from './brackets.ts';
 import { pluginCallouts } from './callouts.ts';
 import { pluginCore } from './core.ts';
@@ -14,6 +15,7 @@ import { pluginWordDiff } from './word-diff.ts';
 
 export type * from '../options.ts';
 export {
+  pluginAnnotations,
   pluginBrackets,
   pluginCallouts,
   pluginCore,
@@ -52,5 +54,6 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.expandable ? [pluginExpandable(options.expandable)] : []),
     // After hidden lines, which rebuilds the children of the code element.
     ...(options.callouts ? [pluginCallouts()] : []),
+    ...(options.annotations ? [pluginAnnotations()] : []),
   ];
 }
