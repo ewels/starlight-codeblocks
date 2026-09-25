@@ -382,7 +382,7 @@ With `codeblocks()`, the integration emits the modules next to `ec.<hash>.js`. W
 
 ### 7. Docs
 
-Write `docs/src/content/docs/features/<name>.mdx` from the template in DOCS-SITE.md. Put each example in an `export const` and pass it to `<Example code={…} />`: MDX removes the indentation of lines in a JSX attribute expression, but not in an `export`. `md`, `markdown` and `mdx` blocks on the docs site do not read directives (`astro.config.mjs`), so the "Markdown" tab shows them as written. Link to other pages with absolute paths that start with `/starlight-codeblocks/`; the links validator rejects relative links. Run `pnpm lint:docs` and read the page against the checklist in WRITING-STYLE.md.
+Write `docs/src/content/docs/features/<name>.mdx` from the template in DOCS-SITE.md. Put each example in an `export const` and pass it to `<Example code={…} />`: MDX removes the indentation of lines in a JSX attribute expression, but not in an `export`. `md`, `markdown` and `mdx` blocks on the docs site do not read directives (`astro.config.mjs`), so the "You write" pane shows them as written. Link to other pages with absolute paths that start with `/starlight-codeblocks/`; the links validator rejects relative links. Run `pnpm lint:docs` and read the page against the checklist in WRITING-STYLE.md.
 
 ## Notes for later phases
 

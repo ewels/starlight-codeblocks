@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const example = (page: import('@playwright/test').Page, n = 0) =>
-  page.locator('.example').nth(n).locator('[role="tabpanel"]').first().locator('.expressive-code');
+  page.locator('.example').nth(n).locator('.pane').nth(1).locator('.expressive-code');
 
 test('hides lines behind a marker, until it is selected', async ({ page }) => {
   const block = example(page);

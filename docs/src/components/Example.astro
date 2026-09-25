@@ -1,5 +1,5 @@
 ---
-import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
+import { Code } from '@astrojs/starlight/components';
 
 interface Props {
   /** Markdown with one or more fenced code blocks. */
@@ -14,21 +14,30 @@ if (blocks.length === 0) throw new Error(`<Example> found no fenced code block i
 ---
 
 <div class="example not-content">
-  <Tabs>
-    <TabItem label="Output">
-      {blocks.map((block) => <Code {...block} />)}
-    </TabItem>
-    <TabItem label="Markdown">
-      <Code code={code.trim()} lang="md" />
-    </TabItem>
-  </Tabs>
+  <div class="pane">
+    <p class="label">You write</p>
+    <Code code={code.trim()} lang="md" />
+  </div>
+  <div class="pane">
+    <p class="label">Readers see</p>
+    {blocks.map((block) => <Code {...block} />)}
+  </div>
 </div>
 
 <style>
   .example {
     margin-top: 1.5rem;
   }
-  .example :global([role='tabpanel'] > * + *) {
+  .pane + .pane {
+    margin-top: 1rem;
+  }
+  .pane > :global(* + *) {
     margin-top: 0.875rem;
+  }
+  .label {
+    margin: 0 0 0.375rem;
+    font-size: var(--sl-text-sm);
+    font-style: italic;
+    color: var(--sl-color-gray-3);
   }
 </style>

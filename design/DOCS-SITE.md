@@ -107,7 +107,7 @@ description: <One sentence, 25 words or fewer, that says what the feature does f
 
 ## The `Example` component
 
-Build an `Example` component for the docs site. It takes the Markdown for one or more code blocks as a string. It shows the rendered result and the Markdown source as Starlight `<Tabs>`: an "Output" tab, selected by default, and a "Markdown" tab after it. Give `<Tabs>` no `syncKey`, so a reader's choice on one page never changes the tabs on another.
+Build an `Example` component for the docs site. It takes the Markdown for one or more code blocks as a string. It shows that source as a code block labelled "You write", and renders it with the plugin under the label "Readers see", as in the mockups.
 
 Use Starlight's `<Code>` component for the rendering if the spike confirms that the plugin works with it. Features that need a directive or a component (code switcher, token transitions, scrollycoding) cannot render through `<Code>`. For those, write the source in a `md` or `mdx` code block, followed by the live version. Add a unit test that checks that the two stay the same.
 
