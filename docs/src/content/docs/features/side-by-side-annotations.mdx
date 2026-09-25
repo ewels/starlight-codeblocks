@@ -1,5 +1,83 @@
 ---
 title: Side-by-side annotations
+description: Show the notes of an annotated block in a column beside the code, so readers see every note next to its line.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+[Annotations](/starlight-codeblocks/features/annotations/) hide each note in a popover until a reader opens it. For a walk-through, where readers need every note, that is one selection too many. Side-by-side annotations use the same `[!annotate]` directive, but show the notes in a column beside the code.
+
+export const basic = `
+\`\`\`py title="report.py" annotations="side"
+import csv
+import sys
+from collections import Counter
+from pathlib import Path
+
+
+def read_rows(path: Path) -> list[dict]:
+    with path.open() as fh:  # [!annotate] Opens the file and closes it when the block ends.
+        return list(csv.DictReader(fh))  # [!annotate] Each row becomes a dict keyed by the header line.
+
+
+def summarise(rows: list[dict]) -> Counter:
+    return Counter(row["status"] for row in rows)  # [!annotate] Counts rows per status value.
+
+
+def main() -> None:
+    rows = read_rows(Path(sys.argv[1]))
+    for status, n in summarise(rows).most_common():
+        print(f"{status:<10} {n:>5}")  # [!annotate] Pads the status and count into columns of fixed width.
+
+
+if __name__ == "__main__":
+    main()
+\`\`\`
+`;
+
+<Example code={basic} />
+
+Each annotated line has a small number, and the note with the same number is in the column on the right. Hover over a note, or move keyboard focus to it, to highlight its line. Hover over a line to highlight its note.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `annotations="side"` | Fence line | `annotations="side"` |
+| `[!annotate] note` | Comment at the end of a line | `print(total)  # [!annotate] Shows the total.` |
+
+Add `annotations="side"` to the fence line of a block that uses `[!annotate]`. The directive works as on the [annotations](/starlight-codeblocks/features/annotations/) page.
+
+## Behaviour
+
+- When the block's container is at least 600 px wide, the code and the notes are two columns. The code column is about 1.65 times as wide as the notes column.
+- The notes column starts level with the top of the block. It sticks below the site header while the block scrolls past.
+- If the notes column is taller than the space below the header, it scrolls with the page instead.
+- In a narrower container, such as on a phone, the notes are a numbered list under the block.
+- Hovering over a note, or focusing it with the Tab key, highlights its line. Hovering over a line highlights its note.
+- The numbers on the lines are hidden from screen readers. Screen readers read the notes as a list after the code.
+- The copy button leaves the numbers and the notes out.
+- Without JavaScript, the layout works, but notes and lines do not highlight each other.
+- Under reduced motion, the highlight changes at once.
+
+## Options
+
+Side-by-side annotations have no options of their own. `annotations: false` turns them off together with annotations:
+
+```js title="astro.config.mjs"
+codeblocks({
+  annotations: false,
+});
+```
+
+## Limitations
+
+- The columns need a container of 600 px or more. In Starlight's default layout, that means a desktop window. Smaller windows get the list under the block.
+- Each note is next to its number, not next to its line. Notes in the column follow each other from the top of the block.
+- Long lines of code scroll inside the code column, which is narrower than a normal block.
+
+## Related
+
+- [Annotations](/starlight-codeblocks/features/annotations/): the same notes in popovers, for blocks where most readers do not need every note.
+- [Footnotes](/starlight-codeblocks/features/footnotes/): the notes in a list under the block at every width, with badges that link the two.
+- [Choose an annotation style](/starlight-codeblocks/guides/choose-an-annotation-style/): a comparison of the four styles, with the same code.

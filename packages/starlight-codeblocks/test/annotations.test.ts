@@ -45,3 +45,25 @@ test('renders a block without annotations the same as without the feature', asyn
   const md = block('js title="a.js"', 'a()', 'b()');
   expect((await render(md)).html).toBe((await render(md, { annotations: false })).html);
 });
+
+test('annotations="side" puts the notes in a column beside the block, with numbers on the lines', async () => {
+  const { html, copyText } = await render(
+    block('py annotations="side"', 'x = 1  # [!annotate] Sets `x`.', 'y = 2  # [!annotate] Sets y.'),
+  );
+  expect(html).toMatch(
+    /^<div class="expressive-code"><div class="scb-side not-content" data-scb-annotations=""><div class="scb-side-grid"><figure/,
+  );
+  expect(html).toContain('<div class="ec-line" data-scb-anno="1">');
+  expect(html).toContain('<span class="scb-annotation scb-annotation-num" aria-hidden="true">1</span>');
+  expect(html).toContain(
+    '</figure><ol class="scb-annotation-notes"><li tabindex="0" data-scb-anno="1"><span class="scb-annotation-note-num">1</span>Sets <code>x</code>.</li><li tabindex="0" data-scb-anno="2"><span class="scb-annotation-note-num">2</span>Sets y.</li></ol></div></div>',
+  );
+  expect(html).not.toContain('popover');
+  expect(copyText).toBe('x = 1\ny = 2');
+});
+
+test('warns about an unknown annotations value and uses popovers', async () => {
+  const { html, warnings } = await render(block('py annotations="list"', 'x = 1  # [!annotate] Note'));
+  expect(warnings.join('\n')).toContain('`annotations="list"` must be `"side"`');
+  expect(html).toContain('popovertarget');
+});

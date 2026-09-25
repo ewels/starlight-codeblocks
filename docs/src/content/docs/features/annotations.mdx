@@ -32,8 +32,9 @@ Each `[!annotate]` comment is gone from the output. A numbered marker is in its 
 | Syntax | Where | Example |
 |---|---|---|
 | `[!annotate] note` | Comment at the end of a line | `run: uv run pytest  # [!annotate] Runs the tests.` |
+| `annotations="side"` | Fence line | `annotations="side"` |
 
-The directive goes at the end of the line it explains. The note is the rest of the comment. It can hold inline code, links and bold text.
+The directive goes at the end of the line it explains. The note is the rest of the comment. It can hold inline code, links and bold text. `annotations="side"` shows the notes in a column beside the code instead, as the [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/) page explains.
 
 ## Behaviour
 
@@ -56,7 +57,7 @@ codeblocks({
 });
 ```
 
-With `annotations: false`, the plugin does not know the `[!annotate]` directive. It leaves the comment in the code as written, and logs a build warning.
+With `annotations: false`, the plugin does not know the `[!annotate]` directive. It leaves the comment in the code as written, and logs a build warning. Side-by-side annotations are off too.
 
 ## Examples
 
