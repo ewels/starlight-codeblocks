@@ -20,6 +20,15 @@ test('hides lines behind a marker, until it is selected', async ({ page }) => {
   await expect(hidden.first()).toBeVisible();
 });
 
+test('clicking the dashed line, away from the badge, toggles the run', async ({ page }) => {
+  // The second marker, not the first: the copy button overlaps the top-right corner of the block.
+  const marker = example(page).locator('.scb-hidden-marker').nth(1);
+  const box = await marker.boundingBox();
+  if (!box) throw new Error('marker has no bounding box');
+  await marker.click({ position: { x: box.width - 10, y: box.height / 2 } });
+  await expect(marker).toHaveAttribute('aria-expanded', 'true');
+});
+
 test('works with the keyboard', async ({ page }) => {
   const marker = example(page).locator('.scb-hidden-marker').first();
   await marker.focus();

@@ -62,7 +62,7 @@ test('a link to a hidden line opens its marker', async ({ page }) => {
 
 test('the hidden-lines marker and the callout arrow line up with the code after the numbers', async ({ page }) => {
   const block = example(page, 2);
-  const marker = await block.locator('.scb-hidden-marker').boundingBox();
+  const marker = await block.locator('.scb-hidden-marker span').boundingBox();
   const code = await block.locator('#server-L4 .code').evaluate((el) => {
     const range = document.createRange();
     range.selectNodeContents(el);

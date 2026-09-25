@@ -62,18 +62,37 @@ export function pluginHiddenLines(): CodeblocksPlugin {
   background: color-mix(in srgb, ${cssVar('codeForeground')} 4%, transparent);
 }
 .${PREFIX}-hidden-marker {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  width: 100%;
+  position: relative;
   margin: 2px 0;
-  /* The gutter width is in ch of the code font; the division undoes this element's smaller font size. */
-  margin-inline-start: calc(var(--scb-gutter, 0px) / 0.8125 + ${cssVar('codePaddingInline')});
-  padding: 0.05em 0.65em;
+  padding: 0;
   border: 0;
-  border-radius: 999px;
-  background: ${cssVar('codeblocksHiddenLines.badgeBackground')};
+  background: none;
   color: ${cssVar('codeblocks.mutedForeground')};
   cursor: pointer;
   font: inherit;
+  text-align: left;
+}
+.${PREFIX}-hidden-marker::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  inset-inline: calc(var(--scb-gutter, 0px) + ${cssVar('codePaddingInline')}) ${cssVar('codePaddingInline')};
+  border-top: 1px dashed color-mix(in srgb, ${cssVar('codeblocks.mutedForeground')} 35%, transparent);
+  transform: translateY(-50%);
+}
+.${PREFIX}-hidden-marker span {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  /* The gutter width is in ch of the code font; the division undoes this span's smaller font size. */
+  margin-inline-start: calc(var(--scb-gutter, 0px) / 0.8125 + ${cssVar('codePaddingInline')});
+  padding: 0.05em 0.65em;
+  border-radius: 999px;
+  background: ${cssVar('codeblocksHiddenLines.badgeBackground')};
   font-size: 0.8125em;
   line-height: 1.6;
 }
