@@ -74,6 +74,7 @@ def greet(name):
 ## Limitations
 
 - The glyphs add visual noise on a block with a lot of whitespace. Use `whitespace="all"` only where the extra detail matters, and leave the default, leading-only view for everything else.
+- Expressive Code turns every tab into spaces before this feature can see it. `codeblocks()` sets `tabWidth: 0` for you unless you already chose your own value. A tab then reaches the plugin unchanged, and a Makefile block copies its real tab rather than spaces. Set `expressiveCode.tabWidth` in the Starlight config, or `tabWidth` in `ec.config.mjs`, for Expressive Code's normal tab-to-space expansion instead.
 
 ## Related
 

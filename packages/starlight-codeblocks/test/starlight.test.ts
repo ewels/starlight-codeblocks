@@ -44,6 +44,16 @@ test('fails when ec.config.mjs has a plugins list without the preset', async () 
   );
 });
 
+test('defaults tabWidth to 0, so a real tab is not expanded to spaces', async () => {
+  const { updates } = await setup();
+  expect((updates[0] as { expressiveCode: { tabWidth: number } }).expressiveCode.tabWidth).toBe(0);
+});
+
+test('keeps a tabWidth the site already chose', async () => {
+  const { updates } = await setup(undefined, { tabWidth: 4 });
+  expect((updates[0] as { expressiveCode: { tabWidth: number } }).expressiveCode.tabWidth).toBe(4);
+});
+
 test('leaves the Starlight config alone when ec.config.mjs has the preset', async () => {
   const { updates, integrations } = await setup(
     "export default { plugins: [[{ name: 'starlight-codeblocks:core' }]] };",

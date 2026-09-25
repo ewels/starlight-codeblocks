@@ -40,7 +40,18 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
         }
 
         const ec = typeof config.expressiveCode === 'object' ? config.expressiveCode : {};
-        updateConfig({ expressiveCode: { ...ec, plugins: [...(ec.plugins ?? []), ...plugins.map(hideFunctions)] } });
+        // astro-expressive-code expands every tab to two spaces before any plugin hook runs, in
+        // fenced code and in <Code>, which corrupts tab-sensitive examples such as Makefiles and
+        // defeats visible whitespace's tab glyph. Leave tabs as written unless the site already
+        // chose its own tabWidth. A site with `ec.config.mjs` plugins manages this file itself.
+        const tabWidthDefault = ec.tabWidth === undefined ? { tabWidth: 0 } : {};
+        updateConfig({
+          expressiveCode: {
+            ...ec,
+            ...tabWidthDefault,
+            plugins: [...(ec.plugins ?? []), ...plugins.map(hideFunctions)],
+          },
+        });
         addIntegration(codeblocksIntegration({ ecConfigOverride: { file: ecConfigFile } }));
       },
     },
