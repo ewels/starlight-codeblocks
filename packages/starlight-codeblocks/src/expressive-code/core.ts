@@ -8,26 +8,16 @@ import {
 } from '@expressive-code/core';
 import type { DirectiveSpecs } from './notation.ts';
 import { parseRange, RangeSyntaxError } from './ranges.ts';
+import { baseStyles, styleSettings } from './styles.ts';
 
 /** An Expressive Code plugin that can declare directives for the notation plugin. */
 export interface CodeblocksPlugin extends ExpressiveCodePlugin {
   directives?: DirectiveSpecs;
 }
 
-/** Popovers and hover cards. `place()` in `src/client/shared/position.ts` positions them. */
-export const floatStyles = `.scb-float {
-  position: fixed;
-  inset: auto;
-  margin-block: 6px;
-  margin-inline: 0;
-  max-width: min(340px, calc(100vw - 16px));
-  position-area: block-end span-inline-end;
-  position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
-}`;
-
-/** Shared parts that every feature needs. The preset adds it first. */
+/** Shared parts that every feature needs: style settings and base styles. The preset adds it first. */
 export function pluginCore(): CodeblocksPlugin {
-  return { name: 'starlight-codeblocks:core', baseStyles: floatStyles };
+  return { name: 'starlight-codeblocks:core', styleSettings, baseStyles };
 }
 
 type Context = Pick<ExpressiveCodeHookContextBase, 'codeBlock' | 'config'>;

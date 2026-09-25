@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { expect, type Page, test } from '@playwright/test';
 import ts from 'typescript';
 import { loaderSource } from '../../packages/starlight-codeblocks/src/client-modules.ts';
-import { floatStyles } from '../../packages/starlight-codeblocks/src/expressive-code/core.ts';
+import { floatStyles } from '../../packages/starlight-codeblocks/src/expressive-code/styles.ts';
 
 // A page on its own origin, so that the tests control every file the browser loads.
 const origin = 'http://codeblocks.test';
