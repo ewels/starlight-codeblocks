@@ -40,7 +40,7 @@ The two imports and the two lines of the `if` block are behind their own markers
 - Selecting a marker shows that run only. Its text changes to "Hide N lines", and the lines get a faint background so the reader can tell they asked for them.
 - The title bar has a button, "Show N hidden lines", where N is the total across every run. It shows every run at once. Once every run is open, it reads "Hide N lines".
 - The copy button, and a manual copy, always include hidden lines, so the code still runs after a paste.
-- Markers and the title bar button use `aria-expanded` and `aria-controls`, so assistive technology reports what they open.
+- Each marker has `aria-expanded`, and the title bar button has `aria-pressed`. Both have `aria-controls`, so assistive technology reports what they open.
 - Hidden lines stay hidden when the page prints.
 - Without JavaScript, hidden lines stay hidden, and the markers and the title bar button do nothing.
 

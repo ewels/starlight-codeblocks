@@ -1,0 +1,47 @@
+---
+import AnchorHeading from '@astrojs/starlight/components/AnchorHeading.astro';
+import Example from './Example.astro';
+import { inlineCode } from './inline-code.ts';
+
+interface Props {
+  id: string;
+  /** Each shows as code in the heading. */
+  labels: string[];
+  description: string;
+  /** Terms and their values, as HTML. */
+  facts: [string, string][];
+  /** Markdown for an `<Example>`. */
+  example?: string | undefined;
+}
+
+const { id, labels, description, facts, example } = Astro.props;
+---
+
+<AnchorHeading level={2} id={id} class="reference-name">
+  {labels.map((label, i) => (<>{i > 0 && ', '}<code>{label}</code></>))}
+</AnchorHeading>
+<p set:html={inlineCode(description)} />
+<dl>
+  {facts.map(([term, html]) => (<><dt>{term}</dt><dd set:html={html} /></>))}
+</dl>
+{example && <Example code={example} layout="side" />}
+
+<style>
+  :global(.reference-name) code {
+    font-size: 0.75em;
+    background: none;
+    padding: 0;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.25rem 1rem;
+  }
+  dl > dt,
+  dl > dd {
+    margin: 0;
+  }
+  dt {
+    font-weight: 600;
+  }
+</style>

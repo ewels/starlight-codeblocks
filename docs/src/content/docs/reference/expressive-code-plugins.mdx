@@ -1,5 +1,71 @@
 ---
 title: Expressive Code plugins
+description: The Expressive Code plugins that the package exports, for sites that configure Expressive Code themselves.
 ---
 
-Not yet written
+`codeblocks()` adds every feature to Starlight for you. Behind it, each feature is an Expressive Code plugin. The `starlight-codeblocks/expressive-code` subpath exports these plugins, and a preset that returns all of them. A site that uses Expressive Code without Starlight, or with its own `plugins` list in `ec.config.mjs`, uses them there.
+
+## The preset
+
+`pluginCodeblocks(options)` returns every plugin, in the correct order, with the options of [`codeblocks()`](/starlight-codeblocks/reference/options/). Use the preset unless you have a reason to add plugins one by one. To leave a feature out, set its option to `false`:
+
+```js title="ec.config.mjs"
+import { pluginCodeblocks } from 'starlight-codeblocks/expressive-code';
+
+export default {
+  plugins: [pluginCodeblocks({ annotations: false, runnable: false })],
+};
+```
+
+On a Starlight site with `codeblocks()`, call `pluginCodeblocks()` with no argument. It then reads the options that you gave to `codeblocks()`.
+
+## Plugins
+
+Each plugin takes the settings of its option, as the [options reference](/starlight-codeblocks/reference/options/) lists them. The table gives the plugins in the order that the preset adds them.
+
+| Plugin | Option | Feature |
+|---|---|---|
+| `pluginCore()` | none | Shared style settings and styles |
+| `pluginNotation(settings)` | `notation` | [Comment notation](/starlight-codeblocks/features/comment-notation/) |
+| `pluginFocus(settings)` | `focus` | [Focus](/starlight-codeblocks/features/focus/) |
+| `pluginLineStates(settings)` | `lineStates` | [Line states](/starlight-codeblocks/features/line-states/) |
+| `pluginWordDiff(settings)` | `wordDiff` | [Word-level diff](/starlight-codeblocks/features/word-level-diff/) |
+| `pluginWhitespace()` | `whitespace` | [Visible whitespace](/starlight-codeblocks/features/visible-whitespace/) |
+| `pluginBrackets(settings)` | `brackets` | [Colourised brackets](/starlight-codeblocks/features/colourised-brackets/) |
+| `pluginShellCopy(settings)` | `shellCopy` | [Smart shell copy](/starlight-codeblocks/features/smart-shell-copy/) |
+| `pluginTokenLinks({ base })` | `tokenLinks` | [Token links](/starlight-codeblocks/features/token-links/) |
+| `pluginApiLinks({ adapters })` | `apiLinks` | [API auto-linking](/starlight-codeblocks/features/api-auto-linking/) |
+| `pluginPlaceholders(settings)` | `placeholders` | [Fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/) |
+| `pluginMentions()` | `mentions` | [Code mentions](/starlight-codeblocks/features/code-mentions/) |
+| `pluginPermalinks()` | `permalinks` | [Line permalinks](/starlight-codeblocks/features/line-permalinks/) |
+| `pluginHiddenLines()` | `hiddenLines` | [Hidden lines](/starlight-codeblocks/features/hidden-lines/) |
+| `pluginExpandable(settings)` | `expandable` | [Expandable blocks](/starlight-codeblocks/features/expandable-blocks/) |
+| `pluginPlayground(playgrounds)` | `playgrounds` | [Open in playground](/starlight-codeblocks/features/open-in-playground/) |
+| `pluginRunnable(settings)` | `runnable` | [Run in the browser](/starlight-codeblocks/features/run-in-the-browser/) |
+| `pluginCodeSwitcher()` | `codeSwitcher` | [Code switcher](/starlight-codeblocks/features/code-switcher/) |
+| `pluginTransitions()` | `transitions` | [Token transitions](/starlight-codeblocks/features/token-transitions/) |
+| `pluginCallouts()` | `callouts` | [Inline callouts](/starlight-codeblocks/features/inline-callouts/) |
+| `pluginAnnotations()` | `annotations` | [Annotations](/starlight-codeblocks/features/annotations/) and [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/) |
+| `pluginFootnotes(settings)` | `footnotes` | [Footnotes](/starlight-codeblocks/features/footnotes/) |
+
+`pluginTokenLinks()` takes the `base` of the Astro site, for links that start with `/`. `pluginApiLinks()` has no default adapters. Give it the adapters from `starlight-codeblocks/adapters/python` and `starlight-codeblocks/adapters/nextflow`, or your own.
+
+## Rules for single plugins
+
+If you add plugins one by one, follow these rules:
+
+1. Add `pluginCore()` first. Every other plugin uses its style settings.
+2. Add `pluginNotation()` second, if any plugin after it reads directives.
+3. Add the other plugins in the order of the table.
+
+The order matters. For example, `pluginPlayground()` sends the copied text, so it must come after `pluginShellCopy()` and `pluginPlaceholders()`, which change that text. `pluginCallouts()` must come after `pluginHiddenLines()`, which rebuilds the lines of the block.
+
+## Without Starlight
+
+Some features need more than an Expressive Code plugin. Without `codeblocks()`, these parts are not there:
+
+- The `:::code-switcher` directive and [inline code highlighting](/starlight-codeblocks/features/inline-code-highlighting/) need the Markdown plugin that `codeblocks()` adds.
+- The `<CodeSteps>` and `<Scrollycoding>` components need Starlight.
+- `runnable.runtimes` values are URLs that the browser imports as they are, because `codeblocks()` is not there to bundle the runtime modules.
+
+The client scripts of interactive features load inline on each page that needs them, so the features work without a change to the build.

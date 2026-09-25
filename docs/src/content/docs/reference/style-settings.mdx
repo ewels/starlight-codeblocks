@@ -1,5 +1,14 @@
 ---
 title: Style settings
+description: Every style setting of the plugin, with its defaults for dark and light themes.
 ---
 
-Not yet written
+import StyleSettings from '../../../components/StyleSettings.astro';
+
+Every colour and size of the plugin is an Expressive Code style setting. The settings are in groups: `codeblocks` has the settings that every feature shares, and each other group belongs to one feature. The [configuration](/starlight-codeblocks/configuration/) page shows how to change a setting with `styleOverrides`.
+
+A default with two values has one for dark themes and one for light themes. A default with one value applies to both. Some defaults come from another setting, so a change to `codeblocks.accent` also changes the markers, the focus ring and the link underlines.
+
+The colour defaults meet the contrast targets on the [accessibility](/starlight-codeblocks/reference/accessibility/) page. If you change a colour, check its contrast against the code background of each theme.
+
+<StyleSettings />

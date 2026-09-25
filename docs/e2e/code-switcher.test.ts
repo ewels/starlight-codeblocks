@@ -6,6 +6,8 @@ const visible = (page: Page, n: number, g = 0) => groups(page, n).nth(g).locator
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/code-switcher/');
+  // A change before the client module starts is lost.
+  await expect(page.locator('[data-scb-code-switcher]:not([data-scb-ready])')).toHaveCount(0);
 });
 
 test('shows the first variant, with a menu in the title bar', async ({ page }) => {
@@ -49,7 +51,7 @@ test('the copy button copies the variant that shows', async ({ page, context }) 
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await visible(page, 0).getByRole('combobox').selectOption({ label: 'Yarn' });
   await visible(page, 0).locator('.copy button').click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('yarn add starlight-codeblocks');
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('yarn add starlight-codeblocks');
 });
 
 test('a variant with a title shows it in the title bar', async ({ page }) => {

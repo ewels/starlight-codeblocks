@@ -1,5 +1,108 @@
 ---
 title: Code switcher or tabs
+description: Choose between the code switcher and Starlight's Tabs component when a page shows the same task in several versions.
 ---
 
-Not yet written
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import Example from '../../../components/Example.astro';
+
+Starlight has a `<Tabs>` component, and the plugin has a [code switcher](/starlight-codeblocks/features/code-switcher/). Both show one version of something at a time, with a control to pick another. Both remember the choice across pages. They differ in what they can contain and in how they look.
+
+## Compare the two
+
+| | Code switcher | `<Tabs>` |
+|---|---|---|
+| Contains | Code blocks only | Any content: prose, lists, code blocks, components |
+| Control | A menu in the title bar of the block | A row of tabs above the content |
+| Works in | Markdown and MDX | MDX only |
+| Keeps the choice | With `sync="<key>"` | With `syncKey="<key>"` |
+| Space on the page | One code block | One code block, plus the row of tabs |
+
+## Use the code switcher for code only
+
+Use the code switcher when each version is one code block and nothing else, such as an install command for each package manager. The menu sits inside the title bar, so the block takes no more space than a plain code block. It works in `.md` files, where components are not available.
+
+export const switcher = `
+:::code-switcher{sync="pm"}
+\`\`\`sh label="npm"
+npm install starlight-codeblocks
+\`\`\`
+\`\`\`sh label="pnpm"
+pnpm add starlight-codeblocks
+\`\`\`
+:::
+`;
+
+<Example code={switcher}>
+
+:::code-switcher{sync="pm"}
+```sh label="npm"
+npm install starlight-codeblocks
+```
+```sh label="pnpm"
+pnpm add starlight-codeblocks
+```
+:::
+
+</Example>
+
+## Use tabs for more than code
+
+Use `<Tabs>` when a version needs text as well as code, or more than one code block. For example, the steps to configure a tool can differ for each operating system. Each tab can then hold a sentence of explanation and the commands.
+
+export const tabs = `
+<Tabs syncKey="os">
+<TabItem label="macOS">
+
+Install the tool with Homebrew:
+
+\`\`\`sh
+brew install jq
+\`\`\`
+
+</TabItem>
+<TabItem label="Windows">
+
+Install the tool with winget:
+
+\`\`\`sh
+winget install jqlang.jq
+\`\`\`
+
+</TabItem>
+</Tabs>
+`;
+
+<Example code={tabs}>
+
+<Tabs syncKey="os">
+<TabItem label="macOS">
+
+Install the tool with Homebrew:
+
+```sh
+brew install jq
+```
+
+</TabItem>
+<TabItem label="Windows">
+
+Install the tool with winget:
+
+```sh
+winget install jqlang.jq
+```
+
+</TabItem>
+</Tabs>
+
+</Example>
+
+## Rules for choosing
+
+- If every version is one code block, use the code switcher.
+- If a version needs prose, a list or a second code block, use `<Tabs>`.
+- If the page is a `.md` file, use the code switcher, or change the file to `.mdx` for `<Tabs>`.
+- If readers pick one version and keep it, such as a package manager, give every block the same key. The choice then applies across the site.
+
+The two keys are separate. A code switcher with `sync="pm"` and a `<Tabs>` group with `syncKey="pm"` do not switch together. Use one of the two for each kind of choice on a site.

@@ -1,0 +1,73 @@
+---
+import AnchorHeading from '@astrojs/starlight/components/AnchorHeading.astro';
+import { featureLink } from './feature-link.ts';
+import { inlineCode } from './inline-code.ts';
+import { styleGroups } from './reference.ts';
+
+const code = (value: unknown) => {
+  const text = String(value);
+  const swatch = /^#[0-9a-f]{3,8}$/i.test(text) ? `<span class="swatch" style="background:${text}"></span>` : '';
+  return `${swatch}<code>${inlineCode(text)}</code>`;
+};
+
+function defaultHtml(value: unknown, derived: string | undefined) {
+  if (derived) return inlineCode(derived);
+  if (Array.isArray(value)) return `${code(value[0])} dark<br />${code(value[1])} light`;
+  return code(value);
+}
+
+const groups = await Promise.all(
+  styleGroups.map(async ({ name, defaults, page, settings = {} }) => ({
+    name,
+    feature: page ? `Settings of ${await featureLink(page)}.` : 'Shared settings, which every feature uses.',
+    rows: Object.entries(settings).map(([key, { description, derived }]) => ({
+      key,
+      description,
+      value: defaultHtml(defaults[key], derived),
+    })),
+  })),
+);
+---
+
+{
+  groups.map(({ name, feature, rows }) => (
+    <>
+      <AnchorHeading level={2} id={name.toLowerCase()} class="reference-name"><code>{name}</code></AnchorHeading>
+      <p set:html={feature} />
+      <table>
+        <thead>
+          <tr><th>Setting</th><th>Default</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          {rows.map(({ key, value, description }) => (
+            <tr>
+              <td><code>{key}</code></td>
+              <td class="default" set:html={value} />
+              <td set:html={inlineCode(description)} />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  ))
+}
+
+<style>
+  :global(.reference-name) code {
+    font-size: 0.75em;
+    background: none;
+    padding: 0;
+  }
+  .default :global(code) {
+    white-space: nowrap;
+  }
+  .default :global(.swatch) {
+    display: inline-block;
+    width: 0.75em;
+    height: 0.75em;
+    margin-inline-end: 0.375em;
+    border: 1px solid var(--sl-color-gray-4);
+    border-radius: 2px;
+    vertical-align: -0.05em;
+  }
+</style>

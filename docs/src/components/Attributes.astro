@@ -1,0 +1,19 @@
+---
+import { attributes } from './reference.ts';
+import { featureLink } from './feature-link.ts';
+import ReferenceEntry from './ReferenceEntry.astro';
+---
+
+{
+  await Promise.all(
+    attributes.map(async ({ id, syntax, description, page, example }) => (
+      <ReferenceEntry
+        id={id}
+        labels={syntax}
+        description={description}
+        facts={[['Feature', await featureLink(page)]]}
+        example={example && `\`\`\`${example.lang} ${example.meta}\n${example.code}\n\`\`\``}
+      />
+    )),
+  )
+}

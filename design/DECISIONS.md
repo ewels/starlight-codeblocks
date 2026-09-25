@@ -556,3 +556,33 @@ Use this format:
 - Decision: `starlight-codeblocks/runtimes/pyodide` exports `pyodide({ url })` and a default `pyodide()`. The default URL is `https://cdn.jsdelivr.net/pyodide/v314.0.7/full/` (the current `pyodide` release on npm). A site that wants another URL writes a one-line module, `export default pyodide({ url })`, and maps `python` to it. The worker is a module worker from a `blob:` URL, so the package ships one file and needs no bundler support for workers. It imports `pyodide.mjs` from the URL on the first `load()`. Runs wait in a queue in the worker, because standard output and standard error belong to the whole interpreter. Each run gets new globals, installs the packages that its imports name (`loadPackagesFromImports`), and drops Pyodide's own frames from a traceback. Stopping a run ends the worker, because Python cannot be interrupted without cross-origin isolation; the next `load()` starts a new one. With `codeblocks()`, `python` maps to this runtime unless the site maps it to another module.
 - Reason: SPEC 8.2 fixes the interface to `load()` and `run()`, so the URL cannot be a per-call option; a factory keeps the interface and lets sites change the URL. GitHub Pages and most hosts do not send the cross-origin isolation headers that `SharedArrayBuffer` interrupts need.
 - Alternatives: A `runnable.pyodideUrl` option (an option the spec does not name). `new Worker(new URL('./worker.js', import.meta.url))` (depends on the site bundler handling the pattern inside a prebuilt package). A shared namespace between runs (one block's names would leak into the next).
+
+## Headings that components write reach the table of contents through route middleware
+
+- Date: 2026-09-26
+- Step: 3.5 (added in 066d1b5, extended in 12.1)
+- Decision: `docs/src/route-data.ts` is a Starlight route middleware. It adds the headings that the reference components write (`Directives.astro`, `Attributes.astro`, `StyleSettings.astro`) to the table of contents of their page. The heading lists come from `componentHeadings` in `docs/src/components/reference.ts`, the same data that the components render.
+- Reason: Starlight builds the table of contents from the Markdown headings only, so headings in a component's output are missing from it.
+- Alternatives: Headings written by hand in the `.mdx` file (they drift from the source).
+
+## Directive examples live in the package
+
+- Date: 2026-09-26
+- Step: 3.5 (added in 066d1b5)
+- Decision: Each directive's description, arguments, example and feature page are in `DirectiveSpec.docs`, next to the directive in its plugin. The directives reference page renders them as sections with side-by-side examples. `test/directives-docs.test.ts` fails if a directive has no docs, or if its example does not render cleanly.
+- Reason: The reference cannot drift from the directives that the plugins declare. The user found a wide table hard to read, so each directive is a section with an example.
+
+## Attributes and style settings reference data in src/reference.ts
+
+- Date: 2026-09-26
+- Step: 12.1
+- Decision: `packages/starlight-codeblocks/src/reference.ts` holds the docs for every attribute (`attributesReference`) and every style setting (`styleSettingsReference`). No entry point imports it, so it does not ship in the bundles. The attributes page renders it as sections with side-by-side examples, the same as the directives page. The style settings page renders one table per group, with the defaults read from each plugin's `PluginStyleSettings`, so values cannot drift; a computed default shows the `derived` text instead. `test/reference.test.ts` fails if the source reads an attribute (`metaOptions.get…('x')`, `list('x')`, `resolveRange(ctx, 'x')`) that is not in the reference, if an example does not render cleanly or does not change the output, if a style setting or group is missing or extra, or if `derived` does not match a computed default. It also checks that the Expressive Code plugins page names every `plugin…` export. Line-state settings use `<state>` keys, one entry for all states.
+- Reason: DOCS-SITE.md asks for reference data from the source or one shared file. One file is simpler than a docs field on every plugin, and the attribute `label` is read by the Sätteri plugin, not by an Expressive Code plugin. Computed defaults (functions of other settings) have no fixed value to print.
+- Alternatives: Resolve the defaults through an Expressive Code engine with the site's themes (the site engine's style variants are not reliably ready when the page renders, and Starlight's themes are not exported). A table with dark and light columns (too wide with descriptions).
+
+## Code switcher e2e tests wait for the client module
+
+- Date: 2026-09-26
+- Step: 12.1
+- Decision: The code switcher tests wait until every switcher has `data-scb-ready` before they select a variant, and poll the clipboard after a copy.
+- Reason: The copy test failed once under load. A `change` event before the module starts is lost, and the clipboard write is asynchronous. 1,050 repeated runs pass.

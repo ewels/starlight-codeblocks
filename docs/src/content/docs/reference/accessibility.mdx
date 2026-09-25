@@ -1,5 +1,166 @@
 ---
 title: Accessibility
+description: What each feature does for keyboard users, screen reader users and readers who ask for reduced motion, and the contrast that the default styles meet.
 ---
 
-Not yet written
+Every feature meets WCAG 2.2 AA in the light and the dark themes of Starlight, with the default style settings. This page lists what each feature does for readers who use a keyboard or a screen reader, or who ask for reduced motion. It also says where colour is part of the meaning, and what else carries that meaning.
+
+## Rules for every feature
+
+These rules apply to all features, so the sections below do not repeat them:
+
+- Every control is a native `button`, `a`, `input` or `select` element. You can reach it with the Tab key and use it with Enter or Space.
+- Every control shows a focus ring in `codeblocks.focusRing` when it has keyboard focus. The ring has 3:1 contrast or more on the code background.
+- A change that happens on hover over a control also happens on keyboard focus.
+- Escape closes an open popover or hover card.
+- When the reader's system asks for reduced motion, every transition and animation of the plugin stops. The change still happens, at once, and pages jump instead of scrolling smoothly.
+- The copy button and a manual selection give the code only. Messages, markers, notes, line numbers and glyphs are not part of the copied text.
+- Code stays in the page for screen readers, also when it is blurred, faded or collapsed. [Hidden lines](/starlight-codeblocks/features/hidden-lines/) are the exception: they stay hidden until the reader opens them.
+
+## Contrast
+
+The default colours meet these targets against the code background of the dark theme and the light theme. Unit tests check each pair.
+
+| Element | Target |
+|---|---|
+| Text, such as messages, output, notes, line numbers and prompts | 4.5:1 |
+| Messages of line states | 5:1 |
+| Bars, underlines, markers, badges and focus rings | 3:1 |
+
+Three features fade lines or text on purpose: [focus](/starlight-codeblocks/features/focus/), [code mentions](/starlight-codeblocks/features/code-mentions/) and [scrollycoding](/starlight-codeblocks/features/scrollycoding/). The faded text is below 4.5:1 until the reader hovers, moves focus or scrolls to it. Keyboard readers can always clear the fade.
+
+If you change a colour in the [style settings](/starlight-codeblocks/reference/style-settings/), check its contrast in both themes.
+
+## Inside the code block
+
+### Focus
+
+- The code area takes keyboard focus when the block has focused lines. Focus in the code area makes every line clear.
+- Screen readers read every line, because the blurred lines stay in the page.
+- The blur is the only difference between focused lines and other lines. It shows where to look, and hides no information.
+
+### Line states
+
+- Each state line has a tint and a bar on the left edge. A message starts with the name of the state in bold, so colour is not the only mark.
+- Screen readers hear the name of the state before the line, for example "Error:", and then the message after the code.
+
+### Comment notation
+
+The plugin reads directives at build time and removes them from the page. Readers get the result of each directive, as the sections for each feature describe.
+
+### Inline callouts
+
+- The bubble has the `note` role. Screen readers read it before its line.
+- A bubble has no animation and no control.
+
+### Annotations
+
+- Each marker is a button with the label "Annotation N". Screen readers read the note after its marker.
+- Escape, or a selection outside the note, closes it.
+- When the page prints, the notes print as a numbered list under the block.
+
+### Footnotes
+
+- Each badge is a link with the label "Footnote N". The number in front of each note is a link back to its line, with the label "Footnote N, for line L".
+- A selected line gets a bar as well as a tint, so the highlight does not rely on colour.
+- Under reduced motion, the page jumps to the note or the line.
+
+### Hidden lines
+
+- Each marker is a button with `aria-expanded`. The title bar button has `aria-pressed`. Both have `aria-controls`, which names the lines they show.
+- The marker text gives the number of lines, such as "3 hidden lines", so readers know what the button opens.
+
+### Smart shell copy
+
+- Screen readers read the prompts, the commands and the output as they are on the page.
+- The copy button has the label "Copy commands", which says what it copies.
+- Output lines are muted and have no syntax colours. Their position after a command also marks them as output.
+
+### Word-level diff
+
+- The line markers of Expressive Code show which lines are removed and which are added. The stronger tint of the changed words is an extra reading aid on top of them.
+- The tint is the only mark of a changed word. Screen readers get the removed line and the added line in full, so a reader can compare the two.
+
+### Visible whitespace
+
+The glyphs are hidden from screen readers, which read the same code as in a block without the attribute.
+
+### Colourised brackets
+
+- The colours are a reading aid. The brackets themselves stay in the code, so readers who cannot tell the colours apart lose no information.
+- Hover over a bracket to outline it and its partner, which shows the pair by shape. The outline needs a pointer, because brackets cannot take keyboard focus.
+
+### Token links
+
+- A link is a normal link with an underline, so it does not rely on colour. It keeps its syntax colours.
+- Readers reach the link with the Tab key.
+
+### API auto-linking
+
+- A link has a dotted underline. On hover and on focus, the underline is solid.
+- The hover card opens at once on keyboard focus. Escape closes it.
+- Screen readers get the text of the card as the description of the link.
+
+### Expandable blocks
+
+- The button under the code says how many lines it shows, such as "Show all 24 lines". It has `aria-expanded`.
+- The collapsed lines use `hidden="until-found"`, so Find in the browser still finds text in them, and the block expands to show the match.
+
+### Open in playground
+
+- The button is a link, or a form button for playgrounds that take a post.
+- Screen readers announce "opens in a new tab" after the label.
+
+## Across the page
+
+### Code mentions
+
+- Keyboard focus on a mention link highlights its lines, the same as hover.
+- Screen readers read the tagged lines as the description of the link.
+- Under reduced motion, the fade and the scroll happen at once.
+
+### Line permalinks
+
+- The line numbers are links. Enter selects a line, and Shift with Enter selects a range.
+- Screen readers announce each number as "Link to line N". Highlighted numbers have `aria-current`.
+- A highlighted line gets a bar as well as a tint.
+
+### Fill-in placeholders
+
+- Each field is a native `input`. Its accessible name is its placeholder text.
+- Escape in a field clears its value.
+
+### Code switcher
+
+- The menu is a native `select` element with the accessible name "Variant".
+- Keyboard focus stays on the menu after the variant changes.
+
+### Token transitions
+
+- The numbered steps and the **Previous** and **Next** buttons are buttons. The left and right arrow keys go to the previous and the next step when a numbered step has focus.
+- Screen readers announce the number and the label of the new step. The current step has `aria-current`.
+- Under reduced motion, the code changes without the animation.
+
+### Scrollycoding
+
+- Screen readers read the steps in order, then the code block. On a narrow screen, each step has its own copy of the block.
+- The pointer does not clear the focus of the sticky block. Move keyboard focus into the block to make every line sharp.
+- Under reduced motion, the focus and the fade of the steps change at once.
+
+### Side-by-side annotations
+
+- Keyboard focus on a note highlights its line, the same as hover.
+- The numbers on the lines are hidden from screen readers. Screen readers read the notes as a list after the code.
+
+## More
+
+### Inline code highlighting
+
+The highlighted code is a normal `code` element, with the same characters as before. The token colours have the same contrast correction as the code blocks.
+
+### Run in the browser
+
+- The **Run** button keeps keyboard focus during a run, so readers can run the code again with Enter or Space. While code runs, the button has `aria-disabled`.
+- The output panel is a polite live region. Screen readers announce the loading message and the output when they change.
+- Standard error has a bar at its start and a hidden "Error:" prefix for screen readers, as well as its colour.
+- The Run button does not print.

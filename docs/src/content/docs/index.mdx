@@ -1,6 +1,60 @@
 ---
 title: starlight-codeblocks
+description: A Starlight plugin that adds focus, line states, annotations, API links and 20 more features to the code blocks of a site.
 template: splash
+hero:
+  tagline: More ways to explain code in Starlight code blocks.
+  actions:
+    - text: Get started
+      link: /starlight-codeblocks/getting-started/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/ewels/starlight-codeblocks
+      icon: external
+      variant: minimal
 ---
 
-Not yet written
+Starlight renders every code block with Expressive Code. The plugin adds 24 features to those code blocks, such as focus, line states, annotations, links to API docs and runnable examples. Each feature starts when a code block uses its attribute or its directive, so existing pages do not change.
+
+This block uses two features together. The fence line focuses line 9, and a directive in the comment adds an annotation. Hover over the block, or move keyboard focus into it, to see every line sharp. Select the number to read the note.
+
+```js title="astro.config.mjs" focus={9} apiLinks=false
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
+import codeblocks from 'starlight-codeblocks';
+
+export default defineConfig({
+  integrations: [
+    starlight({
+      title: 'My docs',
+      plugins: [codeblocks()], // [!annotate] One line turns on every feature. A feature changes a block only when the block uses it.
+    }),
+  ],
+});
+```
+
+## Install
+
+Add the package to the site:
+
+:::code-switcher{sync="pm"}
+```sh label="npm"
+npm install starlight-codeblocks
+```
+```sh label="pnpm"
+pnpm add starlight-codeblocks
+```
+```sh label="Yarn"
+yarn add starlight-codeblocks
+```
+:::
+
+Then add `codeblocks()` to the Starlight plugins in `astro.config.mjs`, as in the block above. The [getting started](/starlight-codeblocks/getting-started/) page has the full steps.
+
+## Features
+
+- [Inside the code block](/starlight-codeblocks/features/focus/): focus, line states, notes on lines, hidden lines, diffs, links and playground buttons.
+- [Across the page](/starlight-codeblocks/features/code-mentions/): links from the prose to lines, line permalinks, fields that readers fill in, variants and code that changes in steps.
+- [More](/starlight-codeblocks/features/inline-code-highlighting/): syntax colours for inline code, and code that runs in the browser.
+- [Extend](/starlight-codeblocks/extend/write-an-api-link-adapter/): your own API link adapters, playgrounds and runtimes.
+- [Reference](/starlight-codeblocks/reference/options/): every option, attribute, directive and style setting.
