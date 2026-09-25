@@ -1,0 +1,25 @@
+---
+import { defaultCommentSyntax } from '../../../packages/starlight-codeblocks/src/expressive-code/comments.ts';
+
+const bySyntax = new Map<string, string[]>();
+for (const [language, syntax] of Object.entries(defaultCommentSyntax)) {
+  const key = syntax.join(', ');
+  bySyntax.set(key, [...(bySyntax.get(key) ?? []), language]);
+}
+---
+
+<table>
+  <thead>
+    <tr><th>Comment syntax</th><th>Languages</th></tr>
+  </thead>
+  <tbody>
+    {
+      [...bySyntax].map(([syntax, languages]) => (
+        <tr>
+          <td>{syntax.split(', ').map((s, i) => <>{i > 0 && ', '}<code>{s}</code></>)}</td>
+          <td>{languages.map((l, i) => <>{i > 0 && ', '}<code>{l}</code></>)}</td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>

@@ -7,6 +7,8 @@ export interface DirectiveSpec {
   placement: 'end' | 'own';
   /** The directive takes the text after it, up to the next directive or the end of the comment. */
   text?: boolean;
+  /** For the directives reference page. */
+  docs?: { description: string; example: string; page: string };
 }
 
 /** Directive specs by name: `code <name>` for `[!code <name>]`, the bare name for the others. */
@@ -256,9 +258,20 @@ export function getDirectives(codeBlock: ExpressiveCodeBlock, name?: string): Bl
 
 const markers = { 'code highlight': 'mark', 'code ++': 'ins', 'code --': 'del' } as const;
 
-const builtInDirectives: DirectiveSpecs = Object.fromEntries(
-  Object.keys(markers).map((name) => [name, { placement: 'end' }]),
-);
+const markerSpec = (name: string, marker: string, change: string): DirectiveSpec => ({
+  placement: 'end',
+  docs: {
+    description: `Marks the line as ${change}, like the \`${marker}\` attribute of Expressive Code.`,
+    example: `const port = 8080 // [!code ${name}]`,
+    page: 'features/comment-notation',
+  },
+});
+
+const builtInDirectives: DirectiveSpecs = {
+  'code highlight': markerSpec('highlight', 'mark', 'highlighted'),
+  'code ++': markerSpec('++', 'ins', 'inserted'),
+  'code --': markerSpec('--', 'del', 'deleted'),
+};
 
 export interface NotationOptions {
   comments?: Record<string, string[]>;

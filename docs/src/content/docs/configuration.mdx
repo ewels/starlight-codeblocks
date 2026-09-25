@@ -1,5 +1,71 @@
 ---
 title: Configuration
+description: Turn features off, change their settings and change their colours with one options object.
 ---
 
-Not yet written
+With no options, `codeblocks()` turns on every feature. A feature changes a code block only when the block uses its attribute or its directive, so the defaults are safe for an existing site. Pages that use no interactive feature load no JavaScript from the plugin.
+
+## The options object
+
+`codeblocks()` takes one object. Each feature has a key in it. Set a key to `false` to turn the feature off, or to an object to change its settings:
+
+```js title="astro.config.mjs" {4-8}
+starlight({
+  title: 'My docs',
+  plugins: [
+    codeblocks({
+      focus: { style: 'dim' },
+      expandable: { lines: 20 },
+      runnable: false,
+    }),
+  ],
+});
+```
+
+The [options reference](/starlight-codeblocks/reference/options/) lists every key, its type and its default.
+
+## Turn a feature off
+
+Set its key to `false`. The attributes and directives of that feature then have no effect. A directive of a feature that is off stays in the code, and the build logs a warning for it:
+
+```js title="astro.config.mjs"
+codeblocks({ annotations: false, placeholders: false });
+```
+
+With `notation: false`, the plugin reads no directives at all, and every comment renders as written. Attributes on the fence line still work.
+
+## Errors in the options
+
+The plugin checks the options when the site starts. An unknown key or a value of the wrong type stops the build with a message that names the option:
+
+```txt
+starlight-codeblocks: `focus.style` must be 'blur' | 'dim', got "fade".
+```
+
+A feature with no settings, such as `callouts`, takes only `false`. To keep the feature on, leave its key out.
+
+## Colours and sizes
+
+Every colour and size of the plugin is an Expressive Code style setting. Each setting has a value for dark themes and a value for light themes. The defaults meet the contrast targets on the [accessibility](/starlight-codeblocks/reference/accessibility/) page.
+
+To change a setting, add `styleOverrides` to the Expressive Code options of Starlight. The shared settings are in the `codeblocks` group. A string applies to both themes, and a pair gives the dark value and then the light value:
+
+```js title="astro.config.mjs" {3-8}
+starlight({
+  expressiveCode: {
+    styleOverrides: {
+      codeblocks: {
+        accent: ['#c792ea', '#7c3aed'],
+        popoverRadius: '4px',
+      },
+    },
+  },
+  plugins: [codeblocks()],
+});
+```
+
+The [style settings reference](/starlight-codeblocks/reference/style-settings/) lists every setting with its defaults.
+
+## Options with an ec.config.mjs file
+
+Give all options to `codeblocks()`, also when `ec.config.mjs` has `pluginCodeblocks()` in its `plugins` list. `pluginCodeblocks()` with no argument reads the same options, so each option has one place. `styleOverrides` can stay in `ec.config.mjs`.

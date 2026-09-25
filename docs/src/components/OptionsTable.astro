@@ -1,0 +1,35 @@
+---
+import { optionsReference } from '../../../packages/starlight-codeblocks/src/options.ts';
+import { inlineCode } from './inline-code.ts';
+
+const show = (value: unknown) => JSON.stringify(value).replaceAll('"', "'");
+const rows = Object.entries(optionsReference).flatMap(([key, feature]) => [
+  { name: key, type: feature.fields || feature.entries ? 'false | object' : 'false', value: 'on', code: false, description: feature.description },
+  ...Object.entries(feature.fields ?? {}).map(([field, spec]) => ({
+    name: `${key}.${field}`,
+    type: spec.type,
+    value: spec.defaultText ?? show(spec.default),
+    code: spec.defaultText === undefined,
+    description: spec.description,
+  })),
+  ...(feature.entries ? [{ name: `${key}.<name>`, type: feature.entries.type, value: 'none', code: false, description: feature.entries.description }] : []),
+]);
+---
+
+<table>
+  <thead>
+    <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    {
+      rows.map((row) => (
+        <tr>
+          <td><code>{row.name}</code></td>
+          <td set:html={inlineCode(row.type.includes('`') ? row.type : `\`${row.type}\``)} />
+          <td>{row.code ? <code>{row.value}</code> : row.value}</td>
+          <td set:html={inlineCode(row.description)} />
+        </tr>
+      ))
+    }
+  </tbody>
+</table>

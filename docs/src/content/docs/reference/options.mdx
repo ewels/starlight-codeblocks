@@ -1,5 +1,10 @@
 ---
 title: Options
+description: Every option of codeblocks() and pluginCodeblocks(), with its type and default.
 ---
 
-Not yet written
+import OptionsTable from '../../../components/OptionsTable.astro';
+
+`codeblocks()` and `pluginCodeblocks()` take the same options object. A key with the type `false | object` takes `false` to turn the feature off, or an object with the settings below it. A key with the type `false` has no settings. The [configuration](/starlight-codeblocks/configuration/) page shows how to use them.
+
+<OptionsTable />

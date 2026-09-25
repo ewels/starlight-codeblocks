@@ -148,7 +148,7 @@ One route for all block features:
 
 A page with code blocks but no interactive feature gets the loader bytes inside `ec.*.js`, which the page already loads for the copy button, and no extra request. A page with no code blocks gets nothing.
 
-Open point for step 3.3: sites that use the preset without `codeblocks()` have no Vite plugin to emit the feature files. Step 3.3 decides between an exported Astro integration and inlining the modules into `jsModules` for that case.
+Settled in step 3.3: sites that use the preset without `codeblocks()` get a loader that carries the module sources and imports them from `blob:` URLs (DECISIONS.md, "Client modules on sites without codeblocks()").
 
 ## Q5. Inline code highlighting
 
@@ -276,100 +276,104 @@ The fallback applies. The Python adapter takes a `pydocs` option (`{ package, ba
 - **Build warnings in a bare Starlight site** (the docs build must have none): the missing `i18n` collection, the missing `404` entry, `@astrojs/sitemap` without `site`, and a Vite `MODULE_LEVEL_DIRECTIVE` warning ("use astro:head-inject") for every `.mdx` page. Step 2.1 must fix or filter each one.
 - **Dependencies.** `@expressive-code/core` is not hoisted under pnpm, so the package must list it (and `expressive-code` for Q5, `hast-util-from-html` and `hast-util-select` for Q6, `@shikijs/magic-move`) itself.
 
-## Implementation guide
+## How to add a feature
 
-For the subagents that build the features. Class and attribute names use `<prefix>` until step 3.4 fixes the prefix.
+Phase 3 built the shared parts. Every feature from phase 4 on follows the conventions below. `<feature>` is the option key in camel case (`lineStates`), `<name>` is the same in kebab case (`line-states`).
 
-### Package entry points
+### Where files go
 
 ```
-src/index.ts                    codeblocks(options): StarlightPlugin
-src/expressive-code/index.ts    pluginCodeblocks(options?) and one plugin factory per feature
-src/satteri/                    code switcher and inline highlighting (mdast plugins)
-src/client/                     one module per interactive feature, plus shared helpers
-src/components/                 CodeSteps.astro, Scrollycoding.astro, Step.astro
+src/options.ts                        CodeblocksOptions, ResolvedOptions, optionsReference (option docs)
+src/index.ts                          codeblocks(): validates options, registers plugins (Q1)
+src/integration.ts                    Astro integration: ec-config override, client module Vite plugins
+src/registry.ts                       globalThis registry (options, real plugins, clientAssets flag)
+src/client-modules.ts                 reads dist/client, builds the loader, clientJsModules
+src/expressive-code/index.ts          pluginCodeblocks(), createPlugins(): the preset, in order
+src/expressive-code/core.ts           pluginCore(), CodeblocksPlugin, resolveRange(), warn(), fail(), numberedLines()
+src/expressive-code/notation.ts       pluginNotation(), getDirectives(), DirectiveSpec, the parser
+src/expressive-code/ranges.ts         parseRange()
+src/expressive-code/comments.ts       comment syntax map
+src/expressive-code/inline-markdown.ts inlineMarkdown() for directive text
+src/expressive-code/styles.ts         shared style settings, base styles, PREFIX
+src/expressive-code/<name>.ts         the feature's Expressive Code plugin (new)
+src/client/<name>.ts                  the feature's client module, if it needs one (new)
+src/client/shared/                    browser helpers bundled into each module: position.ts (place())
+src/satteri/, src/components/         code switcher, inline highlighting, CodeSteps, Scrollycoding (later)
+test/<name>.test.ts                   unit tests through render()
+docs/e2e/<name>.test.ts               Playwright tests against the docs page
+docs/src/content/docs/features/<name>.mdx   the feature page (DOCS-SITE.md template)
 ```
 
-### Registration route (Q1)
+### 1. Options
+
+The keys and their types are already in `CodeblocksOptions` and `optionsReference` (`src/options.ts`). If the feature's settings differ from SPEC section 3, change both, with a test in `test/options.test.ts`. The docs options reference reads `optionsReference`, so write its descriptions in the docs style. The feature receives its resolved settings: `false`, `true` (features with no settings) or an object with every default filled in.
+
+### 2. The Expressive Code plugin
+
+Write `pluginX(settings)` in `src/expressive-code/<name>.ts`. It returns a `CodeblocksPlugin` named `starlight-codeblocks:<name>`. `codeblocks()` finds its plugins by that prefix. Add it to `createPlugins()` in `src/expressive-code/index.ts` behind `options.<feature>`, after `pluginCore()` and `pluginNotation()`, and export it from that file. Store state for a block with `AttachedPluginData`, never on `codeBlock.props`.
 
 ```ts
-// src/index.ts (shape only)
-const REGISTRY = Symbol.for('starlight-codeblocks');
-
-export default function codeblocks(userOptions = {}): StarlightPlugin {
+export function pluginFocus(settings: { style: 'blur' | 'dim' }): CodeblocksPlugin {
   return {
-    name: 'starlight-codeblocks',
+    name: 'starlight-codeblocks:focus',
+    directives: { 'code focus': { placement: 'end', docs: { description, example, page: 'features/focus' } } },
+    styleSettings,                 // the codeblocksFocus group, see step 4
+    baseStyles,                    // ({ cssVar }) => css, scoped to .expressive-code by Expressive Code
+    jsModules: clientJsModules,    // only if the feature has a client module, see step 5
     hooks: {
-      async 'config:setup'({ config, updateConfig, addIntegration, astroConfig, logger }) {
-        const options = resolveOptions(userOptions);          // validates, throws on unknown keys
-        const plugins = createPlugins(options);                // real EC plugin objects
-        globalThis[REGISTRY] = { options, plugins, themes: undefined };
-
-        const ecFile = await loadEcConfigFile(astroConfig.root);   // undefined when missing
-        const inFile = ecFile?.plugins?.flat().some(isOurPlugin);
-        if (ecFile?.plugins && !inFile) throw new AstroError(/* add pluginCodeblocks() to ec.config.mjs */);
-        if (!inFile) {
-          const ec = typeof config.expressiveCode === 'object' ? config.expressiveCode : {};
-          updateConfig({ expressiveCode: { ...ec, plugins: [...(ec.plugins ?? []), ...plugins.map(hideFunctions)] } });
-        }
-        addIntegration(codeblocksIntegration({ ecConfigOverride: !inFile, options }));
+      preprocessMetadata(context) {
+        const lines = resolveRange(context, 'focus') ?? [];            // focus={4-7}
+        for (const d of getDirectives(context.codeBlock, 'code focus')) lines.push(...d.lines);
+      },
+      postprocessRenderedLine({ renderData }) {},                     // classes on renderData.lineAst
+      postprocessRenderedBlock({ renderData }) {
+        renderData.blockAst.properties.dataScbFocus = '';              // data-scb-focus
       },
     },
   };
 }
-
-// Only `name` stays enumerable, so <Code>'s serialisation check passes.
-function hideFunctions(plugin) {
-  const shell = { name: plugin.name };
-  for (const [key, value] of Object.entries(plugin)) {
-    if (key !== 'name') Object.defineProperty(shell, key, { value, enumerable: false });
-  }
-  return shell;
-}
 ```
 
-The integration's Vite plugin for `<Code>`:
+### 3. Attributes and directives
 
-```ts
-{
-  name: 'starlight-codeblocks:ec-config',
-  enforce: 'pre',
-  resolveId: (id) => (id === 'virtual:astro-expressive-code/ec-config' ? '\0scb-ec-config' : undefined),
-  load: (id) => id === '\0scb-ec-config' ? `
-    ${userFileExists ? `import user from ${JSON.stringify(ecFilePath)};` : 'const user = {};'}
-    const { plugins } = globalThis[Symbol.for('starlight-codeblocks')];
-    export default { ...user, plugins: [...(user.plugins ?? []), ...plugins] };` : undefined,
-}
-```
+- Attributes: read them with `codeBlock.metaOptions`. For a range, call `resolveRange(context, key)` in any hook from `preprocessMetadata` on. It returns line objects, warns about numbers outside the block, and fails the build for anything that is not a range. It counts the lines that readers see (own-line directives do not count), the same lines as Expressive Code's `{}` markers.
+- Directives: declare each one in the plugin's `directives` property, keyed `code <name>` for `[!code <name>]` or by the bare name (`annotate`, `callout`). `placement` is `end` or `own`; `text: true` makes the directive take the text after it; `docs` feeds the directives reference page. The notation plugin removes them from the code and the copied text. Read them with `getDirectives(codeBlock, name)` in any hook from `preprocessMetadata` on. Each has `lines` (its target line, then `count - 1` more), `text`, `match` (the literal from `/text/`, already checked against the target line) and `args`.
+- Render directive text with `inlineMarkdown(text)`, which returns hast nodes.
+- Warnings and errors: `warn(context, message, lineInBlock?)` and `fail(context, message)`. Both name the file and the block. Unknown names and missing matches already warn in the notation plugin.
+- Line objects stay valid when other plugins delete lines. Apply effects to the line objects, not to indexes.
 
-### Writing a feature's Expressive Code plugin
+### 4. Styles
 
-```ts
-import { definePlugin, PluginStyleSettings } from '@expressive-code/core';
-import { h, select } from '@expressive-code/core/hast';
+- Classes start with `scb-<name>-`, data attributes with `data-scb-<name>`. `PREFIX` in `styles.ts` holds `scb`.
+- Declare the feature's style settings in its own group, `codeblocks<Feature>` (for example `codeblocksFocus.blur`), with a `declare module '@expressive-code/core' { interface StyleSettings { codeblocksFocus: … } }` block in the feature file. Every colour is a `[dark, light]` pair; every size is a setting. Reference them with `cssVar('codeblocksFocus.blur')`.
+- Reuse the shared settings where they fit: `codeblocks.accent`, `accentForeground`, `mutedForeground`, `focusRing` and the `popover…` settings. A resolver can read them: `({ resolveSetting }) => resolveSetting('codeblocks.accent')`.
+- The core plugin already gives every `scb-` element a focus ring, stops transitions and animations of `scb-` elements (and their descendants) under reduced motion, hides `scb-no-print` in print, and styles `scb-sr-only` and `scb-float`.
+- Add a contrast test for new colours in the feature's test, like `test/styles.test.ts`: text 4.5:1, bars, tints and outlines that carry meaning 3:1, against `#23262f`/`#24292e` (dark) and `#f6f7f9`/`#ffffff` (light).
 
-export function pluginFocus(options: FocusOptions) {
-  return definePlugin({
-    name: 'starlight-codeblocks:focus',        // prefix is how codeblocks() finds its plugins
-    styleSettings,                             // colours and sizes, see "Theme colours"
-    baseStyles: ({ cssVar }) => css,           // scoped to .expressive-code by EC
-    jsModules: [LOADER],                       // same string in every interactive feature
-    hooks: {
-      preprocessMetadata({ codeBlock }) {},    // read attributes: codeBlock.metaOptions.getString('focus')
-      preprocessCode({ codeBlock }) {},        // directives: line.editText(), codeBlock.deleteLine()
-      annotateCode({ codeBlock }) {},          // line.addAnnotation(...) for inline ranges
-      postprocessRenderedLine({ renderData }) {},   // classes on renderData.lineAst
-      postprocessRenderedBlock({ renderData }) {    // attributes on renderData.blockAst
-        renderData.blockAst.properties['data-<prefix>-focus'] = '';
-      },
-    },
-  });
-}
-```
+### 5. Client module
 
-- Store per-block state with `AttachedPluginData`, not on `codeBlock.props`.
-- `codeBlock.parentDocument.sourceFilePath` is the page path for build warnings.
-- The shared comment notation parser runs in `preprocessCode` of one plugin that comes first in the preset, and stores parsed directives in plugin data for the others.
+Only if static HTML cannot do the job.
+
+1. Write `src/client/<name>.ts`. Its default export runs when the loader imports the module and again on every `astro:page-load`, so it must skip elements it has already set up (for example with a `data-scb-ready` attribute). No top-level side effects.
+2. The build (`tsdown.config.ts`) turns each top-level file in `src/client/` into `dist/client/scb-<name>.<hash>.js`, minified, with every import bundled in. Put shared browser helpers in `src/client/shared/`.
+3. Add `jsModules: clientJsModules` to the plugin. The loader imports `scb-<name>` on pages where an element has `data-scb-<name>`. So the Expressive Code plugin must set that attribute on each block that needs the module, and only then.
+4. `test/client-modules.test.ts` fails if the module is over 3 kB gzipped.
+5. Popovers and hover cards: give the element the `scb-float` class, keep it inside the block's `.expressive-code` element (it holds the theme variables; ARCHITECTURE Q8), and call `place(floating, anchor)` from `src/client/shared/position.ts` when it opens. Call the function it returns when it closes.
+6. Read the current theme from `document.documentElement.dataset.theme` if the script needs it.
+
+With `codeblocks()`, the integration emits the modules next to `ec.<hash>.js`. Without it, the loader carries the module sources and imports them from `blob:` URLs (DECISIONS.md).
+
+### 6. Tests
+
+- Unit tests in `packages/starlight-codeblocks/test/<name>.test.ts` with `render(markdown, options?, extraPlugins?)` from `test/render.ts`. It returns `{ html, copyText, warnings }`. Cover every attribute and directive, the copied text, the warnings, and that a block that does not use the feature renders the same with the feature off (`render(md, { <feature>: false })`).
+- Playwright tests in `docs/e2e/<name>.test.ts`, against the example on the feature's docs page (`page.goto('./features/<name>/')`). Use the keyboard and the pointer, and check the `reduced-motion` project. `docs/e2e/client.test.ts` shows how to test browser code on its own routed origin.
+- `pnpm test` builds the package first, because the tests read `dist/client`.
+
+### 7. Docs
+
+Write `docs/src/content/docs/features/<name>.mdx` from the template in DOCS-SITE.md. Put each example in an `export const` and pass it to `<Example code={…} />`: MDX removes the indentation of lines in a JSX attribute expression, but not in an `export`. `md`, `markdown` and `mdx` blocks on the docs site do not read directives (`astro.config.mjs`), so the "You write" pane shows them as written. Link to other pages with absolute paths that start with `/starlight-codeblocks/`; the links validator rejects relative links. Run `pnpm lint:docs` and read the page against the checklist in WRITING-STYLE.md.
+
+## Notes for later phases
 
 ### Copy text (Q3)
 
@@ -382,29 +386,12 @@ postprocessRenderedBlock({ codeBlock, renderData }) {
 
 In the browser, change `button.dataset.code` (for example on placeholder input). The frames click handler reads it at click time.
 
-### Client modules (Q4)
-
-```js
-// LOADER, generated at package build time from dist/client/manifest
-const here = import.meta.url;   // a variable, so Vite does not rewrite new URL() in dev
-const modules = { focus: 'scb-focus.Ab12c.js', annotations: 'scb-annotations.De34f.js' };
-const load = () => {
-  for (const [feature, file] of Object.entries(modules)) {
-    if (document.querySelector(`[data-<prefix>-${feature}]`)) import(new URL(`./${file}`, here).href);
-  }
-};
-load();
-document.addEventListener('astro:page-load', load);
-```
-
-The integration emits `dist/client/*` with `this.emitFile({ type: 'asset', fileName: `${assetsDir}/${file}`, source })` in a build-only Vite plugin, and serves the same files in dev from `resolveId`/`load` on `/${assetsDir}/${file}`. `assetsDir` is `astroConfig.build.assets` (default `_astro`).
-
 ### Sätteri plugins (Q2, Q5)
 
 ```ts
 import { isSatteriProcessor } from '@astrojs/markdown-satteri';
 
-function codeblocksIntegration(): AstroIntegration {
+function codeblocksIntegration(): AstroIntegration {   // src/integration.ts
   return {
     name: 'starlight-codeblocks',
     hooks: {
@@ -442,19 +429,3 @@ const blocks = selectAll('.expressive-code', fromHtml(html, { fragment: true }))
 ```
 
 Keep the rendered blocks in the page for the no-JavaScript view.
-
-### Theme colours (Q8)
-
-```ts
-const styleSettings = new PluginStyleSettings({
-  defaultValues: {
-    '<prefix>': {
-      cardBackground: ({ theme }) => theme.colors['editorHoverWidget.background'] ?? theme.bg,
-      errorTint: ['#f8514926', '#cf222e1f'],   // [dark, light]
-    },
-  },
-});
-// in baseStyles: background: ${cssVar('<prefix>.cardBackground')}
-```
-
-Put popovers and cards inside the block's `.expressive-code` element. Take theme objects from `styleVariants` (resolver context or hook context) when code outside a block needs them, and store them in the registry.

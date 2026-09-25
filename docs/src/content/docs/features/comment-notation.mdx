@@ -1,5 +1,143 @@
 ---
 title: Comment notation
+description: Mark lines with directives in code comments. The plugin applies each directive and removes it from the code that readers see and copy.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+import CommentSyntaxTable from '../../../components/CommentSyntaxTable.astro';
+
+Expressive Code marks lines with attributes on the fence line, such as `{3}` or `ins={5}`. An attribute counts lines, so it points at the wrong line when you add a line above it. A directive sits in a comment on the line that it marks, and moves with that line.
+
+export const markers = `
+\`\`\`ts title="config.ts"
+export const config = {
+  port: 3000, // [!code --]
+  port: Number(process.env.PORT ?? 3000), // [!code ++]
+  host: 'localhost', // [!code highlight]
+};
+\`\`\`
+`;
+
+<Example code={markers} />
+
+Each directive changes its line. Each comment holds only a directive, so the plugin removes the whole comment. The copy button copies the code without the directives.
+
+## Syntax
+
+A directive is text in square brackets that starts with `!`. It goes in a comment, in the comment syntax of the language of the block.
+
+| Form | Meaning | Example |
+|---|---|---|
+| `[!code <name>]` | Applies to the line it is on. | `// [!code highlight]` |
+| `[!code <name>:N]` | Applies to its line and the next N-1 lines. | `// [!code ++:3]` |
+| `[!<name>] <text>` | Takes the text after it, up to the next directive or the end of the comment. | `// [!annotate] Runs once` |
+| `[!<name> /<text>/]` | Points at the first match of the literal text on its target line. | `// [!callout /port/] From the environment` |
+| `[\!code <name>]` | Renders as the literal text `[!code <name>]`. | `// [\!code focus]` |
+
+There are two kinds of directive:
+
+- An end-of-line directive applies to the line it is on.
+- An own-line directive takes a whole line and applies to the line below it. The plugin removes the line that holds it.
+
+The [directives reference](/starlight-codeblocks/reference/directives/) lists every directive and says which kind it is.
+
+## Behaviour
+
+The plugin reads the directives when the site builds. It needs no JavaScript in the browser.
+
+- The plugin removes every directive from the rendered code and from the copied text.
+- If a comment holds only directives, the plugin removes the whole comment and the whitespace before it. Other text in the comment stays.
+- The copy button leaves out messages, annotations, callouts and footnotes.
+- `[!code highlight]`, `[!code ++]` and `[!code --]` give the same result as the `mark`, `ins` and `del` attributes of Expressive Code.
+- A backslash after the bracket, as in `[\!code focus]`, turns a directive into plain text. The plugin removes the backslash.
+- Inline code, links and bold in the text of a directive render as HTML. Other Markdown stays as text.
+
+### Line numbers
+
+Line numbers in attributes count the lines that readers see. The plugin removes own-line directives before it counts, so they do not change the numbers. This applies to the attributes of Expressive Code as well, such as `{2}` and `ins={3}`.
+
+### Warnings
+
+The build logs a warning with the file, the code block and the line when:
+
+- a directive has an unknown name, or the feature it belongs to is off;
+- the `/<text>/` of a directive has no match on its target line;
+- an own-line directive is at the end of a line of code;
+- an own-line directive has no line below it.
+
+The directive then has no effect. An unknown directive stays in the code as written, so you can see it on the page.
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `notation` | `false \| object` | on | Set to `false` to read no directives. Every comment then renders as written. |
+| `notation.comments` | `Record<string, string[]>` | `{}` | Comment syntax for each language, added to the built-in map. An empty list removes a language. |
+
+Each entry in `notation.comments` is a language and a list of comment syntaxes. A syntax with a space in it is a block comment: the opener, then the closer.
+
+```js title="astro.config.mjs"
+codeblocks({
+  notation: {
+    comments: {
+      cypher: ['//'],
+      jinja: ['{# #}'],
+    },
+  },
+});
+```
+
+An entry replaces the built-in syntax of that language. The built-in map:
+
+<CommentSyntaxTable />
+
+## Examples
+
+Python and shell blocks use `#` comments:
+
+export const python = `
+\`\`\`py
+import json
+
+data = json.loads(text)  # [!code highlight]
+print(data["name"])
+\`\`\`
+`;
+
+<Example code={python} />
+
+HTML blocks use `<!-- -->` comments. `:2` marks two lines with one directive:
+
+export const html = `
+\`\`\`html
+<nav>
+  <a href="/">Home</a> <!-- [!code ++:2] -->
+  <a href="/docs/">Docs</a>
+</nav>
+\`\`\`
+`;
+
+<Example code={html} />
+
+To show a directive as text, for example in a page about this plugin, add a backslash:
+
+export const escaped = `
+\`\`\`js
+const port = 8080; // [\\!code highlight]
+\`\`\`
+`;
+
+<Example code={escaped} />
+
+## Limitations
+
+- JSON has no comments, so a `json` block cannot use directives. Use `jsonc`, or use attributes.
+- The plugin finds the comment by its opener. A directive inside a string that contains the opener, such as `"// [!code ++]"`, counts as a directive. Escape it with a backslash.
+- One comment on each line can hold directives.
+- MDX comments in `mdx` blocks, such as `{/* */}`, are not in the built-in map. Add them with `notation.comments`.
+
+## Related
+
+- [Focus](/starlight-codeblocks/features/focus/): use `[!code focus]` to blur the lines that do not matter.
+- [Line states](/starlight-codeblocks/features/line-states/): use `[!code error]` and the other states to tint a line and add a message.
+- [Migrate from VitePress](/starlight-codeblocks/guides/migrate-from-vitepress/): most `[!code …]` directives of VitePress work unchanged.

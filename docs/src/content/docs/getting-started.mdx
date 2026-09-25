@@ -1,5 +1,118 @@
 ---
 title: Getting started
+description: Install starlight-codeblocks, add it to a Starlight site and write a first code block that uses a directive.
 ---
 
-Not yet written
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+import Example from '../../components/Example.astro';
+
+Starlight renders every code block with Expressive Code. The plugin adds its features to those code blocks, so the code blocks you already have keep working. You turn on nothing per page: a feature starts when a code block uses its attribute or directive.
+
+## Requirements
+
+- Astro 7 or later.
+- Starlight 0.42 or later.
+- Node.js 22 or later.
+
+## Install the plugin
+
+<Steps>
+
+1. Add the package to the site.
+
+   <Tabs syncKey="pm">
+   <TabItem label="npm">
+
+   ```sh
+   npm install starlight-codeblocks
+   ```
+
+   </TabItem>
+   <TabItem label="pnpm">
+
+   ```sh
+   pnpm add starlight-codeblocks
+   ```
+
+   </TabItem>
+   <TabItem label="Yarn">
+
+   ```sh
+   yarn add starlight-codeblocks
+   ```
+
+   </TabItem>
+   </Tabs>
+
+2. Open `astro.config.mjs`.
+
+3. Add `codeblocks()` to the `plugins` list of Starlight.
+
+   ```js title="astro.config.mjs" ins={3,9}
+   import starlight from '@astrojs/starlight';
+   import { defineConfig } from 'astro/config';
+   import codeblocks from 'starlight-codeblocks';
+
+   export default defineConfig({
+     integrations: [
+       starlight({
+         title: 'My docs',
+         plugins: [codeblocks()],
+       }),
+     ],
+   });
+   ```
+
+4. Start the dev server with `npm run dev`. The site builds as before.
+
+</Steps>
+
+## Write a first directive
+
+A directive is a marker in a code comment. The plugin reads it, applies it and removes it, so readers never see the marker and never copy it. The block below marks one line as added and one as removed:
+
+export const firstDirective = `
+\`\`\`js title="server.js"
+import express from 'express';
+
+const app = express();
+const port = 3000; // [!code --]
+const port = process.env.PORT ?? 3000; // [!code ++]
+app.listen(port);
+\`\`\`
+`;
+
+<Example code={firstDirective} />
+
+Select the copy button on the result. The copied code has no directives in it. The [comment notation](/starlight-codeblocks/features/comment-notation/) page lists the rules for every directive.
+
+## Sites with an ec.config.mjs file
+
+Some sites keep their Expressive Code options in an `ec.config.mjs` file. If that file has no `plugins` list, the plugin works with no change.
+
+If the file has a `plugins` list, Expressive Code uses that list only. Add `pluginCodeblocks()` to it:
+
+```js title="ec.config.mjs" ins={2,5}
+import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
+import { pluginCodeblocks } from 'starlight-codeblocks/expressive-code';
+
+export default {
+  plugins: [pluginCollapsibleSections(), pluginCodeblocks()],
+};
+```
+
+Keep `codeblocks()` in `astro.config.mjs` as well, and give it the options there. `pluginCodeblocks()` with no argument uses the same options. If you forget this step, the build stops with a message that tells you what to add.
+
+## Sites without Starlight
+
+Astro sites that use Expressive Code without Starlight add the preset to the Expressive Code plugins. Give the options to `pluginCodeblocks()`:
+
+```js title="ec.config.mjs"
+import { pluginCodeblocks } from 'starlight-codeblocks/expressive-code';
+
+export default {
+  plugins: [pluginCodeblocks({ focus: { style: 'dim' } })],
+};
+```
+
+The code switcher, inline code highlighting and the `<CodeSteps>` and `<Scrollycoding>` components need Starlight. The features inside code blocks work on every site.
