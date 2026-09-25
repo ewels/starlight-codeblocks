@@ -325,3 +325,11 @@ Use this format:
 - Decision: Added `.scb-btn` to the core plugin's `baseStyles` in `styles.ts`: a small bordered, tinted pill button, coloured from `codeblocks.mutedForeground`/`codeForeground`/`borderColor`. The hidden-lines title bar toggle adds it alongside its own class.
 - Reason: The feature needed the same small button look that the mockups give their title bar tools (SPEC's mockups win on look and feel where the spec gives no value), and expandable blocks (step 4.7) and future title-bar buttons (playground, run) will need the same look. One class avoids repeating the same six lines of CSS in every feature that adds a button outside a line.
 - Alternatives: Repeat the button CSS in each feature file (drift between features, as one feature file's tweak would not reach another's identical-looking button).
+
+## Expandable blocks: collapsing lives entirely in the client module
+
+- Date: 2026-09-25
+- Step: 4.7
+- Decision: `pluginExpandable()` only marks a qualifying block with `data-scb-expandable="N"`; it renders no collapsed markup and no `hidden` attribute at build time. `src/client/expandable.ts` sets `hidden="until-found"` on the lines past `N` and listens for `beforematch` on them to expand. The fade (`pre.scb-expandable-collapsed::after`) and the "Show all/fewer lines" bar are wrapped in `@media (scripting: enabled)` and `@media (scripting: none)`.
+- Reason: SPEC 6.14 requires the block to show in full without JavaScript. `hidden="until-found"` is a native HTML feature that hides its element with no script needed, so setting it at build time would collapse the block even with JavaScript off, which fails that requirement. Building the collapse only in the client, behind the same `scripting` media feature that Expressive Code's own copy button uses to hide itself, is the only way to get both the native find-in-page behaviour SPEC 6.14 asks for and a fully expanded block with no script.
+- Alternatives: A CSS `max-height`/`overflow: hidden` clip set at build time (visually collapses the block even with JavaScript off, and find-in-page cannot reveal `overflow: hidden` content the way it reveals `hidden="until-found"`). Rendering the button only in the client (loses the disclosure pattern for screen readers before the module loads, and needs the same `scripting: none` guard anyway for the fade).

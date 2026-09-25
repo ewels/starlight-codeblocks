@@ -3,6 +3,7 @@ import { type CodeblocksOptions, type ResolvedOptions, resolveOptions } from '..
 import { getRegistry } from '../registry.ts';
 import { pluginBrackets } from './brackets.ts';
 import { pluginCore } from './core.ts';
+import { pluginExpandable } from './expandable.ts';
 import { pluginFocus } from './focus.ts';
 import { pluginHiddenLines } from './hidden-lines.ts';
 import { pluginLineStates } from './line-states.ts';
@@ -14,6 +15,7 @@ export type * from '../options.ts';
 export {
   pluginBrackets,
   pluginCore,
+  pluginExpandable,
   pluginFocus,
   pluginHiddenLines,
   pluginLineStates,
@@ -45,5 +47,6 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.whitespace ? [pluginWhitespace()] : []),
     ...(options.brackets ? [pluginBrackets(options.brackets)] : []),
     ...(options.hiddenLines ? [pluginHiddenLines()] : []),
+    ...(options.expandable ? [pluginExpandable(options.expandable)] : []),
   ];
 }
