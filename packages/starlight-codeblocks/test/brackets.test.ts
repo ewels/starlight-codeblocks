@@ -31,8 +31,8 @@ test('findBrackets leaves an unmatched bracket out', () => {
 
 test('colours matching brackets by depth, cycling every 3 levels', async () => {
   const { html, copyText, warnings } = await render(block('js brackets', 'const a = (1 + [2, 3]);'));
-  expect(html).toContain('<span class="scb-brackets-1" data-scb-pair="scb-brackets-1"><span style=');
-  expect(html).toContain('<span class="scb-brackets-2" data-scb-pair="scb-brackets-0"><span style=');
+  expect(html).toContain('<span class="scb-brackets-1" data-scb-pair="scb-brackets-1">(</span>');
+  expect(html).toContain('<span class="scb-brackets-2" data-scb-pair="scb-brackets-0">[</span>');
   expect(html).toContain('<pre data-language="js" data-scb-brackets="">');
   expect(copyText).toBe('const a = (1 + [2, 3]);');
   expect(warnings).toEqual([]);

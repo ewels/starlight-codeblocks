@@ -13,6 +13,24 @@ test('colours brackets by nesting depth', async ({ page }) => {
   await expect(block.locator('.scb-brackets-2')).toHaveCount(2);
 });
 
+test('each depth shows its own colour, different from the plain text', async ({ page }) => {
+  const block = example(page);
+  // Read the innermost element: that is the colour the glyph is drawn in.
+  const colour = (selector: string) =>
+    block
+      .locator(selector)
+      .first()
+      .evaluate((el) => {
+        let inner: Element = el;
+        while (inner.firstElementChild) inner = inner.firstElementChild;
+        return getComputedStyle(inner).color;
+      });
+  const colours = await Promise.all(
+    ['.scb-brackets-1', '.scb-brackets-2', '.scb-brackets-3', '.ec-line .code'].map(colour),
+  );
+  expect(new Set(colours).size).toBe(4);
+});
+
 test('leaves brackets in strings with the normal colour', async ({ page }) => {
   const block = example(page, 2);
   await expect(block.locator('[class*="scb-brackets"]')).toHaveCount(0);

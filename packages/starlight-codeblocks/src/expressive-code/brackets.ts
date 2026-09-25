@@ -110,8 +110,13 @@ class BracketAnnotation extends ExpressiveCodeAnnotation {
     super({ inlineRange });
   }
   render({ nodesToTransform }: AnnotationRenderOptions) {
+    // Unwrap the syntax token span: its own theme colour would override the bracket colour.
     return nodesToTransform.map((node) =>
-      h('span', { class: `${PREFIX}-brackets-${this.depth + 1}`, dataScbPair: this.pairId }, [node]),
+      h(
+        'span',
+        { class: `${PREFIX}-brackets-${this.depth + 1}`, dataScbPair: this.pairId },
+        node.type === 'element' ? node.children : [node],
+      ),
     );
   }
 }
