@@ -1,5 +1,148 @@
 ---
 title: Migrate from VitePress
+description: Move VitePress code blocks to Starlight. Most directives work unchanged, and this page lists the fence line syntax that differs.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+VitePress marks code blocks with the `[!code …]` directives of the Shiki transformers. The plugin reads the same directives, so most VitePress code blocks work in Starlight unchanged. The differences are on the fence line: VitePress puts some attributes directly after the language, and Expressive Code needs a space there.
+
+This block uses four VitePress directives together, to show that they need no change:
+
+export const unchanged = `
+\`\`\`js title="server.js" wordDiff=false
+import { createServer } from 'node:http';
+
+const port = 3000; // [!code --]
+const port = Number(process.env.PORT ?? 3000); // [!code ++]
+const server = createServer(handler); // [!code focus]
+server.listen(port); // [!code error]
+\`\`\`
+`;
+
+<Example code={unchanged} />
+
+The copy button copies the code without the directives, the same as in VitePress. `wordDiff=false` is not VitePress syntax. It turns off [word-level diff](/starlight-codeblocks/features/word-level-diff/), which the plugin applies to `[!code --]` and `[!code ++]` pairs by default.
+
+## Directives that work unchanged
+
+Each of these directives gives the same result as in VitePress. Each one also takes `:N`, as in `[!code focus:3]`.
+
+| VitePress | This plugin | Notes |
+|---|---|---|
+| `// [!code highlight]` | `// [!code highlight]` | The same as the `mark` attribute of Expressive Code. |
+| `// [!code ++]`, `// [!code --]` | `// [!code ++]`, `// [!code --]` | The plugin also highlights the changed words. Add `wordDiff=false` to the fence line to turn this off. |
+| `// [!code focus]` | `// [!code focus]` | See [focus](/starlight-codeblocks/features/focus/). |
+| `// [!code error]`, `// [!code warning]` | `// [!code error]`, `// [!code warning]` | You can add a message after the directive. See [line states](/starlight-codeblocks/features/line-states/). |
+
+The plugin reads each directive in the comment syntax of the block's language, such as `#` for Python and `<!-- -->` for HTML. The [comment notation](/starlight-codeblocks/features/comment-notation/) page lists the comment syntax for each language.
+
+## Syntax that differs
+
+The rest of the VitePress code block syntax has an equivalent in Expressive Code or in the plugin, with different syntax. Two features have no equivalent.
+
+| VitePress | Starlight with this plugin |
+|---|---|
+| `js{1,3-5}` | `js {1,3-5}`, with a space after the language |
+| `// [!code word:port]` | `"port"` on the fence line |
+| `js:line-numbers` | `js showLineNumbers`, with the line numbers plugin of Expressive Code |
+| `::: code-group` and `[npm]` | `:::code-switcher` and `label="npm"` |
+| `<<< @/snippets/example.js` | Not supported |
+| `ts twoslash` | Not supported |
+
+The build logs a warning for most of the VitePress forms, so you can find the blocks to change. `js{1,3-5}` and `js:line-numbers` give a warning that the language is unknown. `[!code word:port]` gives a warning about the count after the colon, and stays in the code. The `[npm]` label of a code group gives no warning.
+
+### Line highlight
+
+Expressive Code reads a range on the fence line, the same as VitePress. It needs a space between the language and the range:
+
+export const highlight = `
+\`\`\`js {2}
+const port = Number(process.env.PORT ?? 3000);
+server.listen(port);
+\`\`\`
+`;
+
+<Example code={highlight} />
+
+The range format is the same: `{1,3-5}` highlights line 1 and lines 3 to 5. The plugin counts the lines that readers see, so a directive on its own line does not change the numbers.
+
+### Word highlight
+
+`[!code word:port]` has no directive equivalent. Put the text in quotes on the fence line instead. Expressive Code then marks every match in the block:
+
+export const word = `
+\`\`\`js "port"
+const port = Number(process.env.PORT ?? 3000);
+server.listen(port);
+\`\`\`
+`;
+
+<Example code={word} />
+
+Expressive Code also takes a regular expression between slashes, such as `/port\d?/`. The [Expressive Code docs](https://expressive-code.com/key-features/text-markers/) describe the text markers.
+
+### Line numbers
+
+VitePress shows line numbers with `:line-numbers` after the language, or with `markdown.lineNumbers` for every block. Expressive Code has a line numbers plugin for the same result:
+
+1. Install `@expressive-code/plugin-line-numbers`.
+2. Add the plugin to the Expressive Code configuration of the site.
+3. Add `showLineNumbers` to the fence line of each block that needs numbers.
+
+To show numbers on every block, set `showLineNumbers: true` in the `defaultProps` of Expressive Code. `startLineNumber=5` is the equivalent of `:line-numbers=5`. If readers must link to a line, use [line permalinks](/starlight-codeblocks/features/line-permalinks/) instead. Line permalinks give the block numbers that are also links, without the line numbers plugin.
+
+### Code groups
+
+A VitePress code group becomes a [code switcher](/starlight-codeblocks/features/code-switcher/). Change `::: code-group` to `:::code-switcher`, with no space after the colons. Move each label from the square brackets to a `label` attribute:
+
+export const group = `
+:::code-switcher
+\`\`\`sh label="npm"
+npm install starlight-codeblocks
+\`\`\`
+\`\`\`sh label="pnpm"
+pnpm add starlight-codeblocks
+\`\`\`
+:::
+`;
+
+<Example code={group}>
+
+:::code-switcher
+```sh label="npm"
+npm install starlight-codeblocks
+```
+```sh label="pnpm"
+pnpm add starlight-codeblocks
+```
+:::
+
+</Example>
+
+The code switcher shows a menu in the title bar, where VitePress shows a row of tabs. Add `{sync="pm"}` after `:::code-switcher` to keep the reader's choice across pages. If a group needs prose between its code blocks, use the `<Tabs>` component of Starlight. The [code switcher or tabs](/starlight-codeblocks/guides/code-switcher-or-tabs/) guide compares the two.
+
+### Snippet import
+
+The plugin does not import code from files. The VitePress `<<<` syntax renders as text. Copy the code into a fenced code block on the page. If one file must stay the source, import it in an `.mdx` page with the `?raw` suffix of Vite. Then give it to the `<Code>` component of Starlight.
+
+### Twoslash
+
+The plugin does not run TypeScript to show types. The community package `expressive-code-twoslash` adds Twoslash to Expressive Code. Before you install it, make sure that it supports the version of Expressive Code on your site. For Python and Nextflow code, [API auto-linking](/starlight-codeblocks/features/api-auto-linking/) links names to their reference pages, with a hover card.
+
+## Migrate a site
+
+Do these steps after you move the pages to Starlight:
+
+1. Install the plugin and add it to the Starlight configuration, as the [getting started](/starlight-codeblocks/getting-started/) page shows.
+2. Add a space between the language and the range in each fence line with a range.
+3. Replace each `[!code word:…]` directive with the text in quotes on the fence line.
+4. Replace each `:line-numbers` with `showLineNumbers`, or use line permalinks.
+5. Change each code group to a code switcher.
+6. Copy the code of each snippet import into the page.
+7. Build the site. Correct the blocks that the build warnings name.
+
+## Related
+
+- [Comment notation](/starlight-codeblocks/features/comment-notation/): the full syntax of directives, including the ones that VitePress does not have.
+- [Directives reference](/starlight-codeblocks/reference/directives/): every directive of the plugin, with an example.
