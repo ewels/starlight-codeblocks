@@ -1,0 +1,43 @@
+---
+import { Code } from '@astrojs/starlight/components';
+
+interface Props {
+  /** Markdown with one or more fenced code blocks. */
+  code: string;
+}
+
+const { code } = Astro.props;
+const blocks = [...code.matchAll(/^(`{3,}|~{3,})([^\s`]*)[ \t]*(.*)\n([\s\S]*?)\n?^\1[ \t]*$/gm)].map(
+  ([, , lang, meta, body]) => ({ lang, meta, code: body }),
+);
+if (blocks.length === 0) throw new Error(`<Example> found no fenced code block in:\n${code}`);
+---
+
+<div class="example not-content">
+  <div class="pane">
+    <p class="label">You write</p>
+    <Code code={code.trim()} lang="md" />
+  </div>
+  <div class="pane">
+    <p class="label">Readers see</p>
+    {blocks.map((block) => <Code {...block} />)}
+  </div>
+</div>
+
+<style>
+  .example {
+    margin-top: 1.5rem;
+  }
+  .pane + .pane {
+    margin-top: 1rem;
+  }
+  .pane > :global(* + *) {
+    margin-top: 0.875rem;
+  }
+  .label {
+    margin: 0 0 0.375rem;
+    font-size: var(--sl-text-sm);
+    font-style: italic;
+    color: var(--sl-color-gray-3);
+  }
+</style>

@@ -109,3 +109,19 @@ Use this format:
 - Decision: `scripts/lint-docs.mjs` checks every rule in WRITING-STYLE.md section 11, except "key" (as an adjective) and "essential" (as praise). The heading check allows a list of proper nouns in the script and ignores section numbers. Sentence length is reported at the first line of the paragraph or list item. The tests run with `node --test` as part of `pnpm test`.
 - Reason: A script cannot tell "key" as an adjective from "the `focus` key", or "essential" as praise from a plain statement of need. Those two, and "-ly" adverbs in general, stay in the manual checklist.
 - Alternatives: Flag every "key" and "essential" (false positives on reference pages).
+
+## Docs URLs and page files
+
+- Date: 2026-09-25
+- Step: 2.6
+- Decision: Pages of the three feature groups and "More" live in `features/`. The other groups use `guides/`, `extend/` and `reference/`. "Getting started" and "Configuration" are at the root. Every page is `.mdx`, so a page can use `Example` without a rename. The sidebar lists each page by slug, in the order of DOCS-SITE.md, so labels come from page titles.
+- Reason: Short, stable URLs that do not change if a feature moves between sidebar groups.
+- Alternatives: One folder for each sidebar group (URLs change when a page moves group).
+
+## Example component renders with Starlight's Code
+
+- Date: 2026-09-25
+- Step: 2.6
+- Decision: `docs/src/components/Example.astro` takes `code` (Markdown with one or more fenced blocks). It shows the source under "You write" with `<Code lang="md">`, and each block under "Readers see" with `<Code lang meta>`.
+- Reason: DOCS-SITE.md asks for `<Code>` where the plugin works with it, and ARCHITECTURE.md Q1 shows it does once step 3.1 adds the ec-config override. Pages with directives or components (code switcher, token transitions, scrollycoding) use a source block and the live version instead.
+- Alternatives: Render with a second Expressive Code engine in the component (duplicates the site config).
