@@ -66,7 +66,7 @@ export function pluginCallouts(): CodeblocksPlugin {
     },
     styleSettings,
     baseStyles: ({ cssVar }) => {
-      const x = `(${cssVar('codePaddingInline')} + var(--scb-callout-mid) * 1ch)`;
+      const x = `(var(--scb-gutter, 0px) + ${cssVar('codePaddingInline')} + var(--scb-callout-mid) * 1ch)`;
       return `
 pre:has(> code > .${cls()}) { container-type: inline-size; }
 .${cls()} {

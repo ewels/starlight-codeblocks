@@ -11,6 +11,7 @@ import { pluginFootnotes } from './footnotes.ts';
 import { pluginHiddenLines } from './hidden-lines.ts';
 import { pluginLineStates } from './line-states.ts';
 import { pluginNotation } from './notation.ts';
+import { pluginPermalinks } from './permalinks.ts';
 import { pluginPlaceholders } from './placeholders.ts';
 import { pluginPlayground } from './playground.ts';
 import { pluginShellCopy } from './shell-copy.ts';
@@ -30,6 +31,7 @@ export {
   pluginHiddenLines,
   pluginLineStates,
   pluginNotation,
+  pluginPermalinks,
   pluginPlaceholders,
   pluginPlayground,
   pluginShellCopy,
@@ -63,6 +65,7 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.shellCopy ? [pluginShellCopy(options.shellCopy)] : []),
     ...(options.tokenLinks ? [pluginTokenLinks()] : []),
     ...(options.placeholders ? [pluginPlaceholders(options.placeholders)] : []),
+    ...(options.permalinks ? [pluginPermalinks()] : []),
     ...(options.hiddenLines ? [pluginHiddenLines()] : []),
     ...(options.expandable ? [pluginExpandable(options.expandable)] : []),
     // After shell copy, which changes the copied text that the playground gets, and after placeholders.

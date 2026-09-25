@@ -35,7 +35,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
               "Add `pluginCodeblocks()` to `plugins` in `ec.config.mjs`. Import it from 'starlight-codeblocks/expressive-code'.",
             );
           }
-          addIntegration(codeblocksIntegration({}));
+          addIntegration(codeblocksIntegration({ options }));
           return;
         }
 
@@ -52,7 +52,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
             plugins: [...(ec.plugins ?? []), ...plugins.map(hideFunctions)],
           },
         });
-        addIntegration(codeblocksIntegration({ ecConfigOverride: { file: ecConfigFile } }));
+        addIntegration(codeblocksIntegration({ options, ecConfigOverride: { file: ecConfigFile } }));
       },
     },
   };

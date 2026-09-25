@@ -38,5 +38,9 @@ export default function initHiddenLines() {
       for (const marker of markers) setRun(marker, open);
       syncToggle(markers, toggle);
     });
+    // A line permalink can target a hidden line before this script is ready.
+    for (const line of block.querySelectorAll('.scb-permalink-target.scb-hidden-line')) {
+      if (!line.classList.contains(OPEN)) markers.find((m) => ids(m).includes(line.id))?.click();
+    }
   }
 }

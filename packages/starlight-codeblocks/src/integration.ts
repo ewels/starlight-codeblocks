@@ -1,5 +1,7 @@
 import type { AstroIntegration } from 'astro';
 import { readClientModules } from './client-modules.ts';
+import type { ResolvedOptions } from './options.ts';
+import { mdastPlugins } from './satteri/index.ts';
 
 type VitePlugin = {
   name: string;
@@ -14,15 +16,19 @@ const EC_CONFIG = 'virtual:astro-expressive-code/ec-config';
 const EC_CONFIG_OVERRIDE = '\0starlight-codeblocks:ec-config';
 
 interface IntegrationOptions {
+  options: ResolvedOptions;
   /** Replace the `ec.config.mjs` module that `<Code>` reads, so that it gets the real plugins. */
   ecConfigOverride?: { file: string | undefined };
 }
 
-export function codeblocksIntegration({ ecConfigOverride }: IntegrationOptions): AstroIntegration {
+export function codeblocksIntegration({ options, ecConfigOverride }: IntegrationOptions): AstroIntegration {
   return {
     name: 'starlight-codeblocks',
     hooks: {
-      'astro:config:setup'({ config, updateConfig }) {
+      'astro:config:setup'({ config, updateConfig, logger }) {
+        // The shape `isSatteriProcessor()` checks, without a dependency on @astrojs/markdown-satteri.
+        const processor = config.markdown.processor as { options?: { mdastPlugins?: unknown[] } } | undefined;
+        processor?.options?.mdastPlugins?.push(...mdastPlugins(options, logger));
         const plugins = clientModulePlugins(config.build.assets);
         if (ecConfigOverride) plugins.push(ecConfigPlugin(ecConfigOverride.file));
         updateConfig({ vite: { plugins: plugins as never } });

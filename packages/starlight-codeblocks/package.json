@@ -32,9 +32,12 @@
   },
   "devDependencies": {
     "@astrojs/starlight": "0.42.4",
+    "@expressive-code/plugin-line-numbers": "0.44.2",
+    "@types/mdast": "4.0.4",
     "@types/node": "22.20.4",
     "astro": "7.3.5",
     "expressive-code": "0.44.2",
+    "satteri": "0.10.5",
     "tsdown": "0.23.0",
     "typescript": "6.0.3",
     "vitest": "5.0.2"

@@ -61,13 +61,12 @@ export function pluginHiddenLines(): CodeblocksPlugin {
 .${PREFIX}-hidden-line.${PREFIX}-hidden-open .code {
   background: color-mix(in srgb, ${cssVar('codeForeground')} 4%, transparent);
 }
-/* Aligned with codePaddingInline, matching a block with no gutter. A block with line numbers
-   (line permalinks, not yet built) would need the gutter's own width added here too. */
 .${PREFIX}-hidden-marker {
   display: inline-flex;
   align-items: center;
   margin: 2px 0;
-  margin-inline-start: ${cssVar('codePaddingInline')};
+  /* The gutter width is in ch of the code font; the division undoes this element's smaller font size. */
+  margin-inline-start: calc(var(--scb-gutter, 0px) / 0.8125 + ${cssVar('codePaddingInline')});
   padding: 0.05em 0.65em;
   border: 0;
   border-radius: 999px;
@@ -112,7 +111,8 @@ export function pluginHiddenLines(): CodeblocksPlugin {
             run++;
             const ids: string[] = [];
             for (let k = i; k < lineEls.length && hidden.has(lines[k] as ExpressiveCodeLine); k++) {
-              const id = `${PREFIX}-hidden-${uid}-l${k}`;
+              // Line permalinks give lines their own ids.
+              const id = String(lineEls[k].properties.id ?? `${PREFIX}-hidden-${uid}-l${k}`);
               lineEls[k].properties.id = id;
               ids.push(id);
             }

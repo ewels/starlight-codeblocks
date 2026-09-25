@@ -1,5 +1,99 @@
 ---
 title: Line permalinks
+description: Give a code block line numbers that link to each line, so readers can share a link to the exact lines they mean.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+A normal code block has no address for its lines. A reader who asks a question about one setting can only link to the page, or to the heading above the block. Line permalinks give a block line numbers, and each number is a link to its line.
+
+export const basic = `
+\`\`\`yaml title="config.yml" id="cfg"
+server:
+  host: 0.0.0.0
+  port: 8080
+cache:
+  dir: .cache
+  max_age: 3600
+logging:
+  level: info
+\`\`\`
+`;
+
+<Example code={basic} />
+
+Select a line number to highlight that line. The address of the page changes to `#cfg-L2`, and the page does not move. Hold Shift and select a second number to highlight every line between the two, as `#cfg-L2-L4`. Open that address in a new tab, and the page scrolls to the lines and highlights them.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `id="<id>"` | Fence line | `id="cfg"` |
+
+The `id` turns on line numbers for that block. It is also the `id` of the block in the page, so `#cfg` links to the whole block. Each block on a page needs its own `id`.
+
+Pick an `id` from what the block contains, such as its file name. The `id` keeps links to the block working when you add other blocks to the page.
+
+## Behaviour
+
+- Each line number links to `#<id>-L<n>`, where `<n>` is the number that the reader sees. If the fence line has `startLineNumber`, the numbers start there.
+- Selecting a number highlights that line and changes the address with `history.replaceState`. The page does not scroll, and the browser history gets no new entry.
+- Selecting a number with Shift held highlights the range from the last number you selected, as `#<id>-L<a>-L<b>`.
+- When the page loads, or the address changes, the plugin highlights the lines in the address and scrolls them into view. If a line is a [hidden line](/starlight-codeblocks/features/hidden-lines/), its marker opens.
+- The line numbers are links, so you can reach them with the Tab key and select them with Enter. Shift and Enter together selects a range. Screen readers announce each one as "Link to line N", and the highlighted numbers have `aria-current`.
+- Line numbers are not part of the copied text, and a manual selection of the code leaves them out.
+- Two blocks with the same `id` on one page cause a build warning.
+- Without JavaScript, the links go to their line, without the highlight.
+
+## Options
+
+Line permalinks have no options. Turn the feature off for the whole site with `permalinks: false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  permalinks: false,
+});
+```
+
+With `permalinks: false`, the plugin ignores `id` on the fence line.
+
+## Examples
+
+A block that shows part of a file can start at the line number of that part, so the numbers match the file:
+
+export const start = `
+\`\`\`py title="app.py" id="app" startLineNumber=41
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+\`\`\`
+`;
+
+<Example code={start} />
+
+This example combines line permalinks with hidden lines and an inline callout on purpose. The hidden-lines marker and the callout arrow line up with the code after the line numbers:
+
+export const combined = `
+\`\`\`ts title="server.ts" id="server" hidden={1-2}
+import { createServer } from 'node:http';
+import { handler } from './handler.ts';
+
+const port = Number(process.env.PORT ?? 3000);
+// [!callout /listen/] Starts the server on the port.
+createServer(handler).listen(port);
+\`\`\`
+`;
+
+<Example code={combined} />
+
+## Limitations
+
+- Line numbers take space on the left of every line. On a phone, a block with long lines scrolls sooner.
+- The plugin highlights one range at a time on a page. A new selection in any block removes the old highlight.
+- An `id` must not match the `id` of a heading on the page. Heading ids come from the heading text, such as `#options`.
+
+## Related
+
+- [Line states](/starlight-codeblocks/features/line-states/): mark a line as an error, a warning or a note in the source, for every reader.
+- [Code mentions](/starlight-codeblocks/features/code-mentions/): highlight lines from a phrase in the prose, without a line number.
+- [Hidden lines](/starlight-codeblocks/features/hidden-lines/): keep set-up lines out of view. Their line numbers still count.
