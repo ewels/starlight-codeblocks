@@ -1,10 +1,9 @@
 ---
 title: Getting started
-description: Install starlight-codeblocks, add it to a Starlight site and write a first code block that uses a directive.
+description: Install starlight-codeblocks and add it to a Starlight site.
 ---
 
 import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
-import Example from '../../components/Example.astro';
 
 Starlight renders every code block with Expressive Code. The plugin adds its features to those code blocks, so the code blocks you already have keep working. You turn on nothing per page: a feature starts when a code block uses its attribute or directive.
 
@@ -67,24 +66,7 @@ Starlight renders every code block with Expressive Code. The plugin adds its fea
 
 </Steps>
 
-## Write a first directive
-
-A directive is a marker in a code comment. The plugin reads it, applies it and removes it, so readers never see the marker and never copy it. The block below marks one line as added and one as removed:
-
-export const firstDirective = `
-\`\`\`js title="server.js" wordDiff=false
-import express from 'express';
-
-const app = express();
-const port = 3000; // [!code --]
-const port = process.env.PORT ?? 3000; // [!code ++]
-app.listen(port);
-\`\`\`
-`;
-
-<Example code={firstDirective} />
-
-Select the copy button on the result. The copied code has no directives in it. The [comment notation](/starlight-codeblocks/features/comment-notation/) page lists the rules for every directive.
+Pick a feature from the sidebar and add its attribute or directive to a code block to turn it on.
 
 ## Sites with an ec.config.mjs file
 
