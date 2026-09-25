@@ -18,7 +18,8 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "peerDependencies": {
     "@astrojs/starlight": ">=0.42.0"
@@ -30,7 +31,9 @@
     "@astrojs/starlight": "0.42.4",
     "@types/node": "22.20.4",
     "astro": "7.3.5",
+    "expressive-code": "0.44.2",
     "tsdown": "0.23.0",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "5.0.2"
   }
 }

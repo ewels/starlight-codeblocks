@@ -9,7 +9,7 @@ Update this file after each step in `PLAN.md`. Use one of these states: not star
 | 1.1 Work through ARCHITECTURE-QUESTIONS.md with small throwaway… | done | Real Astro 7.3.5 / Starlight 0.42.4 / EC 0.44.2 / Sätteri 0.10.5 site in the scratchpad, not committed. |
 | 1.2 Write the answers to design/ARCHITECTURE.md | done | All nine answered. No step blocked. Phase 10 is feasible (Q5). Code switcher is a directive (Q2). Step 3.3 must also settle client files for preset-only sites (Q4). |
 | 2.1 Create the pnpm workspace: packages/<name> (TypeScript, ESM, built… | done | pnpm workspace, tsdown package with `.` and `./expressive-code` exports, Starlight docs site. Biome and TypeScript 6 (see DECISIONS.md). Docs build is warning-free. |
-| 2.2 Set up Vitest with a render helper that runs a Markdown code block… | not started | |
+| 2.2 Set up Vitest with a render helper that runs a Markdown code block… | done | `test/render.ts`: `render(markdown)` renders one fenced block with `ExpressiveCode` (default plugins, so frames and the copy button are there) plus `pluginCodeblocks()`, and returns `{ html, copyText }`. Extend it with plugin options in 3.1. |
 | 2.3 Set up Playwright against a production build of the docs site,… | not started | |
 | 2.4 Write scripts/lint-docs.mjs from the rules in WRITING-STYLE.md,… | not started | |
 | 2.5 Add a CI workflow that runs lint, unit tests, both builds and the… | not started | |
