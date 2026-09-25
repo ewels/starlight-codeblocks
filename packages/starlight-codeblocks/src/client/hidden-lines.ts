@@ -1,0 +1,42 @@
+const OPEN = 'scb-hidden-open';
+
+function ids(el: HTMLElement) {
+  return (el.getAttribute('aria-controls') ?? '').split(' ').filter(Boolean);
+}
+
+function setRun(marker: HTMLElement, open: boolean) {
+  for (const id of ids(marker)) document.getElementById(id)?.classList.toggle(OPEN, open);
+  marker.setAttribute('aria-expanded', String(open));
+  const n = ids(marker).length;
+  const span = marker.querySelector('span');
+  if (span) span.textContent = open ? `Hide ${n} line${n === 1 ? '' : 's'}` : `${n} hidden line${n === 1 ? '' : 's'}`;
+}
+
+function syncToggle(markers: HTMLElement[], toggle: HTMLElement) {
+  const total = markers.reduce((sum, m) => sum + ids(m).length, 0);
+  const allOpen = markers.every((m) => m.getAttribute('aria-expanded') === 'true');
+  toggle.setAttribute('aria-pressed', String(allOpen));
+  toggle.textContent = allOpen ? `Hide ${total} lines` : `Show ${total} hidden line${total === 1 ? '' : 's'}`;
+}
+
+/** Toggles a hidden-lines marker, or every marker at once from the title bar button. */
+export default function initHiddenLines() {
+  for (const block of document.querySelectorAll<HTMLElement>(
+    '[data-scb-hidden-lines]:not([data-scb-hidden-lines-ready])',
+  )) {
+    block.dataset.scbHiddenLinesReady = '';
+    const markers = [...block.querySelectorAll<HTMLElement>('.scb-hidden-marker')];
+    const toggle = block.querySelector<HTMLElement>('.scb-hidden-toggle');
+    for (const marker of markers) {
+      marker.addEventListener('click', () => {
+        setRun(marker, marker.getAttribute('aria-expanded') !== 'true');
+        if (toggle) syncToggle(markers, toggle);
+      });
+    }
+    toggle?.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-pressed') !== 'true';
+      for (const marker of markers) setRun(marker, open);
+      syncToggle(markers, toggle);
+    });
+  }
+}

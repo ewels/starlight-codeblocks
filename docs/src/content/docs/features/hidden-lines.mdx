@@ -1,5 +1,95 @@
 ---
 title: Hidden lines
+description: Hide the imports and set-up that readers need to run an example but not to understand it.
 ---
 
-Not yet written
+import Example from '../../../components/Example.astro';
+
+Some lines earn their place in a working example, but not a reader's attention. Think of an import, a config object, or the boilerplate around the part you explain. The `hidden` attribute and `[!code hide]` remove lines like these from view, behind a marker the reader can open.
+
+export const basic = `
+\`\`\`py title="summary.py" hidden={1-3,6-7}
+import json
+from pathlib import Path
+
+config = json.loads(Path("config.json").read_text())
+for key, value in config.items():
+    if key.startswith("_"):
+        continue
+    print(f"{key} = {value}")
+\`\`\`
+`;
+
+<Example code={basic} />
+
+The two imports and the two lines of the `if` block are behind their own markers. Select a marker to show that run, or the title bar button to show every hidden line at once. Copying the block gives the whole file, imports included.
+
+## Syntax
+
+| Syntax | Where | Example |
+|---|---|---|
+| `hidden={range}` | Fence line | `hidden={1-3,6-7}` |
+| `[!code hide]` | Comment | `import unused_helper  // [!code hide]` |
+| `[!code hide:N]` | Comment | `# [!code hide:3]` |
+
+`hidden={range}` takes a [range](/starlight-codeblocks/features/comment-notation/#line-numbers), such as `{2}` or `{1, 4-6}`. `[!code hide:N]` hides its own line and the next N-1 lines. You can use the attribute and the directive in the same block.
+
+## Behaviour
+
+- Each run of hidden lines is replaced by a dashed marker, with the text "N hidden lines".
+- Selecting a marker shows that run only. Its text changes to "Hide N lines", and the lines get a faint background so the reader can tell they asked for them.
+- The title bar has a button, "Show N hidden lines", where N is the total across every run. It shows every run at once. Once every run is open, it reads "Hide N lines".
+- The copy button, and a manual copy, always include hidden lines, so the code still runs after a paste.
+- Markers and the title bar button use `aria-expanded` and `aria-controls`, so assistive technology reports what they open.
+- Hidden lines stay hidden when the page prints.
+- Without JavaScript, hidden lines stay hidden, and the markers and the title bar button do nothing.
+
+## Options
+
+Hidden lines have no options. Turn the feature off for the whole site with `hiddenLines: false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  hiddenLines: false,
+});
+```
+
+With `hiddenLines: false`, `hidden={range}` and `[!code hide]` are left in the code as written, and the fence line's `hidden` attribute is ignored.
+
+## Examples
+
+A directive keeps the hidden line next to the code it belongs to, so it moves if you reorder the block:
+
+export const directive = `
+\`\`\`ts title="server.ts"
+import { createServer } from 'node:http'; // [!code hide]
+import { readFileSync } from 'node:fs'; // [!code hide]
+
+const port = Number(process.env.PORT ?? 3000);
+createServer((req, res) => res.end(readFileSync('index.html'))).listen(port);
+\`\`\`
+`;
+
+<Example code={directive} />
+
+Hidden lines pair well with a block that has no title, where the title bar exists only for the toggle button:
+
+export const noTitle = `
+\`\`\`sh hidden={1}
+export API_TOKEN=xxxxxxxxxxxx
+curl -H "Authorization: Bearer $API_TOKEN" https://api.example.com/v1/items
+\`\`\`
+`;
+
+<Example code={noTitle} />
+
+## Limitations
+
+- Hidden lines take up no space until the reader asks for them. Expressive Code's own `collapse` differs: it reserves a line for "N collapsed lines" even before it opens.
+- A hidden line still runs in the copied code. If a line depends on something the reader must change, such as an API key, keep it visible or use a [fill-in placeholder](/starlight-codeblocks/features/fill-in-placeholders/) instead.
+
+## Related
+
+- [Focus](/starlight-codeblocks/features/focus/): blur the lines around the ones you are explaining, without removing them.
+- [Expandable blocks](/starlight-codeblocks/features/expandable-blocks/): cap a long block at a line count, instead of naming the lines to hide.
+- [Comment notation](/starlight-codeblocks/features/comment-notation/): the directive syntax that `[!code hide]` uses.

@@ -82,6 +82,20 @@ export function baseStyles({ cssVar }: ResolverContext) {
   white-space: nowrap;
   border: 0;
 }
+.${PREFIX}-btn {
+  border: 1px solid ${cssVar('borderColor')};
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  background: color-mix(in srgb, ${cssVar('codeForeground')} 8%, transparent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  color: ${cssVar('codeblocks.mutedForeground')};
+}
+.${PREFIX}-btn:hover, .${PREFIX}-btn:focus-visible {
+  color: ${cssVar('codeForeground')};
+  background: color-mix(in srgb, ${cssVar('codeForeground')} 14%, transparent);
+}
 :where([class^='${PREFIX}-'], [class*=' ${PREFIX}-']):focus-visible {
   outline: 2px solid ${cssVar('codeblocks.focusRing')};
   outline-offset: 2px;

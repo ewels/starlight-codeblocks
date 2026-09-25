@@ -309,3 +309,19 @@ Use this format:
 - Decision: `findBrackets()` walks the plain text of the block once, tracking string quotes (`'`, `"`, `` ` ``, with backslash escapes; single and double quotes reset at the end of a line, backticks do not) and the block's comment syntax from `commentSyntaxFor()`, and pairs `()`, `[]` and `{}` with a stack. Only a bracket that is actually closed gets coloured; an unmatched bracket, on either side, is left alone. This is the first feature with its own client module: `src/client/brackets.ts` outlines the hovered bracket and its partner by matching `data-scb-pair`, delegated from one listener per block. Caret-based matching is not built, because SPEC 6.11 makes it optional.
 - Reason: SPEC 6.11 asks that brackets in strings and comments keep their normal colour, but Expressive Code exposes no token-scope API to plugins, and a full grammar for every language is out of proportion to the feature. The mockup's own bracket transformer uses the same kind of approximation. Depth colouring uses `ExpressiveCodeAnnotation` per bracket, the same mechanism as word-level diff, so syntax highlighting is untouched.
 - Alternatives: `@shikijs/colorized-brackets` (the design pack's own mockup notes record that it cannot be used directly on this stack). A full per-language tokeniser (far more code for a decorative feature).
+
+## Hidden lines: force the title bar with :has(), no dedicated colours
+
+- Date: 2026-09-25
+- Step: 4.6
+- Decision: `pluginHiddenLines()` rebuilds `pre > code`'s children in `postprocessRenderedBlock`, inserting a `scb-hidden-marker` button before each run of hidden lines and giving every hidden line an id, so each marker's `aria-controls` names its own lines. The title bar button lives in `figcaption.header`, whose `display: none` default (when a block has no title or terminal frame) is overridden with `.frame:not(.has-title):not(.is-terminal):has(.scb-hidden-toggle) .header { display: flex; … }`, so a block with no title still gets a bar for the toggle. Colours reuse the shared `codeblocks.mutedForeground`/`codeForeground`/`codeBackground`/`borderColor` tokens through CSS `color-mix()`, with no new style settings group.
+- Reason: SPEC 6.7 asks for the button "in the title bar" even though `hidden={…}` needs no title of its own. `:has()` is Baseline-supported and keeps the change scoped to blocks that actually have hidden lines, without touching `astro-expressive-code`'s own header markup. A dedicated colour group would need dark and light values and a contrast test for what is only a faint, decorative background and a dashed rule, neither of which carries meaning on its own (SPEC 5's colour rule is about meaning, not decoration).
+- Alternatives: Always require a title for hidden lines (contradicts the spec's own attribute-only syntax). A style settings group for the marker and the forced header background (over-specified for two decorative tints that already track the block's own foreground and background).
+
+## Shared scb-btn utility class
+
+- Date: 2026-09-25
+- Step: 4.6
+- Decision: Added `.scb-btn` to the core plugin's `baseStyles` in `styles.ts`: a small bordered, tinted pill button, coloured from `codeblocks.mutedForeground`/`codeForeground`/`borderColor`. The hidden-lines title bar toggle adds it alongside its own class.
+- Reason: The feature needed the same small button look that the mockups give their title bar tools (SPEC's mockups win on look and feel where the spec gives no value), and expandable blocks (step 4.7) and future title-bar buttons (playground, run) will need the same look. One class avoids repeating the same six lines of CSS in every feature that adds a button outside a line.
+- Alternatives: Repeat the button CSS in each feature file (drift between features, as one feature file's tweak would not reach another's identical-looking button).
