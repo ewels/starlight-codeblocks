@@ -1,0 +1,36 @@
+{
+  "name": "starlight-codeblocks",
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./expressive-code": {
+      "types": "./dist/expressive-code/index.d.mts",
+      "default": "./dist/expressive-code/index.mjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@astrojs/starlight": ">=0.42.0"
+  },
+  "dependencies": {
+    "@expressive-code/core": "^0.44.2"
+  },
+  "devDependencies": {
+    "@astrojs/starlight": "0.42.4",
+    "@types/node": "22.20.4",
+    "astro": "7.3.5",
+    "tsdown": "0.23.0",
+    "typescript": "6.0.3"
+  }
+}
