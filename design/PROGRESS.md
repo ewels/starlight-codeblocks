@@ -47,17 +47,15 @@ Nothing.
 
 ### Check first
 
-1. **Unsigned, unpushed commits.** The commits after `90235bc` are unsigned, because 1Password signing was not available, and are not pushed. Re-sign and push, for example: `git rebase --exec 'git commit --amend --no-edit -S' origin/main`, then `git push`.
-2. **Leftover stash.** `stash@{0}` ("wip", on `e79c3e2`) is work in progress of the accessibility fixes, since committed in `8272a11` and later commits. Check it, then `git stash drop`.
-3. **No pull request.** KICKOFF.md asks for a draft PR from `main` to `main`. That is not possible, because all work is on `main` (DECISIONS.md, "Work on main instead of initial-build"). No PR was opened.
-4. **Upstream notes.**
+1. **No pull request.** KICKOFF.md asks for a draft PR from `main` to `main`. That is not possible, because all work is on `main` (DECISIONS.md, "Work on main instead of initial-build"). No PR was opened.
+2. **Upstream notes.**
    - Expressive Code: unlabelled `pre` regions (above).
    - `astro-expressive-code` expands tabs to spaces by default, so `codeblocks()` sets `tabWidth: 0` unless the site sets its own.
    - `<Code>` uses a second copy of `@expressive-code/core`, so `instanceof` on its classes fails (ARCHITECTURE.md).
    - Starlight: the table of contents reads Markdown headings only, so the docs site adds component headings with route middleware.
    - Starlight: a bare site prints build warnings. The docs site works around them (DECISIONS.md, "Docs site build without warnings").
    - starlight-pydocs: needs a small Node API.
-5. **Deviations from SPEC to confirm** (DECISIONS.md has the reasons):
+3. **Deviations from SPEC to confirm** (DECISIONS.md has the reasons):
    - Side-by-side annotations and scrollycoding switch to two columns at 600 px, not 640 px, because Starlight's default content column is about 632 px wide.
    - Callout width is capped against the visible block, not 90% of the code element.
    - Collapsing of expandable blocks happens in the client only, so the block shows in full without JavaScript.
