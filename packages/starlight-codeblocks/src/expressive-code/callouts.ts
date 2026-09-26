@@ -1,6 +1,6 @@
 import { type ExpressiveCodeLine, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
-import { type ElementContent, h, select, selectAll } from '@expressive-code/core/hast';
-import type { CodeblocksPlugin } from './core.ts';
+import { type ElementContent, h, select } from '@expressive-code/core/hast';
+import { type CodeblocksPlugin, insertBefore, lineElement } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
@@ -123,11 +123,9 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
         const callouts = getDirectives(codeBlock, 'callout');
         const code = select('pre > code', renderData.blockAst);
         if (callouts.length === 0 || !code) return;
-        const lines = codeBlock.getLines();
-        const lineEls = selectAll('.ec-line', code);
         for (const directive of callouts) {
           const line = directive.lines[0] as ExpressiveCodeLine;
-          const lineEl = lineEls[lines.indexOf(line)];
+          const lineEl = lineElement(line);
           if (!lineEl) continue;
           const hidden = (lineEl.properties.className as string[] | undefined)?.includes(`${PREFIX}-hidden-line`);
           const bubble: ElementContent = h(
@@ -140,8 +138,7 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
             [h('span', { class: cls('-bubble') }, inlineMarkdown(directive.text ?? ''))],
           );
           // Callouts for one line keep their source order, directly above it.
-          const at = code.children.indexOf(lineEl);
-          code.children.splice(at, 0, bubble);
+          insertBefore(code, lineEl, bubble);
         }
       },
     },

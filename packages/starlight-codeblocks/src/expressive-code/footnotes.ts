@@ -1,13 +1,14 @@
 import {
+  type ExpressiveCodeLine,
   onBackground,
   PluginStyleSettings,
   type StyleResolverFn,
   setAlpha,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
-import { addClassName, h, select, selectAll } from '@expressive-code/core/hast';
+import { addClassName, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { blockUid, type CodeblocksPlugin, numberedLines, warn } from './core.ts';
+import { blockUid, type CodeblocksPlugin, lineElement, numberedLines, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
@@ -159,7 +160,6 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
         }
         const sticky = attribute === 'sticky' || (attribute !== 'static' && siteSticky);
         const lines = codeBlock.getLines();
-        const lineEls = selectAll('.ec-line', pre);
         const ordered = refs
           .map((directive) => ({ directive, index: lines.indexOf(directive.lines[0] as never) }))
           .filter(({ index }) => index >= 0)
@@ -170,7 +170,8 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
           const n = String(i + 1);
           const note = `${PREFIX}-fn-${uid}-${n}`;
           const badge = `${PREFIX}-fnref-${uid}-${n}`;
-          const code = lineEls[index] && select('.code', lineEls[index]);
+          const lineEl = lineElement(directive.lines[0] as ExpressiveCodeLine);
+          const code = lineEl && select('.code', lineEl);
           code?.children.push(
             h(
               'a',

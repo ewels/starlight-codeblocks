@@ -7,9 +7,16 @@ import {
   setAlpha,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
-import { addClassName, type ElementContent, h, select, selectAll } from '@expressive-code/core/hast';
+import { addClassName, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { addTitleBarControl, blockUid, type CodeblocksPlugin, resolveRange } from './core.ts';
+import {
+  addTitleBarControl,
+  blockUid,
+  type CodeblocksPlugin,
+  insertBefore,
+  lineElement,
+  resolveRange,
+} from './core.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
 
@@ -122,44 +129,41 @@ export function pluginHiddenLines(): CodeblocksPlugin {
         const code = select('pre > code', renderData.blockAst);
         const figure = select('figure', renderData.blockAst);
         if (!code || !figure) return;
-        const lineEls = selectAll('.ec-line', code);
         const lines = codeBlock.getLines();
         const uid = blockUid(context);
-        const children: ElementContent[] = [];
         const markerIds: string[] = [];
-        let run = 0;
-        for (let i = 0; i < lineEls.length; i++) {
-          const isHidden = hidden.has(lines[i] as ExpressiveCodeLine);
-          const wasHidden = i > 0 && hidden.has(lines[i - 1] as ExpressiveCodeLine);
-          if (isHidden && !wasHidden) {
-            run++;
-            const ids: string[] = [];
-            for (let k = i; k < lineEls.length && hidden.has(lines[k] as ExpressiveCodeLine); k++) {
-              // Line permalinks give lines their own ids.
-              const id = String(lineEls[k].properties.id ?? `${PREFIX}-hidden-${uid}-l${k}`);
-              lineEls[k].properties.id = id;
-              ids.push(id);
-            }
-            const markerId = `${PREFIX}-hidden-${uid}-m${run}`;
-            markerIds.push(markerId);
-            children.push(
-              h(
-                'button',
-                {
-                  type: 'button',
-                  id: markerId,
-                  class: `${PREFIX}-hidden-marker ${PREFIX}-no-print`,
-                  ariaExpanded: 'false',
-                  ariaControls: ids.join(' '),
-                },
-                [h('span', {}, plural(ids.length))],
-              ),
-            );
+        for (let i = 0; i < lines.length; i++) {
+          const first = lineElement(lines[i] as ExpressiveCodeLine);
+          if (!first || !hidden.has(lines[i] as ExpressiveCodeLine) || hidden.has(lines[i - 1] as ExpressiveCodeLine))
+            continue;
+          const ids: string[] = [];
+          for (let k = i; k < lines.length && hidden.has(lines[k] as ExpressiveCodeLine); k++) {
+            const el = lineElement(lines[k] as ExpressiveCodeLine);
+            if (!el) continue;
+            // Line permalinks give lines their own ids.
+            const id = String(el.properties.id ?? `${PREFIX}-hidden-${uid}-l${k}`);
+            el.properties.id = id;
+            addClassName(el, `${PREFIX}-hidden-line`);
+            ids.push(id);
           }
-          if (isHidden) addClassName(lineEls[i], `${PREFIX}-hidden-line`);
-          children.push(lineEls[i]);
+          const markerId = `${PREFIX}-hidden-${uid}-m${markerIds.length + 1}`;
+          markerIds.push(markerId);
+          insertBefore(
+            code,
+            first,
+            h(
+              'button',
+              {
+                type: 'button',
+                id: markerId,
+                class: `${PREFIX}-hidden-marker ${PREFIX}-no-print`,
+                ariaExpanded: 'false',
+                ariaControls: ids.join(' '),
+              },
+              [h('span', {}, plural(ids.length))],
+            ),
+          );
         }
-        code.children = children;
         figure.properties.dataScbHiddenLines = '';
         addTitleBarControl(
           figure,

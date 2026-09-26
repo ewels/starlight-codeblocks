@@ -13,7 +13,7 @@ import {
   onBackground,
   type StyleVariant,
 } from '@expressive-code/core';
-import { type Element, type ElementContent, h, select } from '@expressive-code/core/hast';
+import { type Element, type ElementContent, EXIT, h, type Parents, select, visit } from '@expressive-code/core/hast';
 import { getRegistry } from '../registry.ts';
 import type { DirectiveSpecs } from './notation.ts';
 import { parseRange, RangeSyntaxError } from './ranges.ts';
@@ -34,7 +34,32 @@ export function pluginCore(): CodeblocksPlugin {
       if (registry) registry.styleVariants = context.styleVariants;
       return baseStyles(context);
     },
+    hooks: {
+      postprocessRenderedLine({ line, renderData }) {
+        lineElements.set(line, renderData.lineAst);
+      },
+    },
   };
+}
+
+const lineElements = new WeakMap<ExpressiveCodeLine, Element>();
+
+/**
+ * The rendered element of a line. Look lines up with this, not by their index among `.ec-line` elements:
+ * other plugins add lines of their own, such as a collapsed section's summary, or move lines into wrappers.
+ */
+export const lineElement = (line: ExpressiveCodeLine) => lineElements.get(line);
+
+/** Inserts `nodes` before `target`, wherever it is in `root`. */
+export function insertBefore(root: Parents, target: Element, ...nodes: ElementContent[]) {
+  visit(
+    root,
+    (node) => node === target,
+    (_, index, parent) => {
+      if (parent && index !== undefined) parent.children.splice(index, 0, ...nodes);
+      return EXIT;
+    },
+  );
 }
 
 type Context = Pick<ExpressiveCodeHookContextBase, 'codeBlock' | 'config'>;

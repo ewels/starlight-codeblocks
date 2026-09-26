@@ -7,7 +7,7 @@ export default function initExpandable() {
   )) {
     pre.dataset.scbExpandableReady = '';
     const n = Number(pre.dataset.scbExpandable);
-    const lines = [...pre.querySelectorAll<HTMLElement>('.ec-line')];
+    const lines = [...pre.querySelectorAll<HTMLElement>('.ec-line:not(summary > *)')];
     const total = lines.length;
     const button = pre.parentElement?.querySelector<HTMLButtonElement>('.scb-expandable-toggle');
     if (!button) continue;

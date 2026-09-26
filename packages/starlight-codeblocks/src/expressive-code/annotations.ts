@@ -1,7 +1,12 @@
-import { PluginStyleSettings, setAlpha, type UnresolvedStyleValue } from '@expressive-code/core';
-import { h, select, selectAll } from '@expressive-code/core/hast';
+import {
+  type ExpressiveCodeLine,
+  PluginStyleSettings,
+  setAlpha,
+  type UnresolvedStyleValue,
+} from '@expressive-code/core';
+import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { blockUid, type CodeblocksPlugin, warn } from './core.ts';
+import { blockUid, type CodeblocksPlugin, lineElement, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
@@ -161,16 +166,15 @@ export function pluginAnnotations(): CodeblocksPlugin {
         }
         const side = mode === 'side';
         const lines = codeBlock.getLines();
-        const lineEls = selectAll('.ec-line', pre);
         const ordered = annotations
           .map((directive) => ({ directive, index: lines.indexOf(directive.lines[0] as never) }))
           .filter(({ index }) => index >= 0)
           .sort((a, b) => a.index - b.index);
         const uid = blockUid(context);
-        const items = ordered.map(({ directive, index }, i) => {
+        const items = ordered.map(({ directive }, i) => {
           const n = String(i + 1);
           const text = inlineMarkdown(directive.text ?? '');
-          const lineEl = lineEls[index];
+          const lineEl = lineElement(directive.lines[0] as ExpressiveCodeLine);
           const code = lineEl && select('.code', lineEl);
           if (side) {
             if (lineEl) lineEl.properties.dataScbAnno = n;

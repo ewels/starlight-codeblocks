@@ -1,6 +1,7 @@
 import { addClassName, type Element, h, removeClassName, select, selectAll, toHtml } from '@expressive-code/core/hast';
 import { fromHtml } from 'hast-util-from-html';
 import { parseRange, RangeSyntaxError } from '../expressive-code/ranges.ts';
+import { codeLines } from './tokens.ts';
 
 const S = 'scb-scrolly';
 const OUT = 'scb-focus-out';
@@ -60,7 +61,7 @@ function renameIds(copy: Element, suffix: string) {
 function apply(group: Element, { focus, mark }: StepState, suffix: string) {
   const copy = structuredClone(group);
   renameIds(copy, suffix);
-  selectAll('.ec-line', copy).forEach((line, i) => {
+  codeLines(copy).forEach((line, i) => {
     removeClassName(line, OUT);
     if (focus.length > 0 && !focus.includes(i)) addClassName(line, OUT);
     if (mark.includes(i)) addClassName(line, 'mark');
@@ -84,7 +85,7 @@ export function scrollycoding(html: string, interactive = true): string {
     );
   }
   const [group] = groups;
-  const count = selectAll('.ec-line', group).length;
+  const count = codeLines(group).length;
   const states = steps.map((step) => ({
     focus: lines(step.properties.dataFocus, 'focus', count),
     mark: lines(step.properties.dataMark, 'mark', count),

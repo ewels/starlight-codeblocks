@@ -5,7 +5,7 @@ function setup(root: HTMLElement) {
   if (root.dataset.scbScrollyReady !== undefined) return;
   root.dataset.scbScrollyReady = '';
   const steps = [...root.querySelectorAll<HTMLElement>(`.${S}-step`)];
-  const lines = [...root.querySelectorAll(`.${S}-code .ec-line`)];
+  const lines = [...root.querySelectorAll(`.${S}-code .ec-line:not(summary > *)`)];
   const show = (step: HTMLElement) => {
     for (const s of steps) s.classList.toggle(`${S}-on`, s === step);
     const focus = list(step.dataset.scbFocus);
