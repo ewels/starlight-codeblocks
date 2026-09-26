@@ -1,7 +1,7 @@
 export const sidebar = [
   {
     label: 'Start here',
-    items: [{ label: 'Introduction', link: '/' }, 'getting-started', 'configuration'],
+    items: [{ label: 'Introduction', link: '/' }, 'getting-started', 'configuration', 'features/comment-notation'],
   },
   {
     label: 'Guides',
@@ -13,40 +13,45 @@ export const sidebar = [
     ],
   },
   {
-    label: 'Inside the code block',
-    items: [
-      'features/focus',
-      'features/line-states',
-      'features/comment-notation',
-      'features/inline-callouts',
-      'features/annotations',
-      'features/footnotes',
-      'features/hidden-lines',
-      'features/smart-shell-copy',
-      'features/word-level-diff',
-      'features/visible-whitespace',
-      'features/colourised-brackets',
-      'features/token-links',
-      'features/api-auto-linking',
-      'features/expandable-blocks',
-      'features/open-in-playground',
-    ],
+    label: 'Draw attention',
+    items: ['features/focus', 'features/line-states'],
   },
   {
-    label: 'Across the page',
+    label: 'Explain code',
     items: [
-      'features/code-mentions',
-      'features/line-permalinks',
-      'features/fill-in-placeholders',
-      'features/code-switcher',
-      'features/token-transitions',
-      'features/scrollycoding',
+      'features/annotations',
+      'features/footnotes',
+      'features/inline-callouts',
       'features/side-by-side-annotations',
     ],
   },
   {
-    label: 'More',
-    items: ['features/inline-code-highlighting', 'features/run-in-the-browser'],
+    label: 'Connect prose and code',
+    items: ['features/code-mentions', 'features/scrollycoding'],
+  },
+  {
+    label: 'Show changes',
+    items: ['features/word-level-diff', 'features/token-transitions'],
+  },
+  {
+    label: 'Shorten long code',
+    items: ['features/hidden-lines', 'features/expandable-blocks'],
+  },
+  {
+    label: 'Make code easier to read',
+    items: ['features/visible-whitespace', 'features/colourised-brackets', 'features/inline-code-highlighting'],
+  },
+  {
+    label: 'Add links',
+    items: ['features/token-links', 'features/api-auto-linking', 'features/line-permalinks'],
+  },
+  {
+    label: 'Adapt to the reader',
+    items: ['features/code-switcher', 'features/fill-in-placeholders'],
+  },
+  {
+    label: 'Copy and run',
+    items: ['features/smart-shell-copy', 'features/open-in-playground', 'features/run-in-the-browser'],
   },
   {
     label: 'Extend',

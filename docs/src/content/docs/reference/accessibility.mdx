@@ -44,7 +44,11 @@ If your site must meet 4.5:1 in every state, set `codeblocksFocus.opacity` and `
 
 If you change a colour in the [style settings](/starlight-codeblocks/reference/style-settings/), check its contrast in both themes.
 
-## Inside the code block
+## Comment notation
+
+The plugin reads directives at build time and removes them from the page. Readers get the result of each directive, as the sections for each feature describe.
+
+## Draw attention
 
 ### Focus
 
@@ -57,14 +61,7 @@ If you change a colour in the [style settings](/starlight-codeblocks/reference/s
 - Each state line has a tint and a bar on the left edge. A message starts with the name of the state in bold, so colour is not the only mark.
 - Screen readers hear the name of the state before the line, for example "Error:", and then the message after the code.
 
-### Comment notation
-
-The plugin reads directives at build time and removes them from the page. Readers get the result of each directive, as the sections for each feature describe.
-
-### Inline callouts
-
-- The bubble has the `note` role. Screen readers read it before its line.
-- A bubble has no animation and no control.
+## Explain code
 
 ### Annotations
 
@@ -81,22 +78,57 @@ The plugin reads directives at build time and removes them from the page. Reader
 - A selected line gets a bar as well as a tint, so the highlight does not rely on colour.
 - Under reduced motion, the page jumps to the note or the line.
 
-### Hidden lines
+### Inline callouts
 
-- Each marker is a button with `aria-expanded`. The label of the title bar button changes from **Show** to **Hide**. Both have `aria-controls`, which names the lines they show.
-- The marker text gives the number of lines, such as "3 hidden lines", so readers know what the button opens.
+- The bubble has the `note` role. Screen readers read it before its line.
+- A bubble has no animation and no control.
 
-### Smart shell copy
+### Side-by-side annotations
 
-- Screen readers read the prompts, the commands and the output as they are on the page.
-- The copy button has the label "Copy commands", which says what it copies.
-- Output lines are muted and have no syntax colours. Their position after a command also marks them as output.
+- Keyboard focus on a note highlights its line, the same as hover. The note shows a focus ring.
+- The numbers on the lines are hidden from screen readers. Screen readers read the notes as a list after the code.
+
+## Connect prose and code
+
+### Code mentions
+
+- Keyboard focus on a mention link highlights its lines, the same as hover.
+- Screen readers read the tagged lines as the description of the link.
+- Under reduced motion, the fade and the scroll happen at once.
+
+### Scrollycoding
+
+- Screen readers read the steps in order, then the code block. On a narrow screen, each step has its own copy of the block.
+- The pointer does not clear the focus of the sticky block. Move keyboard focus into the block to make every line sharp.
+- Under reduced motion, the focus and the fade of the steps change at once.
+
+## Show changes
 
 ### Word-level diff
 
 - The line markers of Expressive Code show which lines are removed and which are added. The changed words get a stronger tint on top of them.
 - An added word is underlined and a removed word has a line through it, so colour is not the only mark of a changed word.
 - Each changed word has the `insertion` or the `deletion` role. Screen readers that support these roles announce the change. All screen readers get the removed line and the added line in full, so a reader can compare the two.
+
+### Token transitions
+
+- The numbered steps and the **Previous** and **Next** buttons are buttons. The left and right arrow keys go to the previous and the next step when a numbered step has focus.
+- Screen readers announce the number and the label of the new step. The current step has `aria-current`.
+- Under reduced motion, the code changes without the animation.
+
+## Shorten long code
+
+### Hidden lines
+
+- Each marker is a button with `aria-expanded`. The label of the title bar button changes from **Show** to **Hide**. Both have `aria-controls`, which names the lines they show.
+- The marker text gives the number of lines, such as "3 hidden lines", so readers know what the button opens.
+
+### Expandable blocks
+
+- The button under the code says how many lines it shows, such as "Show all 24 lines". It has `aria-expanded`.
+- The collapsed lines use `hidden="until-found"`, so Find in the browser still finds text in them, and the block expands to show the match.
+
+## Make code easier to read
 
 ### Visible whitespace
 
@@ -107,6 +139,12 @@ The glyphs are hidden from screen readers, which read the same code as in a bloc
 - The colours are a reading aid. The brackets themselves stay in the code, so readers who cannot tell the colours apart lose no information.
 - Hover over a bracket to outline it and its partner, which shows the pair by shape.
 - Brackets cannot take keyboard focus. With caret browsing (F7 in most browsers), move the caret onto a bracket to get the same outline.
+
+### Inline code highlighting
+
+The highlighted code is a normal `code` element, with the same characters as before. The token colours have the same contrast correction as the code blocks.
+
+## Add links
 
 ### Token links
 
@@ -119,29 +157,18 @@ The glyphs are hidden from screen readers, which read the same code as in a bloc
 - The hover card opens at once on keyboard focus. Escape closes it.
 - Screen readers get the text of the card as the description of the link.
 
-### Expandable blocks
-
-- The button under the code says how many lines it shows, such as "Show all 24 lines". It has `aria-expanded`.
-- The collapsed lines use `hidden="until-found"`, so Find in the browser still finds text in them, and the block expands to show the match.
-
-### Open in playground
-
-- The button is a link, or a form button for playgrounds that take a post.
-- Screen readers announce "opens in a new tab" after the label.
-
-## Across the page
-
-### Code mentions
-
-- Keyboard focus on a mention link highlights its lines, the same as hover.
-- Screen readers read the tagged lines as the description of the link.
-- Under reduced motion, the fade and the scroll happen at once.
-
 ### Line permalinks
 
 - The line numbers are links. Enter selects a line, and Shift with Enter selects a range.
 - Screen readers announce each number as "Link to line N". Highlighted numbers have `aria-current`.
 - A highlighted line gets a bar as well as a tint.
+
+## Adapt to the reader
+
+### Code switcher
+
+- The menu is a native `select` element with the accessible name "Variant".
+- Keyboard focus stays on the menu after the variant changes.
 
 ### Fill-in placeholders
 
@@ -149,33 +176,18 @@ The glyphs are hidden from screen readers, which read the same code as in a bloc
 - A field prints as its text, without the border.
 - Escape in a field clears its value.
 
-### Code switcher
+## Copy and run
 
-- The menu is a native `select` element with the accessible name "Variant".
-- Keyboard focus stays on the menu after the variant changes.
+### Smart shell copy
 
-### Token transitions
+- Screen readers read the prompts, the commands and the output as they are on the page.
+- The copy button has the label "Copy commands", which says what it copies.
+- Output lines are muted and have no syntax colours. Their position after a command also marks them as output.
 
-- The numbered steps and the **Previous** and **Next** buttons are buttons. The left and right arrow keys go to the previous and the next step when a numbered step has focus.
-- Screen readers announce the number and the label of the new step. The current step has `aria-current`.
-- Under reduced motion, the code changes without the animation.
+### Open in playground
 
-### Scrollycoding
-
-- Screen readers read the steps in order, then the code block. On a narrow screen, each step has its own copy of the block.
-- The pointer does not clear the focus of the sticky block. Move keyboard focus into the block to make every line sharp.
-- Under reduced motion, the focus and the fade of the steps change at once.
-
-### Side-by-side annotations
-
-- Keyboard focus on a note highlights its line, the same as hover. The note shows a focus ring.
-- The numbers on the lines are hidden from screen readers. Screen readers read the notes as a list after the code.
-
-## More
-
-### Inline code highlighting
-
-The highlighted code is a normal `code` element, with the same characters as before. The token colours have the same contrast correction as the code blocks.
+- The button is a link, or a form button for playgrounds that take a post.
+- Screen readers announce "opens in a new tab" after the label.
 
 ### Run in the browser
 

@@ -55,7 +55,26 @@ The [documentation](https://ewels.github.io/starlight-codeblocks/) has a page fo
 
 Each section below shows the smallest syntax for a feature and how it looks to readers. Open a section to see it.
 
-### Inside the code block
+### Start here
+
+<details>
+<summary>Comment notation</summary>
+
+Mark lines with directives in code comments. The plugin applies each directive and removes it from the code that readers see and copy.
+
+```ts
+  port: 3000, // [!code --]
+  port: Number(process.env.PORT ?? 3000), // [!code ++]
+  host: 'localhost', // [!code highlight]
+```
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/comment-notation.png" alt="A TypeScript block with a removed line, an added line and a highlighted line, set by comments that the reader does not see.">
+
+[Comment notation documentation](https://ewels.github.io/starlight-codeblocks/features/comment-notation/)
+
+</details>
+
+### Draw attention
 
 <details>
 <summary>Focus</summary>
@@ -88,38 +107,7 @@ for name in sys.argv[1:]  # [!code error] SyntaxError: expected ':'
 
 </details>
 
-<details>
-<summary>Comment notation</summary>
-
-Mark lines with directives in code comments. The plugin applies each directive and removes it from the code that readers see and copy.
-
-```ts
-  port: 3000, // [!code --]
-  port: Number(process.env.PORT ?? 3000), // [!code ++]
-  host: 'localhost', // [!code highlight]
-```
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/comment-notation.png" alt="A TypeScript block with a removed line, an added line and a highlighted line, set by comments that the reader does not see.">
-
-[Comment notation documentation](https://ewels.github.io/starlight-codeblocks/features/comment-notation/)
-
-</details>
-
-<details>
-<summary>Inline callouts</summary>
-
-Put a short note in a bubble above a line, with an arrow that points at the word it explains.
-
-```js
-// [!callout /signal/] Lets `controller.abort()` cancel the request.
-const res = await fetch(url, { signal: controller.signal });
-```
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/inline-callouts.png" alt="A JavaScript block with a note in a bubble above a line, with an arrow that points at the word signal.">
-
-[Inline callouts documentation](https://ewels.github.io/starlight-codeblocks/features/inline-callouts/)
-
-</details>
+### Explain code
 
 <details>
 <summary>Annotations</summary>
@@ -153,36 +141,82 @@ app = Flask(__name__)
 </details>
 
 <details>
-<summary>Hidden lines</summary>
+<summary>Inline callouts</summary>
 
-Hide the imports and set-up that readers need to run an example but not to understand it. The copy button still copies every line.
+Put a short note in a bubble above a line, with an arrow that points at the word it explains.
 
-````md
-```py hidden={1-3,6-7}
+```js
+// [!callout /signal/] Lets `controller.abort()` cancel the request.
+const res = await fetch(url, { signal: controller.signal });
 ```
-````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/hidden-lines.webp" alt="A Python block with dashed lines in place of hidden lines. Selecting a dashed line shows the hidden imports.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/inline-callouts.png" alt="A JavaScript block with a note in a bubble above a line, with an arrow that points at the word signal.">
 
-[Hidden lines documentation](https://ewels.github.io/starlight-codeblocks/features/hidden-lines/)
+[Inline callouts documentation](https://ewels.github.io/starlight-codeblocks/features/inline-callouts/)
 
 </details>
 
 <details>
-<summary>Smart shell copy</summary>
+<summary>Side-by-side annotations</summary>
 
-Show prompts and output in terminal blocks. The Copy commands button copies the commands only, not the prompts or the output lines. It applies to every terminal block with a prompt line.
+Show the notes of an annotated block in a column beside the code, so readers see every note next to its line.
 
-```sh
-$ uv tool install ruff
-Resolved 1 package in 180ms
+````md
+```py annotations="side"
 ```
+````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/smart-shell-copy.webp" alt="A terminal block with prompts and their output. The pointer selects the Copy commands button in the title bar. A caption below the block then shows the copied text: the commands only, without the prompts or the output.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/side-by-side-annotations.png" alt="A Python block with its notes in a column beside the code, each note next to its line.">
 
-[Smart shell copy documentation](https://ewels.github.io/starlight-codeblocks/features/smart-shell-copy/)
+[Side-by-side annotations documentation](https://ewels.github.io/starlight-codeblocks/features/side-by-side-annotations/)
 
 </details>
+
+### Connect prose and code
+
+<details>
+<summary>Code mentions</summary>
+
+Link a phrase in the prose to lines of the code block below it, so that readers see which lines the text is about.
+
+````md
+The [base case](#mention:base) stops the recursion.
+
+```py
+    if n == 0:  # [!mention base]
+```
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-mentions.webp" alt="A paragraph with two linked phrases above a Python block. The pointer moves over each phrase and the lines it names stay sharp while the others fade.">
+
+[Code mentions documentation](https://ewels.github.io/starlight-codeblocks/features/code-mentions/)
+
+</details>
+
+<details>
+<summary>Scrollycoding</summary>
+
+Explain a code block in prose steps that scroll past it, while the block stays in view and focuses the lines of each step.
+
+````mdx
+<Scrollycoding>
+
+```js
+```
+
+<Step focus="1">Import Express.</Step>
+<Step focus="3">Create the app object.</Step>
+
+</Scrollycoding>
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/scrollycoding.webp" alt="Prose steps scroll past a code block that stays in view. The block focuses the lines of each step.">
+
+[Scrollycoding documentation](https://ewels.github.io/starlight-codeblocks/features/scrollycoding/)
+
+</details>
+
+### Show changes
 
 <details>
 <summary>Word-level diff</summary>
@@ -199,6 +233,65 @@ Highlight the words that changed inside each line of a diff, so readers find a s
 [Word-level diff documentation](https://ewels.github.io/starlight-codeblocks/features/word-level-diff/)
 
 </details>
+
+<details>
+<summary>Token transitions</summary>
+
+Step through versions of one code block, and watch the code move from each version to the next, so readers see what changed.
+
+````mdx
+<CodeSteps>
+
+```js step="Create the app"
+```
+
+```js step="Parse JSON bodies"
+```
+
+</CodeSteps>
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/token-transitions.webp" alt="A JavaScript block with step buttons. Selecting Next moves the code to the next version, and the new lines fade in.">
+
+[Token transitions documentation](https://ewels.github.io/starlight-codeblocks/features/token-transitions/)
+
+</details>
+
+### Shorten long code
+
+<details>
+<summary>Hidden lines</summary>
+
+Hide the imports and set-up that readers need to run an example but not to understand it. The copy button still copies every line.
+
+````md
+```py hidden={1-3,6-7}
+```
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/hidden-lines.webp" alt="A Python block with dashed lines in place of hidden lines. Selecting a dashed line shows the hidden imports.">
+
+[Hidden lines documentation](https://ewels.github.io/starlight-codeblocks/features/hidden-lines/)
+
+</details>
+
+<details>
+<summary>Expandable blocks</summary>
+
+Show the first lines of a long block, with a fade and a button to reveal the rest.
+
+````md
+```py expandable={8}
+```
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/expandable-blocks.webp" alt="A Python block that shows its first lines with a fade and a button. Selecting the button shows every line.">
+
+[Expandable blocks documentation](https://ewels.github.io/starlight-codeblocks/features/expandable-blocks/)
+
+</details>
+
+### Make code easier to read
 
 <details>
 <summary>Visible whitespace</summary>
@@ -231,6 +324,23 @@ Colour matching brackets by nesting depth, so readers can match the pairs on a d
 [Colourised brackets documentation](https://ewels.github.io/starlight-codeblocks/features/colourised-brackets/)
 
 </details>
+
+<details>
+<summary>Inline code highlighting</summary>
+
+Give inline code in the prose the same syntax colours as the code blocks, with a language suffix at the end of the code.
+
+```md
+Call `await fetch(url){:js}` before you read the body.
+```
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/inline-code-highlighting.png" alt="A sentence with two pieces of inline code in syntax colours.">
+
+[Inline code highlighting documentation](https://ewels.github.io/starlight-codeblocks/features/inline-code-highlighting/)
+
+</details>
+
+### Add links
 
 <details>
 <summary>Token links</summary>
@@ -267,59 +377,6 @@ run = json.loads(Path("run.json").read_text())
 </details>
 
 <details>
-<summary>Expandable blocks</summary>
-
-Show the first lines of a long block, with a fade and a button to reveal the rest.
-
-````md
-```py expandable={8}
-```
-````
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/expandable-blocks.webp" alt="A Python block that shows its first lines with a fade and a button. Selecting the button shows every line.">
-
-[Expandable blocks documentation](https://ewels.github.io/starlight-codeblocks/features/expandable-blocks/)
-
-</details>
-
-<details>
-<summary>Open in playground</summary>
-
-Add a title bar button that opens the example in an online playground, with the code already filled in.
-
-````md
-```ts playground="typescript"
-```
-````
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/open-in-playground.png" alt="A TypeScript block with an Open in TS Playground button in its title bar.">
-
-[Open in playground documentation](https://ewels.github.io/starlight-codeblocks/features/open-in-playground/)
-
-</details>
-
-### Across the page
-
-<details>
-<summary>Code mentions</summary>
-
-Link a phrase in the prose to lines of the code block below it, so that readers see which lines the text is about.
-
-````md
-The [base case](#mention:base) stops the recursion.
-
-```py
-    if n == 0:  # [!mention base]
-```
-````
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-mentions.webp" alt="A paragraph with two linked phrases above a Python block. The pointer moves over each phrase and the lines it names stay sharp while the others fade.">
-
-[Code mentions documentation](https://ewels.github.io/starlight-codeblocks/features/code-mentions/)
-
-</details>
-
-<details>
 <summary>Line permalinks</summary>
 
 Give a code block line numbers that link to each line, so readers can share a link to the exact lines they mean.
@@ -335,21 +392,7 @@ Give a code block line numbers that link to each line, so readers can share a li
 
 </details>
 
-<details>
-<summary>Fill-in placeholders</summary>
-
-Turn placeholders such as `YOUR_TOKEN` into fields, so readers type their own values into every block and the copied code.
-
-````md
-```sh placeholder="YOUR_TOKEN"
-```
-````
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/fill-in-placeholders.webp" alt="A shell block and a Python block with a YOUR_TOKEN field. Text typed in one field appears in both blocks.">
-
-[Fill-in placeholders documentation](https://ewels.github.io/starlight-codeblocks/features/fill-in-placeholders/)
-
-</details>
+### Adapt to the reader
 
 <details>
 <summary>Code switcher</summary>
@@ -374,81 +417,52 @@ pnpm add starlight-codeblocks
 </details>
 
 <details>
-<summary>Token transitions</summary>
+<summary>Fill-in placeholders</summary>
 
-Step through versions of one code block, and watch the code move from each version to the next, so readers see what changed.
-
-````mdx
-<CodeSteps>
-
-```js step="Create the app"
-```
-
-```js step="Parse JSON bodies"
-```
-
-</CodeSteps>
-````
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/token-transitions.webp" alt="A JavaScript block with step buttons. Selecting Next moves the code to the next version, and the new lines fade in.">
-
-[Token transitions documentation](https://ewels.github.io/starlight-codeblocks/features/token-transitions/)
-
-</details>
-
-<details>
-<summary>Scrollycoding</summary>
-
-Explain a code block in prose steps that scroll past it, while the block stays in view and focuses the lines of each step.
-
-````mdx
-<Scrollycoding>
-
-```js
-```
-
-<Step focus="1">Import Express.</Step>
-<Step focus="3">Create the app object.</Step>
-
-</Scrollycoding>
-````
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/scrollycoding.webp" alt="Prose steps scroll past a code block that stays in view. The block focuses the lines of each step.">
-
-[Scrollycoding documentation](https://ewels.github.io/starlight-codeblocks/features/scrollycoding/)
-
-</details>
-
-<details>
-<summary>Side-by-side annotations</summary>
-
-Show the notes of an annotated block in a column beside the code, so readers see every note next to its line.
+Turn placeholders such as `YOUR_TOKEN` into fields, so readers type their own values into every block and the copied code.
 
 ````md
-```py annotations="side"
+```sh placeholder="YOUR_TOKEN"
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/side-by-side-annotations.png" alt="A Python block with its notes in a column beside the code, each note next to its line.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/fill-in-placeholders.webp" alt="A shell block and a Python block with a YOUR_TOKEN field. Text typed in one field appears in both blocks.">
 
-[Side-by-side annotations documentation](https://ewels.github.io/starlight-codeblocks/features/side-by-side-annotations/)
+[Fill-in placeholders documentation](https://ewels.github.io/starlight-codeblocks/features/fill-in-placeholders/)
 
 </details>
 
-### More
+### Copy and run
 
 <details>
-<summary>Inline code highlighting</summary>
+<summary>Smart shell copy</summary>
 
-Give inline code in the prose the same syntax colours as the code blocks, with a language suffix at the end of the code.
+Show prompts and output in terminal blocks. The Copy commands button copies the commands only, not the prompts or the output lines. It applies to every terminal block with a prompt line.
 
-```md
-Call `await fetch(url){:js}` before you read the body.
+```sh
+$ uv tool install ruff
+Resolved 1 package in 180ms
 ```
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/inline-code-highlighting.png" alt="A sentence with two pieces of inline code in syntax colours.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/smart-shell-copy.webp" alt="A terminal block with prompts and their output. The pointer selects the Copy commands button in the title bar. A caption below the block then shows the copied text: the commands only, without the prompts or the output.">
 
-[Inline code highlighting documentation](https://ewels.github.io/starlight-codeblocks/features/inline-code-highlighting/)
+[Smart shell copy documentation](https://ewels.github.io/starlight-codeblocks/features/smart-shell-copy/)
+
+</details>
+
+<details>
+<summary>Open in playground</summary>
+
+Add a title bar button that opens the example in an online playground, with the code already filled in.
+
+````md
+```ts playground="typescript"
+```
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/open-in-playground.png" alt="A TypeScript block with an Open in TS Playground button in its title bar.">
+
+[Open in playground documentation](https://ewels.github.io/starlight-codeblocks/features/open-in-playground/)
 
 </details>
 

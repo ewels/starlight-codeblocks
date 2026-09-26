@@ -12,42 +12,50 @@ The docs site lives in `docs/`. It is a Starlight site that uses the plugin thro
 
 ## Sidebar
 
+The feature groups say what authors use the features for, not how the features work. Each group has two to four pages. Comment notation is syntax that many features use, so it is in "Start here". `docs/src/sidebar.mjs` is the source; the README, `llms.txt`, the accessibility page and the home page follow its groups and order.
+
 ```
 Start here
   Introduction                 (index, splash template)
   Getting started
   Configuration
+  Comment notation
 Guides
   Choose an annotation style
   Code switcher or tabs
   Migrate from VitePress
   Use with other plugins
-Inside the code block
+Draw attention
   Focus
   Line states
-  Comment notation
-  Inline callouts
+Explain code
   Annotations
   Footnotes
-  Hidden lines
-  Smart shell copy
+  Inline callouts
+  Side-by-side annotations
+Connect prose and code
+  Code mentions
+  Scrollycoding
+Show changes
   Word-level diff
+  Token transitions
+Shorten long code
+  Hidden lines
+  Expandable blocks
+Make code easier to read
   Visible whitespace
   Colourised brackets
+  Inline code highlighting
+Add links
   Token links
   API auto-linking
-  Expandable blocks
-  Open in playground
-Across the page
-  Code mentions
   Line permalinks
-  Fill-in placeholders
+Adapt to the reader
   Code switcher
-  Token transitions
-  Scrollycoding
-  Side-by-side annotations
-More
-  Inline code highlighting
+  Fill-in placeholders
+Copy and run
+  Smart shell copy
+  Open in playground
   Run in the browser
 Extend
   Write an API link adapter
@@ -71,7 +79,7 @@ Reference
 
 ## Feature page template
 
-Every page in the three feature groups uses this structure and these headings. Leave out a section only if it would be empty.
+Every feature page uses this structure and these headings. Leave out a section only if it would be empty.
 
 Every example on a feature page shows only that page's own feature. No example may trigger another feature by accident, such as word-level diff appearing in a comment notation example, or a line state appearing in a visible whitespace example. If a feature triggers automatically, pick different example code or turn it off for that block (for example `wordDiff=false`). Combining features is allowed only in an example whose explicit purpose is to show a combination, and the text next to it must say so.
 
