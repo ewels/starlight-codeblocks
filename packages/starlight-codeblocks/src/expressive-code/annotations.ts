@@ -8,7 +8,7 @@ import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { blockUid, type CodeblocksPlugin, lineElement, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
-import { getDirectives } from './notation.ts';
+import { getRenderedDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
 
 export interface AnnotationsStyleSettings {
@@ -156,7 +156,7 @@ export function pluginAnnotations(): CodeblocksPlugin {
     hooks: {
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
-        const annotations = getDirectives(codeBlock, 'annotate');
+        const annotations = getRenderedDirectives(context, 'annotate');
         const figure = select('figure', renderData.blockAst);
         const pre = figure && select('pre', figure);
         if (annotations.length === 0 || !figure || !pre) return;
@@ -168,7 +168,6 @@ export function pluginAnnotations(): CodeblocksPlugin {
         const lines = codeBlock.getLines();
         const ordered = annotations
           .map((directive) => ({ directive, index: lines.indexOf(directive.lines[0] as never) }))
-          .filter(({ index }) => index >= 0)
           .sort((a, b) => a.index - b.index);
         const uid = blockUid(context);
         const items = ordered.map(({ directive }, i) => {

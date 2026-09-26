@@ -1,6 +1,6 @@
 import { AttachedPluginData, type ExpressiveCodeBlock, type ExpressiveCodeLine } from '@expressive-code/core';
 import { type CommentSyntax, commentSyntaxFor } from './comments.ts';
-import { type CodeblocksPlugin, lineData, warn } from './core.ts';
+import { type CodeblocksPlugin, lineData, lineElement, warn } from './core.ts';
 
 export interface DirectiveSpec {
   /** `own`: the directive takes a whole line, and applies to the line below it. */
@@ -281,6 +281,19 @@ const notationData = new AttachedPluginData<{
 export function getDirectives(codeBlock: ExpressiveCodeBlock, name?: string): BlockDirective[] {
   const { directives } = notationData.getOrCreateFor(codeBlock);
   return name === undefined ? directives : directives.filter((directive) => directive.name === name);
+}
+
+/**
+ * The directives named `name` whose line is rendered, for `postprocessRenderedBlock`. Warns about the others:
+ * another plugin, such as Twoslash, removed their line after the notation plugin read them.
+ */
+export function getRenderedDirectives(context: Parameters<typeof warn>[0], name: string): BlockDirective[] {
+  return getDirectives(context.codeBlock, name).filter((directive) => {
+    const [line] = directive.lines;
+    if (!line || lineElement(line)) return !!line;
+    warn(context, `\`[!${name}]\` is dropped: another plugin removed its line.`, directive.sourceLine);
+    return false;
+  });
 }
 
 const markers = { 'code highlight': 'mark', 'code ++': 'ins', 'code --': 'del' } as const;

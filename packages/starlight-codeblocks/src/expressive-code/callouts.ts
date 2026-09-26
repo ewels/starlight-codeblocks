@@ -2,7 +2,7 @@ import { type ExpressiveCodeLine, PluginStyleSettings, type UnresolvedStyleValue
 import { type ElementContent, h, select } from '@expressive-code/core/hast';
 import { type CodeblocksPlugin, insertBefore, lineElement } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
-import { getDirectives } from './notation.ts';
+import { getRenderedDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
 
 export interface CalloutsStyleSettings {
@@ -119,9 +119,9 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
 }`;
     },
     hooks: {
-      postprocessRenderedBlock({ codeBlock, renderData }) {
-        const callouts = getDirectives(codeBlock, 'callout');
-        const code = select('pre > code', renderData.blockAst);
+      postprocessRenderedBlock(context) {
+        const callouts = getRenderedDirectives(context, 'callout');
+        const code = select('pre > code', context.renderData.blockAst);
         if (callouts.length === 0 || !code) return;
         for (const directive of callouts) {
           const line = directive.lines[0] as ExpressiveCodeLine;

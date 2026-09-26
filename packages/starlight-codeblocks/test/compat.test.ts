@@ -93,3 +93,20 @@ test('colours keep their contrast when a theme sets the code background to a CSS
     ).toBeGreaterThanOrEqual(4.5);
   }
 });
+
+test('drops annotations and footnotes whose line another plugin removed, with a warning', async () => {
+  // Twoslash removes lines this way, after the directives are read.
+  const dropLast: ExpressiveCodePlugin = {
+    name: 'drop-last-line',
+    hooks: { preprocessCode: ({ codeBlock }) => void codeBlock.deleteLine(codeBlock.getLines().length - 1) },
+  };
+  const warnings: string[] = [];
+  const ec = new ExpressiveCode({ plugins: [pluginCodeblocks(), dropLast], logger: { warn: (m) => warnings.push(m) } });
+  for (const code of ['a()\nb() // [!annotate] Gone', 'a()\n// [!ref] Gone\nb()', 'a()\n// [!callout] Gone\nb()']) {
+    const { renderedGroupAst } = await ec.render({ code, language: 'js' });
+    expect(select('ol', renderedGroupAst)).toBeUndefined();
+    expect(select('.scb-callout', renderedGroupAst)).toBeUndefined();
+  }
+  expect(warnings).toHaveLength(3);
+  expect(warnings[0]).toContain('another plugin removed its line');
+});

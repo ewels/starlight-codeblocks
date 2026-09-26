@@ -10,7 +10,7 @@ import { addClassName, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { blockUid, type CodeblocksPlugin, lineElement, numberedLines, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
-import { getDirectives } from './notation.ts';
+import { getRenderedDirectives } from './notation.ts';
 import { PREFIX, solidCodeBackground } from './styles.ts';
 
 export interface FootnotesStyleSettings {
@@ -150,7 +150,7 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
     hooks: {
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
-        const refs = getDirectives(codeBlock, 'ref');
+        const refs = getRenderedDirectives(context, 'ref');
         const figure = select('figure', renderData.blockAst);
         const pre = figure && select('pre', figure);
         if (refs.length === 0 || !figure || !pre) return;
@@ -162,7 +162,6 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
         const lines = codeBlock.getLines();
         const ordered = refs
           .map((directive) => ({ directive, index: lines.indexOf(directive.lines[0] as never) }))
-          .filter(({ index }) => index >= 0)
           .sort((a, b) => a.index - b.index);
         const start = codeBlock.metaOptions.getInteger('startLineNumber') ?? 1;
         const uid = blockUid(context);
