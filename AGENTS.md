@@ -13,7 +13,7 @@ The working name in the design pack is `starlight-codeblocks`. The real package 
 ## Stack
 
 - Astro 7, Starlight 0.42 or later, Expressive Code 0.44 or later.
-- Sätteri, the Astro 7 default Markdown processor. Sätteri does not run remark or rehype plugins. Do not add remark or rehype plugins, and do not switch the docs site to `unified()`.
+- Sätteri, the Astro 7 default Markdown processor. Sätteri does not run remark or rehype plugins. The docs site stays on Sätteri: do not add remark or rehype plugins to it, and do not switch it to `unified()`. The package builds its Markdown features as Sätteri plugins first. It also registers the same plugins through a small remark adapter when a site uses `unified()`, so that those sites get the features too (see `design/DECISIONS.md`).
 - Node 22 or later, and a pnpm workspace.
 - TypeScript for all package source. No front-end framework in client code.
 

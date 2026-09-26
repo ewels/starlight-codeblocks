@@ -301,6 +301,7 @@ src/client/shared/                    browser helpers bundled into each module: 
 src/adapters/                         API link adapters, one subpath export each (python, nextflow)
 src/runtimes/                         runtimes for the Run button, one subpath export each (pyodide)
 src/satteri/index.ts                  mdastPlugins(): the Sätteri plugin (duplicate ids, mention links, :::code-switcher)
+src/satteri/remark.ts                 remarkFromSatteri(): runs the same plugin as a remark plugin under unified()
 src/components/                       CodeSteps, Scrollycoding, Step (shipped as source, `starlight-codeblocks/components`)
 test/<name>.test.ts                   unit tests through render()
 docs/e2e/<name>.test.ts               Playwright tests against the docs page
@@ -430,6 +431,7 @@ function codeblocksIntegration(): AstroIntegration {   // src/integration.ts
 - Page-level checks go in the `before(root, ctx)` hook of the plugin in `src/satteri/index.ts`, which walks the whole tree once. `test/mentions.test.ts` shows how to run it with `markdownToHtml` from `satteri` in a unit test.
 - In the docs, `<Example code={x}>…</Example>` renders the Markdown between the tags live, for prose and directives; `scripts/examples.test.mjs` checks that it matches `x`.
 - A plugin object is reused across compiles. Use a factory entry (`(ctx) => plugin`) for per-document state.
+- Sites on Astro's `unified()` processor get the same plugin through `remarkFromSatteri()`, which runs the definition over the remark tree. It supports `before`, `after`, visitors that return a node, and `ctx.parent`, `indexOf`, `replaceNode`, `removeNode` and `setProperty`. If a plugin needs another part of Sätteri's context, add it there, and add a case to `test/remark.test.ts`.
 
 ### MDX components (Q6)
 

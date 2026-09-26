@@ -5,6 +5,7 @@ import { runtimeFileName, runtimeModules } from './expressive-code/runnable.ts';
 import type { ResolvedOptions } from './options.ts';
 import { mdastPlugins } from './satteri/index.ts';
 import { INLINE_CSS_ID, inlineStyles } from './satteri/inline-code.ts';
+import { remarkFromSatteri } from './satteri/remark.ts';
 
 type EmittedFile =
   | { type: 'asset'; fileName: string; source: string }
@@ -34,9 +35,13 @@ export function codeblocksIntegration({ options, ecConfigOverride }: Integration
     name: 'starlight-codeblocks',
     hooks: {
       'astro:config:setup'({ config, updateConfig, logger }) {
-        // The shape `isSatteriProcessor()` checks, without a dependency on @astrojs/markdown-satteri.
-        const processor = config.markdown.processor as { options?: { mdastPlugins?: unknown[] } } | undefined;
-        processor?.options?.mdastPlugins?.push(...mdastPlugins(options, logger));
+        // The shapes `isSatteriProcessor()` and `isUnifiedProcessor()` check, without depending on either package.
+        const processor = config.markdown.processor as
+          | { name?: string; options?: { mdastPlugins?: unknown[]; remarkPlugins?: unknown[] } }
+          | undefined;
+        if (processor?.name === 'unified') {
+          processor.options?.remarkPlugins?.push(remarkFromSatteri(mdastPlugins(options, logger)));
+        } else processor?.options?.mdastPlugins?.push(...mdastPlugins(options, logger));
         const plugins = clientModulePlugins(config.build.assets);
         if (ecConfigOverride) plugins.push(ecConfigPlugin(ecConfigOverride.file));
         if (options.inlineHighlighting) plugins.push(inlineCssPlugin());
