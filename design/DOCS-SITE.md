@@ -72,9 +72,10 @@ Reference
 ## The introduction page
 
 - One paragraph that says what the plugin adds to Starlight code blocks.
-- One live code block that shows focus and an annotation together, like the hero block in the mockups.
+- A feature carousel (`docs/src/components/FeatureCarousel.astro` and `Feature.astro`): one slide for each feature with its name, the first sentence of its page description, one live example that shows only that feature, and a link to its page under the example. Under the slides, a button with an icon for each feature, under a small heading for each sidebar group, in sidebar order. The build fails if a feature in the sidebar has no slide or no icon, or if the slides are out of order.
+- The carousel changes slide every 7 seconds. It has a Pause and Play control, and it pauses while the pointer is over it or focus is in it. Selecting a feature stops the rotation. Under reduced motion it does not rotate or fade. Without JavaScript it shows the first slide, and the buttons are links to the feature pages.
 - The install command in a code switcher (npm, pnpm, Yarn) and the one line of configuration.
-- A short list of the feature groups, each linked to its first page.
+- Links to the Extend and Reference groups.
 
 ## Feature page template
 

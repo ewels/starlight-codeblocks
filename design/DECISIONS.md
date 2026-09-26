@@ -881,3 +881,19 @@ Use this format:
 - Decision: The sidebar groups the features by what authors use them for, in eight groups of two to five pages: Explain code (annotations, footnotes, inline callouts, side-by-side annotations, scrollycoding), Draw attention (focus, line states, code mentions), Show what changed (word-level diff, token transitions), Shorten long code (hidden lines, expandable blocks), Make code easier to read (visible whitespace, colourised brackets, inline code highlighting), Link code (token links, API auto-linking, line permalinks), Adapt to the reader (code switcher, fill-in placeholders) and Copy and run (smart shell copy, open in playground, run in the browser). Comment notation is syntax that many features read, so it moves to "Start here". Page URLs do not change. The README, `llms.txt`, the accessibility page and the home page use the same groups in the same order.
 - Reason: The user found the groups by where a feature works ("Inside the code block", "Across the page", "More") not useful. The user put scrollycoding in "Explain code", next to side-by-side annotations, because a walkthrough explains code.
 - Alternatives: A "Walk through code" group, which had only scrollycoding. A "Connect prose and code" group for code mentions and scrollycoding (the first version of this change).
+
+## Feature carousel on the home page
+
+- Date: 2026-09-26
+- Step: after the plan (docs structure)
+- Decision: The home page has a carousel in place of the hero block and the list of groups. Each `<Feature page="…">` slide is live MDX, so features that need prose or components (code mentions, inline code, the code switcher, `<CodeSteps>`, `<Scrollycoding>`) work as on their pages. The slides share one grid cell, so the carousel keeps the height of the tallest slide and the buttons under it do not move when the slide changes. Scrollycoding and side-by-side annotations are `tall`: they are out of the layout while they are not the current slide, because their height (about 1,000 px for scrollycoding, and the notes list under the block on phones) would leave most other slides empty. The rotation follows the WAI carousel pattern: a Pause and Play control, pause on hover and on focus (but not on focus of the control itself), rotation off under reduced motion, and a polite live region that says the feature name only when the reader selects a slide. Selecting a feature stops the rotation, because the reader has chosen what to read. The button grid comes from `docs/src/sidebar.mjs`. The Markdown version of the page lists the features in their groups.
+- Reason: The user asked for a carousel with one example at a time, a button with an icon for each feature, grouped as in the sidebar, and a link to the feature page under the example.
+- Alternatives: A slide area that takes the height of each slide (the buttons move under the pointer after a click). An inner scroll box for scrollycoding (its steps activate in the middle of the window, so they would not activate reliably in a box).
+
+## Lucide icons for the home page, axe for its test
+
+- Date: 2026-09-26
+- Step: after the plan (docs structure)
+- Decision: The feature buttons use icons from `lucide-static` (ISC licence), a dev dependency of the docs site only. The component imports the SVG strings at build time and puts them inline with `aria-hidden`, so the page loads no icon library. `@axe-core/playwright` (MPL-2.0, dev dependency of the docs site) checks the home page in the e2e tests, with Expressive Code's `landmark-unique` rule off (an upstream issue) and contrast results allowed only on faded lines.
+- Reason: Starlight's built-in icon set has no suitable icon for most of the 24 features. Lucide has one for each, in one consistent style.
+- Alternatives: Tabler icons (also suitable; MIT). Copying the SVG paths into the repository, which would need the licence text next to them.

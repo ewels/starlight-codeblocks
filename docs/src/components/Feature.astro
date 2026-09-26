@@ -1,0 +1,72 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+import { getEntry } from 'astro:content';
+
+interface Props {
+  /** The id of the feature page, such as `features/focus`. */
+  page: string;
+  /** Takes the height the example needs, instead of the shared height of the other slides. */
+  tall?: boolean;
+}
+
+const { page, tall = false } = Astro.props;
+const entry = await getEntry('docs', page);
+if (!entry) throw new Error(`<Feature> names a missing page: ${page}`);
+const { title, description = '' } = entry.data;
+const summary = description.match(/^.*?\.(?=\s|$)/)?.[0] ?? description;
+const href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${page}/`;
+---
+
+<section class:list={['slide', { tall }]} data-feature={page} aria-roledescription="slide" aria-label={title}>
+  <h3>{title}</h3>
+  <p class="summary">{summary}</p>
+  <div class="body"><slot /></div>
+  <p class="more">
+    <a href={href}>Read the {title} <span class="last">documentation<Icon name="right-arrow" /></span></a>
+  </p>
+</section>
+
+<style>
+  .slide {
+    display: flex;
+    flex-direction: column;
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+  .slide:global([data-current]) {
+    transition: opacity 0.3s;
+  }
+  .slide > :global(* + *) {
+    margin-top: 1rem;
+  }
+  h3 {
+    margin: 0;
+    font-size: var(--sl-text-h3);
+  }
+  .summary {
+    margin-top: 0.25rem;
+    color: var(--sl-color-gray-2);
+  }
+  .body {
+    flex: 1;
+  }
+  .body > :global(* + *) {
+    margin-top: 1rem;
+  }
+  .more a {
+    font-weight: 600;
+  }
+  .last {
+    white-space: nowrap;
+  }
+  .more :global(svg) {
+    display: inline;
+    margin-inline-start: 0.25rem;
+    vertical-align: -0.125em;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .slide:global([data-current]) {
+      transition: none;
+    }
+  }
+</style>

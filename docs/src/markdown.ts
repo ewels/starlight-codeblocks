@@ -44,7 +44,9 @@ function fenced(code: string, info: string) {
 
 const absoluteLinks = (text: string) => text.replaceAll(`](${base}/`, `](${siteUrl}`);
 const cell = (text: string) => text.replaceAll('|', '\\|').replaceAll('\n', ' ');
-const titles = new Map((await getCollection('docs')).map((entry) => [entry.id, entry.data.title]));
+const docs = await getCollection('docs');
+const titles = new Map(docs.map((entry) => [entry.id, entry.data.title]));
+const descriptions = new Map(docs.map((entry) => [entry.id, entry.data.description ?? '']));
 const featureLink = (page: string) => `[${titles.get(page) ?? page}](${pageUrl(page)})`;
 const facts = (list: [string, string][]) => list.map(([term, value]) => `- ${term}: ${value}`).join('\n');
 const heading = (level: number, labels: string[]) => `${'#'.repeat(level)} ${labels.map((l) => `\`${l}\``).join(', ')}`;
@@ -127,6 +129,20 @@ const component: Record<string, (props: Record<string, string>, id: string) => s
   },
 };
 
+/** The home page carousel as a list of the features in each sidebar group. */
+function featureList() {
+  return sidebar
+    .map(({ label, items }) => ({
+      label,
+      ids: items.filter((item): item is string => typeof item === 'string' && item.startsWith('features/')),
+    }))
+    .filter(({ ids }) => ids.length > 0)
+    .map(({ label, ids }) =>
+      [`### ${label}`, ids.map((id) => `- ${featureLink(id)}: ${descriptions.get(id)}`).join('\n')].join('\n\n'),
+    )
+    .join('\n\n');
+}
+
 const attrs = (text: string) =>
   Object.fromEntries([...text.matchAll(/(\w+)=(?:"([^"]*)"|\{(\w+)\})/g)].map(([, k, s, e]) => [k, s ?? e ?? '']));
 
@@ -186,6 +202,10 @@ export function pageMarkdown(entry: Entry) {
       out.push(fenced(code.trim(), 'md'));
       if (!selfClosing)
         while (lines[++i]?.trim() !== '</Example>') if (i >= lines.length) throw new Error('Unclosed <Example>');
+    } else if (name === 'FeatureCarousel') {
+      out.push(featureList());
+      while (lines[++i]?.trim() !== '</FeatureCarousel>')
+        if (i >= lines.length) throw new Error('Unclosed <FeatureCarousel>');
     } else if (name === 'Code') {
       out.push(fenced(raw[props.code ?? ''] ?? '', `${props.lang} title="${props.title}"`));
     } else if (name === 'TabItem') {

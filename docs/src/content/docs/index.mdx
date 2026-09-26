@@ -14,24 +14,380 @@ hero:
       variant: minimal
 ---
 
+import { CodeSteps, Scrollycoding, Step } from 'starlight-codeblocks/components';
+import Feature from '../../components/Feature.astro';
+import FeatureCarousel from '../../components/FeatureCarousel.astro';
+
 Starlight renders every code block with Expressive Code. The plugin adds 24 features to those code blocks, such as focus, line states, annotations, links to API docs and runnable examples. Each feature starts when a code block uses its attribute or its directive, so existing pages do not change.
 
-This block uses two features together. The fence line focuses line 9, and a directive in the comment adds an annotation. Hover over the block, or move keyboard focus into it, to see every line sharp. Select the number to read the note.
+## Features
 
-```js title="astro.config.mjs" focus={9} apiLinks=false
-import { defineConfig } from 'astro/config';
-import starlight from '@astrojs/starlight';
-import codeblocks from 'starlight-codeblocks';
+Select a feature to see its example. Until you select one, the example changes every 7 seconds. Hover over the example, or move keyboard focus into it, to stop the change while you read.
+
+<FeatureCarousel>
+
+<Feature page="features/comment-notation">
+
+```ts title="config.ts" wordDiff=false
+export const config = {
+  port: 3000, // [!code --]
+  port: Number(process.env.PORT ?? 3000), // [!code ++]
+  host: 'localhost', // [!code highlight]
+};
+```
+
+</Feature>
+
+<Feature page="features/annotations">
+
+```yaml title=".github/workflows/test.yml"
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v6  # [!annotate] Installs `uv` and caches its downloads between runs.
+      - run: uv run pytest
+```
+
+</Feature>
+
+<Feature page="features/footnotes">
+
+```py title="app.py" apiLinks=false
+from flask import Flask
+
+# [!ref] Creates the application object.
+app = Flask(__name__)
+
+# [!ref] Runs this function for `GET /health`.
+@app.get("/health")
+def health():
+    return {"ok": True}
+```
+
+</Feature>
+
+<Feature page="features/inline-callouts">
+
+```js
+const controller = new AbortController();
+// [!callout /signal/] Lets `controller.abort()` cancel the request.
+const res = await fetch(url, { signal: controller.signal });
+const data = await res.json();
+```
+
+</Feature>
+
+<Feature page="features/side-by-side-annotations" tall>
+
+```py title="report.py" annotations="side" apiLinks=false
+import csv
+from collections import Counter
+
+
+def read_rows(path):
+    with path.open() as fh:  # [!annotate] Opens the file and closes it when the block ends.
+        return list(csv.DictReader(fh))  # [!annotate] Each row becomes a dict keyed by the header line.
+
+
+def summarise(rows, key):
+    return Counter(r[key] for r in rows)  # [!annotate] Counts the rows for each value in the column `key`.
+```
+
+</Feature>
+
+<Feature page="features/scrollycoding" tall>
+
+<Scrollycoding>
+
+```js title="server.js"
+import express from 'express';
+
+const app = express();
+app.use(express.json());
+
+app.listen(3000);
+```
+
+<Step focus="1">Import Express. Nothing else is needed for a small server.</Step>
+<Step focus="3-4">Create the app object, and parse JSON request bodies.</Step>
+<Step focus="6">Start listening on port 3000.</Step>
+
+</Scrollycoding>
+
+</Feature>
+
+<Feature page="features/focus">
+
+```js title="src/config.js" focus={4-7}
+import { defineConfig } from './lib.js';
 
 export default defineConfig({
-  integrations: [
-    starlight({
-      title: 'My docs',
-      plugins: [codeblocks()], // [!annotate] One line turns on every feature. A feature changes a block only when the block uses it.
-    }),
-  ],
+  cache: {
+    dir: '.cache',
+    maxAge: 3600,
+  },
+  retries: 2,
+  verbose: false,
 });
 ```
+
+</Feature>
+
+<Feature page="features/line-states">
+
+```py title="loop.py" info={1} apiLinks=false
+import sys
+
+for name in sys.argv[1:]  # [!code error] SyntaxError: expected ':'
+    print(name)
+
+count = len(sys.argv)  # [!code warning] Includes the script name
+```
+
+</Feature>
+
+<Feature page="features/code-mentions">
+
+The [base case](#mention:base) stops the recursion. The [recursive step](#mention:step) calls the function again with a smaller number.
+
+```py title="factorial.py"
+def factorial(n):
+    if n == 0:  # [!mention base]
+        return 1  # [!mention base]
+    return n * factorial(n - 1)  # [!mention step]
+```
+
+</Feature>
+
+<Feature page="features/word-level-diff">
+
+```diff lang="js"
+-const timeout = 5000;
++const timeout = options.timeout ?? 5000;
+const client = createClient({
+-  retries: 3,
++  retries: options.retries,
+});
+```
+
+</Feature>
+
+<Feature page="features/token-transitions">
+
+<CodeSteps>
+
+```js title="server.js" step="Create the app"
+const app = express();
+
+app.listen(3000);
+```
+
+```js title="server.js" step="Parse JSON bodies"
+const app = express();
+app.use(express.json());
+
+app.listen(3000);
+```
+
+```js title="server.js" step="Add a health route"
+const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ ok: true });
+});
+
+app.listen(3000);
+```
+
+</CodeSteps>
+
+</Feature>
+
+<Feature page="features/hidden-lines">
+
+```py title="summary.py" hidden={1-3,6-7} apiLinks=false
+import json
+from pathlib import Path
+
+config = json.loads(Path("config.json").read_text())
+for key, value in config.items():
+    if key.startswith("_"):
+        continue
+    print(f"{key} = {value}")
+```
+
+</Feature>
+
+<Feature page="features/expandable-blocks">
+
+```py title="report.py" expandable={8} apiLinks=false
+import csv
+import sys
+from collections import Counter
+from pathlib import Path
+
+
+def read_rows(path: Path) -> list[dict]:
+    with path.open() as fh:
+        return list(csv.DictReader(fh))
+
+
+def summarise(rows: list[dict]) -> Counter:
+    return Counter(row["status"] for row in rows)
+
+
+def main() -> None:
+    rows = read_rows(Path(sys.argv[1]))
+    counts = summarise(rows)
+    for status, n in counts.most_common():
+        print(f"{status:<10} {n:>5}")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+</Feature>
+
+<Feature page="features/visible-whitespace">
+
+```make title="Makefile" whitespace
+build:
+	cargo build --release
+
+test:
+    cargo test  # Recipes must start with a tab
+```
+
+</Feature>
+
+<Feature page="features/colourised-brackets">
+
+```js brackets
+const title = document.title;
+const slug = encodeURIComponent(kebabCase(trim(title.toLowerCase())));
+```
+
+</Feature>
+
+<Feature page="features/inline-code-highlighting">
+
+Call `await fetch(url){:js}` and check `res.ok{:js}` before you read the body.
+
+</Feature>
+
+<Feature page="features/token-links">
+
+```py apiLinks=false
+import numpy as np
+
+# [!link /linspace/ https://numpy.org/doc/stable/reference/generated/numpy.linspace.html]
+x = np.linspace(0, 1, 50)
+y = np.sin(2 * np.pi * x)
+```
+
+</Feature>
+
+<Feature page="features/api-auto-linking">
+
+```py title="report.py"
+import json
+from pathlib import Path
+
+run = json.loads(Path("run.json").read_text())
+print(run["status"])
+```
+
+</Feature>
+
+<Feature page="features/line-permalinks">
+
+```yaml title="config.yml" id="cfg"
+server:
+  host: 0.0.0.0
+  port: 8080
+cache:
+  dir: .cache
+  max_age: 3600
+logging:
+  level: info
+```
+
+</Feature>
+
+<Feature page="features/code-switcher">
+
+:::code-switcher{sync="lang"}
+```py apiLinks=false
+import json
+
+with open("config.json") as fh:
+    config = json.load(fh)
+```
+```js
+import { readFile } from 'node:fs/promises';
+
+const config = JSON.parse(await readFile('config.json', 'utf8'));
+```
+:::
+
+</Feature>
+
+<Feature page="features/fill-in-placeholders">
+
+```sh placeholder="YOUR_TOKEN,WORKSPACE_ID"
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  https://api.example.com/workspaces/WORKSPACE_ID/runs
+```
+
+</Feature>
+
+<Feature page="features/smart-shell-copy">
+
+```sh frame="terminal"
+$ uv tool install ruff
+Resolved 1 package in 180ms
+Installed 1 executable: ruff
+$ ruff check src/ \
+    --fix
+Found 3 errors (3 fixed, 0 remaining).
+```
+
+</Feature>
+
+<Feature page="features/open-in-playground">
+
+```ts playground="typescript"
+type Status = 'queued' | 'running' | 'done';
+
+function label(s: Status): string {
+  return s === 'done' ? 'Finished' : s;
+}
+
+console.log(label('done'));
+```
+
+</Feature>
+
+<Feature page="features/run-in-the-browser">
+
+```js runnable
+const sizes = [3, 1, 4, 1, 5];
+const total = sizes.reduce((sum, size) => sum + size, 0);
+console.log('Total:', total);
+console.error('Sizes of 1 are deprecated.');
+```
+
+</Feature>
+
+</FeatureCarousel>
 
 ## Install
 
@@ -49,19 +405,27 @@ yarn add starlight-codeblocks
 ```
 :::
 
-Then add `codeblocks()` to the Starlight plugins in `astro.config.mjs`, as in the block above. The [getting started](/starlight-codeblocks/getting-started/) page has the full steps.
+Then add `codeblocks()` to the Starlight plugins in `astro.config.mjs`:
 
-## Features
+```js title="astro.config.mjs" ins={9}
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
+import codeblocks from 'starlight-codeblocks';
 
-- [Comment notation](/starlight-codeblocks/features/comment-notation/): the directives in code comments that many features read.
-- [Explain code](/starlight-codeblocks/features/annotations/): annotations, footnotes, inline callouts, notes beside the code and code that follows the prose as readers scroll.
-- [Draw attention](/starlight-codeblocks/features/focus/): focus, line states and links from the prose to lines.
-- [Show what changed](/starlight-codeblocks/features/word-level-diff/): changed words in diffs, and code that changes in steps.
-- [Shorten long code](/starlight-codeblocks/features/hidden-lines/): hidden lines and blocks that expand.
-- [Make code easier to read](/starlight-codeblocks/features/visible-whitespace/): visible whitespace, bracket pair colours and syntax colours for inline code.
-- [Link code](/starlight-codeblocks/features/token-links/): links on tokens, links to API docs and links to lines.
-- [Adapt to the reader](/starlight-codeblocks/features/code-switcher/): variants of a block, and fields that readers fill in.
-- [Copy and run](/starlight-codeblocks/features/smart-shell-copy/): copy without prompts, playground buttons and code that runs in the browser.
+export default defineConfig({
+  integrations: [
+    starlight({
+      title: 'My docs',
+      plugins: [codeblocks()],
+    }),
+  ],
+});
+```
+
+The [getting started](/starlight-codeblocks/getting-started/) page has the full steps.
+
+## Extend and reference
+
 - [Extend](/starlight-codeblocks/extend/write-an-api-link-adapter/): your own API link adapters, playgrounds and runtimes.
 - [Reference](/starlight-codeblocks/reference/options/): every option, attribute, directive and style setting.
 
