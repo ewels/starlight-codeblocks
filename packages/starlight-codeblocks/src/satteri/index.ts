@@ -97,6 +97,7 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
       before(root, ctx) {
         const codes: Code[] = [];
         const events: Event[] = [];
+        const malformed: Link[] = [];
         let section = 0;
         walk(root as Nodes, (node) => {
           if (node.type === 'heading') section++;
@@ -105,9 +106,19 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
             events.push({ section, names: new Set([...node.value.matchAll(TAG)].map((m) => m[1] as string)) });
           }
           if (node.type === 'link' && node.url.startsWith(MENTION)) {
-            events.push({ section, link: node, name: decodeURIComponent(node.url.slice(MENTION.length)) });
+            try {
+              events.push({ section, link: node, name: decodeURIComponent(node.url.slice(MENTION.length)) });
+            } catch {
+              malformed.push(node);
+            }
           }
         });
+        for (const link of malformed) {
+          logger.warn(
+            `${fileName(fileURL)}: the link to \`${link.url}\` has a malformed % escape. It shows as plain text.`,
+          );
+          ctx.replaceNode(link, [...link.children]);
+        }
         if (options.permalinks) checkIds(codes, fileName(fileURL), logger);
         if (options.mentions) checkMentions(events, ctx, fileName(fileURL), logger);
       },

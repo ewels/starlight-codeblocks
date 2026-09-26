@@ -74,3 +74,9 @@ test('leaves mention links alone with the feature off', async () => {
   expect(html).toContain('href="#mention:z"');
   expect(warnings).toEqual([]);
 });
+
+test('warns about a mention link with a malformed escape, and leaves it as plain text', async () => {
+  const { html, warnings } = await page(`${code('a')}\n\nSee [bad](#mention:a%E0%A4%A).`);
+  expect(warnings).toEqual([expect.stringMatching(/page\.md: .*#mention:a%E0%A4%A.*malformed/)]);
+  expect(html).not.toContain('href="#mention:');
+});
