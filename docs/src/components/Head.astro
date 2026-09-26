@@ -1,0 +1,11 @@
+---
+import Default from '@astrojs/starlight/components/Head.astro';
+import { getCollection } from 'astro:content';
+import { pageUrl } from '../markdown.ts';
+
+const ids = new Set((await getCollection('docs')).map((entry) => entry.id));
+const id = Astro.locals.starlightRoute.entry.id || 'index';
+---
+
+<Default><slot /></Default>
+{ids.has(id) && <link rel="alternate" type="text/markdown" href={pageUrl(id, true)} />}
