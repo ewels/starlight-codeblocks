@@ -16,6 +16,19 @@ The plan is complete. No step is blocked.
 - **Share cards:** a 1200 × 630 px `og:image` for each page, made at build time with `astro-og-canvas`, with `og:image` and `twitter:image` tags.
 - **Final review** in three passes: gates, code, spec, docs, visual, accessibility and print.
 
+### Compatibility
+
+Tested against 49 Starlight and Expressive Code plugins in a scratch site (not in the repo). Every breakage found is fixed or documented:
+
+- **Markdown processors.** Sätteri is the primary path; under Astro's `unified()` the same Sätteri plugin runs through a small remark adapter, so the code switcher, `{:lang}`, mentions and the duplicate id check work there too (checked with starlight-markdown-blocks).
+- **Other plugins' Expressive Code hooks.** Lines are found through a per-line element map (collapsible sections, Twoslash); `ec.config.mjs` plugin lists load the client modules.
+- **Copies of blocks** (full screen plugins): every client feature works in a `cloneNode` copy, including bracket and note highlights, API cards, fields, code switcher menus and `<CodeSteps>` buttons.
+- **HTML readers.** Every decoration has the class `scb-deco` and `data-pagefind-ignore`; `starlight-llms-txt` needs one selector; placeholder text is in the static HTML.
+- **Links validator.** `linksValidatorExclude` export.
+- **MDX-parsing plugins** (starlight-versions, starlight-md-txt): the `{:lang}` suffix also works inside the backticks, as in rehype-pretty-code.
+- **Docs:** the guide "Use with other plugins" (tested list, plugin order, recipes for links validator, llms.txt, page actions, versions, Markdoc, `unified()`).
+- **Upstream drafts** (not filed) for six other plugins are in the session scratchpad (`compat/UPSTREAM.md`), not in the repo.
+
 ### Blocked
 
 Nothing.
@@ -109,3 +122,4 @@ Update this file after each step in `PLAN.md`. Use one of these states: not star
 | 12.5 Final review | done | Three review passes (gates, code, spec, docs, visual, accessibility, print), all findings fixed. Code: `Object.hasOwn` for name lookups; `javascript:` link URLs refused, parsed as a browser does; directives inside strings left alone, and found after a Rust lifetime or Lisp quote; deterministic ids; Scrollycoding copies get their own ids; no duplicate listeners after client navigation; word diff capped at 1,000,000 cells. Docs: claims that did not match the code, options as sections, an overflow test on every page at every width, the print note on the token transitions page. Accessibility and visual: syntax colours kept at 4.5:1 on plugin tints (tested against the default themes), focus rings, footnote focus and names, 24 px targets, block names from titles, forced colours, side-by-side examples that fit at every desktop width, whitespace glyphs on the midline. Print: controls off paper, fields as text, focus sharp at 60%, every step of scrollycoding and token transitions. Extra tests for every "minor untested" spec item. README media regenerated. Left upstream: Expressive Code `landmark-unique`. |
 | 12.6 Return to any blocked steps | done | No step was blocked. |
 | Compatibility with other plugins, part 1 | done | Fixes from testing 49 Starlight and Expressive Code plugins. Client modules load when `ec.config.mjs` has `plugins` (the package is found from a site bundle). Features find lines through a per-line element map, so they work after `@expressive-code/plugin-collapsible-sections` and similar plugins. Colours keep their contrast when a theme sets `codeBackground` to a CSS variable (starlight-theme-black, starlight-theme-galaxy). The `expressiveCode: false` error names plugins listed earlier, such as starlight-theme-nova. Directives whose line another plugin removed (Twoslash) are dropped with a warning, with no empty lists. Hidden lines, expandable blocks, Run, annotations and permalinks work in copies of a block (full screen plugins), and the title bar controls leave room for starlight-codeblock-fullscreen's button. Tests in `test/compat.test.ts` and `docs/e2e/compat.test.ts`. |
+| Compatibility with other plugins, part 2 | done | Remark adapter for `unified()` (`src/satteri/remark.ts`, `test/remark.test.ts` through Astro's own Markdown processor). `linksValidatorExclude` export; the docs site uses it. One decoration marker (`scb-deco`, `data-pagefind-ignore`) from one list in `core.ts`, checked by `test/decorations.test.ts` and in the docs build's Pagefind index; placeholder text copy in the static HTML. Bracket and note highlights, API cards, fields, code switcher menus and `<CodeSteps>` work in copies of a block (`docs/e2e/compat.test.ts`). `{:lang}` inside the backticks. Guide "Use with other plugins". AGENTS.md limits the no-remark rule to the docs site. Checked on the scratch site with `UNIFIED=1` + starlight-markdown-blocks, starlight-links-validator, starlight-llms-txt, starlight-md-txt and starlight-codeblock-fullscreen. |
