@@ -93,6 +93,8 @@ function changedRanges(tokens: string[], keep: boolean[]): Array<[start: number,
   return ranges;
 }
 
+const MAX_CELLS = 1_000_000;
+
 export interface WordDiffResult {
   a: Array<[start: number, end: number]>;
   b: Array<[start: number, end: number]>;
@@ -100,11 +102,13 @@ export interface WordDiffResult {
 
 /**
  * Compares a removed line and an added line token by token. Returns the changed ranges of each line,
- * or `null` when the lines are too different (SPEC 6.9: less than `minSimilarity` similar).
+ * or `null` when the lines are too different (less than `minSimilarity` similar) or too long to compare.
  */
 export function wordDiff(a: string, b: string, minSimilarity: number): WordDiffResult | null {
   const tokensA = splitTokens(a);
   const tokensB = splitTokens(b);
+  // The table has one cell for each pair of tokens.
+  if (tokensA.length * tokensB.length > MAX_CELLS) return null;
   const [keepA, keepB] = diffMask(tokensA, tokensB);
   const matched = tokensA.reduce((sum, token, i) => sum + (keepA[i] ? token.length : 0), 0);
   const similarity = a.length + b.length === 0 ? 1 : (2 * matched) / (a.length + b.length);

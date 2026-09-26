@@ -86,3 +86,9 @@ test('every word-diff colour meets 3:1 contrast on the code background', async (
     }
   }
 });
+
+test('wordDiff returns null for a pair too long to compare', () => {
+  const line = 'a '.repeat(600);
+  expect(wordDiff(line, `${line}b`, 0.4)).toBeNull();
+  expect(wordDiff('a '.repeat(200), `${'a '.repeat(200)}b`, 0.4)).not.toBeNull();
+});

@@ -97,6 +97,7 @@ export const different = `
 
 - Pairing is by position. The first removed line pairs with the first added line, the second with the second, and each later pair the same way. A block that adds or removes a different number of lines can pair the wrong lines.
 - The comparison works on the visible text of the line. It does not parse the language, so it cannot tell that `total` and `sum` are the same value with a new name.
+- The plugin does not compare a long pair of lines, such as two lines of minified code. If the number of tokens in the removed line multiplied by the number in the added line is more than 1,000,000, the whole-line tints stay.
 
 ## Related
 
