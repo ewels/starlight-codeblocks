@@ -97,3 +97,15 @@ test('does not treat Object.prototype names as directives or comment syntaxes', 
   expect(warnings.join('\n')).toContain('is not a known directive');
   expect((await render(block('constructor', 'a() // [!code focus]'))).html).toContain('[!code focus]');
 });
+
+test('leaves directives inside a string literal alone', async () => {
+  const lines = [
+    'const s = "// [!code focus]"',
+    "const t = 'a' // [!code highlight]",
+    "fn f(x: &'a str) {} // [!code ++]",
+  ];
+  const { html, copyText } = await render(block('js', ...lines));
+  expect(copyText).toBe(['const s = "// [!code focus]"', "const t = 'a'", "fn f(x: &'a str) {}"].join('\n'));
+  expect(html).not.toContain('scb-focus');
+  expect((await render(block('sh', 'echo "# [!code focus]"'))).copyText).toBe('echo "# [!code focus]"');
+});

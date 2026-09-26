@@ -130,7 +130,7 @@ const port = 8080; // [\\!code highlight]
 ## Limitations
 
 - JSON has no comments, so a `json` block cannot use directives. Use `jsonc`, or use attributes.
-- The plugin finds the comment by its opener. A directive inside a string that contains the opener, such as `"// [!code ++]"`, counts as a directive. Escape it with a backslash.
+- The plugin skips a comment opener inside a string that opens and closes on the same line, such as `"// [!code ++]"`. A string that continues on the next line, such as a template literal, is not skipped. Escape a directive in it with a backslash.
 - One comment on each line can hold directives.
 - MDX comments in `mdx` blocks, such as `{/* */}`, are not in the built-in map. Add them with `notation.comments`.
 
