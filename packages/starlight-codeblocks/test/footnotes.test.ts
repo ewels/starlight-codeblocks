@@ -7,15 +7,15 @@ import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
 
-test('turns [!ref] into a badge on the next line and an item in the list', async () => {
+test('turns [!ref] into a badge on the next line, described by an item in the list', async () => {
   const { html, copyText, warnings } = await render(block('py', 'import os', '# [!ref] Creates `app`.', 'app = 1'));
   const badge = html.match(
-    /<a class="scb-footnote-badge" href="#([\w-]+)" id="([\w-]+)" aria-label="Footnote 1" data-scb-fn="1">1<\/a><\/div><\/div><\/code><\/pre>/,
+    /<a class="scb-footnote-badge" href="#([\w-]+)" id="([\w-]+)" aria-label="Footnote 1" aria-describedby="\1-text" data-scb-fn="1">1<\/a><\/div><\/div><\/code><\/pre>/,
   );
   expect(badge).toBeTruthy();
   const [, note, ref] = badge as RegExpMatchArray;
   expect(html).toContain(
-    `<ol class="scb-footnotes"><li id="${note}" data-scb-fn="1"><a class="scb-footnote-num" href="#${ref}" aria-label="Footnote 1, for line 2">1.</a><span>Creates <code>app</code>.</span></li></ol>`,
+    `<ol class="scb-footnotes"><li id="${note}" tabindex="-1" data-scb-fn="1"><a class="scb-footnote-num" href="#${ref}" aria-label="Footnote 1, for line 2">1.</a><span id="${note}-text">Creates <code>app</code>.</span></li></ol>`,
   );
   expect(html).toContain('data-scb-footnotes=""');
   expect(html).not.toContain('[!ref]');

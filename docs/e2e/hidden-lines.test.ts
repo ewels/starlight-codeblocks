@@ -40,6 +40,8 @@ test('the title bar button shows every run at once', async ({ page }) => {
   const block = example(page);
   const toggle = block.locator('.scb-hidden-toggle');
   await expect(toggle).toHaveText('Show 5 hidden lines');
+  await expect(toggle).not.toHaveAttribute('aria-pressed');
+  await expect(block.locator('figure')).toHaveAccessibleName('summary.py');
   await toggle.click();
   await expect(toggle).toHaveText('Hide 5 lines');
   const hidden = block.locator('.scb-hidden-line');

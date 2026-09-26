@@ -53,6 +53,11 @@ test('focusing a note with the keyboard highlights its line', async ({ page }) =
   await expect(block.locator('.ec-line[data-scb-anno="1"]')).toHaveClass(/scb-annotation-lit/);
   await page.keyboard.press('Tab');
   await expect(block.locator('.ec-line[data-scb-anno="2"]')).toHaveClass(/scb-annotation-lit/);
+  const outline = await block
+    .locator('.scb-annotation-notes li')
+    .nth(1)
+    .evaluate((el) => getComputedStyle(el).outlineStyle);
+  expect(outline).toBe('solid');
   await expect(block.locator('.ec-line[data-scb-anno="1"]')).not.toHaveClass(/scb-annotation-lit/);
 });
 

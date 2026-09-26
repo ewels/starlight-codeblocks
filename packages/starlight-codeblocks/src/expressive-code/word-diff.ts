@@ -7,7 +7,7 @@ import {
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { h } from '@expressive-code/core/hast';
-import type { CodeblocksPlugin } from './core.ts';
+import { type CodeblocksPlugin, ensureTextContrast } from './core.ts';
 import { PREFIX } from './styles.ts';
 
 export interface WordDiffStyleSettings {
@@ -28,11 +28,10 @@ const styleSettings = new PluginStyleSettings({
     codeblocksWordDiff: {
       ins: ['#5fcd78', '#1f7a3d'],
       del: ['#ff6464', '#c62828'],
-      // Dark themes have room for a lighter, more translucent tint; light themes need more opacity for 3:1 contrast.
       insBackground: ({ resolveSetting, theme }) =>
-        setAlpha(resolveSetting('codeblocksWordDiff.ins'), theme.type === 'dark' ? 0.6 : 0.75),
+        setAlpha(resolveSetting('codeblocksWordDiff.ins'), theme.type === 'dark' ? 0.36 : 0.3),
       delBackground: ({ resolveSetting, theme }) =>
-        setAlpha(resolveSetting('codeblocksWordDiff.del'), theme.type === 'dark' ? 0.7 : 0.75),
+        setAlpha(resolveSetting('codeblocksWordDiff.del'), theme.type === 'dark' ? 0.4 : 0.3),
     },
   },
 });
@@ -118,7 +117,7 @@ export function wordDiff(a: string, b: string, minSimilarity: number): WordDiffR
 
 class ChangedTokenAnnotation extends ExpressiveCodeAnnotation {
   constructor(
-    private readonly type: 'ins' | 'del',
+    readonly type: 'ins' | 'del',
     inlineRange: { columnStart: number; columnEnd: number },
   ) {
     super({ inlineRange });
@@ -148,8 +147,27 @@ export function pluginWordDiff({ minSimilarity = 0.4 }: { minSimilarity?: number
 .${PREFIX}-worddiff-ins { background: ${cssVar('codeblocksWordDiff.insBackground')}; border-radius: 2px; text-decoration: underline 1px; text-underline-offset: 0.2em; }
 .${PREFIX}-worddiff-del { background: ${cssVar('codeblocksWordDiff.delBackground')}; border-radius: 2px; text-decoration: line-through 1px; }`,
     hooks: {
+      postprocessAnnotations(context) {
+        for (const line of context.codeBlock.getLines()) {
+          for (const annotation of line.getAnnotations()) {
+            if (!(annotation instanceof ChangedTokenAnnotation) || !annotation.inlineRange) continue;
+            const { type } = annotation;
+            ensureTextContrast(
+              context,
+              line,
+              (v) => [
+                v.resolvedStyleSettings.get(`textMarkers.${type}Background`),
+                v.resolvedStyleSettings.get(`codeblocksWordDiff.${type}Background`),
+              ],
+              annotation.inlineRange,
+            );
+          }
+        }
+      },
       // Runs after the text-markers plugin has annotated diff-syntax, `ins`/`del` and `[!code ++/--]` lines.
       annotateCode({ codeBlock }) {
+        const mark = (line: ExpressiveCodeLine, type: 'ins' | 'del', [columnStart, columnEnd]: [number, number]) =>
+          line.addAnnotation(new ChangedTokenAnnotation(type, { columnStart, columnEnd }));
         if (codeBlock.metaOptions.getBoolean('wordDiff') === false) return;
         const lines = codeBlock.getLines();
         let i = 0;
@@ -173,12 +191,8 @@ export function pluginWordDiff({ minSimilarity = 0.4 }: { minSimilarity?: number
             const add = ins[pair] as ExpressiveCodeLine;
             const diff = wordDiff(del.text, add.text, minSimilarity);
             if (!diff) continue;
-            for (const [start, end] of diff.a) {
-              del.addAnnotation(new ChangedTokenAnnotation('del', { columnStart: start, columnEnd: end }));
-            }
-            for (const [start, end] of diff.b) {
-              add.addAnnotation(new ChangedTokenAnnotation('ins', { columnStart: start, columnEnd: end }));
-            }
+            for (const range of diff.a) mark(del, 'del', range);
+            for (const range of diff.b) mark(add, 'ins', range);
           }
         }
       },

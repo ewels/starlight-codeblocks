@@ -7,6 +7,7 @@ import {
   ExpressiveCodeAnnotation,
   type ExpressiveCodeHookContextBase,
   PluginStyleSettings,
+  setAlpha,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
@@ -36,8 +37,8 @@ const styleSettings = new PluginStyleSettings({
     codeblocksApiLinks: {
       underline: ['#7f8aa0', '#7d8696'],
       hoverUnderline: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),
-      hoverBackground: ({ resolveSetting }) =>
-        `color-mix(in srgb, ${resolveSetting('codeblocks.accent')} 12%, transparent)`,
+      hoverBackground: ({ resolveSetting, theme }) =>
+        setAlpha(resolveSetting('codeblocks.accent'), theme.type === 'dark' ? 0.1 : 0.12),
     },
   },
 });

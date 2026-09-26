@@ -104,3 +104,10 @@ test('without JavaScript, every step shows as its own block, with its label', as
   await expect(current(page).first().getByRole('button', { name: 'Next' })).toBeHidden();
   await context.close();
 });
+
+test('the current step differs from the others in forced colours', async ({ page }) => {
+  await page.emulateMedia({ forcedColors: 'active' });
+  const dots = current(page).locator('.scb-steps-dot');
+  const background = (i: number) => dots.nth(i).evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(await background(0)).not.toBe(await background(1));
+});

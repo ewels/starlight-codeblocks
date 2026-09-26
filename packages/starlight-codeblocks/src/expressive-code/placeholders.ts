@@ -77,7 +77,7 @@ export function pluginPlaceholders({ storage = 'local' }: { storage?: string } =
 }
 .${PREFIX}-placeholder::placeholder {
   color: inherit;
-  opacity: 0.8;
+  opacity: 1;
 }
 .${PREFIX}-placeholder:focus {
   outline: 2px solid currentColor;

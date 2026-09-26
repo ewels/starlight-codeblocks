@@ -7,7 +7,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, h, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { blockUid, type CodeblocksPlugin, numberedLines, warn } from './core.ts';
+import { blockUid, type CodeblocksPlugin, ensureTextContrast, numberedLines, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
@@ -104,6 +104,7 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
 }
 .${cls('s')} li {
   display: flex;
+  align-items: baseline;
   gap: 0.6ch;
   margin: 0;
   padding: 1px 0;
@@ -113,7 +114,11 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
 .${cls('s')} li.${cls('-on')} { color: ${cssVar('codeForeground')}; }
 .${cls('-num')} {
   flex: none;
-  min-width: 2.5ch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: max(2.5ch, 24px);
+  min-height: 24px;
   color: ${v('numberForeground')};
   font-weight: 600;
   text-align: end;
@@ -122,6 +127,7 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
 .${cls('-num')}:hover { text-decoration: underline; text-underline-offset: 3px; }
 .${cls('s')} code {
   padding: 0 4px;
+  color: ${cssVar('codeForeground')};
   border-radius: 3px;
   background: color-mix(in srgb, currentColor 12%, transparent);
   font-size: 0.95em;
@@ -137,6 +143,15 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
     },
     jsModules: clientJsModules,
     hooks: {
+      postprocessAnnotations(context) {
+        for (const { lines } of getDirectives(context.codeBlock, 'ref')) {
+          const line = lines[0];
+          if (line)
+            ensureTextContrast(context, line, (v) => [
+              v.resolvedStyleSettings.get('codeblocksFootnotes.lineBackground'),
+            ]);
+        }
+      },
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
         const refs = getDirectives(codeBlock, 'ref');
@@ -162,9 +177,20 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
           const badge = `${PREFIX}-fnref-${uid}-${n}`;
           const code = lineEls[index] && select('.code', lineEls[index]);
           code?.children.push(
-            h('a', { class: cls('-badge'), href: `#${note}`, id: badge, ariaLabel: `Footnote ${n}`, dataScbFn: n }, n),
+            h(
+              'a',
+              {
+                class: cls('-badge'),
+                href: `#${note}`,
+                id: badge,
+                ariaLabel: `Footnote ${n}`,
+                ariaDescribedby: `${note}-text`,
+                dataScbFn: n,
+              },
+              n,
+            ),
           );
-          return h('li', { id: note, dataScbFn: n }, [
+          return h('li', { id: note, tabindex: '-1', dataScbFn: n }, [
             h(
               'a',
               {
@@ -174,7 +200,7 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
               },
               `${n}.`,
             ),
-            h('span', inlineMarkdown(directive.text ?? '')),
+            h('span', { id: `${note}-text` }, inlineMarkdown(directive.text ?? '')),
           ]);
         });
         figure.properties.dataScbFootnotes = '';

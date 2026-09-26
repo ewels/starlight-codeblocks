@@ -70,6 +70,9 @@ export function pluginTransitions(): CodeblocksPlugin {
   background: ${cssVar('codeblocks.accent')};
   color: ${cssVar('codeblocks.accentForeground')};
 }
+@media (forced-colors: active) {
+  .${S}-dot[aria-current] { forced-color-adjust: none; border-color: Highlight; background: Highlight; color: HighlightText; }
+}
 .${S}-line {
   width: 18px;
   height: 2px;

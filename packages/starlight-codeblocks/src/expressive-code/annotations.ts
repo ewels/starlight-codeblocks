@@ -1,7 +1,7 @@
-import { PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
+import { PluginStyleSettings, setAlpha, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { blockUid, type CodeblocksPlugin, warn } from './core.ts';
+import { blockUid, type CodeblocksPlugin, ensureTextContrast, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
@@ -57,7 +57,8 @@ export function pluginAnnotations(): CodeblocksPlugin {
   height: ${cssVar('codeblocksAnnotations.markerSize')};
   margin-inline-start: 1.6ch;
   padding: 0;
-  border: 0;
+  /* Forced colours remove the background, but draw the border. */
+  border: 1px solid transparent;
   border-radius: 50%;
   background: ${cssVar('codeblocksAnnotations.markerBackground')};
   color: ${cssVar('codeblocksAnnotations.markerForeground')};
@@ -101,7 +102,10 @@ export function pluginAnnotations(): CodeblocksPlugin {
 }
 .${cls('-notes')} li.${cls('-on')}, .${cls('-notes')} li:focus-visible {
   border-color: ${cssVar('codeblocks.accent')};
-  outline: none;
+}
+.${cls('-notes')} li:focus-visible {
+  outline: 2px solid ${cssVar('codeblocks.focusRing')};
+  outline-offset: 2px;
 }
 .${cls('-note-num')} {
   margin-inline-end: 5px;
@@ -141,6 +145,16 @@ export function pluginAnnotations(): CodeblocksPlugin {
 }`,
     jsModules: clientJsModules,
     hooks: {
+      postprocessAnnotations(context) {
+        if (context.codeBlock.metaOptions.getString('annotations') !== 'side') return;
+        for (const { lines } of getDirectives(context.codeBlock, 'annotate')) {
+          const line = lines[0];
+          if (line)
+            ensureTextContrast(context, line, (v) => [
+              setAlpha(v.resolvedStyleSettings.get('codeblocks.accent') ?? '', 0.17),
+            ]);
+        }
+      },
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
         const annotations = getDirectives(codeBlock, 'annotate');

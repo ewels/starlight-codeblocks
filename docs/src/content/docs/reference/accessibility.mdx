@@ -3,17 +3,19 @@ title: Accessibility
 description: What each feature does for keyboard users, screen reader users and readers who ask for reduced motion, and the contrast that the default styles meet.
 ---
 
-Every feature meets WCAG 2.2 AA in the light and the dark themes of Starlight, with the default style settings. This page lists what each feature does for readers who use a keyboard or a screen reader, or who ask for reduced motion. It also says where colour is part of the meaning, and what else carries that meaning.
+The features meet WCAG 2.2 AA in the light and the dark themes of Starlight, with the default style settings. The one known exception is the fade of three features, which the [contrast](#contrast) section explains. This page lists what each feature does for readers who use a keyboard or a screen reader, or who ask for reduced motion. It also says where colour is part of the meaning, and what else carries that meaning.
 
 ## Rules for every feature
 
 These rules apply to all features, so the sections below do not repeat them:
 
 - Every control is a native `button`, `a`, `input` or `select` element. You can reach it with the Tab key and use it with Enter or Space.
-- Every control shows a focus ring in `codeblocks.focusRing` when it has keyboard focus. The ring has 3:1 contrast or more on the code background.
+- Every control shows a focus ring in `codeblocks.focusRing` when it has keyboard focus. The ring has 3:1 contrast or more on the code background. The code area of a block, which takes focus when it scrolls, uses the same ring.
+- In forced colours mode, markers keep their outline and the current step keeps its highlight.
+- A block with controls in its title bar has the title as its accessible name. Without a title, the name is "Code block". The labels of the controls are not part of the name.
 - A change that happens on hover over a control also happens on keyboard focus.
 - Escape closes an open popover or hover card.
-- When the reader's system asks for reduced motion, every transition and animation of the plugin stops. The change still happens, at once, and pages jump instead of scrolling smoothly.
+- When the reader's system asks for reduced motion, every transition and animation of the plugin stops, and so does the transition of the copy button. The change still happens, at once, and pages jump instead of scrolling smoothly.
 - The copy button and a manual selection give the code only. Messages, markers, notes, line numbers and glyphs are not part of the copied text.
 - The copy button includes [hidden lines](/starlight-codeblocks/features/hidden-lines/). A manual selection includes only the hidden lines that are open.
 - Code stays in the page for screen readers, also when it is blurred, faded or collapsed. [Hidden lines](/starlight-codeblocks/features/hidden-lines/) are the exception: they stay hidden until the reader opens them.
@@ -25,6 +27,7 @@ The default colours meet these targets against the code background of the dark t
 | Element | Target |
 |---|---|
 | Text, such as messages, output, notes, line numbers and prompts | 4.5:1 |
+| Code on the tint of a line or a changed word | 4.5:1 |
 | Messages of line states | 5:1 |
 | Bars, underlines, markers, badges and focus rings | 3:1 |
 
@@ -33,6 +36,8 @@ Three features fade lines or text on purpose: [focus](/starlight-codeblocks/feat
 - The faded text stays in the page. Screen readers read it the same as the other text, and a copy gives it in full.
 - The reader can always bring the text back to full contrast. For focus, hover over the block or move keyboard focus into it. For code mentions, the fade lasts only while a mention link has hover or focus. For scrollycoding, scroll to the step, or move focus into the sticky block.
 - The fade does not hide information. It shows where to look.
+
+Some tints are on known lines, such as a line state or a word-level diff. There, the plugin changes each syntax colour that falls below 4.5:1 on the tint. Expressive Code does the same for its own marked lines. A tint that any line can get, such as a permalink target, is light enough for every syntax colour of the default themes.
 
 If your site must meet 4.5:1 in every state, set `codeblocksFocus.opacity` and `codeblocksMentions.fadeOpacity` to `1` and `codeblocksFocus.blur` to `0px` in the style settings. Do not use scrollycoding on that site.
 
@@ -68,13 +73,16 @@ The plugin reads directives at build time and removes them from the page. Reader
 
 ### Footnotes
 
-- Each badge is a link with the label "Footnote N". The number in front of each note is a link back to its line, with the label "Footnote N, for line L".
+- Each badge is a link with the label "Footnote N", and its note is its accessible description. The number in front of each note is a link back to its line, with the label "Footnote N, for line L".
+- A badge moves keyboard focus to its note, and the number moves focus back to the badge.
+- A badge that gets keyboard focus under a sticky list scrolls into view above the list.
+- The number links are 24 by 24 pixels or more.
 - A selected line gets a bar as well as a tint, so the highlight does not rely on colour.
 - Under reduced motion, the page jumps to the note or the line.
 
 ### Hidden lines
 
-- Each marker is a button with `aria-expanded`. The title bar button has `aria-pressed`. Both have `aria-controls`, which names the lines they show.
+- Each marker is a button with `aria-expanded`. The label of the title bar button changes from **Show** to **Hide**. Both have `aria-controls`, which names the lines they show.
 - The marker text gives the number of lines, such as "3 hidden lines", so readers know what the button opens.
 
 ### Smart shell copy
@@ -158,7 +166,7 @@ The glyphs are hidden from screen readers, which read the same code as in a bloc
 
 ### Side-by-side annotations
 
-- Keyboard focus on a note highlights its line, the same as hover.
+- Keyboard focus on a note highlights its line, the same as hover. The note shows a focus ring.
 - The numbers on the lines are hidden from screen readers. Screen readers read the notes as a list after the code.
 
 ## More

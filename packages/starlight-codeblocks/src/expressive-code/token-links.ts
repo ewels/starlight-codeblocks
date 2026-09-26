@@ -2,6 +2,7 @@ import {
   type AnnotationRenderOptions,
   ExpressiveCodeAnnotation,
   PluginStyleSettings,
+  setAlpha,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { h } from '@expressive-code/core/hast';
@@ -26,8 +27,8 @@ const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksTokenLinks: {
       underline: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),
-      hoverBackground: ({ resolveSetting }) =>
-        `color-mix(in srgb, ${resolveSetting('codeblocks.accent')} 12%, transparent)`,
+      hoverBackground: ({ resolveSetting, theme }) =>
+        setAlpha(resolveSetting('codeblocks.accent'), theme.type === 'dark' ? 0.1 : 0.12),
     },
   },
 });

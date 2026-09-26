@@ -54,7 +54,7 @@ export function pluginFocus({ style = 'blur' }: { style?: 'blur' | 'dim' } = {})
   transition: filter ${cssVar('codeblocksFocus.transitionDuration')} ease, opacity ${cssVar('codeblocksFocus.transitionDuration')} ease;
 }
 pre > code[tabindex]:focus-visible {
-  outline: 3px solid ${cssVar('focusBorder')};
+  outline: 3px solid ${cssVar('codeblocks.focusRing')};
   outline-offset: -3px;
 }
 /* The sticky block of scrollycoding sits under the pointer while the reader scrolls, so hover must not clear it. */

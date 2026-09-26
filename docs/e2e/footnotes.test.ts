@@ -53,6 +53,44 @@ test('the sticky list stays at the bottom of the window while the block is on sc
   expect(first).toBe('static');
 });
 
+test('a badge describes itself with its note, and moves focus to the note and back', async ({ page }) => {
+  const block = example(page);
+  const badge = block.getByRole('link', { name: 'Footnote 1', exact: true });
+  const note = block.locator('.scb-footnotes li').first();
+  await expect(badge).toHaveAccessibleDescription(((await note.locator('span').textContent()) ?? '').trim());
+  await badge.focus();
+  await page.keyboard.press('Enter');
+  await expect(note).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(note.locator('.scb-footnote-num')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(badge).toBeFocused();
+});
+
+test('the links in the list are at least 24 by 24 pixels', async ({ page }) => {
+  for (const link of await example(page).locator('.scb-footnote-num').all()) {
+    const box = await link.boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(24);
+    expect(box?.height).toBeGreaterThanOrEqual(24);
+  }
+});
+
+test('a focused badge does not stay under the sticky list', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 500 });
+  const block = example(page, 1);
+  const list = block.locator('.scb-footnotes');
+  for (const badge of await block.locator('.scb-footnote-badge').all()) {
+    const top = await badge.evaluate((el) => el.getBoundingClientRect().bottom + scrollY - innerHeight + 10);
+    await page.evaluate((y) => scrollTo(0, y), top);
+    await badge.focus();
+    const [badgeBottom, listTop] = await Promise.all([
+      badge.evaluate((el) => el.getBoundingClientRect().bottom),
+      list.evaluate((el) => el.getBoundingClientRect().top),
+    ]);
+    expect(badgeBottom).toBeLessThanOrEqual(listTop);
+  }
+});
+
 test('copying leaves the badges and notes out', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await example(page).locator('.copy button').focus();

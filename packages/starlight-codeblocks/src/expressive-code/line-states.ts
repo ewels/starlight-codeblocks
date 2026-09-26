@@ -11,7 +11,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, type ElementContent, h, select } from '@expressive-code/core/hast';
 import type { LineStateDefinition } from '../options.ts';
-import { type CodeblocksPlugin, resolveRange } from './core.ts';
+import { type CodeblocksPlugin, ensureTextContrast, resolveRange } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import type { DirectiveSpecs } from './notation.ts';
 import { getDirectives } from './notation.ts';
@@ -141,6 +141,15 @@ ${Object.keys(all)
           for (const line of resolveRange(context, name) ?? []) add(line, name);
           for (const directive of getDirectives(context.codeBlock, `code ${name}`)) {
             for (const [i, line] of directive.lines.entries()) add(line, name, i === 0 ? directive.text : undefined);
+          }
+        }
+      },
+      postprocessAnnotations(context) {
+        for (const [line, list] of stateData.getOrCreateFor(context.codeBlock).states) {
+          for (const { name } of list) {
+            ensureTextContrast(context, line, (v) => [
+              v.resolvedStyleSettings.get(`codeblocksLineStates.${name}Background` as never),
+            ]);
           }
         }
       },

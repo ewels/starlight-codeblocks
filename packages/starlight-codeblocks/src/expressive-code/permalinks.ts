@@ -32,7 +32,9 @@ const styleSettings = new PluginStyleSettings({
       foreground: ({ resolveSetting }: Context) =>
         ensureColorContrastOnBackground(resolveSetting('gutterForeground'), resolveSetting('codeBackground'), 4.5, 5),
       target: ['#ffcb8b', '#a15c00'],
-      targetBackground: ({ resolveSetting }: Context) => setAlpha(resolveSetting('codeblocksPermalinks.target'), 0.16),
+      // Any line can be the target, so the tint must stay light enough for every syntax colour as it is.
+      targetBackground: ({ resolveSetting, theme }: Context) =>
+        setAlpha(resolveSetting('codeblocksPermalinks.target'), theme.type === 'dark' ? 0.08 : 0.12),
     },
   },
 });

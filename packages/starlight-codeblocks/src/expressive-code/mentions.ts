@@ -1,7 +1,7 @@
 import { PluginStyleSettings, type StyleResolverFn, setAlpha, type UnresolvedStyleValue } from '@expressive-code/core';
 import { select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { type CodeblocksPlugin, warn } from './core.ts';
+import { type CodeblocksPlugin, ensureTextContrast, warn } from './core.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
 
@@ -55,6 +55,13 @@ export function pluginMentions(): CodeblocksPlugin {
 }`,
     jsModules: clientJsModules,
     hooks: {
+      postprocessAnnotations(context) {
+        for (const { lines } of getDirectives(context.codeBlock, 'mention')) {
+          for (const line of lines) {
+            ensureTextContrast(context, line, (v) => [v.resolvedStyleSettings.get('codeblocksMentions.background')]);
+          }
+        }
+      },
       postprocessRenderedLine(context) {
         const names = getDirectives(context.codeBlock, 'mention')
           .filter((d) => d.lines.includes(context.line))

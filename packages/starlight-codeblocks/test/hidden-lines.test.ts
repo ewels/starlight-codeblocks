@@ -34,11 +34,20 @@ test('adds a title bar button that shows every run at once', async () => {
   const { html } = await render(block('js title="a.js" hidden={1,3}', 'a()', 'b()', 'c()'));
   expect(html).toContain('class="scb-btn scb-hidden-toggle"');
   expect(html).toContain('Show 2 hidden lines');
+  expect(html).not.toContain('aria-pressed');
+});
+
+test('names the figure after its title, not after the controls in the title bar', async () => {
+  expect((await render(block('js title="a.js" hidden={1}', 'a()', 'b()'))).html).toContain('aria-label="a.js"');
+  expect((await render(block('sh hidden={1}', 'a', 'b'))).html).toContain('aria-label="Terminal window"');
+  expect((await render(block('js hidden={1}', 'a()', 'b()'))).html).toContain('aria-label="Code block"');
 });
 
 test('forces a header for the toggle button even without a title', async () => {
   const { html } = await render(block('js hidden={1}', 'a()', 'b()'));
-  expect(html).toMatch(/<figure class="frame" data-scb-hidden-lines=""><figcaption class="header">/);
+  expect(html).toMatch(
+    /<figure class="frame" data-scb-hidden-lines="" aria-label="Code block"><figcaption class="header">/,
+  );
 });
 
 test('markers and the toggle use aria-expanded and aria-controls', async () => {

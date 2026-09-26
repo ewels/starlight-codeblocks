@@ -2,6 +2,7 @@ import { type Element, h, select, selectAll, toHtml } from '@expressive-code/cor
 import { syncTokenKeys, toKeyedTokens } from '@shikijs/magic-move/core';
 import type { KeyedTokensInfo } from '@shikijs/magic-move/types';
 import { fromHtml } from 'hast-util-from-html';
+import { nameFigure } from '../expressive-code/core.ts';
 import { readTokens } from './tokens.ts';
 
 const S = 'scb-steps';
@@ -71,6 +72,7 @@ export function codeSteps(html: string): string {
         header.children.push(tools);
       }
       tools.children.push(navButton('prev', current === 0), navButton('next', current === groups.length - 1));
+      nameFigure(figure);
     }
     if (current === 0)
       group.properties.className = [...((group.properties.className as string[]) ?? []), `${S}-current`];

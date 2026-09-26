@@ -166,7 +166,6 @@ export function pluginHiddenLines(): CodeblocksPlugin {
             {
               type: 'button',
               class: `${PREFIX}-btn ${PREFIX}-hidden-toggle`,
-              ariaPressed: 'false',
               ariaControls: markerIds.join(' '),
             },
             `Show ${plural(hidden.size)}`,

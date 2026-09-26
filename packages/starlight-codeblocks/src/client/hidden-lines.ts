@@ -21,7 +21,6 @@ function setRun(marker: HTMLElement, open: boolean) {
 function syncToggle(markers: HTMLElement[], toggle: HTMLElement) {
   const total = markers.reduce((sum, m) => sum + ids(m).length, 0);
   const allOpen = markers.every((m) => m.getAttribute('aria-expanded') === 'true');
-  toggle.setAttribute('aria-pressed', String(allOpen));
   toggle.textContent = allOpen ? `Hide ${total} lines` : `Show ${total} hidden line${total === 1 ? '' : 's'}`;
 }
 
@@ -40,7 +39,7 @@ export default function initHiddenLines() {
       });
     }
     toggle?.addEventListener('click', () => {
-      const open = toggle.getAttribute('aria-pressed') !== 'true';
+      const open = !markers.every((m) => m.getAttribute('aria-expanded') === 'true');
       for (const marker of markers) setRun(marker, open);
       syncToggle(markers, toggle);
     });

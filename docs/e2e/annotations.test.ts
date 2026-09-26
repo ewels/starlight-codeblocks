@@ -82,3 +82,10 @@ test('prints the notes as a numbered list under the block', async ({ page }) => 
   ]);
   await expect(block.locator('.scb-annotation').first()).toBeHidden();
 });
+
+test('a marker keeps its circle in forced colours', async ({ page }) => {
+  await page.emulateMedia({ forcedColors: 'active' });
+  const marker = example(page).getByRole('button', { name: 'Annotation 1' });
+  expect(await marker.evaluate((el) => getComputedStyle(el).borderTopStyle)).toBe('solid');
+  expect(await marker.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('1px');
+});

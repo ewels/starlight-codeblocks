@@ -126,12 +126,17 @@ export function baseStyles({ cssVar }: ResolverContext) {
 .${PREFIX}-btn:hover, .${PREFIX}-btn:focus-visible {
   background: color-mix(in srgb, ${cssVar('codeForeground')} 13%, transparent);
 }
+/* Expressive Code's own focus border can fall under 3:1 contrast on the code. */
+pre:focus-visible {
+  outline-color: ${cssVar('codeblocks.focusRing')};
+}
 :where([class^='${PREFIX}-'], [class*=' ${PREFIX}-']):focus-visible {
   outline: 2px solid ${cssVar('codeblocks.focusRing')};
   outline-offset: 2px;
 }
 @media (prefers-reduced-motion: reduce) {
-  [class^='${PREFIX}-'], [class*=' ${PREFIX}-'], [class^='${PREFIX}-'] *, [class*=' ${PREFIX}-'] * {
+  [class^='${PREFIX}-'], [class*=' ${PREFIX}-'], [class^='${PREFIX}-'] *, [class*=' ${PREFIX}-'] *,
+  .copy button, .copy button div, .copy .feedback {
     transition: none !important;
     animation: none !important;
   }

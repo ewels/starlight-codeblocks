@@ -1,4 +1,5 @@
 import { expect, type Locator, test } from '@playwright/test';
+import { contrast } from './contrast.ts';
 
 const filter = (line: Locator) => line.evaluate((el) => getComputedStyle(el).filter);
 const opacity = (line: Locator) => line.evaluate((el) => getComputedStyle(el).opacity);
@@ -40,6 +41,11 @@ test('shows every line when keyboard focus is in the block', async ({ page }) =>
   await page.keyboard.press('Tab');
   await expect(code).toBeFocused();
   expect(await code.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
+  const [ring, background] = await code.evaluate((el) => [
+    getComputedStyle(el).outlineColor,
+    getComputedStyle(el.parentElement as Element).backgroundColor,
+  ]);
+  expect(await contrast(page, ring, background)).toBeGreaterThanOrEqual(3);
   await expect.poll(() => filter(block.locator('.ec-line.scb-focus-out').first())).toBe('none');
 });
 

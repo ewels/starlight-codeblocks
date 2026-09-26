@@ -6,8 +6,14 @@ import {
   type ExpressiveCodeHookContextBase,
   type ExpressiveCodeLine,
   type ExpressiveCodePlugin,
+  ensureColorContrastOnBackground,
+  getStaticBackgroundColor,
+  InlineStyleAnnotation,
+  isInlineStyleAnnotation,
+  onBackground,
+  type StyleVariant,
 } from '@expressive-code/core';
-import { type Element, h, select } from '@expressive-code/core/hast';
+import { type Element, type ElementContent, h, select } from '@expressive-code/core/hast';
 import { getRegistry } from '../registry.ts';
 import type { DirectiveSpecs } from './notation.ts';
 import { parseRange, RangeSyntaxError } from './ranges.ts';
@@ -126,4 +132,61 @@ export function addTitleBarControl(blockAst: Element, control: Element) {
     header.children.push(tools);
   }
   tools.children.push(control);
+  const figure = select('figure', blockAst);
+  if (figure) nameFigure(figure);
+}
+
+const controlTags = new Set(['a', 'button', 'input', 'select']);
+
+/**
+ * Names the figure after the text of its title bar without the controls. Otherwise the figure takes its
+ * name from the whole `figcaption`, controls included.
+ */
+export function nameFigure(figure: Element) {
+  const header = select('.header', figure);
+  if (!header) return;
+  const text = (node: ElementContent): string =>
+    node.type === 'text'
+      ? node.value
+      : node.type === 'element' && !controlTags.has(node.tagName)
+        ? node.children.map(text).join('')
+        : '';
+  figure.properties.ariaLabel = header.children.map(text).join(' ').replace(/\s+/g, ' ').trim() || 'Code block';
+}
+
+/**
+ * Adjusts the syntax colours of `line`, or of `range` in it, so that they stay readable on a tint, as
+ * Expressive Code does for its own line markers. `tint` gives the layers from the code background up.
+ * Call it from `postprocessAnnotations`, so that the result wins over the text markers' own adjustments.
+ */
+export function ensureTextContrast(
+  { styleVariants, config }: Pick<ExpressiveCodeHookContextBase, 'styleVariants' | 'config'>,
+  line: ExpressiveCodeLine,
+  tint: (variant: StyleVariant) => (string | undefined)[],
+  range: { columnStart: number; columnEnd: number } = { columnStart: 0, columnEnd: line.text.length },
+) {
+  const min = config.minSyntaxHighlightingColorContrast;
+  if (min <= 0) return;
+  const colours = line.getAnnotations().filter(isInlineStyleAnnotation);
+  styleVariants.forEach((variant, styleVariantIndex) => {
+    const bg = tint(variant).reduce<string>(
+      (under, layer) => (layer ? onBackground(layer, under) : under),
+      getStaticBackgroundColor(variant),
+    );
+    for (const { color, inlineRange, styleVariantIndex: index } of colours) {
+      if (!color || !inlineRange || (index !== undefined && index !== styleVariantIndex)) continue;
+      const columnStart = Math.max(inlineRange.columnStart, range.columnStart);
+      const columnEnd = Math.min(inlineRange.columnEnd, range.columnEnd);
+      const readable = ensureColorContrastOnBackground(color, bg, min);
+      if (columnStart >= columnEnd || readable.toLowerCase() === color.toLowerCase()) continue;
+      line.addAnnotation(
+        new InlineStyleAnnotation({
+          styleVariantIndex,
+          inlineRange: { columnStart, columnEnd },
+          color: readable,
+          renderPhase: 'earlier',
+        }),
+      );
+    }
+  });
 }

@@ -1,4 +1,3 @@
-import { getColorContrast, onBackground } from '@expressive-code/core';
 import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
@@ -73,18 +72,10 @@ test('does not add spans when the feature is off', async () => {
   expect(worddiff((await render(md, { wordDiff: false })).html)).toBeNull();
 });
 
-test('every word-diff colour meets 3:1 contrast on the code background', async () => {
-  const ec = new ExpressiveCode({ plugins: [pluginCodeblocks()] });
-  await ec.getBaseStyles();
-  const backgrounds = { dark: ['#23262f', '#24292e'], light: ['#f6f7f9', '#ffffff'] };
-  for (const variant of ec.styleVariants) {
-    const get = (key: string) => variant.resolvedStyleSettings.get(`codeblocksWordDiff.${key}` as never) as string;
-    for (const key of ['insBackground', 'delBackground']) {
-      for (const bg of backgrounds[variant.theme.type]) {
-        expect(getColorContrast(onBackground(get(key), bg), bg), `${key} on ${bg}`).toBeGreaterThanOrEqual(3);
-      }
-    }
-  }
+test('marks changed words with an underline or a line-through, so that the tint does not carry the meaning alone', async () => {
+  const css = await new ExpressiveCode({ plugins: [pluginCodeblocks()] }).getBaseStyles();
+  expect(css).toMatch(/\.scb-worddiff-ins\{[^}]*text-decoration:underline/);
+  expect(css).toMatch(/\.scb-worddiff-del\{[^}]*text-decoration:line-through/);
 });
 
 test('wordDiff returns null for a pair too long to compare', () => {
