@@ -1,4 +1,10 @@
-import { PluginStyleSettings, type ResolverContext, type UnresolvedStyleValue } from '@expressive-code/core';
+import {
+  getFirstStaticColor,
+  PluginStyleSettings,
+  type ResolverContext,
+  type StyleResolverFn,
+  type UnresolvedStyleValue,
+} from '@expressive-code/core';
 
 /** Every class and data attribute of the plugin starts with this, as `scb-…` and `data-scb-…`. */
 export const PREFIX = 'scb';
@@ -25,6 +31,13 @@ declare module '@expressive-code/core' {
     codeblocks: CodeblocksStyleSettings;
   }
 }
+
+/**
+ * The code background as a colour, for contrast sums. Themes such as starlight-theme-black set it to a CSS
+ * variable, which the sums cannot read, so the theme background stands in.
+ */
+export const solidCodeBackground = ({ resolveSetting, theme }: Parameters<StyleResolverFn>[0]) =>
+  getFirstStaticColor(resolveSetting('codeBackground'), theme.bg) ?? (theme.type === 'dark' ? '#202020' : '#ffffff');
 
 // The dark values are the mockup colours. The light values give the same contrast on light themes.
 export const styleSettings = new PluginStyleSettings({

@@ -15,7 +15,7 @@ import { type CodeblocksPlugin, ensureTextContrast, resolveRange } from './core.
 import { inlineMarkdown } from './inline-markdown.ts';
 import type { DirectiveSpecs } from './notation.ts';
 import { getDirectives } from './notation.ts';
-import { PREFIX } from './styles.ts';
+import { PREFIX, solidCodeBackground } from './styles.ts';
 
 /**
  * Settings of the `codeblocksLineStates` group. Each state also has `<state>` (the bar colour),
@@ -43,18 +43,18 @@ export const builtInStates: Record<string, LineStateDefinition> = {
 type Context = Parameters<StyleResolverFn>[0];
 type Resolve = Context['resolveSetting'];
 const get = (resolve: Resolve, key: string) => resolve(`codeblocksLineStates.${key}` as never);
-const lineBackground = (resolve: Resolve, name: string) =>
-  onBackground(get(resolve, `${name}Background`), resolve('codeBackground'));
+const lineBackground = (context: Context, name: string) =>
+  onBackground(get(context.resolveSetting, `${name}Background`), solidCodeBackground(context));
 
 function stateSettings(name: string, { colour }: LineStateDefinition) {
   return {
     [name]: [colour.dark, colour.light],
     [`${name}Background`]: ({ resolveSetting }: Context) => setAlpha(get(resolveSetting, name), 0.15),
     [`${name}LabelBackground`]: ({ resolveSetting }: Context) => setAlpha(get(resolveSetting, name), 0.2),
-    [`${name}LabelForeground`]: ({ resolveSetting }: Context) =>
+    [`${name}LabelForeground`]: (context: Context) =>
       ensureColorContrastOnBackground(
-        mix(get(resolveSetting, name), resolveSetting('codeForeground'), 0.5),
-        onBackground(get(resolveSetting, `${name}LabelBackground`), lineBackground(resolveSetting, name)),
+        mix(get(context.resolveSetting, name), context.resolveSetting('codeForeground'), 0.5),
+        onBackground(get(context.resolveSetting, `${name}LabelBackground`), lineBackground(context, name)),
         5,
       ),
   };

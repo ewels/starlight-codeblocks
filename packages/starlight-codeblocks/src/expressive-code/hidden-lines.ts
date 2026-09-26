@@ -18,7 +18,7 @@ import {
   resolveRange,
 } from './core.ts';
 import { getDirectives } from './notation.ts';
-import { PREFIX } from './styles.ts';
+import { PREFIX, solidCodeBackground } from './styles.ts';
 
 export interface HiddenLinesStyleSettings {
   badgeBackground: UnresolvedStyleValue;
@@ -33,8 +33,8 @@ declare module '@expressive-code/core' {
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksHiddenLines: {
-      badgeBackground: ({ resolveSetting }: Parameters<StyleResolverFn>[0]) =>
-        onBackground(setAlpha(resolveSetting('codeblocks.mutedForeground'), 0.1), resolveSetting('codeBackground')),
+      badgeBackground: (context: Parameters<StyleResolverFn>[0]) =>
+        onBackground(setAlpha(context.resolveSetting('codeblocks.mutedForeground'), 0.1), solidCodeBackground(context)),
     },
   },
 });

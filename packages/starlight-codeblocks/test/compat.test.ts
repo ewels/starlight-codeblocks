@@ -1,4 +1,9 @@
-import type { ExpressiveCodePlugin } from '@expressive-code/core';
+import {
+  type ExpressiveCodePlugin,
+  getColorContrast,
+  getStaticBackgroundColor,
+  onBackground,
+} from '@expressive-code/core';
 import { type Element, select, selectAll, toText } from '@expressive-code/core/hast';
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 import { ExpressiveCode } from 'expressive-code';
@@ -56,4 +61,35 @@ test('components count code lines without a collapsed section’s summary', asyn
   const root = await renderAfter([pluginCollapsibleSections()], 'collapse={1-2}', 'a()', 'b()', 'c()');
   expect(selectAll('.ec-line', root)).toHaveLength(4);
   expect(codeLines(root).map(text)).toEqual(['a()', 'b()', 'c()']);
+});
+
+test('colours keep their contrast when a theme sets the code background to a CSS variable', async () => {
+  const ec = new ExpressiveCode({
+    plugins: [pluginCodeblocks()],
+    styleOverrides: { codeBackground: 'var(--code-background)' },
+  });
+  await ec.getBaseStyles();
+  for (const variant of ec.styleVariants) {
+    const get = (key: string) => variant.resolvedStyleSettings.get(key as never) as string;
+    const bg = getStaticBackgroundColor(variant);
+    const name = variant.theme.type;
+    for (const state of ['error', 'warning', 'info']) {
+      const lineBg = onBackground(get(`codeblocksLineStates.${state}Background`), bg);
+      const labelBg = onBackground(get(`codeblocksLineStates.${state}LabelBackground`), lineBg);
+      expect(
+        getColorContrast(get(`codeblocksLineStates.${state}LabelForeground`), labelBg),
+        `${name} ${state}`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+    const badge = get('codeblocksHiddenLines.badgeBackground');
+    expect(getColorContrast(get('codeblocks.mutedForeground'), badge), `${name} hidden`).toBeGreaterThanOrEqual(4.5);
+    expect(getColorContrast(get('codeblocksPermalinks.foreground'), bg), `${name} permalink`).toBeGreaterThanOrEqual(
+      4.5,
+    );
+    const fnLine = get('codeblocksFootnotes.lineBackground');
+    expect(
+      getColorContrast(get('codeblocksFootnotes.numberForeground'), fnLine),
+      `${name} footnote`,
+    ).toBeGreaterThanOrEqual(4.5);
+  }
 });

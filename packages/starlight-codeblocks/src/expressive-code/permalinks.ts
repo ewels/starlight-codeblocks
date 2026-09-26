@@ -9,7 +9,7 @@ import {
 import { type Element, getClassNames, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { type CodeblocksPlugin, numberedLines } from './core.ts';
-import { PREFIX } from './styles.ts';
+import { PREFIX, solidCodeBackground } from './styles.ts';
 
 export interface PermalinksStyleSettings {
   foreground: UnresolvedStyleValue;
@@ -29,8 +29,13 @@ const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksPermalinks: {
       // Line numbers are links, so they need text contrast, more than Expressive Code gives its gutter.
-      foreground: ({ resolveSetting }: Context) =>
-        ensureColorContrastOnBackground(resolveSetting('gutterForeground'), resolveSetting('codeBackground'), 4.5, 5),
+      foreground: (context: Context) =>
+        ensureColorContrastOnBackground(
+          context.resolveSetting('gutterForeground'),
+          solidCodeBackground(context),
+          4.5,
+          5,
+        ),
       target: ['#ffcb8b', '#a15c00'],
       // Any line can be the target, so the tint must stay light enough for every syntax colour as it is.
       targetBackground: ({ resolveSetting, theme }: Context) =>
