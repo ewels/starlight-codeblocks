@@ -24,7 +24,6 @@ export function pluginWhitespace(): CodeblocksPlugin {
     name: 'starlight-codeblocks:whitespace',
     baseStyles: ({ cssVar }) => `
 .${PREFIX}-ws, .${PREFIX}-ws-tab { position: relative; }
-.${PREFIX}-ws-tab { display: inline-block; width: 4ch; }
 .${PREFIX}-ws > [aria-hidden], .${PREFIX}-ws-tab > [aria-hidden] { position: absolute; inset: 0; }
 .${PREFIX}-ws > [aria-hidden]::before, .${PREFIX}-ws-tab > [aria-hidden]::before {
   display: block;
@@ -32,7 +31,7 @@ export function pluginWhitespace(): CodeblocksPlugin {
   color: ${cssVar('codeblocks.mutedForeground')};
 }
 .${PREFIX}-ws > [aria-hidden]::before { content: '\\00b7'; }
-.${PREFIX}-ws-tab > [aria-hidden]::before { content: '\\2192'; }`,
+.${PREFIX}-ws-tab > [aria-hidden]::before { content: '\\2192'; text-align: start; }`,
     hooks: {
       annotateCode({ codeBlock }) {
         const all = codeBlock.metaOptions.getString('whitespace') === 'all';

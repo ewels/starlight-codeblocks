@@ -30,7 +30,7 @@ The first recipe starts with an arrow, for the tab that Make needs. The second s
 
 ## Behaviour
 
-- A space renders as a middle dot, and a tab as an arrow that fills the width of the tab.
+- A space renders as a middle dot. A tab renders as an arrow at the start of the tab. The tab keeps its width up to the next tab stop, which the CSS `tab-size` property sets.
 - By default, the plugin shows only the leading whitespace of each line, where indentation usually matters. `whitespace="all"` shows every space and tab, including the ones between words.
 - The glyphs are drawn with CSS on top of the real character. A manual copy or the copy button gives the actual spaces and tabs.
 - Screen readers do not hear the glyphs. They read the same code as a block without the attribute.

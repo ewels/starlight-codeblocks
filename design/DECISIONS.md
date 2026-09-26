@@ -649,3 +649,11 @@ Use this format:
 - Decision: The Expressive Code plugin that renders the `step="…"` label is always registered, so with `transitions: false` each step still shows its label after the title. `<CodeSteps>` renders its `<script>` only when transitions are on, so the page then loads no magic-move code. The magic-move stylesheet is imported in the component frontmatter, so it lands only on pages whose modules import the components (about 1 kB, inert with the feature off). The label hides when the steps are narrower than 640 px (a container query, as for the other size rules of the steps), and only in a title bar that has the stepper.
 - Reason: SPEC 7.5 says that without the interactive steps each step shows its label, and AGENTS.md says pages must not load client code for features they do not use. Imported in the `<script>`, the stylesheet went into the CSS of every page. Expressive Code scopes base styles inside `.expressive-code`, so the rule cannot test the `[data-scb-steps]` wrapper outside the block; `:has(> .scb-steps-stepper)` tests the title bar itself.
 - Alternatives: A media query on the window (wrong in narrow columns, such as a side-by-side layout). Copying the magic-move rules into the component style (a copy of a dependency's CSS to keep in step).
+
+## Tab width in visible whitespace
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: A tab keeps its natural width, to the next tab stop that `tab-size` sets, and its arrow sits at the start of that width, as in the mockup. The fixed `4ch` width is gone.
+- Reason: A fixed width made a tab in the middle of a line under `whitespace="all"` stop short of the next tab stop, so the columns after it moved, and it ignored the site's `tab-size`. SPEC 6.10 says the arrow marks the tab's width, and the arrow at the start shows where the tab begins.
+- Alternatives: Stretch the arrow across the tab (a long arrow reads as a symbol in the code, not as whitespace).
