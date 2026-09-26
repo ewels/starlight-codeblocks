@@ -48,19 +48,6 @@ If you change a colour in the [style settings](/starlight-codeblocks/reference/s
 
 The plugin reads directives at build time and removes them from the page. Readers get the result of each directive, as the sections for each feature describe.
 
-## Draw attention
-
-### Focus
-
-- The code area takes keyboard focus when the block has focused lines. Focus in the code area makes every line clear.
-- Screen readers read every line, because the blurred lines stay in the page.
-- The blur and the fade are the only differences between focused lines and other lines. They show where to look, and hide no information.
-
-### Line states
-
-- Each state line has a tint and a bar on the left edge. A message starts with the name of the state in bold, so colour is not the only mark.
-- Screen readers hear the name of the state before the line, for example "Error:", and then the message after the code.
-
 ## Explain code
 
 ### Annotations
@@ -88,7 +75,24 @@ The plugin reads directives at build time and removes them from the page. Reader
 - Keyboard focus on a note highlights its line, the same as hover. The note shows a focus ring.
 - The numbers on the lines are hidden from screen readers. Screen readers read the notes as a list after the code.
 
-## Connect prose and code
+### Scrollycoding
+
+- Screen readers read the steps in order, then the code block. On a narrow screen, each step has its own copy of the block.
+- The pointer does not clear the focus of the sticky block. Move keyboard focus into the block to make every line sharp.
+- Under reduced motion, the focus and the fade of the steps change at once.
+
+## Draw attention
+
+### Focus
+
+- The code area takes keyboard focus when the block has focused lines. Focus in the code area makes every line clear.
+- Screen readers read every line, because the blurred lines stay in the page.
+- The blur and the fade are the only differences between focused lines and other lines. They show where to look, and hide no information.
+
+### Line states
+
+- Each state line has a tint and a bar on the left edge. A message starts with the name of the state in bold, so colour is not the only mark.
+- Screen readers hear the name of the state before the line, for example "Error:", and then the message after the code.
 
 ### Code mentions
 
@@ -96,13 +100,7 @@ The plugin reads directives at build time and removes them from the page. Reader
 - Screen readers read the tagged lines as the description of the link.
 - Under reduced motion, the fade and the scroll happen at once.
 
-### Scrollycoding
-
-- Screen readers read the steps in order, then the code block. On a narrow screen, each step has its own copy of the block.
-- The pointer does not clear the focus of the sticky block. Move keyboard focus into the block to make every line sharp.
-- Under reduced motion, the focus and the fade of the steps change at once.
-
-## Show changes
+## Show what changed
 
 ### Word-level diff
 
@@ -144,7 +142,7 @@ The glyphs are hidden from screen readers, which read the same code as in a bloc
 
 The highlighted code is a normal `code` element, with the same characters as before. The token colours have the same contrast correction as the code blocks.
 
-## Add links
+## Link code
 
 ### Token links
 

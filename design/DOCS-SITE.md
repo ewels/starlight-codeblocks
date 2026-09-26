@@ -12,7 +12,7 @@ The docs site lives in `docs/`. It is a Starlight site that uses the plugin thro
 
 ## Sidebar
 
-The feature groups say what authors use the features for, not how the features work. Each group has two to four pages. Comment notation is syntax that many features use, so it is in "Start here". `docs/src/sidebar.mjs` is the source; the README, `llms.txt`, the accessibility page and the home page follow its groups and order.
+The feature groups say what authors use the features for, not how the features work. Each group has two to five pages. Comment notation is syntax that many features use, so it is in "Start here". `docs/src/sidebar.mjs` is the source; the README, `llms.txt`, the accessibility page and the home page follow its groups and order.
 
 ```
 Start here
@@ -25,18 +25,17 @@ Guides
   Code switcher or tabs
   Migrate from VitePress
   Use with other plugins
-Draw attention
-  Focus
-  Line states
 Explain code
   Annotations
   Footnotes
   Inline callouts
   Side-by-side annotations
-Connect prose and code
-  Code mentions
   Scrollycoding
-Show changes
+Draw attention
+  Focus
+  Line states
+  Code mentions
+Show what changed
   Word-level diff
   Token transitions
 Shorten long code
@@ -46,7 +45,7 @@ Make code easier to read
   Visible whitespace
   Colourised brackets
   Inline code highlighting
-Add links
+Link code
   Token links
   API auto-linking
   Line permalinks

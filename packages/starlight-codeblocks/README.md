@@ -74,39 +74,6 @@ Mark lines with directives in code comments. The plugin applies each directive a
 
 </details>
 
-### Draw attention
-
-<details>
-<summary>Focus</summary>
-
-Blur the lines outside a range, so that readers look at the lines that you name first. Every line becomes sharp when a reader hovers over the block or moves keyboard focus into it.
-
-````md
-```js focus={4-7}
-```
-````
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/focus.webp" alt="A code block with four sharp lines and the other lines blurred. The pointer moves over the block and every line becomes sharp.">
-
-[Focus documentation](https://ewels.github.io/starlight-codeblocks/features/focus/)
-
-</details>
-
-<details>
-<summary>Line states</summary>
-
-Tint lines as errors, warnings or notes, with an optional message after the code, like the diagnostics in a code editor.
-
-```py
-for name in sys.argv[1:]  # [!code error] SyntaxError: expected ':'
-```
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/line-states.png" alt="A Python block with a red error line and a yellow warning line, each with its message after the code, and a blue info line.">
-
-[Line states documentation](https://ewels.github.io/starlight-codeblocks/features/line-states/)
-
-</details>
-
 ### Explain code
 
 <details>
@@ -172,27 +139,6 @@ Show the notes of an annotated block in a column beside the code, so readers see
 
 </details>
 
-### Connect prose and code
-
-<details>
-<summary>Code mentions</summary>
-
-Link a phrase in the prose to lines of the code block below it, so that readers see which lines the text is about.
-
-````md
-The [base case](#mention:base) stops the recursion.
-
-```py
-    if n == 0:  # [!mention base]
-```
-````
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-mentions.webp" alt="A paragraph with two linked phrases above a Python block. The pointer moves over each phrase and the lines it names stay sharp while the others fade.">
-
-[Code mentions documentation](https://ewels.github.io/starlight-codeblocks/features/code-mentions/)
-
-</details>
-
 <details>
 <summary>Scrollycoding</summary>
 
@@ -216,7 +162,59 @@ Explain a code block in prose steps that scroll past it, while the block stays i
 
 </details>
 
-### Show changes
+### Draw attention
+
+<details>
+<summary>Focus</summary>
+
+Blur the lines outside a range, so that readers look at the lines that you name first. Every line becomes sharp when a reader hovers over the block or moves keyboard focus into it.
+
+````md
+```js focus={4-7}
+```
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/focus.webp" alt="A code block with four sharp lines and the other lines blurred. The pointer moves over the block and every line becomes sharp.">
+
+[Focus documentation](https://ewels.github.io/starlight-codeblocks/features/focus/)
+
+</details>
+
+<details>
+<summary>Line states</summary>
+
+Tint lines as errors, warnings or notes, with an optional message after the code, like the diagnostics in a code editor.
+
+```py
+for name in sys.argv[1:]  # [!code error] SyntaxError: expected ':'
+```
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/line-states.png" alt="A Python block with a red error line and a yellow warning line, each with its message after the code, and a blue info line.">
+
+[Line states documentation](https://ewels.github.io/starlight-codeblocks/features/line-states/)
+
+</details>
+
+<details>
+<summary>Code mentions</summary>
+
+Link a phrase in the prose to lines of the code block below it, so that readers see which lines the text is about.
+
+````md
+The [base case](#mention:base) stops the recursion.
+
+```py
+    if n == 0:  # [!mention base]
+```
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-mentions.webp" alt="A paragraph with two linked phrases above a Python block. The pointer moves over each phrase and the lines it names stay sharp while the others fade.">
+
+[Code mentions documentation](https://ewels.github.io/starlight-codeblocks/features/code-mentions/)
+
+</details>
+
+### Show what changed
 
 <details>
 <summary>Word-level diff</summary>
@@ -340,7 +338,7 @@ Call `await fetch(url){:js}` before you read the body.
 
 </details>
 
-### Add links
+### Link code
 
 <details>
 <summary>Token links</summary>

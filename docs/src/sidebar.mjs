@@ -13,24 +13,21 @@ export const sidebar = [
     ],
   },
   {
-    label: 'Draw attention',
-    items: ['features/focus', 'features/line-states'],
-  },
-  {
     label: 'Explain code',
     items: [
       'features/annotations',
       'features/footnotes',
       'features/inline-callouts',
       'features/side-by-side-annotations',
+      'features/scrollycoding',
     ],
   },
   {
-    label: 'Connect prose and code',
-    items: ['features/code-mentions', 'features/scrollycoding'],
+    label: 'Draw attention',
+    items: ['features/focus', 'features/line-states', 'features/code-mentions'],
   },
   {
-    label: 'Show changes',
+    label: 'Show what changed',
     items: ['features/word-level-diff', 'features/token-transitions'],
   },
   {
@@ -42,7 +39,7 @@ export const sidebar = [
     items: ['features/visible-whitespace', 'features/colourised-brackets', 'features/inline-code-highlighting'],
   },
   {
-    label: 'Add links',
+    label: 'Link code',
     items: ['features/token-links', 'features/api-auto-linking', 'features/line-permalinks'],
   },
   {
