@@ -34,7 +34,7 @@ Nothing.
 
 ### Check first
 
-1. **Unsigned, unpushed commits.** The 38 commits after `90235bc` are unsigned, because 1Password signing was not available overnight, and are not pushed. Re-sign and push, for example: `git rebase --exec 'git commit --amend --no-edit -S' origin/main`, then `git push`.
+1. **Unsigned, unpushed commits.** The commits after `90235bc` are unsigned, because 1Password signing was not available, and are not pushed. Re-sign and push, for example: `git rebase --exec 'git commit --amend --no-edit -S' origin/main`, then `git push`.
 2. **Leftover stash.** `stash@{0}` ("wip", on `e79c3e2`) is work in progress of the accessibility fixes, since committed in `8272a11` and later commits. Check it, then `git stash drop`.
 3. **No pull request.** KICKOFF.md asks for a draft PR from `main` to `main`. That is not possible, because all work is on `main` (DECISIONS.md, "Work on main instead of initial-build"). No PR was opened.
 4. **Upstream notes.**
