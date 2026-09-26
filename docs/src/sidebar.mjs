@@ -5,7 +5,12 @@ export const sidebar = [
   },
   {
     label: 'Guides',
-    items: ['guides/choose-an-annotation-style', 'guides/code-switcher-or-tabs', 'guides/migrate-from-vitepress'],
+    items: [
+      'guides/choose-an-annotation-style',
+      'guides/code-switcher-or-tabs',
+      'guides/migrate-from-vitepress',
+      'guides/use-with-other-plugins',
+    ],
   },
   {
     label: 'Inside the code block',

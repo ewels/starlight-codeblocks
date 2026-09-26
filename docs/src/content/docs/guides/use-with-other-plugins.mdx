@@ -1,0 +1,126 @@
+---
+title: Use with other plugins
+description: Configure the plugin next to other Starlight plugins, themes, Expressive Code plugins and Markdown processors.
+---
+
+A Starlight site often has more than one plugin. Most plugins work next to this one with no change. Some need a setting, or a place in the list of plugins. This page gives the set-up for each of them.
+
+## Tested plugins
+
+These plugins were tested on a site with every feature of this plugin on. They need no change:
+
+- Pages and content: `starlight-openapi`, `starlight-typedoc`, `starlight-pydocs`, `starlight-blog`, `starlight-tags`, `starlight-quiz`, `starlight-videos`, `astro-mermaid`, `starlight-github-alerts`, `starlight-kbd` and `starlight-heading-badges`.
+- Navigation and search: `starlight-sidebar-topics`, `starlight-auto-sidebar`, `starlight-site-graph`, `starlight-scroll-to-top`, `@astrojs/starlight-docsearch` and `starlight-telescope`.
+- Layout: `starlight-image-zoom`, `starlight-fullview-mode`, `starlight-view-modes`, `starlight-ui-tweaks`, `starlight-announcement`, `starlight-package-managers` and `@astrojs/starlight-tailwind` with Tailwind 4.
+- Themes: `starlight-theme-rapide`, `starlight-theme-flexoki`, `starlight-theme-next`, `starlight-theme-vintage`, `starlight-theme-black`, `starlight-theme-galaxy` and `@catppuccin/starlight`.
+- Expressive Code plugins: `@expressive-code/plugin-line-numbers`, `@expressive-code/plugin-collapsible-sections`, `expressive-code-color-chips` and `expressive-code-links`.
+- Full screen code blocks: `starlight-codeblock-fullscreen`. The controls of every feature work in its full screen copy of a block.
+
+The plugins in the next sections work too, with the set-up that each section gives.
+
+## Plugin order
+
+List `codeblocks()` before any plugin or theme that sets the `expressiveCode` option of Starlight. For example, `starlight-theme-nova` turns Expressive Code off unless the site sets the option:
+
+```js title="astro.config.mjs"
+starlight({
+  plugins: [codeblocks(), starlightThemeNova()],
+}),
+```
+
+If a theme must come first, set `expressiveCode: {}` in the Starlight config. The plugin stops the build with a message if Expressive Code is off.
+
+## Expressive Code plugins in ec.config.mjs
+
+If `ec.config.mjs` has a `plugins` list, the plugin cannot add its own Expressive Code plugins. Add `pluginCodeblocks()` to the list:
+
+```js title="ec.config.mjs"
+import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
+import { pluginCodeblocks } from 'starlight-codeblocks/expressive-code';
+
+export default {
+  plugins: [pluginLineNumbers(), pluginCodeblocks()],
+};
+```
+
+`pluginCodeblocks()` can go before or after the other plugins. The features find each line wherever another plugin puts it, such as inside a collapsed section.
+
+`expressive-code-twoslash` removes some lines of a block, such as the last lines after a `^?` query. A directive on a line that it removes has no effect, and the build logs a warning. Put the directive on a line that stays.
+
+## starlight-links-validator
+
+`starlight-links-validator` reports links to [code mentions](/starlight-codeblocks/features/code-mentions/) and [line permalinks](/starlight-codeblocks/features/line-permalinks/) as broken. It cannot see those ids, because they exist only in the rendered code. Give it the `linksValidatorExclude` function from this plugin:
+
+```js title="astro.config.mjs"
+import codeblocks, { linksValidatorExclude } from 'starlight-codeblocks';
+import starlightLinksValidator from 'starlight-links-validator';
+
+starlight({
+  plugins: [codeblocks(), starlightLinksValidator({ exclude: linksValidatorExclude })],
+}),
+```
+
+The function skips `#mention:` links and links to the `id` of a code block, alone or with a line, such as `#cfg-L2`. The validator still checks every other link.
+
+## starlight-llms-txt
+
+`starlight-llms-txt` makes its text from the HTML of each page. The plugin adds labels, buttons and notes to a block, and the text of those goes into the code. Every one of these elements has the class `scb-deco`. Remove them with one selector:
+
+```js title="astro.config.mjs"
+starlightLlmsTxt({
+  customSelectors: { all: ['.scb-deco'] },
+}),
+```
+
+The code in `llms-full.txt` is then the code that the copy button copies. Placeholder fields keep their text. Annotations, callouts and footnote badges go. Notes that show under a block, such as the list of footnotes, stay.
+
+Pagefind needs no set-up. It does not index these elements, because each one has `data-pagefind-ignore`.
+
+## Page actions and raw Markdown
+
+`starlight-page-actions`, `starlight-page-context-action` and `starlight-md-txt` give readers the Markdown source of a page. That source keeps the attributes on each fence line and the directives in the code comments, as the author wrote them. The plugin does not change it. Most readers of the source, such as AI assistants, can read directives, because they are comments.
+
+## starlight-versions and starlight-md-txt
+
+`starlight-versions` and `starlight-md-txt` read `.md` files as MDX. MDX reads a `{:js}` after the closing backtick of inline code as a JavaScript expression, and the build fails. Put the suffix of [inline code highlighting](/starlight-codeblocks/features/inline-code-highlighting/) inside the backticks. That form is valid in `.md` and `.mdx` files.
+
+## Markdoc
+
+In Markdoc files (`.mdoc`), with `@astrojs/markdoc` and `@astrojs/starlight-markdoc`, the features inside a code block work. Markdoc does not take attributes on the fence line. Put them in a `meta` attribute of a Markdoc tag after the language:
+
+````md title="src/content/docs/example.mdoc"
+```js {% title="app.js" meta="focus={2}" %}
+const app = express();
+app.use(express.json());
+app.listen(3000);
+```
+````
+
+Directives in code comments work as in Markdown. Markdoc has its own parser, so the features that read the text outside a block do not run in `.mdoc` files:
+
+- the code switcher
+- inline code highlighting
+- the check of code mention links
+- the check for duplicate block ids
+
+Use `.md` or `.mdx` files for pages that need them.
+
+## The unified() processor
+
+Astro 7 uses Sätteri for Markdown. Some plugins need Astro's `unified()` processor, because they add remark plugins, such as `starlight-markdown-blocks`. Every feature works with `unified()` too. The plugin adds its own remark plugin when the site uses it:
+
+```js title="astro.config.mjs"
+import { unified } from '@astrojs/markdown-remark';
+
+export default defineConfig({
+  markdown: { processor: unified() },
+  integrations: [starlight({ plugins: [codeblocks()] })],
+});
+```
+
+Starlight adds `remark-directive` for `unified()`, which the code switcher needs. Sätteri stays the default of Astro 7, so keep it unless another plugin needs `unified()`.
+
+## Related
+
+- [Configuration](/starlight-codeblocks/configuration/): turn features on and off, and configure them.
+- [Expressive Code plugins](/starlight-codeblocks/reference/expressive-code-plugins/): use the features one at a time in `ec.config.mjs`.

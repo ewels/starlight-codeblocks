@@ -21,6 +21,7 @@ Guides
   Choose an annotation style
   Code switcher or tabs
   Migrate from VitePress
+  Use with other plugins
 Inside the code block
   Focus
   Line states
@@ -116,6 +117,7 @@ Use Starlight's `<Code>` component for the rendering if the spike confirms that 
 - Choose an annotation style: when to use inline callouts, annotations, footnotes and side-by-side annotations. Give one example of each, with the same code, so readers can compare.
 - Code switcher or tabs: when to use the code switcher and when to use Starlight's `<Tabs>`.
 - Migrate from VitePress: the VitePress features and their equivalents, the directives that work unchanged, and the ones that differ.
+- Use with other plugins: the plugins that were tested with this one, the order of plugins, and the set-up for plugins that need one (links validator, llms.txt, page actions, versions, Markdoc, `unified()`).
 
 ## Extend pages
 
