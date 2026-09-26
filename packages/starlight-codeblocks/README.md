@@ -1,8 +1,6 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/logo.svg" width="96" height="96" alt="The starlight-codeblocks logo: a terminal window with a yellow star inside">
-</p>
-
-<h1 align="center">starlight-codeblocks</h1>
+<h1 align="center">
+  <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/logotype.svg" width="800" alt="starlight-codeblocks">
+</h1>
 
 A Starlight plugin that adds 24 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
 

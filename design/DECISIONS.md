@@ -865,3 +865,11 @@ Use this format:
 - Decision: The guide "Use with other plugins" (`guides/use-with-other-plugins`, last in the Guides group of the sidebar and so in `llms.txt`) lists the tested plugins in groups, gives the plugin order, and has one section for each plugin that needs a set-up: `ec.config.mjs` and expressive-code-twoslash, starlight-links-validator, starlight-llms-txt and Pagefind, page actions, starlight-versions and starlight-md-txt, Markdoc, and `unified()`. It uses sections and lists, and no wide tables.
 - Reason: The compatibility tests found set-ups that readers cannot guess, and each belongs to no single feature page.
 - Alternatives: A page under Extend (those pages define interfaces). Notes on each feature page only (readers look for the other plugin's name, not the feature).
+
+## Logotype
+
+- Date: 2026-09-26
+- Step: after the plan (user request)
+- Decision: A logotype of the terminal window mark and the name "starlight-codeblocks" in Michroma 400, lowercase, at 88 units on a 132 unit high canvas with 0.02 em letter spacing, the same as the starlight-pydocs logotype. The text is outlined to paths, because an SVG in an `<img>` cannot load a web font. The README uses `.github/assets/logotype.svg` in a plain `<img>`: one file with a transparent background whose text colour changes through `@media (prefers-color-scheme: dark)` (`#1b1f2a` light, `#f4f5f8` dark). The docs site uses the logotype as the Starlight `logo` with `replacesTitle`, as starlight-pydocs does, but through two files with fixed colours (`docs/src/assets/logotype-light.svg` and `logotype-dark.svg`). The square logo stays for the favicon, the share cards and the touch icon.
+- Reason: The user asked for the starlight-pydocs font and one SVG that follows light and dark mode. In an `<img>`, the SVG's `prefers-color-scheme` follows the viewer's system setting, which is what GitHub's own theme follows by default. The Starlight theme picker does not change the system setting, so the docs site needs the light and dark pair that Starlight switches.
+- Alternatives: A `<picture>` pair with two files, as the starlight-pydocs README has (the user asked for one file). Live `<text>` with a web font (does not load in an `<img>`). Committing the Michroma font file (not needed after outlining).

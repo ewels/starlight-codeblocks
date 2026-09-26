@@ -13,7 +13,11 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'starlight-codeblocks',
-      logo: { src: './src/assets/logo.svg' },
+      logo: {
+        light: './src/assets/logotype-light.svg',
+        dark: './src/assets/logotype-dark.svg',
+        replacesTitle: true,
+      },
       favicon: '/favicon.svg',
       customCss: ['./src/styles/custom.css'],
       components: { Head: './src/components/Head.astro', PageTitle: './src/components/PageTitle.astro' },
