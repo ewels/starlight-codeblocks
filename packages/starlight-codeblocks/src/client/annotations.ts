@@ -1,14 +1,25 @@
 import { place } from './shared/position.ts';
 
-function popovers(block: HTMLElement) {
-  for (const popover of block.querySelectorAll<HTMLElement>('.scb-annotation-popover')) {
-    const button = block.querySelector<HTMLElement>(`[popovertarget="${popover.id}"]`);
-    let stop = () => {};
-    popover.addEventListener('toggle', (event) => {
-      stop();
-      stop = button && (event as ToggleEvent).newState === 'open' ? place(popover, button) : () => {};
-    });
-  }
+const stops = new WeakMap<Element, () => void>();
+
+function toggle(event: Event) {
+  const popover = event.target as HTMLElement;
+  if (!popover.classList?.contains('scb-annotation-popover')) return;
+  stops.get(popover)?.();
+  const button = popover.previousElementSibling as HTMLElement | null;
+  if (button && (event as ToggleEvent).newState === 'open') stops.set(popover, place(popover, button));
+}
+
+/**
+ * `popovertarget` finds the popover by id, so in a copy of the block, as full screen plugins show, it would
+ * open the popover of the original. The popover right after the button is the button's own.
+ */
+function click(event: MouseEvent) {
+  const button = (event.target as Element).closest<HTMLElement>('button.scb-annotation');
+  const popover = button?.nextElementSibling as HTMLElement | null | undefined;
+  if (!button || !popover || document.getElementById(popover.id) === popover) return;
+  event.preventDefault();
+  popover.togglePopover();
 }
 
 function side(block: HTMLElement) {
@@ -53,12 +64,14 @@ export default function initAnnotations() {
   if (!ready) {
     ready = true;
     addEventListener('resize', checkHeights, { passive: true });
+    // Toggle events do not bubble, so listen in the capture phase.
+    document.addEventListener('toggle', toggle, true);
+    document.addEventListener('click', click);
   }
   for (const block of document.querySelectorAll<HTMLElement>(
     '[data-scb-annotations]:not([data-scb-annotations-ready])',
   )) {
     block.dataset.scbAnnotationsReady = '';
-    popovers(block);
     side(block);
   }
 }

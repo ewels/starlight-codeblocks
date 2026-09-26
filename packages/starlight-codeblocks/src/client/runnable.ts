@@ -81,23 +81,27 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
   }
 }
 
+async function click(event: MouseEvent) {
+  const button = (event.target as Element).closest<HTMLElement>('.scb-run');
+  // Found through the button, so that a copy of the block, as full screen plugins show, works too.
+  const figure = button?.closest<HTMLElement>('[data-scb-runnable]');
+  const panel = figure?.querySelector<HTMLElement>('.scb-run-output');
+  // aria-disabled, not disabled, so that the button keeps the keyboard focus.
+  if (!button || !figure || !panel || button.getAttribute('aria-disabled') === 'true') return;
+  button.setAttribute('aria-disabled', 'true');
+  try {
+    await run(figure, panel);
+  } finally {
+    button.removeAttribute('aria-disabled');
+    button.textContent = 'Run again';
+  }
+}
+
+let ready = false;
+
 /** Runs a `runnable` block with its language's runtime, which loads on the first click. */
 export default function initRunnable() {
-  for (const figure of document.querySelectorAll<HTMLElement>('[data-scb-runnable]:not([data-scb-runnable-ready])')) {
-    figure.dataset.scbRunnableReady = '';
-    const button = figure.querySelector<HTMLElement>('.scb-run');
-    const panel = figure.querySelector<HTMLElement>('.scb-run-output');
-    if (!button || !panel) continue;
-    button.addEventListener('click', async () => {
-      // aria-disabled, not disabled, so that the button keeps the keyboard focus.
-      if (button.getAttribute('aria-disabled') === 'true') return;
-      button.setAttribute('aria-disabled', 'true');
-      try {
-        await run(figure, panel);
-      } finally {
-        button.removeAttribute('aria-disabled');
-        button.textContent = 'Run again';
-      }
-    });
-  }
+  if (ready) return;
+  ready = true;
+  document.addEventListener('click', click);
 }

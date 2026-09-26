@@ -108,6 +108,8 @@ export function baseStyles({ cssVar }: ResolverContext) {
   inset-block: 0;
   inset-inline-end: 0;
 }
+/* starlight-codeblock-fullscreen puts its button over the end of the title bar. */
+.header:has(> .cb-fullscreen__button) .${PREFIX}-tools { margin-inline-end: 2.25rem; }
 /* Without a title or a terminal frame, Expressive Code hides the header. Give it a minimal bar for the controls. */
 .frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools, .${PREFIX}-steps-head) {
   --button-spacing: 2.1rem;

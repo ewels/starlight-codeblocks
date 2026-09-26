@@ -793,3 +793,19 @@ Use this format:
 - Decision: The core plugin records the rendered element of each line in `postprocessRenderedLine`. Annotations, callouts, footnotes and hidden lines look up a line's element with `lineElement(line)` and insert nodes before it with `insertBefore()`, wherever the line sits. Hidden lines no longer rebuild the children of `<code>`. The components (`<CodeSteps>`, `<Scrollycoding>`) and the expandable client module work on rendered HTML, so they count `.ec-line` elements but skip a collapsed section's `summary` line. `@expressive-code/plugin-collapsible-sections` is a devDependency, only for the unit tests in `test/compat.test.ts`.
 - Reason: Another plugin's `postprocessRenderedBlock` can run before ours. `@expressive-code/plugin-collapsible-sections` adds a summary line and moves lines into `<details>`, so the n-th `.ec-line` was no longer line n: annotations and footnotes landed on the wrong line, and hidden lines flattened the `<details>` away. `expressive-code-twoslash` nests other blocks inside lines.
 - Alternatives: Tell users to list `pluginCodeblocks()` first (fragile, and not possible when a theme adds plugins). Data attributes on each line (extra markup in every block).
+
+## Client modules work in copies of a block
+
+- Date: 2026-09-26
+- Step: after the plan (compatibility with other plugins)
+- Decision: Hidden lines, expandable blocks and the Run button listen for clicks on the document and find their targets from the event target, inside the block (`closest()`), not with `document.getElementById`. Line permalinks find lines inside the clicked block. Annotation buttons in a copy of a block open the popover right after them, not the popover that `popovertarget` finds by id; popover placement listens for `toggle` on the document in the capture phase. When starlight-codeblock-fullscreen puts its button in the title bar, the plugin's controls move 2.25rem away from the end. The Playwright tests in `docs/e2e/compat.test.ts` copy a block into an overlay and add a copy of the full screen button, as the other plugin does, so the docs site does not depend on it.
+- Reason: Full screen plugins show a `cloneNode(true)` copy of the block. The copy has the same ids, no event listeners and the `-ready` markers of the original, so its controls did nothing, or acted on the original. The full screen button covered the step buttons of `<CodeSteps>`.
+- Alternatives: Give each copy new ids (the other plugin makes the copy). Watch the DOM for new blocks with a `MutationObserver` (more code in every module). Also delegate the hover-only decorations (bracket pairs, API link cards, side-by-side note highlights), field edits in placeholders and `<CodeSteps>` navigation: left out, because in a copy they only lose a decoration or show the step that was current when the copy was made.
+
+## Tests for other plugins without depending on them
+
+- Date: 2026-09-26
+- Step: after the plan (compatibility with other plugins)
+- Decision: The package's unit tests use `@expressive-code/plugin-collapsible-sections` (a devDependency) and small fake plugins that remove lines the way `expressive-code-twoslash` does. The test for `ec.config.mjs` bundles calls `packageRoot()` with the path of a bundled chunk in the docs site, rather than an extra e2e site with `ec.config.mjs` and a `<Code>`-only page.
+- Reason: The repository must not depend on third-party Starlight plugins at runtime, and a second site for one path lookup adds a full build to CI for a one-line check.
+- Alternatives: An e2e fixture site per plugin (slow, and the scratch compatibility site already covers the real plugins by hand).
