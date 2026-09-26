@@ -34,6 +34,39 @@ test('code switcher: the menu does not print, and the selected variant does', as
   await expect(block.locator('.expressive-code:not([hidden]) pre').first()).toBeVisible();
 });
 
+test('token transitions: every step prints with its label', async ({ page }) => {
+  await page.goto('./features/token-transitions/');
+  const blocks = example(page).locator('.scb-steps > .expressive-code');
+  expect(await blocks.count()).toBe(3);
+  for (const block of await blocks.all()) {
+    await expect(block.locator('pre')).toBeVisible();
+    await expect(block.locator('.scb-steps-label')).toBeVisible();
+  }
+});
+
+test('focus: the other lines print sharp and only a little faded', async ({ page }) => {
+  await page.goto('./features/focus/');
+  const line = example(page).locator('.scb-focus-out').first();
+  const [filter, opacity] = await line.evaluate((el) => [getComputedStyle(el).filter, getComputedStyle(el).opacity]);
+  expect(filter).toBe('none');
+  expect(Number(opacity)).toBeGreaterThanOrEqual(0.6);
+});
+
+test('scrollycoding: every step prints in full with its own code, and nothing sticks', async ({ page }) => {
+  await page.goto('./features/scrollycoding/');
+  const steps = page.locator('.scb-scrolly').first().locator('.scb-scrolly-step');
+  expect(await steps.count()).toBe(5);
+  for (const step of await steps.all()) {
+    expect(await step.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+    await expect(step.locator('.scb-scrolly-text')).toBeVisible();
+    await expect(step.locator('pre')).toBeVisible();
+    for (const line of await step.locator('.scb-focus-out').all()) {
+      expect(await line.evaluate((el) => getComputedStyle(el).filter)).toBe('none');
+    }
+  }
+  await expect(page.locator('.scb-scrolly-code').first()).toBeHidden();
+});
+
 test('token transitions: the steps and the Previous and Next buttons do not print', async ({ page }) => {
   await page.goto('./features/token-transitions/');
   const current = page.locator('.scb-steps-current').first();

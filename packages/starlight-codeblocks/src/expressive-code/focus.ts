@@ -61,6 +61,9 @@ pre > code[tabindex]:focus-visible {
 .frame:not(.${PREFIX}-scrolly-frame):hover .${OUT}, .frame:focus-within .${OUT} {
   opacity: 1;
   filter: none;
+}
+@media print {
+  .${OUT} { opacity: 0.6; filter: none; }
 }`,
     hooks: {
       preprocessMetadata(context) {

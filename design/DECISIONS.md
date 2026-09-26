@@ -753,3 +753,11 @@ Use this format:
 - Decision: The tints of a selected footnote line, an open annotation's line and a mentioned line use the accent at 10% opacity in dark themes and 12% in light themes, like the link hover tints, and the plugin no longer adjusts the syntax colours of those lines. Annotations get a `lineBackground` style setting for its tint. Syntax colours are adjusted only under tints that are always visible: line states and word diff.
 - Reason: The adjustment ran at build time, so it changed the colours of these lines when they were not active too, and one token showed in two colours in a block. The lighter tints keep every syntax colour of Starlight's and Expressive Code's default themes at 4.5:1.
 - Alternatives: Adjusted colours only in the active state, as CSS variables for each token (a lot of extra markup for a small gain).
+
+## Print of focus, scrollycoding and token transitions
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: In print, lines outside the focus are sharp at 60% opacity. Scrollycoding prints its narrow layout: each step's text at full opacity, followed by its own copy of the block with that step's focus. Token transitions print every step, each with its title bar and step label. The wide layouts apply only under `@media screen`.
+- Reason: Blur and the 48% opacity make code hard to read on paper, and a sticky column or a single visible step loses content. A light fade still shows which lines each step is about.
+- Alternatives: No fade in print (loses the focus). Print only the last step of token transitions (loses how the code grew).

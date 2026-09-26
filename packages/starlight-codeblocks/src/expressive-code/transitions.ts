@@ -106,7 +106,7 @@ export function pluginTransitions(): CodeblocksPlugin {
 @container (min-width: 481px) {
   .${S}-nav-icon { display: none; }
 }
-@media (scripting: enabled) {
+@media screen and (scripting: enabled) {
   @container (max-width: 640px) {
     .${S}-head:has(> .${S}-stepper) > .${S}-label { display: none; }
   }

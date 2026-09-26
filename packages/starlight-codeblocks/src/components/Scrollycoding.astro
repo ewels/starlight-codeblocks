@@ -27,7 +27,7 @@ const html = scrollycoding(await Astro.slots.render('default'), getRegistry()?.o
   .scb-scrolly-code {
     display: none;
   }
-  @media (scripting: enabled) {
+  @media screen and (scripting: enabled) {
     @container (min-width: 600px) {
       [data-scb-scrolly] .scb-scrolly-grid {
         display: grid;
