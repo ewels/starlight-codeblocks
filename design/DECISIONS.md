@@ -657,3 +657,11 @@ Use this format:
 - Decision: A tab keeps its natural width, to the next tab stop that `tab-size` sets, and its arrow sits at the start of that width, as in the mockup. The fixed `4ch` width is gone.
 - Reason: A fixed width made a tab in the middle of a line under `whitespace="all"` stop short of the next tab stop, so the columns after it moved, and it ignored the site's `tab-size`. SPEC 6.10 says the arrow marks the tab's width, and the arrow at the start shows where the tab begins.
 - Alternatives: Stretch the arrow across the tab (a long arrow reads as a symbol in the code, not as whitespace).
+
+## Manual copy of shell output and fields
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: Output lines in a shell block have `user-select: none`, so a manual selection gives the commands only, as the copy button does. On a block with fill-in fields, a `copy` event handler (in the placeholders module, which such pages already load) replaces the clipboard text when the selection is inside the block's code: one line for each selected line, each field as its value or its placeholder text, and nothing that is not visible or not selectable. A selection that goes past the block keeps the browser's own text.
+- Reason: SPEC 5 asks for the same text as the copy button where the browser allows it. The browser's own copy put line breaks around each field and left out its value. Building the text from the live DOM keeps partial selections partial, where copying the button text would copy the whole block.
+- Alternatives: Write the copy button text for any selection in the block (wrong for a selection of one line). Record both as browser limits (the fix is small).

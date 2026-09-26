@@ -39,11 +39,11 @@ A prompt is text at the start of a line. The default prompts are `$ ` and `> `, 
 
 - A line that starts with a prompt is a command. The prompt has its own colour, and a manual selection leaves it out.
 - A command line that ends with `\` continues on the next line. That line is part of the command too.
-- Every other line is output. Output lines have no syntax colours, and use a muted colour.
+- Every other line is output. Output lines have no syntax colours, use a muted colour, and a manual selection leaves them out.
 - The copy button's label is **Copy commands**. It copies each command without its prompt, one command on each line.
 - Hidden lines that are commands are part of the copied text. Hidden output lines are not.
 - A terminal block with no prompt line renders and copies as Expressive Code shows it.
-- The copy button needs JavaScript, as in Expressive Code. Without JavaScript, readers can select the code by hand. The selection leaves out the prompts, but includes the output.
+- The copy button needs JavaScript, as in Expressive Code. Without JavaScript, readers can select the code by hand. The selection leaves out the prompts and the output.
 
 ## Options
 

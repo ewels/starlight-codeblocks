@@ -100,6 +100,51 @@ function change(text: string, value: string) {
   }
 }
 
+/**
+ * The selected text of a block with fields, as a manual copy of a block without fields gives it: one
+ * line for each line, fields as their value or text, and nothing that cannot be seen or selected.
+ */
+function selectedText(pre: HTMLElement, range: Range) {
+  const hidden = (el: Element) => {
+    if (!el.checkVisibility()) return true;
+    for (let e: Element | null = el; e && e !== pre; e = e.parentElement) {
+      if (getComputedStyle(e).userSelect === 'none') return true;
+    }
+    return false;
+  };
+  let text = '';
+  let line: Element | null | undefined;
+  const walker = document.createTreeWalker(pre, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const el = node instanceof Element ? node : node.parentElement;
+    const field = node instanceof HTMLInputElement ? node : undefined;
+    if (!el || (!field && !(node instanceof Text)) || !range.intersectsNode(node) || hidden(el)) continue;
+    const next = el.closest('.ec-line');
+    if (line !== undefined && next !== line) text += '\n';
+    line = next;
+    if (field) text += field.value || field.placeholder;
+    else {
+      const value = node.nodeValue ?? '';
+      const start = node === range.startContainer ? range.startOffset : 0;
+      const end = node === range.endContainer ? range.endOffset : value.length;
+      text += value.slice(start, end);
+    }
+  }
+  return text;
+}
+
+function copy(event: ClipboardEvent) {
+  const selection = getSelection();
+  if (!selection || selection.isCollapsed || !event.clipboardData) return;
+  const range = selection.getRangeAt(0);
+  const common = range.commonAncestorContainer;
+  const el = common instanceof Element ? common : common.parentElement;
+  const pre = el?.closest('[data-scb-placeholders]')?.querySelector<HTMLElement>('pre');
+  if (!pre?.contains(common) || !pre.querySelector(FIELD)) return;
+  event.clipboardData.setData('text/plain', selectedText(pre, range));
+  event.preventDefault();
+}
+
 /** Fills every field with the reader's saved values, and keeps fields with the same text in step. */
 export default function initPlaceholders() {
   const blocks = [
@@ -118,6 +163,7 @@ export default function initPlaceholders() {
       const input = (event.target as Element).closest?.<HTMLInputElement>(FIELD);
       if (input) change(input.placeholder, input.value);
     });
+    document.addEventListener('copy', copy);
     document.addEventListener('keydown', (event) => {
       const input = (event.target as Element).closest?.<HTMLInputElement>(FIELD);
       if (input && event.key === 'Escape') change(input.placeholder, '');

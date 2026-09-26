@@ -69,3 +69,14 @@ test('a manual selection leaves out the prompts', async ({ page }) => {
   expect(text).not.toContain('$ ');
   expect(text).toContain('uv tool install ruff');
 });
+
+test('a manual copy leaves out the output lines, as the copy button does', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await example(page)
+    .locator('pre')
+    .evaluate((pre) => getSelection()?.selectAllChildren(pre));
+  await page.keyboard.press('ControlOrMeta+c');
+  const text = await page.evaluate(() => navigator.clipboard.readText());
+  expect(text).not.toContain('Resolved 1 package');
+  expect(text).toContain('uv tool install ruff');
+});

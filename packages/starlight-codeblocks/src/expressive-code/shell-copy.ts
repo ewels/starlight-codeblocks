@@ -47,10 +47,12 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
 .${PREFIX}-shell-prompt {
   color: ${cssVar('codeblocksShellCopy.promptForeground')};
   user-select: none;
+  -webkit-user-select: none;
 }
 .${PREFIX}-shell-output .code {
   color: ${cssVar('codeblocksShellCopy.outputForeground')};
-}`,
+}
+.${PREFIX}-shell-output { user-select: none; -webkit-user-select: none; }`,
     hooks: {
       preprocessCode({ codeBlock }) {
         const { frame = 'auto' } = codeBlock.props;

@@ -120,3 +120,19 @@ test.describe('custom playgrounds', () => {
     await expect(page.locator('.copy button')).toHaveAttribute('data-code', 'key = "a&b c"');
   });
 });
+
+test('a manual copy gives the same text as the copy button, and a part of it for a part', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await token(page).first().click();
+  await page.keyboard.type('tok_123');
+  const block = example(page).locator('.expressive-code').first();
+  const manual = async (select: (pre: HTMLElement) => void) => {
+    await block.locator('pre').evaluate(select);
+    await page.keyboard.press('ControlOrMeta+c');
+    return page.evaluate(() => navigator.clipboard.readText());
+  };
+  expect(await manual((pre) => getSelection()?.selectAllChildren(pre))).toBe(await copied(page, block));
+  expect(
+    await manual((pre) => getSelection()?.selectAllChildren(pre.querySelectorAll('.ec-line')[1] as HTMLElement)),
+  ).toBe('  https://api.example.com/workspaces/WORKSPACE_ID/runs');
+});

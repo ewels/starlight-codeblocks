@@ -40,7 +40,7 @@ The attribute lists the literal texts to turn into fields, separated by commas. 
 - A field is as wide as its placeholder text or its value, whichever is longer.
 - Typing in a field updates every field with the same text on the page. Pages that load later show the value too.
 - Escape in a field clears its value, in every field with the same text.
-- The copy button copies the code with the reader's values. An empty field copies its placeholder text.
+- The copy button copies the code with the reader's values. An empty field copies its placeholder text. A manual copy of a selection in the block copies the same way.
 - A [playground](/starlight-codeblocks/features/open-in-playground/) button opens the code with the reader's values.
 - Values stay in the reader's browser. The plugin never sends them anywhere.
 - If a text in the attribute is not in the code, the build logs a warning.
@@ -92,7 +92,6 @@ console.log(await response.json());
 
 - A field matches literal text only. A text that also appears in a place that is not a placeholder becomes a field there too. Choose texts such as `YOUR_TOKEN` that appear nowhere else.
 - A custom `url` playground gets the reader's values only if it puts the code in the URL with `encodeURIComponent()`. A custom `post` playground must put the code in a field as it is.
-- A manual selection of the code leaves out the text in fields. Use the copy button to copy the code with the values.
 
 ## Related
 
