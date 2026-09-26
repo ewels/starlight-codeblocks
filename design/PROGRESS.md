@@ -12,6 +12,8 @@ The plan is complete. No step is blocked.
 - **CI** (`ci.yml`) and **Deploy docs** (`deploy-docs.yml`) both run and pass on `main`. GitHub Pages is on, with source "GitHub Actions".
 - **README** with a logo and a section, image or animation and docs link for each feature (media from `pnpm readme:media`). The package README is a copy, checked by a test.
 - **Logo and favicon** (terminal window with a star).
+- **Agent-ready docs site:** a Markdown version of each page at `<page>.md` (examples keep their fence lines), `llms.txt` and `llms-full.txt`, a `rel="alternate"` Markdown link in the head of each page, and page actions under each title (**Copy as Markdown**, **View as Markdown**, **Open in Claude**, **Open in ChatGPT**).
+- **Share cards:** a 1200 × 630 px `og:image` for each page, made at build time with `astro-og-canvas`, with `og:image` and `twitter:image` tags.
 - **Final review** in three passes: gates, code, spec, docs, visual, accessibility and print.
 
 ### Blocked
@@ -27,8 +29,7 @@ Nothing.
 - **Colourised brackets and comment notation** use a language-agnostic scanner for strings and comments, so rare lines can be misread. Expressive Code has no token-scope API.
 - **UI strings are English only.** No translation option.
 - **Manual copy on blocks with fields:** a selection that goes past the block keeps the browser's own text.
-- **No og:image share cards** on the docs site.
-- **CI needs the network:** the docs build fetches the Python `objects.inv`, and one Pyodide e2e test loads Pyodide from jsDelivr.
+- **CI needs the network:** the docs build fetches the Python `objects.inv` and, on a clean machine, the Inter fonts for the share cards, and one Pyodide e2e test loads Pyodide from jsDelivr.
 - **starlight-pydocs** has no Node API, so the Python adapter reads its Griffe dump (ARCHITECTURE.md Q9).
 
 ### Check first

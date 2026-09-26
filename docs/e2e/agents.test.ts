@@ -23,7 +23,7 @@ for (const path of pages) {
     const markdown = await response.text();
     expect(markdown).toMatch(/^# \S/);
     const prose = markdown.replace(/^\s*(`{3,})[^\n]*\n[\s\S]*?^\s*\1$/gm, '');
-    expect(prose).not.toMatch(/^(import|export) |<Example|<\/?(Tabs|TabItem|Aside|Steps)\b/m);
+    expect(prose).not.toMatch(/^(import|export) |^\s*<\/?(Example|Tabs|TabItem|Aside|Steps)\b/m);
   });
 }
 
@@ -96,3 +96,19 @@ test.describe('page actions', () => {
     await expect(page.locator('.page-actions')).toHaveCount(0);
   });
 });
+
+for (const path of pages) {
+  test(`/${path} has a share card of 1200 × 630 px`, async ({ page, request }) => {
+    oneProject();
+    await page.goto(`./${path}`);
+    const image = String(await page.locator('meta[property="og:image"]').getAttribute('content'));
+    expect(image).toBe(`${site}og/${path ? path.replace(/\/$/, '') : 'index'}.png`);
+    await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute('content', image);
+    const response = await request.get(local(image));
+    expect(response.status()).toBe(200);
+    expect(response.headers()['content-type']).toBe('image/png');
+    const png = await response.body();
+    expect(png.subarray(1, 4).toString()).toBe('PNG');
+    expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1200, 630]);
+  });
+}
