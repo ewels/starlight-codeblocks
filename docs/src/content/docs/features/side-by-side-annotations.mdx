@@ -81,7 +81,9 @@ import express from 'express';
 
 const app = express();
 app.use(express.json()); // [!annotate] Parses JSON bodies into \`req.body\`.
-app.get('/health', (req, res) => res.send('ok')); // [!annotate] A route for the load balancer to check.
+app.get('/health', (req, res) => { // [!annotate] A route for the load balancer to check.
+  res.send('ok');
+});
 app.listen(3000); // [!annotate] See the [Express guide](https://expressjs.com/en/starter/hello-world.html).
 \`\`\`
 `;

@@ -92,12 +92,15 @@ test.describe('without JavaScript', () => {
   });
 });
 
-test('the code of the example fits its column on a desktop, without a scroll bar', async ({ page, isMobile }) => {
+test('the code of every example fits its column on a desktop, without a scroll bar', async ({ page, isMobile }) => {
   test.skip(isMobile, 'On a phone the code can scroll.');
-  for (const width of [1024, 1280, 1600]) {
+  const pres = page.locator('.scb-side-grid pre');
+  expect(await pres.count()).toBeGreaterThan(1);
+  for (const width of [1024, 1280, 1440, 1600]) {
     await page.setViewportSize({ width, height: 900 });
-    const pre = example(page).locator('pre');
-    const [scroll, client] = await pre.evaluate((el) => [el.scrollWidth, el.clientWidth]);
-    expect(scroll, `at ${width}px`).toBeLessThanOrEqual(client);
+    for (const [i, pre] of (await pres.all()).entries()) {
+      const [scroll, client] = await pre.evaluate((el) => [el.scrollWidth, el.clientWidth]);
+      expect(scroll, `block ${i + 1} at ${width}px`).toBeLessThanOrEqual(client);
+    }
   }
 });
