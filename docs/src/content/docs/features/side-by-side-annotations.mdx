@@ -5,7 +5,7 @@ description: Show the notes of an annotated block in a column beside the code, s
 
 import Example from '../../../components/Example.astro';
 
-[Annotations](/starlight-codeblocks/features/annotations/) hide each note in a popover until a reader opens it. For a walk-through, where readers need every note, that is one selection too many. Side-by-side annotations use the same `[!annotate]` directive, but show the notes in a column beside the code.
+[Annotations](/starlight-codeblocks/features/annotations/) hide each note in a popover until a reader opens it. For a walkthrough, where readers need every note, that is one selection too many. Side-by-side annotations use the same `[!annotate]` directive, but show the notes in a column beside the code.
 
 export const basic = `
 \`\`\`py title="report.py" annotations="side" apiLinks=false
@@ -69,6 +69,23 @@ codeblocks({
   annotations: false,
 });
 ```
+
+## Examples
+
+A note can hold inline code and links, as in a popover. This JavaScript block explains each line of a small server:
+
+export const server = `
+\`\`\`js title="server.js" annotations="side"
+import express from 'express';
+
+const app = express();
+app.use(express.json()); // [!annotate] Parses JSON bodies into \`req.body\`.
+app.get('/health', (req, res) => res.send('ok')); // [!annotate] A route for the load balancer to check.
+app.listen(3000); // [!annotate] See the [Express guide](https://expressjs.com/en/starter/hello-world.html).
+\`\`\`
+`;
+
+<Example code={server} />
 
 ## Limitations
 

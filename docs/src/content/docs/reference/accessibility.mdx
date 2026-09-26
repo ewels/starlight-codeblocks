@@ -15,6 +15,7 @@ These rules apply to all features, so the sections below do not repeat them:
 - Escape closes an open popover or hover card.
 - When the reader's system asks for reduced motion, every transition and animation of the plugin stops. The change still happens, at once, and pages jump instead of scrolling smoothly.
 - The copy button and a manual selection give the code only. Messages, markers, notes, line numbers and glyphs are not part of the copied text.
+- The copy button includes [hidden lines](/starlight-codeblocks/features/hidden-lines/). A manual selection includes only the hidden lines that are open.
 - Code stays in the page for screen readers, also when it is blurred, faded or collapsed. [Hidden lines](/starlight-codeblocks/features/hidden-lines/) are the exception: they stay hidden until the reader opens them.
 
 ## Contrast
@@ -43,7 +44,7 @@ If you change a colour in the [style settings](/starlight-codeblocks/reference/s
 
 - The code area takes keyboard focus when the block has focused lines. Focus in the code area makes every line clear.
 - Screen readers read every line, because the blurred lines stay in the page.
-- The blur is the only difference between focused lines and other lines. It shows where to look, and hides no information.
+- The blur and the fade are the only differences between focused lines and other lines. They show where to look, and hide no information.
 
 ### Line states
 

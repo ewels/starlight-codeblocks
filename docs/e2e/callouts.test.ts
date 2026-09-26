@@ -9,7 +9,7 @@ const example = (page: import('@playwright/test').Page, n = 0) =>
 
 test('shows the note in a bubble above its line, with the note role', async ({ page }) => {
   const note = example(page).getByRole('note');
-  await expect(note).toHaveText('Aborts the request if the reader leaves the page.');
+  await expect(note).toHaveText('Lets controller.abort() cancel the request.');
   const line = example(page).locator('.ec-line').nth(1);
   await expect(line).toContainText('const res');
   expect((await note.boundingBox())?.y).toBeLessThan((await line.boundingBox())?.y ?? 0);
@@ -56,7 +56,7 @@ test('copying leaves the callout out, with the keyboard', async ({ page, context
   await example(page).locator('.copy button').focus();
   await page.keyboard.press('Enter');
   const copied = await page.evaluate(() => navigator.clipboard.readText());
-  expect(copied).not.toContain('Aborts');
+  expect(copied).not.toContain('cancel the request');
   expect(copied).not.toContain('[!callout');
   expect(copied).toContain('const res = await fetch(url, { signal: controller.signal });');
 });

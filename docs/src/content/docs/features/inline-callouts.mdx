@@ -10,7 +10,7 @@ A code block shows the code, and the prose around it explains it. When the expla
 export const basic = `
 \`\`\`js
 const controller = new AbortController();
-// [!callout /signal/] Aborts the request if the reader leaves the page.
+// [!callout /signal/] Lets \`controller.abort()\` cancel the request.
 const res = await fetch(url, { signal: controller.signal });
 const data = await res.json();
 \`\`\`
@@ -24,7 +24,7 @@ The comment line with `[!callout /signal/]` is gone from the output. The bubble 
 
 | Syntax | Where | Example |
 |---|---|---|
-| `[!callout /text/] note` | Comment on its own line | `// [!callout /signal/] Aborts the request.` |
+| `[!callout /text/] note` | Comment on its own line | `// [!callout /signal/] Lets abort() cancel it.` |
 | `[!callout] note` | Comment on its own line | `# [!callout] Runs once at start-up.` |
 
 The directive goes on its own line, directly above the line it explains. `/text/` is literal text, not a regular expression. The arrow points at the first match on the line below. Without `/text/`, the arrow points at the first character that is not a space. The note can hold inline code, links and bold text.

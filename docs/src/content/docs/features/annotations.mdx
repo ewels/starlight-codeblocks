@@ -17,7 +17,7 @@ jobs:
       matrix:
         python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v6  # [!annotate] Installs \`uv\` and caches its downloads between runs.
       - run: uv run pytest
 \`\`\`
@@ -71,7 +71,7 @@ export async function retry<T>(task: () => Promise<T>, attempts = 3): Promise<T>
       return await task();
     } catch (error) {
       if (i >= attempts) throw error; // [!annotate] Gives up and passes on the last error. See [Error handling](https://example.com/errors).
-      await new Promise((done) => setTimeout(done, 2 ** i * 100)); // [!annotate] Waits 200, 400, 800 ms: an exponential backoff.
+      await new Promise((done) => setTimeout(done, 2 ** i * 100)); // [!annotate] Waits 200 ms, then 400 ms: an exponential backoff.
     }
   }
 }

@@ -113,7 +113,7 @@ Mark lines with directives in code comments. The plugin applies each directive a
 Put a short note in a bubble above a line, with an arrow that points at the word it explains.
 
 ```js
-// [!callout /signal/] Aborts the request if the reader leaves the page.
+// [!callout /signal/] Lets `controller.abort()` cancel the request.
 const res = await fetch(url, { signal: controller.signal });
 ```
 
@@ -189,7 +189,7 @@ Resolved 1 package in 180ms
 <details>
 <summary>Word-level diff</summary>
 
-Highlight only the words that changed in a diff, not the whole line, so readers see the change at a glance. It applies to each removed line that an added line follows.
+Highlight the words that changed inside each line of a diff, so readers find a small edit in a long line. It applies to each removed line that an added line follows.
 
 ```diff
 -const timeout = 5000;
@@ -244,7 +244,7 @@ Turn any text on a line of code into a link, with a directive in the comment abo
 x = np.linspace(0, 1, 50)
 ```
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/token-links.png" alt="A Python block where the word linspace is a link with a dotted underline.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/token-links.png" alt="A Python block where the word linspace is a link with a solid underline in the accent colour.">
 
 [Token links documentation](https://ewels.github.io/starlight-codeblocks/features/token-links/)
 
@@ -255,10 +255,11 @@ x = np.linspace(0, 1, 50)
 
 Link the names in code examples to their reference pages, with a card that shows the signature and a summary. Adapters for Python and Nextflow come with the plugin.
 
-```js
-import { python } from 'starlight-codeblocks/adapters/python';
+```py
+import json
+from pathlib import Path
 
-codeblocks({ apiLinks: { adapters: [python()] } });
+run = json.loads(Path("run.json").read_text())
 ```
 
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/api-auto-linking.webp" alt="A Python block where library names have dotted underlines. The pointer moves over one and a card shows its signature and a summary.">
@@ -391,7 +392,7 @@ Step through versions of one code block, and watch the code move from each versi
 </CodeSteps>
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/token-transitions.webp" alt="A JavaScript block with step buttons. Selecting Next moves the code to the next version, and the new lines slide in.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/token-transitions.webp" alt="A JavaScript block with step buttons. Selecting Next moves the code to the next version, and the new lines fade in.">
 
 [Token transitions documentation](https://ewels.github.io/starlight-codeblocks/features/token-transitions/)
 

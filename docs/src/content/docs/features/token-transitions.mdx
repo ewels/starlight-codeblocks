@@ -90,7 +90,7 @@ Put two or more code blocks between the tags, with an empty line after `<CodeSte
 ## Behaviour
 
 - The title bar shows the title, the numbered steps, the label of the current step, and the **Previous** and **Next** buttons.
-- The steps up to the current step are filled. The current step is solid.
+- Earlier steps have an outline in the accent colour. The current step is filled.
 - Select a number to go to that step. You cannot select **Previous** on the first step, or **Next** on the last step.
 - When a numbered step has keyboard focus, the left and right arrow keys go to the previous and the next step.
 - The animation takes 500 ms. Code that is in both versions moves. Removed code fades out, and new code fades in.
@@ -156,7 +156,7 @@ search:
 
 </Example>
 
-A refactor changes the code inside a function. Code that stays moves to its new place, so readers follow the rename:
+A refactor changes the code inside a function. Code that stays moves to its new place, so readers see the loop become one call to `sum()`:
 
 export const refactor = `
 <CodeSteps>
