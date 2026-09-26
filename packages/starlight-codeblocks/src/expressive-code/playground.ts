@@ -62,7 +62,7 @@ export function pluginPlayground(playgrounds: Record<string, PlaygroundDefinitio
           }
           control = h(
             'a',
-            { class: `${PREFIX}-btn ${PREFIX}-playground`, href, target: '_blank', rel: 'noopener' },
+            { class: `${PREFIX}-btn ${PREFIX}-playground ${PREFIX}-no-print`, href, target: '_blank', rel: 'noopener' },
             label,
           );
           // Its compressed code cannot take placeholder values by text replacement, so a script rebuilds it.
@@ -71,10 +71,14 @@ export function pluginPlayground(playgrounds: Record<string, PlaygroundDefinitio
           }
         } else {
           const { action, fields } = (playground.post as NonNullable<PlaygroundDefinition['post']>)(input);
-          control = h('form', { class: `${PREFIX}-playground`, method: 'post', action, target: '_blank' }, [
-            ...Object.entries(fields).map(([field, value]) => h('input', { type: 'hidden', name: field, value })),
-            h('button', { type: 'submit', class: `${PREFIX}-btn` }, label),
-          ]);
+          control = h(
+            'form',
+            { class: `${PREFIX}-playground ${PREFIX}-no-print`, method: 'post', action, target: '_blank' },
+            [
+              ...Object.entries(fields).map(([field, value]) => h('input', { type: 'hidden', name: field, value })),
+              h('button', { type: 'submit', class: `${PREFIX}-btn` }, label),
+            ],
+          );
         }
         addTitleBarControl(renderData.blockAst, control);
       },

@@ -4,7 +4,7 @@ import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
 const href = (html: string) =>
-  (html.match(/<a class="scb-btn scb-playground" href="([^"]+)"/)?.[1] ?? '').replaceAll('&#x26;', '&');
+  (html.match(/<a class="scb-btn scb-playground scb-no-print" href="([^"]+)"/)?.[1] ?? '').replaceAll('&#x26;', '&');
 
 test('typescript opens the TS Playground with the code compressed by lz-string', async () => {
   const code = "const greeting: string = 'hello';\nconsole.log(greeting);";
@@ -26,13 +26,15 @@ test('rust opens the Rust Playground with the code in the URL', async () => {
 
 test('the link goes in the title bar, which a block without a title gets for it', async () => {
   const { html } = await render(block('ts playground="typescript"', 'let a = 1;'));
-  expect(html).toMatch(/<figcaption class="header"><span class="scb-tools"><a class="scb-btn scb-playground"/);
+  expect(html).toMatch(
+    /<figcaption class="header"><span class="scb-tools"><a class="scb-btn scb-playground scb-no-print"/,
+  );
 });
 
 test('shares the title bar controls with hidden lines', async () => {
   const { html } = await render(block('ts title="a.ts" playground="typescript" hidden={1}', 'let a = 1;', 'a++;'));
   expect(html).toMatch(
-    /<span class="scb-tools"><button[^>]*scb-hidden-toggle[^>]*>[^<]*<\/button><a class="scb-btn scb-playground"/,
+    /<span class="scb-tools"><button[^>]*scb-hidden-toggle[^>]*>[^<]*<\/button><a class="scb-btn scb-playground scb-no-print"/,
   );
 });
 
@@ -79,7 +81,7 @@ test('a post playground renders a form with hidden fields that opens a new tab',
     },
   });
   expect(html).toContain(
-    '<form class="scb-playground" method="post" action="https://stackblitz.com/run" target="_blank"><input type="hidden" name="project[files][index.js]" value="console.log(1)"><button type="submit" class="scb-btn">Open in StackBlitz',
+    '<form class="scb-playground scb-no-print" method="post" action="https://stackblitz.com/run" target="_blank"><input type="hidden" name="project[files][index.js]" value="console.log(1)"><button type="submit" class="scb-btn">Open in StackBlitz',
   );
 });
 

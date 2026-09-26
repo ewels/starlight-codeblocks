@@ -46,7 +46,7 @@ export function pluginCodeSwitcher(): CodeblocksPlugin {
           figure,
           h(
             'select',
-            { class: `${PREFIX}-btn ${MENU}`, ariaLabel: 'Variant' },
+            { class: `${PREFIX}-btn ${MENU} ${PREFIX}-no-print`, ariaLabel: 'Variant' },
             labels.map((label, i) => h('option', { value: String(i), selected: i === index }, label)),
           ),
         );

@@ -146,7 +146,7 @@ export function pluginHiddenLines(): CodeblocksPlugin {
                 {
                   type: 'button',
                   id: markerId,
-                  class: `${PREFIX}-hidden-marker`,
+                  class: `${PREFIX}-hidden-marker ${PREFIX}-no-print`,
                   ariaExpanded: 'false',
                   ariaControls: ids.join(' '),
                 },
@@ -165,7 +165,7 @@ export function pluginHiddenLines(): CodeblocksPlugin {
             'button',
             {
               type: 'button',
-              class: `${PREFIX}-btn ${PREFIX}-hidden-toggle`,
+              class: `${PREFIX}-btn ${PREFIX}-hidden-toggle ${PREFIX}-no-print`,
               ariaControls: markerIds.join(' '),
             },
             `Show ${plural(hidden.size)}`,

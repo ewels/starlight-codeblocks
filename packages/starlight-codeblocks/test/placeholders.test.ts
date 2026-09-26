@@ -58,7 +58,7 @@ test('a TS Playground link in a block with fields loads the playground script', 
 
 test('other playground links need no playground script', async () => {
   const { html } = await render(block('rust placeholder="YOUR_TOKEN" playground="rust"', 'let t = "YOUR_TOKEN";'));
-  expect(html).toContain('class="scb-btn scb-playground"');
+  expect(html).toContain('class="scb-btn scb-playground scb-no-print"');
   expect(html).not.toContain('data-scb-playground');
 });
 

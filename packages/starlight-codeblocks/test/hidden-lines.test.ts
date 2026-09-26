@@ -8,7 +8,7 @@ const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines
 
 test('hides lines named by hidden={range}, replaced by a marker', async () => {
   const { html, copyText, warnings } = await render(block('js hidden={2-3}', 'a()', 'b()', 'c()', 'd()'));
-  expect(html).toContain('class="scb-hidden-marker"');
+  expect(html).toContain('class="scb-hidden-marker scb-no-print"');
   expect(html).toContain('<span>2 hidden lines</span>');
   expect(html.match(/class="ec-line scb-hidden-line"/g)).toHaveLength(2);
   expect(copyText).toBe('a()\nb()\nc()\nd()');
@@ -25,14 +25,14 @@ test('hides lines with [!code hide] and [!code hide:N]', async () => {
 
 test('groups consecutive hidden lines into one run, each with its own marker', async () => {
   const { html } = await render(block('js hidden={1-2,4}', 'a()', 'b()', 'c()', 'd()'));
-  expect(html.match(/class="scb-hidden-marker"/g)).toHaveLength(2);
+  expect(html.match(/class="scb-hidden-marker scb-no-print"/g)).toHaveLength(2);
   expect(html).toContain('<span>2 hidden lines</span>');
   expect(html).toContain('<span>1 hidden line</span>');
 });
 
 test('adds a title bar button that shows every run at once', async () => {
   const { html } = await render(block('js title="a.js" hidden={1,3}', 'a()', 'b()', 'c()'));
-  expect(html).toContain('class="scb-btn scb-hidden-toggle"');
+  expect(html).toContain('class="scb-btn scb-hidden-toggle scb-no-print"');
   expect(html).toContain('Show 2 hidden lines');
   expect(html).not.toContain('aria-pressed');
 });
@@ -53,7 +53,7 @@ test('forces a header for the toggle button even without a title', async () => {
 test('markers and the toggle use aria-expanded and aria-controls', async () => {
   const { html } = await render(block('js hidden={2}', 'a()', 'b()', 'c()'));
   const marker = html.match(
-    /<button type="button" id="(scb-hidden-[\w-]+)" class="scb-hidden-marker" aria-expanded="false" aria-controls="([\w -]+)">/,
+    /<button type="button" id="(scb-hidden-[\w-]+)" class="scb-hidden-marker scb-no-print" aria-expanded="false" aria-controls="([\w -]+)">/,
   );
   expect(marker).toBeTruthy();
   const [, markerId, lineIds] = marker as RegExpMatchArray;

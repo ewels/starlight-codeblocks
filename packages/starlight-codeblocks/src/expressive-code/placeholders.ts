@@ -83,6 +83,9 @@ export function pluginPlaceholders({ storage = 'local' }: { storage?: string } =
   outline: 2px solid currentColor;
   outline-offset: 1px;
   border-style: solid;
+}
+@media print {
+  .${PREFIX}-placeholder { padding: 0; border: 0; background: none; }
 }`,
     jsModules: clientJsModules,
     hooks: {

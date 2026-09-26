@@ -12,10 +12,14 @@ export type StepTokens = [number, string, string][];
 
 function navButton(go: 'prev' | 'next', disabled: boolean) {
   const text = go === 'prev' ? 'Previous' : 'Next';
-  return h('button', { type: 'button', class: `scb-btn ${S}-nav`, dataScbStepsGo: go, ariaLabel: text, disabled }, [
-    h('span', { class: `${S}-nav-text` }, text),
-    h('span', { class: `${S}-nav-icon`, ariaHidden: 'true' }, go === 'prev' ? '‹' : '›'),
-  ]);
+  return h(
+    'button',
+    { type: 'button', class: `scb-btn ${S}-nav scb-no-print`, dataScbStepsGo: go, ariaLabel: text, disabled },
+    [
+      h('span', { class: `${S}-nav-text` }, text),
+      h('span', { class: `${S}-nav-icon`, ariaHidden: 'true' }, go === 'prev' ? '‹' : '›'),
+    ],
+  );
 }
 
 /**
@@ -48,7 +52,7 @@ export function codeSteps(html: string): string {
       }
       const stepper = h(
         'span',
-        { class: `${S}-stepper`, role: 'group', ariaLabel: 'Steps' },
+        { class: `${S}-stepper scb-no-print`, role: 'group', ariaLabel: 'Steps' },
         groups.flatMap((_, i) => {
           const done = i <= current ? ` ${S}-done` : '';
           const dot = h(

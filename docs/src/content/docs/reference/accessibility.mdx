@@ -19,6 +19,7 @@ These rules apply to all features, so the sections below do not repeat them:
 - The copy button and a manual selection give the code only. Messages, markers, notes, line numbers and glyphs are not part of the copied text.
 - The copy button includes [hidden lines](/starlight-codeblocks/features/hidden-lines/). A manual selection includes only the hidden lines that are open.
 - Code stays in the page for screen readers, also when it is blurred, faded or collapsed. [Hidden lines](/starlight-codeblocks/features/hidden-lines/) are the exception: they stay hidden until the reader opens them.
+- Controls do not print. An expandable block prints in full, and hidden lines stay hidden.
 
 ## Contrast
 
@@ -145,6 +146,7 @@ The glyphs are hidden from screen readers, which read the same code as in a bloc
 ### Fill-in placeholders
 
 - Each field is a native `input`. Its accessible name is its placeholder text.
+- A field prints as its text, without the border.
 - Escape in a field clears its value.
 
 ### Code switcher

@@ -37,6 +37,7 @@ pre[data-scb-expandable] > code > [hidden] { display: none; }
   }
 }
 @media print {
+  pre.${PREFIX}-expandable-collapsed::after { display: none; }
   pre[data-scb-expandable] > code > .ec-line[hidden] { display: grid !important; }
   pre[data-scb-expandable] > code > .${PREFIX}-callout[hidden] { display: flex !important; }
 }`,

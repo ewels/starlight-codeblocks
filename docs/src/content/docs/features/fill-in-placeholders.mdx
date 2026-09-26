@@ -45,6 +45,7 @@ The attribute lists the literal texts to turn into fields, separated by commas. 
 - Values stay in the reader's browser. The plugin never sends them anywhere.
 - If a text in the attribute is not in the code, the build logs a warning.
 - Without JavaScript, fields are plain inputs. They do not update each other, and the copy button copies the placeholder text.
+- A field prints as its text, without the border: the value if the reader typed one, or else the placeholder text.
 
 <Aside type="danger">
 Tell readers where their values go. With the default `storage: 'local'`, the browser keeps the values after the reader closes the tab. On a shared computer, the next person can see them.

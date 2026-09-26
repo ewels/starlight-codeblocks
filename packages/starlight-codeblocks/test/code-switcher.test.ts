@@ -9,7 +9,7 @@ const variant = (index: number, labels: string[]) => `scbSwitcher="${encodeVaria
 
 test('renders the menu in the title bar, with the variant selected', async () => {
   const { html, copyText } = await render([`\`\`\`sh ${variant(1, ['npm', 'pnpm'])}`, 'pnpm add x', '```'].join('\n'));
-  expect(html).toContain('<select class="scb-btn scb-switcher-menu" aria-label="Variant">');
+  expect(html).toContain('<select class="scb-btn scb-switcher-menu scb-no-print" aria-label="Variant">');
   expect(html).toContain('<option value="0">npm</option><option value="1" selected>pnpm</option>');
   expect(html).toContain('class="scb-tools"');
   expect(copyText).toBe('pnpm add x');

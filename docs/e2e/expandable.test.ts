@@ -45,6 +45,9 @@ test('the fade and the button do not print', async ({ page }) => {
   const bar = example(page).locator('.scb-expandable-bar');
   await page.emulateMedia({ media: 'print' });
   await expect(bar).toBeHidden();
+  const pre = example(page).locator('pre');
+  expect(await pre.evaluate((el) => getComputedStyle(el, '::after').display)).toBe('none');
+  await expect(pre.locator('.ec-line').last()).toBeVisible();
 });
 
 test('has no transition, with or without reduced motion', async ({ page }) => {
