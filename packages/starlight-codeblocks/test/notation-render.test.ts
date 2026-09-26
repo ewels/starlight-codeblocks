@@ -90,3 +90,10 @@ test('keeps diff syntax working', async () => {
   expect(copyText).toBe('a()\nb()');
   expect(html).toContain('ec-line highlight ins');
 });
+
+test('does not treat Object.prototype names as directives or comment syntaxes', async () => {
+  const { html, warnings } = await render(block('js', 'a() // [!constructor]'));
+  expect(html).toContain('[!constructor]');
+  expect(warnings.join('\n')).toContain('is not a known directive');
+  expect((await render(block('constructor', 'a() // [!code focus]'))).html).toContain('[!code focus]');
+});

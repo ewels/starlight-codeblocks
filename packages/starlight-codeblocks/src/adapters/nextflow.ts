@@ -153,7 +153,11 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
 
       /** Links the operators in the chain after `tokens[i]`. */
       const chain = (i: number) => {
-        while (tokens[i]?.value === '.' && tokens[i + 1]?.type === 'name' && operators[at(i + 1).value]) {
+        while (
+          tokens[i]?.value === '.' &&
+          tokens[i + 1]?.type === 'name' &&
+          Object.hasOwn(operators, at(i + 1).value)
+        ) {
           add(at(i + 1), at(i + 1), at(i + 1).value, operator(at(i + 1).value));
           i = skipCall(tokens, i + 2);
         }
@@ -164,7 +168,7 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
         const token = at(i);
         if (token.type !== 'name' || inInclude.has(token) || tokens[i - 1]?.value === '.') continue;
         const name = tokens[i + 2];
-        if (isChannel(token) && tokens[i + 1]?.value === '.' && name && factories[name.value]) {
+        if (isChannel(token) && tokens[i + 1]?.value === '.' && name && Object.hasOwn(factories, name.value)) {
           // One link for `channel.of`, unless a line break splits it.
           const oneLine = !code.slice(token.start, name.end).includes('\n');
           add(oneLine ? token : name, name, `channel.${name.value}`, factory(name.value));

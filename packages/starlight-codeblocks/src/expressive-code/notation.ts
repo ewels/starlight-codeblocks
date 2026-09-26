@@ -120,7 +120,7 @@ function interpret(token: Token, specs: DirectiveSpecs, sourceLine: number) {
     count = match[2] === undefined ? 1 : Number(match[2]);
     if (count < 1) return { problem: 'needs a count of 1 or more after the colon, such as `:3`' };
   }
-  const spec = specs[name];
+  const spec = Object.hasOwn(specs, name) ? specs[name] : undefined;
   if (!spec) return { problem: 'is not a known directive' };
   const match = rest.find((part) => 'literal' in part);
   const directive: Directive = {

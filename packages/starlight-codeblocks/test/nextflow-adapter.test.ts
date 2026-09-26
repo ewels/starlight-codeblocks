@@ -149,3 +149,9 @@ test('the bundled map has every channel factory and operator of the reference', 
   ]);
   expect(Object.keys(operators)).toHaveLength(47);
 });
+
+test('does not treat Object.prototype names as factories or operators', async () => {
+  expect(await texts(['ch = channel.of(1)', 'ch.toString()', 'channel.constructor', 'ch.hasOwnProperty("a")'])).toEqual(
+    ['channel.of'],
+  );
+});

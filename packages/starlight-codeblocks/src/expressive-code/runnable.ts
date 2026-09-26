@@ -91,7 +91,7 @@ export function pluginRunnable({ runtimes, timeout = 10000 }: RunnableSettings =
         const info = bundledLanguagesInfo.find(
           (l) => l.id === codeBlock.language || l.aliases?.includes(codeBlock.language),
         );
-        const language = [codeBlock.language, info?.id].find((l) => l && modules[l]);
+        const language = [codeBlock.language, info?.id].find((l) => l && Object.hasOwn(modules, l));
         if (!language) {
           warn(
             context,

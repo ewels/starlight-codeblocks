@@ -110,9 +110,9 @@ export default function initPlaceholders() {
     store = openStore(blocks[0]?.dataset.scbPlaceholders);
     try {
       const saved = JSON.parse(store?.getItem(KEY) ?? '{}');
-      values = saved && typeof saved === 'object' ? saved : {};
+      values = Object.assign(Object.create(null), saved && typeof saved === 'object' ? saved : {});
     } catch {
-      values = {};
+      values = Object.create(null);
     }
     document.addEventListener('input', (event) => {
       const input = (event.target as Element).closest?.<HTMLInputElement>(FIELD);

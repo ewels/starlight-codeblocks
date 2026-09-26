@@ -112,3 +112,8 @@ test('output and error colours meet 4.5:1 in the dark and the light theme', asyn
     }
   }
 });
+
+test('does not treat Object.prototype names as runtimes', async () => {
+  const { warnings } = await render(block('constructor runnable', 'a'), js);
+  expect(warnings.join('\n')).toContain('needs a runtime');
+});

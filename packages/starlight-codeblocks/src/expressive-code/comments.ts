@@ -27,7 +27,8 @@ export interface CommentSyntax {
 
 export function commentSyntaxFor(language: string, overrides: Record<string, string[]> = {}): CommentSyntax[] {
   const key = language.toLowerCase();
-  const syntax = overrides[key] ?? defaultCommentSyntax[key] ?? [];
+  const own = (syntaxes: Record<string, string[]>) => (Object.hasOwn(syntaxes, key) ? syntaxes[key] : undefined);
+  const syntax = own(overrides) ?? own(defaultCommentSyntax) ?? [];
   return syntax.map((entry) => {
     const [open = '', close] = entry.trim().split(/\s+/);
     return { open, close };

@@ -37,7 +37,7 @@ export function pluginPlayground(playgrounds: Record<string, PlaygroundDefinitio
         const { codeBlock, renderData } = context;
         const name = codeBlock.metaOptions.getString('playground');
         if (name === undefined) return;
-        const playground = all[name];
+        const playground = Object.hasOwn(all, name) ? all[name] : undefined;
         if (!playground) {
           warn(
             context,

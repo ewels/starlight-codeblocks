@@ -108,3 +108,8 @@ test('renders a block without playground= the same as without the feature', asyn
   const md = block('ts title="a.ts"', 'let a = 1;');
   expect((await render(md)).html).toBe((await render(md, { playgrounds: false })).html);
 });
+
+test('does not treat Object.prototype names as playgrounds', async () => {
+  const { warnings } = await render(block('ts playground="constructor"', 'let a = 1;'));
+  expect(warnings.join('\n')).toContain('is not a known playground');
+});
