@@ -633,3 +633,11 @@ Use this format:
 - Decision: Annotations, footnotes and hidden lines build their element ids from one id per block: the first 8 hex characters of a SHA-1 of the source file path, the meta string and the code, plus a count when the same engine renders an identical block again. The footnote label "for line N" counts from `startLineNumber`. The interface strings (such as "Footnote 1, for line 2", "Show 3 hidden lines", "Copy") stay in English, and there is no option to translate them.
 - Reason: Random ids changed the HTML on every build, so builds were not reproducible and every deploy changed every page. The hash keeps ids stable when unrelated blocks change; the count keeps two identical blocks on a page apart. The spec does not ask for translated interface strings, so translation is out of scope for this release.
 - Alternatives: A global counter (ids change when a block above is added, and depend on the order in which Astro renders pages). Starlight's i18n strings (a later release can add them).
+
+## Ids in Scrollycoding copies
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: `<Scrollycoding>` adds a suffix to every id in each copy of the block (`-s1`, `-s2`, … for the step copies and `-sticky` for the sticky copy), and rewrites `aria-controls`, `aria-describedby`, `aria-labelledby`, `popovertarget`, `#` links and CSS anchor names in the same copy to match. A line permalink id `<id>-L<n>` becomes `<id>-<suffix>-L<n>`, so the permalinks script still finds the lines of the block it belongs to. A link to `#<id>-L<n>` from outside the component does not select a line.
+- Reason: Every copy had the same ids, so a hidden-lines marker or an annotation in the sticky copy opened the lines or the popover of a step copy that was not on screen. Duplicate ids also fail WCAG 4.1.1 parsing checks in older tools.
+- Alternatives: Keep the original ids on one copy (which copy a reader sees depends on the width of the page, so no single copy is right).

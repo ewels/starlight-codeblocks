@@ -94,3 +94,35 @@ test('fails the build for a range that is not valid, or without one block and a 
   expect(() => scrollycoding(html)).toThrow('needs one code block and one or more <Step> components');
   expect(() => scrollycoding([html, html, steps[0]].join(''))).toThrow('It has 2 code blocks and 1 steps.');
 });
+
+test('gives each copy its own ids, and points its references at them', async () => {
+  const { html } = await render(
+    [
+      '```js id="cfg" footnotes="static"',
+      'a() // [!annotate] Calls `a`.',
+      '// [!ref] Calls `b`.',
+      'b()',
+      'c() // [!code hide]',
+      'd()',
+      '```',
+    ].join('\n'),
+  );
+  const out = scrollycoding([html, ...steps].join('\n'));
+  const tree = fromHtml(out, { fragment: true });
+  const ids = selectAll('[id]', tree).map((el) => String(el.properties.id));
+  expect(ids.length).toBeGreaterThan(10);
+  expect(new Set(ids).size).toBe(ids.length);
+  const refs = selectAll('*', tree).flatMap((el) => {
+    const p = el.properties;
+    const hash = typeof p.href === 'string' && p.href.startsWith('#') ? [p.href.slice(1)] : [];
+    const list = [p.ariaControls, p.popoverTarget].flatMap((v) => (v ? String(v).split(/[\s,]+/) : []));
+    return [...hash, ...list];
+  });
+  expect(refs.length).toBeGreaterThan(10);
+  for (const ref of refs) expect(ids).toContain(ref);
+  const anchors = [...out.matchAll(/(anchor-name|position-anchor):(--[\w-]+)/g)].map((m) => `${m[1]}${m[2]}`);
+  expect(new Set(anchors).size).toBe(anchors.length);
+  expect(out).toContain('id="cfg-sticky"');
+  expect(out).toContain('id="cfg-sticky-L1"');
+  expect(out).toContain('href="#cfg-s2-L1"');
+});

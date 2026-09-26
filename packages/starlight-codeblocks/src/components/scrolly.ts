@@ -24,9 +24,42 @@ function lines(value: unknown, name: string, count: number): number[] {
   }
 }
 
+/**
+ * Adds `suffix` to every id in a copy of the block, and to the references to them, so that each copy's
+ * controls act on that copy. A line permalink id `<block>-L<n>` becomes `<block>-<suffix>-L<n>`.
+ */
+function renameIds(copy: Element, suffix: string) {
+  const elements = [copy, ...selectAll('*', copy)];
+  const block = select('[data-scb-permalinks]', copy)?.properties.id;
+  const renamed = new Map<string, string>();
+  for (const { properties } of elements) {
+    const id = properties.id;
+    if (typeof id !== 'string') continue;
+    const line = block ? id.match(new RegExp(`^${block}(-L\\d+)$`)) : null;
+    renamed.set(id, line ? `${block}-${suffix}${line[1]}` : `${id}-${suffix}`);
+  }
+  const rename = (id: string) => renamed.get(id) ?? id;
+  for (const { properties } of elements) {
+    if (typeof properties.id === 'string') properties.id = rename(properties.id);
+    for (const key of ['ariaControls', 'ariaDescribedBy', 'ariaLabelledBy', 'popoverTarget']) {
+      const value = properties[key];
+      if (value !== undefined) properties[key] = String(value).split(/\s+/).map(rename).join(' ');
+    }
+    if (typeof properties.href === 'string' && properties.href.startsWith('#')) {
+      properties.href = `#${rename(properties.href.slice(1))}`;
+    }
+    if (typeof properties.style === 'string') {
+      properties.style = properties.style.replace(/--([\w-]+)/g, (name, id) =>
+        renamed.has(id) ? `--${rename(id)}` : name,
+      );
+    }
+  }
+}
+
 /** Sets the focus and the marks of one step on a copy of the block. */
-function apply(group: Element, { focus, mark }: StepState) {
+function apply(group: Element, { focus, mark }: StepState, suffix: string) {
   const copy = structuredClone(group);
+  renameIds(copy, suffix);
   selectAll('.ec-line', copy).forEach((line, i) => {
     removeClassName(line, OUT);
     if (focus.length > 0 && !focus.includes(i)) addClassName(line, OUT);
@@ -67,12 +100,12 @@ export function scrollycoding(html: string, interactive = true): string {
         dataScbFocus: states[k].focus.join(','),
         dataScbMark: states[k].mark.join(','),
       },
-      [h('div', { class: `${S}-text` }, step.children), apply(group, states[k])],
+      [h('div', { class: `${S}-text` }, step.children), apply(group, states[k], `s${k + 1}`)],
     );
   });
   const grid = h('div', { class: `${S}-grid` }, [h('div', { class: `${S}-steps` }, column)]);
   if (interactive) {
-    const sticky = apply(group, states[0]);
+    const sticky = apply(group, states[0], 'sticky');
     const figure = select('figure', sticky);
     if (figure) addClassName(figure, `${S}-frame`);
     const code = select('pre > code', sticky);
