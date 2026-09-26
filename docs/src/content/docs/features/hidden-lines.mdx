@@ -41,6 +41,7 @@ The imports and the `if` block are behind their own markers. Select a marker to 
 - The title bar has a button, "Show N hidden lines", where N is the total across every run. It shows every run at once. Once every run is open, it reads "Hide N lines".
 - The copy button always includes hidden lines, so the code still runs after a paste. A manual selection includes only the hidden lines that are open, and never the text of a marker.
 - Each marker has `aria-expanded`, and the title bar button has `aria-pressed`. Both have `aria-controls`, so assistive technology reports what they open.
+- An [inline callout](/starlight-codeblocks/features/inline-callouts/) on a hidden line shows only while the line is open.
 - Hidden lines stay hidden when the page prints.
 - Without JavaScript, hidden lines stay hidden, and the markers and the title bar button do nothing.
 

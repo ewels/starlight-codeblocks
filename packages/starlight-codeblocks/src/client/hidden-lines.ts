@@ -5,7 +5,13 @@ function ids(el: HTMLElement) {
 }
 
 function setRun(marker: HTMLElement, open: boolean) {
-  for (const id of ids(marker)) document.getElementById(id)?.classList.toggle(OPEN, open);
+  for (const id of ids(marker)) {
+    const line = document.getElementById(id);
+    line?.classList.toggle(OPEN, open);
+    for (let el = line?.previousElementSibling; el?.classList.contains('scb-callout'); el = el.previousElementSibling) {
+      el.classList.toggle(OPEN, open);
+    }
+  }
   marker.setAttribute('aria-expanded', String(open));
   const n = ids(marker).length;
   const span = marker.querySelector('span');

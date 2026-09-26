@@ -23,7 +23,12 @@ function pair(link: Element, name: string) {
 }
 
 function setUp(link: HTMLAnchorElement) {
-  const name = decodeURIComponent(link.getAttribute('href')?.slice(PREFIX.length) ?? '');
+  let name: string;
+  try {
+    name = decodeURIComponent(link.getAttribute('href')?.slice(PREFIX.length) ?? '');
+  } catch {
+    return;
+  }
   const block = pair(link, name);
   if (!block) return;
   const lines = [...block.querySelectorAll<HTMLElement>(`[data-scb-mention~="${CSS.escape(name)}"]`)];

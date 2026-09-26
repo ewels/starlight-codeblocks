@@ -19,8 +19,8 @@ export function pluginExpandable({ lines: siteDefault = 12 }: { lines?: number }
   padding: 0.45rem;
   border-top: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
 }
-/* An .ec-line's own display: grid rule otherwise beats the [hidden] user-agent style. */
-pre[data-scb-expandable] .ec-line[hidden] { display: none; }
+/* The own display rules of lines, markers and callouts otherwise beat the [hidden] user-agent style. */
+pre[data-scb-expandable] > code > [hidden] { display: none; }
 @media (scripting: none) {
   .${PREFIX}-expandable-bar { display: none; }
 }
@@ -37,7 +37,8 @@ pre[data-scb-expandable] .ec-line[hidden] { display: none; }
   }
 }
 @media print {
-  pre[data-scb-expandable] .ec-line[hidden] { display: grid !important; }
+  pre[data-scb-expandable] > code > .ec-line[hidden] { display: grid !important; }
+  pre[data-scb-expandable] > code > .${PREFIX}-callout[hidden] { display: flex !important; }
 }`,
     jsModules: clientJsModules,
     hooks: {

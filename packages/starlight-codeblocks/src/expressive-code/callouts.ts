@@ -111,7 +111,12 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
   background: color-mix(in srgb, currentColor 12%, transparent);
   font-size: 0.95em;
 }
-.${cls('-bubble')} a { color: inherit; text-underline-offset: 3px; }`;
+.${cls('-bubble')} a { color: inherit; text-underline-offset: 3px; }
+/* A callout on a hidden line shows with the line. */
+.${cls('-hidden')}:not(.${PREFIX}-hidden-open) { display: none; }
+@media print {
+  .${cls('-hidden')} { display: none !important; }
+}`;
     },
     hooks: {
       postprocessRenderedBlock({ codeBlock, renderData }) {
@@ -124,9 +129,14 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
           const line = directive.lines[0] as ExpressiveCodeLine;
           const lineEl = lineEls[lines.indexOf(line)];
           if (!lineEl) continue;
+          const hidden = (lineEl.properties.className as string[] | undefined)?.includes(`${PREFIX}-hidden-line`);
           const bubble: ElementContent = h(
             'div',
-            { class: cls(), role: 'note', style: `--scb-callout-mid:${calloutMiddle(line.text, directive.match)}` },
+            {
+              class: hidden ? `${cls()} ${cls('-hidden')}` : cls(),
+              role: 'note',
+              style: `--scb-callout-mid:${calloutMiddle(line.text, directive.match)}`,
+            },
             [h('span', { class: cls('-bubble') }, inlineMarkdown(directive.text ?? ''))],
           );
           // Callouts for one line keep their source order, directly above it.

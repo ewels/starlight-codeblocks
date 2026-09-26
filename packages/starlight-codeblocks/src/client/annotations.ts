@@ -32,7 +32,17 @@ function side(block: HTMLElement) {
     block.classList.toggle('scb-side-static', notes.offsetHeight > innerHeight - top);
   };
   checkHeight();
-  addEventListener('resize', checkHeight, { passive: true });
+  heights.set(block, checkHeight);
+}
+
+const heights = new Map<HTMLElement, () => void>();
+let ready = false;
+
+function checkHeights() {
+  for (const [block, check] of heights) {
+    if (block.isConnected) check();
+    else heights.delete(block);
+  }
 }
 
 /**
@@ -40,6 +50,10 @@ function side(block: HTMLElement) {
  * the rest), and links each side-by-side note with its line on hover and focus.
  */
 export default function initAnnotations() {
+  if (!ready) {
+    ready = true;
+    addEventListener('resize', checkHeights, { passive: true });
+  }
   for (const block of document.querySelectorAll<HTMLElement>(
     '[data-scb-annotations]:not([data-scb-annotations-ready])',
   )) {

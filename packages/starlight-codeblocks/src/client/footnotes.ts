@@ -24,10 +24,11 @@ function select(event: MouseEvent) {
   if (other) reveal(other);
 }
 
+let ready = false;
+
 /** Highlights a footnote's line and list item together. Without it, the badges and items are plain links. */
 export default function initFootnotes() {
-  const root = document.documentElement;
-  if (root.dataset.scbFootnotesReady !== undefined) return;
-  root.dataset.scbFootnotesReady = '';
+  if (ready) return;
+  ready = true;
   document.addEventListener('click', select);
 }

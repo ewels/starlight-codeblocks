@@ -11,7 +11,10 @@ export default function initExpandable() {
     const total = lines.length;
     const button = pre.parentElement?.querySelector<HTMLButtonElement>('.scb-expandable-toggle');
     if (!button) continue;
-    const tail = lines.slice(n);
+    const last = lines[n - 1];
+    const tail = [...(last?.parentElement?.children ?? [])].filter(
+      (el) => last && last.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING,
+    );
     const collapse = () => {
       for (const line of tail) line.setAttribute('hidden', 'until-found');
       pre.classList.add(COLLAPSED);
@@ -29,6 +32,7 @@ export default function initExpandable() {
       if (button.getAttribute('aria-expanded') === 'true') collapse();
       else expand();
     });
-    collapse();
+    if (tail.some((el) => el.classList.contains('scb-permalink-target'))) expand();
+    else collapse();
   }
 }

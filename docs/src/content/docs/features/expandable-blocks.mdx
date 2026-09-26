@@ -54,6 +54,7 @@ The block shows its first eight lines, faded at the bottom, with "Show all 24 li
 - A bar under the code has a button, "Show all X lines", where X is the total. When the block is open, it reads "Show fewer lines".
 - A block collapses only if the collapse hides three lines or more. A block with eight lines and `expandable={7}` renders in full.
 - The collapsed lines use `hidden="until-found"` in browsers that support it. A reader who searches the page with Find still finds text inside them, and the block expands to show the match.
+- A [line permalink](/starlight-codeblocks/features/line-permalinks/) to a collapsed line opens the block.
 - Without JavaScript, the block renders in full, with no fade and no button.
 
 ## Options
@@ -102,7 +103,6 @@ jobs:
 ## Limitations
 
 - Expandable blocks print in full: the fade and the button do not appear on paper.
-- A [line permalink](/starlight-codeblocks/features/line-permalinks/) to a collapsed line does not open the block on page load. It opens only when the reader's browser runs its own Find and matches text inside the block.
 
 ## Related
 
