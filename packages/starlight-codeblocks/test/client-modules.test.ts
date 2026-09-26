@@ -1,12 +1,18 @@
+import { realpathSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { afterEach, expect, test } from 'vitest';
-import { clientJsModules, loaderSource, readClientModules } from '../src/client-modules.ts';
+import { clientJsModules, loaderSource, packageRoot, readClientModules } from '../src/client-modules.ts';
 import { clientModulePlugins } from '../src/integration.ts';
 import { setRegistry } from '../src/registry.ts';
 
 afterEach(() => setRegistry(undefined));
 
 const modules = [{ feature: 'annotations', fileName: 'scb-annotations.abc.js', source: 'export default () => {}' }];
+
+test('finds the package from a site bundle, as with plugins in ec.config.mjs', () => {
+  const chunk = new URL('../../../docs/dist/.prerender/chunks/ec.config_abc.mjs', import.meta.url);
+  expect(realpathSync(packageRoot(chunk.href))).toBe(realpathSync(new URL('..', import.meta.url)));
+});
 
 test('the asset loader imports files next to itself', () => {
   const source = loaderSource(modules, false);

@@ -1,4 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getRegistry } from './registry.ts';
@@ -12,9 +13,21 @@ export interface ClientModule {
 
 const FILE = /^scb-(.+)\.[\w-]+\.js$/;
 
-function packageRoot() {
-  let dir = dirname(fileURLToPath(import.meta.url));
-  while (!existsSync(join(dir, 'package.json'))) dir = dirname(dir);
+const isPackage = (dir: string) => {
+  const file = join(dir, 'package.json');
+  return existsSync(file) && JSON.parse(readFileSync(file, 'utf8')).name === 'starlight-codeblocks';
+};
+
+/**
+ * The folder of this package. A site can bundle this module, as Astro does for plugins in `ec.config.mjs`;
+ * the walk up then finds only the site, so resolve the package from there instead.
+ */
+export function packageRoot(from = import.meta.url) {
+  for (let dir = dirname(fileURLToPath(from)); dir !== dirname(dir); dir = dirname(dir)) {
+    if (isPackage(dir)) return dir;
+  }
+  let dir = dirname(createRequire(from).resolve('starlight-codeblocks'));
+  while (!isPackage(dir)) dir = dirname(dir);
   return dir;
 }
 
