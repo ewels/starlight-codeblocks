@@ -2,7 +2,7 @@ import { type Element, h, select, selectAll, toHtml } from '@expressive-code/cor
 import { syncTokenKeys, toKeyedTokens } from '@shikijs/magic-move/core';
 import type { KeyedTokensInfo } from '@shikijs/magic-move/types';
 import { fromHtml } from 'hast-util-from-html';
-import { nameFigure } from '../expressive-code/core.ts';
+import { markDecorations, nameFigure } from '../expressive-code/core.ts';
 import { readTokens } from './tokens.ts';
 
 const S = 'scb-steps';
@@ -91,6 +91,7 @@ export function codeSteps(html: string): string {
     });
   });
 
+  markDecorations(root);
   const data = JSON.stringify(steps).replaceAll('<', '\\u003c');
   return `<div class="${S}" data-scb-steps>${toHtml(root)}<div class="sr-only" aria-live="polite"></div><script type="application/json">${data}</script></div>`;
 }

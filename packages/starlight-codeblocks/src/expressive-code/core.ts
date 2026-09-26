@@ -13,7 +13,16 @@ import {
   onBackground,
   type StyleVariant,
 } from '@expressive-code/core';
-import { type Element, type ElementContent, EXIT, h, type Parents, select, visit } from '@expressive-code/core/hast';
+import {
+  type Element,
+  type ElementContent,
+  EXIT,
+  h,
+  type Parents,
+  select,
+  selectAll,
+  visit,
+} from '@expressive-code/core/hast';
 import { getRegistry } from '../registry.ts';
 import type { DirectiveSpecs } from './notation.ts';
 import { parseRange, RangeSyntaxError } from './ranges.ts';
@@ -38,8 +47,43 @@ export function pluginCore(): CodeblocksPlugin {
       postprocessRenderedLine({ line, renderData }) {
         lineElements.set(line, renderData.lineAst);
       },
+      postprocessRenderedBlockGroup({ renderData }) {
+        markDecorations(renderData.groupAst);
+      },
     },
   };
+}
+
+/** The class on every element that a feature adds to a block but that is not code, such as labels and buttons. */
+export const DECORATION = `${PREFIX}-deco`;
+
+const decorations = [
+  'tools',
+  'sr-only',
+  'state-label',
+  'annotation',
+  'annotation-popover',
+  'footnote-badge',
+  'callout',
+  'hidden-marker',
+  'expandable-bar',
+  'steps-stepper',
+  'run-output',
+  'permalink',
+]
+  .map((name) => `.${PREFIX}-${name}`)
+  .join(', ');
+
+/**
+ * Gives each decoration the one class that tools reading the HTML can drop, such as starlight-llms-txt,
+ * and keeps it out of the Pagefind index. Keep the list in step with new decorations.
+ */
+export function markDecorations(root: Parents) {
+  for (const element of selectAll(decorations, root)) {
+    const classes = element.properties.className as string[];
+    if (!classes.includes(DECORATION)) classes.push(DECORATION);
+    element.properties.dataPagefindIgnore = '';
+  }
 }
 
 const lineElements = new WeakMap<ExpressiveCodeLine, Element>();

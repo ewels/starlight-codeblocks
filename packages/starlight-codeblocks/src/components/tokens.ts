@@ -1,4 +1,5 @@
 import { type Element, type ElementContent, matches, select, selectAll } from '@expressive-code/core/hast';
+import { DECORATION } from '../expressive-code/core.ts';
 
 export interface Token {
   content: string;
@@ -7,10 +8,7 @@ export interface Token {
 }
 
 // Decorations that other features add inside a line. Keep in step with their unselectable elements.
-const DECORATIONS = [
-  'button, input, select, [popover], [aria-hidden="true"]',
-  '.scb-sr-only, .scb-state-label, .scb-state-prefix, .scb-callout, .scb-annotation, .scb-footnote-badge',
-].join(', ');
+const DECORATIONS = `button, input, select, [popover], [aria-hidden="true"], .${DECORATION}`;
 
 /** The code lines of a block, without the lines that other plugins add, such as a collapsed section's summary. */
 export function codeLines(root: Element): Element[] {

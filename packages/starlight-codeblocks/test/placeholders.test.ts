@@ -5,7 +5,7 @@ import { render } from './render.ts';
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
 
 const field = (text: string) =>
-  `<input type="text" class="scb-placeholder" data-ph="${text}" placeholder="${text}" aria-label="${text}" spellcheck="false" autocomplete="off" style="width: ${text.length}ch">`;
+  `<input type="text" class="scb-placeholder" data-ph="${text}" placeholder="${text}" aria-label="${text}" spellcheck="false" autocomplete="off" style="width: ${text.length}ch"><span class="scb-placeholder-text">${text}</span>`;
 
 test('turns every match of each text into a field, named by its text', async () => {
   const { html, copyText, warnings } = await render(

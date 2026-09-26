@@ -50,7 +50,7 @@ test('removes the numbers of the line numbers plugin from blocks with an id', as
   const { toHtml } = await import('@expressive-code/core/hast');
   const html = toHtml(renderedGroupAst);
   expect(html).not.toContain('<div class="ln"');
-  expect(html.match(/class="scb-permalink"/g)).toHaveLength(2);
+  expect(html.match(/class="scb-permalink scb-deco"/g)).toHaveLength(2);
   const plain = toHtml((await ec.render({ code: 'a()', language: 'js' })).renderedGroupAst);
   expect(plain).toContain('<div class="ln"');
 });

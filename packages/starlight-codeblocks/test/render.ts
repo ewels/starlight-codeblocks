@@ -23,8 +23,11 @@ export async function render(markdown: string, options: CodeblocksOptions = {}, 
     parentDocument: { sourceFilePath: 'src/content/docs/example.md' },
   });
   const button = select('button[data-code]', renderedGroupAst);
+  const rawHtml = toHtml(renderedGroupAst);
   return {
-    html: toHtml(renderedGroupAst),
+    /** The HTML without the decoration marker, which `test/decorations.test.ts` checks. */
+    html: rawHtml.replaceAll(' scb-deco', '').replace(/ data-pagefind-ignore(="")?/g, ''),
+    rawHtml,
     copyText: String(button?.properties.dataCode ?? '').replaceAll('\x7F', '\n'),
     warnings,
   };

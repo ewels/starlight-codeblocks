@@ -36,7 +36,9 @@ class PlaceholderAnnotation extends ExpressiveCodeAnnotation {
       autocomplete: 'off',
       style: `width: ${this.text.length}ch`,
     });
-    const field: ElementContent = style ? h('span', { style }, [input]) : input;
+    // The text copy is for tools that read the HTML and skip inputs, such as starlight-llms-txt and Pagefind.
+    const text = h('span', { class: `${PREFIX}-placeholder-text` }, this.text);
+    const field: ElementContent = h('span', style ? { style } : {}, [input, text]);
     return nodesToTransform.map((_, i) => (i === 0 ? field : h(null, [])));
   }
 }
@@ -75,6 +77,7 @@ export function pluginPlaceholders({ storage = 'local' }: { storage?: string } =
   line-height: 1.35;
   vertical-align: baseline;
 }
+.${PREFIX}-placeholder-text { display: none; }
 .${PREFIX}-placeholder::placeholder {
   color: inherit;
   opacity: 1;

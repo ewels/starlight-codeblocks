@@ -19,7 +19,9 @@ const steps = [
 
 async function renderSteps(blocks = steps) {
   const rendered = await Promise.all(blocks.map((b) => render(b)));
-  const html = codeSteps(rendered.map((r) => r.html).join('\n'));
+  const html = codeSteps(rendered.map((r) => r.rawHtml).join('\n'))
+    .replaceAll(' scb-deco', '')
+    .replace(/ data-pagefind-ignore(="")?/g, '');
   const data = JSON.parse(html.match(/<script type="application\/json">(.*?)<\/script>/)?.[1] ?? '[]') as StepTokens[];
   return { html, data, rendered };
 }
