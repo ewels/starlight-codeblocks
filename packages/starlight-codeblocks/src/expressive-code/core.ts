@@ -53,6 +53,9 @@ function where(codeBlock: ExpressiveCodeBlock, line?: number) {
 }
 
 /** Logs a build warning that names the file, the code block and, if given, the line in the block. */
+/** A relative, `http:` or `https:` URL, so that no link runs `javascript:`. */
+export const isSafeUrl = (href: string) => !/^[a-z][a-z0-9+.-]*:/i.test(href) || /^https?:/i.test(href);
+
 export function warn({ codeBlock, config }: Context, message: string, line?: number) {
   config.logger.warn(`${where(codeBlock, line)}: ${message}`);
 }

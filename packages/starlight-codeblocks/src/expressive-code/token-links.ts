@@ -6,7 +6,7 @@ import {
 } from '@expressive-code/core';
 import { h } from '@expressive-code/core/hast';
 import { getRegistry } from '../registry.ts';
-import { type CodeblocksPlugin, warn } from './core.ts';
+import { type CodeblocksPlugin, isSafeUrl, warn } from './core.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
 
@@ -91,6 +91,10 @@ export function pluginTokenLinks({ base }: { base?: string } = {}): CodeblocksPl
               '`[!link]` needs the text to link and one URL, such as `[!link /Path/ https://example.com/]`.',
               directive.sourceLine,
             );
+            continue;
+          }
+          if (!isSafeUrl(url)) {
+            warn(context, `\`[!link]\` needs a relative, http or https URL, not \`${url}\`.`, directive.sourceLine);
             continue;
           }
           const line = directive.lines[0];

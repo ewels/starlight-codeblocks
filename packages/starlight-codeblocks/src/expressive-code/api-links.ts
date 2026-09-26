@@ -13,7 +13,7 @@ import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import type { AdapterContext, ApiLinkAdapter, Resolution } from '../options.ts';
 import { getRegistry } from '../registry.ts';
-import type { CodeblocksPlugin } from './core.ts';
+import { type CodeblocksPlugin, isSafeUrl } from './core.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
 import { withBase } from './token-links.ts';
@@ -114,9 +114,6 @@ function ready(adapter: ApiLinkAdapter, { config }: Pick<ExpressiveCodeHookConte
   return setup;
 }
 
-// Inventories and dumps are outside the site's control, so they must not add `javascript:` links.
-const isSafe = (href: string) => !/^[a-z][a-z0-9+.-]*:/i.test(href) || /^https?:/i.test(href);
-
 /** The line at the top of the card: the signature, or the kind and qualified name. */
 export const cardHead = (resolution: Resolution, name: string) =>
   resolution.signature ?? [resolution.kind, resolution.name ?? name].filter(Boolean).join(' ');
@@ -188,7 +185,7 @@ export function pluginApiLinks({ adapters }: { adapters: ApiLinkAdapter[] }): Co
             const lineStart = starts[index] ?? 0;
             if (!line || tokenLinked.has(line) || end > lineStart + line.text.length) continue;
             const resolution = adapter.resolve(symbol);
-            if (!resolution || !isSafe(resolution.href)) continue;
+            if (!resolution || !isSafeUrl(resolution.href)) continue;
             const head = cardHead(resolution, symbol.name);
             const properties: Record<string, string> = {
               class: cls(),

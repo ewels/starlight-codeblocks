@@ -93,3 +93,9 @@ test('the underline meets 3:1 contrast in both themes', async () => {
     for (const bg of backgrounds[variant.theme.type]) expect(getColorContrast(colour, bg)).toBeGreaterThanOrEqual(3);
   }
 });
+
+test('does not link a javascript: URL', async () => {
+  const { html, warnings } = await render(block('js', '// [!link /alert/ javascript:alert(1)]', 'alert(1)'));
+  expect(html).not.toContain('javascript:');
+  expect(warnings.join('\n')).toContain('http');
+});
