@@ -93,3 +93,24 @@ test('styles use the site engine style variants from the registry', () => {
     setRegistry(undefined);
   }
 });
+
+test('also takes the suffix inside the backticks, as rehype-pretty-code does', async () => {
+  const { html, warnings } = await md('Call `await fetch(url){:js}` now.', {}, false);
+  expect(html).toMatch(
+    /^<p>Call <code class="scb-inline" data-lang="js"><span style="--0:#[0-9A-F]+;--1:#[0-9A-F]+">await<\/span>/,
+  );
+  expect(html).not.toContain('{');
+  expect(warnings).toEqual([]);
+});
+
+test('leaves an inner suffix alone in code that is only a suffix, has a backtick, or uses the token form', async () => {
+  for (const source of ['`{:js}`', '`` `x`{:js} ``', '`` `x{:js}` ``', '`name{:.entity.name}`']) {
+    expect((await md(source)).html).toBe((await md(source, { inlineHighlighting: false })).html);
+  }
+});
+
+test('removes an inner suffix with an unknown language, with a warning', async () => {
+  const { html, warnings } = await md('Run `x{:nope}`.');
+  expect(html).toBe('<p>Run <code>x</code>.</p>');
+  expect(warnings).toHaveLength(1);
+});

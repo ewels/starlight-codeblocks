@@ -1,20 +1,20 @@
 ---
 title: Inline code highlighting
-description: Give inline code in the prose the same syntax colours as the code blocks, with a language suffix after the closing backtick.
+description: Give inline code in the prose the same syntax colours as the code blocks, with a language suffix at the end of the code.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
-Starlight shows inline code in the prose in one colour, with no syntax highlighting. A short expression such as a function call is then harder to read than the same code in a block. A `{:lang}` suffix after the closing backtick gives the inline code the syntax colours of that language.
+Starlight shows inline code in the prose in one colour, with no syntax highlighting. A short expression such as a function call is then harder to read than the same code in a block. A `{:lang}` suffix at the end of the inline code gives it the syntax colours of that language.
 
 export const basic = `
-Call \`await fetch(url)\`{:js} and check \`res.ok\`{:js} before you read the body.
+Call \`await fetch(url){:js}\` and check \`res.ok{:js}\` before you read the body.
 `;
 
 <Example code={basic}>
 
-Call `await fetch(url)`\{:js} and check `res.ok`\{:js} before you read the body.
+Call `await fetch(url){:js}` and check `res.ok{:js}` before you read the body.
 
 </Example>
 
@@ -24,12 +24,15 @@ The two pieces of inline code get the colours and the background of the site's c
 
 | Syntax | Where | Example |
 |---|---|---|
-| `` `<code>`{:<lang>} `` | Prose, directly after the closing backtick | `` `res.ok`{:js} `` |
+| `` `<code>{:<lang>}` `` | Inside the backticks, at the end of the code | `` `res.ok{:js}` `` |
+| `` `<code>`{:<lang>} `` | Directly after the closing backtick | `` `res.ok`{:js} `` |
 
-`<lang>` is a language name or alias that Expressive Code knows, the same as on a fence line: `js`, `py`, `sh`, `css` and others. Languages that the site adds in the `shiki.langs` option of Expressive Code work too. The suffix must follow the backtick with no space between them. The syntax is the same as in rehype-pretty-code.
+`<lang>` is a language name or alias that Expressive Code knows, the same as on a fence line: `js`, `py`, `sh`, `css` and others. Languages that the site adds in the `shiki.langs` option of Expressive Code work too. The suffix must follow the code or the backtick with no space between them.
+
+Use the suffix inside the backticks. It is the syntax of rehype-pretty-code, and it is valid in `.md` and `.mdx` files with no change. Inline code that contains a backtick keeps its suffix as text, so that a page can show the syntax, as this one does.
 
 <Aside type="caution">
-In `.mdx` files, write a backslash before the suffix: `` `res.ok`\{:js} ``. MDX reads `{:js}` as a JavaScript expression, and the build fails without the backslash. In `.md` files, write the suffix without a backslash.
+MDX reads a `{:js}` after the closing backtick as a JavaScript expression, and the build fails. Write a backslash before it: `` `res.ok`\{:js} ``. Some plugins read `.md` files as MDX too, such as starlight-versions and starlight-md-txt, so the backslash is needed in `.md` files on those sites. The backslash works in `.md` files on every site.
 </Aside>
 
 ## Behaviour
@@ -37,7 +40,7 @@ In `.mdx` files, write a backslash before the suffix: `` `res.ok`\{:js} ``. MDX 
 - The inline code uses the site's Expressive Code themes: the background and the token colours of the dark theme and the light theme.
 - The colours change with Starlight's theme menu, the same as the code blocks.
 - The colours have the same contrast correction as the code blocks.
-- The plugin removes the suffix from the page.
+- The plugin removes the suffix from the page, in both forms.
 - Inline code without a suffix does not change.
 - If Expressive Code does not know the language, the code shows as normal inline code and the build logs a warning with the file name. The plugin removes the suffix.
 - The highlighting happens at build time, so it works without JavaScript. Pages with no code blocks get the colours too.
@@ -60,16 +63,16 @@ With `inlineHighlighting: false`, the suffix stays in the prose as text.
 A shell command in a sentence:
 
 export const shell = `
-Install the package with \`pnpm add starlight-codeblocks\`{:sh}, then restart the dev server.
+Install the package with \`pnpm add starlight-codeblocks{:sh}\`, then restart the dev server.
 `;
 
 <Example code={shell}>
 
-Install the package with `pnpm add starlight-codeblocks`\{:sh}, then restart the dev server.
+Install the package with `pnpm add starlight-codeblocks{:sh}`, then restart the dev server.
 
 </Example>
 
-A CSS declaration and a Python expression in a list:
+A CSS declaration and a Python expression in a list, with the suffix after the backtick:
 
 export const list = `
 - Hide the element with \`display: none\`{:css}.
@@ -86,6 +89,7 @@ export const list = `
 ## Limitations
 
 - Inline code cannot use the attributes or directives of code blocks, such as focus or line states.
+- The plugin does not support the token form of rehype-pretty-code, such as `{:.entity.name.function}`.
 - The code must be on one line. Expressive Code highlights it as a code block of one line. An unclosed string colours the rest of the code as a string.
 
 ## Related

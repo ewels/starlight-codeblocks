@@ -9,6 +9,8 @@ export const INLINE_CSS_ID = 'virtual:starlight-codeblocks/inline-code.css';
 
 const CLASS = 'scb-inline';
 const TEXT_SUFFIX = /^\{:([\w#+.-]+)\}/;
+// rehype-pretty-code's form, inside the backticks. Code with a backtick is left alone, so that docs can show the syntax.
+const INNER_SUFFIX = /^([^`]*\S)\{:([\w#+-][\w#+.-]*)\}$/;
 
 interface EcOptions {
   themeCssRoot?: string;
@@ -131,14 +133,19 @@ export async function inlineCode(node: InlineCode, ctx: MdastVisitorContext, war
   const index = ctx.indexOf(node);
   if (!parent || index === undefined) return;
   const found = suffix(parent.children as Nodes[], index);
-  if (!found) return;
-  for (const removed of found.remove) ctx.removeNode(removed);
-  if (found.restValue) ctx.setProperty(found.rest as Text, 'value', found.restValue);
-  else ctx.removeNode(found.rest);
-  const tokens = await highlight(node.value, found.lang);
-  if (tokens === undefined) {
-    warn(`inline code \`${node.value}\` has the unknown language \`${found.lang}\`. It shows as plain inline code.`);
-    return;
+  const inner = found ? undefined : node.value.match(INNER_SUFFIX);
+  if (!found && !inner) return;
+  if (found) {
+    for (const removed of found.remove) ctx.removeNode(removed);
+    if (found.restValue) ctx.setProperty(found.rest as Text, 'value', found.restValue);
+    else ctx.removeNode(found.rest);
   }
-  return { type: 'html', value: `<code class="${CLASS}" data-lang="${found.lang}">${tokens}</code>` } as const;
+  const code = inner ? (inner[1] as string) : node.value;
+  const lang = inner ? (inner[2] as string) : (found?.lang as string);
+  const tokens = await highlight(code, lang);
+  if (tokens === undefined) {
+    warn(`inline code \`${code}\` has the unknown language \`${lang}\`. It shows as plain inline code.`);
+    return inner ? ({ type: 'inlineCode', value: code } as const) : undefined;
+  }
+  return { type: 'html', value: `<code class="${CLASS}" data-lang="${lang}">${tokens}</code>` } as const;
 }

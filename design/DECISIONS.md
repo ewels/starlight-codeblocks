@@ -841,3 +841,11 @@ Use this format:
 - Decision: The features that "Client modules work in copies of a block" left out now work in a copy too. Bracket pairs and side-by-side note highlights listen for `mouseover`, `focusin` and `focusout` on the document and light up inside the block of the event target. API link cards use one card, which moves into the block of the link it shows. Fill-in fields keep each template in `data-scb-template`, so that a copy fills its own copied code from the template, and a copy gets its own update function the first time a reader types in it. `<CodeSteps>` gives each step `data-scb-steps-of`; in a copy of a step, Previous, Next, the step numbers and the arrow keys swap in the title, step numbers, controls, code and copy button of the step they go to, without the animation, and keep what other plugins added to the copy, such as a full screen button.
 - Reason: The user prefers working features in the copies that full screen plugins show over known limits.
 - Alternatives: The token animation in a copy (the copy has one step and no step data; the swap keeps the code correct).
+
+## Inline code suffix inside the backticks
+
+- Date: 2026-09-26
+- Step: after the plan (compatibility with other plugins)
+- Decision: Inline highlighting also takes the suffix inside the backticks, `` `fetch(url){:js}` ``, and the docs recommend that form. The form after the backtick, `` `fetch(url)`{:js} ``, still works, and the docs say to write `\{:js}` in `.mdx` files and on sites whose plugins read `.md` as MDX. Inline code that contains a backtick, or that is only a suffix, keeps its text, so that docs can show the syntax. The token form `{:.token}` is not supported, so a suffix that starts with a dot stays as text.
+- Reason: The form inside the backticks is the one that rehype-pretty-code documents (`` `[1, 2, 3]{:js}` ``); SPEC 8.1 names rehype-pretty-code as the source of the convention. It is valid Markdown and valid MDX, so it needs no backslash, and it works with starlight-versions and starlight-md-txt, which read `.md` files as MDX and fail on `{:js}` after the backtick.
+- Alternatives: Only document the backslash (every author has to remember it, and plain `.md` breaks as soon as a site adds one of those plugins). A different syntax, such as a `lang` attribute (no existing convention).

@@ -83,3 +83,9 @@ test('registers the remark plugin only for the unified() processor', () => {
   };
   expect(satteri.options.mdastPlugins).toHaveLength(1);
 });
+
+test('takes the suffix inside the backticks too', async () => {
+  const { html } = await md('Call `fetch(url){:js}` now.');
+  expect(html).toMatch(/<p>Call <code class="scb-inline" data-lang="js"><span/);
+  expect(html).not.toContain('{:js}');
+});

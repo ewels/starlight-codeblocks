@@ -442,10 +442,10 @@ Show the notes of an annotated block in a column beside the code, so readers see
 <details>
 <summary>Inline code highlighting</summary>
 
-Give inline code in the prose the same syntax colours as the code blocks, with a language suffix after the closing backtick.
+Give inline code in the prose the same syntax colours as the code blocks, with a language suffix at the end of the code.
 
 ```md
-Call `await fetch(url)`{:js} before you read the body.
+Call `await fetch(url){:js}` before you read the body.
 ```
 
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/inline-code-highlighting.png" alt="A sentence with two pieces of inline code in syntax colours.">
