@@ -11,16 +11,16 @@ Each example below uses the same code and the same two notes, so you can compare
 
 ## Compare the styles
 
-| Style | Directive | Reader sees the note | Note goes | Best for |
-|---|---|---|---|---|
-| [Inline callout](/starlight-codeblocks/features/inline-callouts/) | `[!callout /text/]` above the line | At once | Above the line, with an arrow at one name | One short sentence about one name |
-| [Annotation](/starlight-codeblocks/features/annotations/) | `[!annotate]` at the end of the line | After a selection | In a popover under a marker | Notes that most readers can skip |
-| [Footnote](/starlight-codeblocks/features/footnotes/) | `[!ref]` above the line | At once | In a list under the block | Notes that every reader needs, on any screen |
-| [Side-by-side annotation](/starlight-codeblocks/features/side-by-side-annotations/) | `[!annotate]`, with `annotations="side"` | At once | In a column beside the code | A walk-through of a longer block on a wide screen |
+| Style | Reader sees the note | Note goes |
+|---|---|---|
+| [Inline callout](/starlight-codeblocks/features/inline-callouts/) | At once | Above the line, with an arrow at one name |
+| [Annotation](/starlight-codeblocks/features/annotations/) | After a selection | In a popover under a marker |
+| [Footnote](/starlight-codeblocks/features/footnotes/) | At once | In a list under the block |
+| [Side-by-side annotation](/starlight-codeblocks/features/side-by-side-annotations/) | At once | In a column beside the code, on a wide screen |
 
 ## Inline callouts
 
-Use a callout for a note of one short sentence that is about one word or name on a line. The bubble is always visible, so keep callouts to one or two in a block.
+Use a callout for a note of one short sentence that is about one word or name on a line. The bubble is always visible, so keep callouts to one or two in a block. Put `[!callout /text/]` in a comment above the line.
 
 export const callout = `
 \`\`\`py title="fetch.py"
@@ -39,7 +39,7 @@ items = response.json()
 
 ## Annotations
 
-Use an annotation when the note is longer, or when the line needs no visual interruption until the reader asks. The code stays as compact as a plain block.
+Use an annotation when the note is longer, or when the line needs no visual interruption until the reader asks. The code stays as compact as a plain block. Put `[!annotate]` in a comment at the end of the line.
 
 export const annotation = `
 \`\`\`py title="fetch.py"
@@ -56,7 +56,7 @@ items = response.json()
 
 ## Footnotes
 
-Use footnotes when every reader needs every note, and the block is short enough that the list stays close to the lines. The list works the same on a phone and on a desktop.
+Use footnotes when every reader needs every note, and the block is short enough that the list stays close to the lines. The list works the same on a phone and on a desktop. Put `[!ref]` in a comment above the line.
 
 export const footnote = `
 \`\`\`py title="fetch.py"
@@ -75,7 +75,7 @@ items = response.json()
 
 ## Side-by-side annotations
 
-Use side-by-side annotations for a longer block that you explain step by step. On a wide screen, each note is beside the code. On a narrow screen, the notes are a list under the block, as footnotes are.
+Use side-by-side annotations for a longer block that you explain step by step. On a wide screen, each note is beside the code. On a narrow screen, the notes are a list under the block, as footnotes are. Use `[!annotate]`, and add `annotations="side"` to the fence line.
 
 export const side = `
 \`\`\`py title="fetch.py" annotations="side"

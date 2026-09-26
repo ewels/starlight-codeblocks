@@ -4,6 +4,7 @@ description: Add a Run button that runs the example in the browser and shows the
 ---
 
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
 A code block in Starlight shows code, but readers must copy it to a terminal to see what it does. The `runnable` attribute adds a **Run** button to the title bar. The button runs the code in the browser and shows the output under the block.
 
@@ -42,11 +43,7 @@ The language of the block chooses the runtime. The plugin has a runtime for Pyth
 
 ## Options
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `runnable` | `false \| object` | on | Set to `false` to turn the feature off. `runnable` attributes then have no effect. |
-| `runnable.runtimes` | `Record<string, string>` | `{ python: 'starlight-codeblocks/runtimes/pyodide' }` | Runtime modules by language. The entries of the site are added to the Python runtime. An entry for `python` replaces it. |
-| `runnable.timeout` | `number` | `10000` | The time in milliseconds before a run stops. |
+<Options />
 
 A runtime module is a package path, or a path from the project root. This site adds a runtime for JavaScript, and gives runs 5 seconds:
 

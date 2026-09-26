@@ -4,6 +4,7 @@ description: Colour matching brackets by nesting depth, so a dense line of code 
 ---
 
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
 A line with several levels of nested brackets is hard to scan: every `(`, `[` and `{` looks the same. The `brackets` attribute colours each bracket by how deep it is nested, cycling through three colours. A reader can then follow a pair by its colour.
 
@@ -34,10 +35,7 @@ The colour cycles every three levels, so the outermost call and the innermost ca
 
 ## Options
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `brackets` | `false \| object` | on | Set to `false` to turn colourised brackets off everywhere. |
-| `brackets.languages` | `string[]` | `[]` | Languages that get colourised brackets on every block, without the `brackets` attribute. |
+<Options />
 
 A site that writes a lot of deeply nested JavaScript or JSON can turn colourised brackets on for those languages by default:
 
@@ -79,7 +77,6 @@ const pattern = "(group)";
 
 - On a short line with only one level of nesting, the colours add little. Use the attribute for lines that are hard to scan, or turn it on for a whole language with `brackets.languages` when it is usually dense.
 - The plugin finds strings and comments with the comment syntax of the block's language, not a full parser. A language with unusual string syntax can colour a bracket that is inside a string.
-- Matching the partner of a hovered bracket needs JavaScript. Following the caret does not, and is not part of this release.
 
 ## Related
 

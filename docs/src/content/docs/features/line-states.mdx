@@ -4,6 +4,7 @@ description: Tint lines as errors, warnings or notes, with an optional message a
 ---
 
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
 Expressive Code can mark a line, but a mark does not say what is wrong with the line. A line state tints the line as an error, a warning or a note. It can also show a message after the code, as a code editor does.
 
@@ -48,10 +49,7 @@ Inline code, links and bold in a message render as HTML. Other Markdown stays as
 
 ## Options
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `lineStates` | `false \| object` | on | Set to `false` to turn line states off. The directives then stay in the code as written. |
-| `lineStates.states` | `Record<string, { label, colour }>` | `{}` | Custom states by name. `label` is the text in the label. `colour` has a `dark` and a `light` value. |
+<Options />
 
 ### Add a custom state
 

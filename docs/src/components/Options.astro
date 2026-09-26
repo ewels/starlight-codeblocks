@@ -1,0 +1,33 @@
+---
+import { featureLink } from './feature-link.ts';
+import { inlineCode } from './inline-code.ts';
+import { adapterOptions, options, pageOptions } from './reference.ts';
+import ReferenceEntry from './ReferenceEntry.astro';
+
+interface Props {
+  /** The options of a built-in adapter, instead of the options of the page. */
+  adapter?: keyof typeof adapterOptions;
+}
+
+const page = Astro.locals.starlightRoute.entry.id;
+const all = page === 'reference/options';
+const entries = Astro.props.adapter ? adapterOptions[Astro.props.adapter] : all ? options : pageOptions(page);
+---
+
+{
+  await Promise.all(
+    entries.map(async (option) => (
+      <ReferenceEntry
+        id={option.id}
+        labels={[option.label]}
+        description={option.description}
+        facts={[
+          ['Type', inlineCode(option.type)],
+          ['Default', inlineCode(option.default)],
+          ...(all ? [['Feature', await featureLink(option.page)] as [string, string]] : []),
+        ]}
+        level={all ? 2 : 3}
+      />
+    )),
+  )
+}

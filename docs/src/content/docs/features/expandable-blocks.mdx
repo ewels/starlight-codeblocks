@@ -4,8 +4,9 @@ description: Show the first lines of a long block, with a fade and a button to r
 ---
 
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
-A full file is sometimes the clearest example, but a reader scanning the page does not need every line in view at once. The `expandable` attribute caps the block at a line count, with a fade at the cut and a button that reveals the rest.
+A full file is sometimes the clearest example, but a reader who scans the page does not need every line in view at once. The `expandable` attribute caps the block at a line count, with a fade at the cut and a button that reveals the rest.
 
 export const basic = `
 \`\`\`py title="report.py" expandable={8} apiLinks=false
@@ -42,27 +43,24 @@ The block shows its first eight lines, faded at the bottom, with "Show all 24 li
 
 ## Syntax
 
-| Syntax | Where | Example |
+| Syntax | Where | Effect |
 |---|---|---|
 | `expandable` | Fence line | Caps the block at the site default, 12 lines |
-| `expandable={N}` | Fence line | `expandable={8}` |
+| `expandable={N}` | Fence line | Caps the block at `N` lines |
 
 ## Behaviour
 
 - The block shows the first `N` lines, with a fade over the last one.
-- A bar under the code has a button, "Show all X lines", where X is the total. After expanding, it reads "Show fewer lines".
-- A block only collapses if doing so hides at least three lines. A block with eight lines and `expandable={7}` renders in full.
+- A bar under the code has a button, "Show all X lines", where X is the total. When the block is open, it reads "Show fewer lines".
+- A block collapses only if the collapse hides three lines or more. A block with eight lines and `expandable={7}` renders in full.
 - The collapsed lines use `hidden="until-found"` in browsers that support it. A reader who searches the page with Find still finds text inside them, and the block expands to show the match.
 - Without JavaScript, the block renders in full, with no fade and no button.
 
 ## Options
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `expandable` | `false \| object` | on | Set to `false` to turn expandable blocks off. `expandable` and `expandable={N}` then have no effect. |
-| `expandable.lines` | `number` | `12` | Lines to show on a block that has the bare `expandable` attribute. |
+<Options />
 
-A site that mostly shows short snippets can lower the site default, so that only unusually long blocks collapse:
+To show more lines in blocks with the bare `expandable` attribute, raise `lines`:
 
 ```js title="astro.config.mjs"
 codeblocks({
@@ -87,7 +85,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:

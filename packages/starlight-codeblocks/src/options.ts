@@ -113,6 +113,9 @@ interface Field {
 
 interface Feature {
   description: string;
+  page: string;
+  /** What stays behind when the option is `false`. */
+  off?: string;
   fields?: Record<string, Field>;
   /** For options that are a map of names to definitions, such as `playgrounds`. */
   entries?: Omit<Field, 'default'>;
@@ -140,6 +143,8 @@ const reservedStateNames = new Set(
 export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   focus: {
     description: 'Blurs the lines outside a focus range.',
+    page: 'features/focus',
+    off: '`[!code focus]` then stays in the code as written.',
     fields: {
       style: {
         type: "'blur' | 'dim'",
@@ -151,6 +156,8 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   },
   lineStates: {
     description: 'Tints lines as errors, warnings or notes, with an optional message.',
+    page: 'features/line-states',
+    off: 'The directives then stay in the code as written.',
     fields: {
       states: {
         type: 'Record<string, { label: string; colour: { dark: string; light: string } }>',
@@ -172,6 +179,8 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   },
   notation: {
     description: 'Reads directives in code comments.',
+    page: 'features/comment-notation',
+    off: 'Every comment then renders as written.',
     fields: {
       comments: {
         type: 'Record<string, string[]>',
@@ -181,10 +190,11 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       },
     },
   },
-  callouts: { description: 'Shows a note in a bubble above a line.' },
-  annotations: { description: 'Adds numbered markers that open a note.' },
+  callouts: { description: 'Shows a note in a bubble above a line.', page: 'features/inline-callouts' },
+  annotations: { description: 'Adds numbered markers that open a note.', page: 'features/annotations' },
   footnotes: {
     description: 'Adds numbered badges to lines, with the notes in a list under the block.',
+    page: 'features/footnotes',
     fields: {
       sticky: {
         type: 'boolean',
@@ -194,9 +204,13 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       },
     },
   },
-  hiddenLines: { description: 'Hides lines that readers need to run the code but not to understand it.' },
+  hiddenLines: {
+    description: 'Hides lines that readers need to run the code but not to understand it.',
+    page: 'features/hidden-lines',
+  },
   shellCopy: {
     description: 'Copies only the commands from terminal blocks with prompts.',
+    page: 'features/smart-shell-copy',
     fields: {
       prompts: {
         type: 'string[]',
@@ -208,6 +222,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   },
   wordDiff: {
     description: 'Highlights the words that changed between a removed line and an added line.',
+    page: 'features/word-level-diff',
     fields: {
       minSimilarity: {
         type: 'number',
@@ -217,9 +232,10 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       },
     },
   },
-  whitespace: { description: 'Shows spaces and tabs as faint glyphs.' },
+  whitespace: { description: 'Shows spaces and tabs as faint glyphs.', page: 'features/visible-whitespace' },
   brackets: {
     description: 'Colours matching brackets by nesting depth.',
+    page: 'features/colourised-brackets',
     fields: {
       languages: {
         type: 'string[]',
@@ -229,9 +245,10 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       },
     },
   },
-  tokenLinks: { description: 'Turns text on a line into a link.' },
+  tokenLinks: { description: 'Turns text on a line into a link.', page: 'features/token-links' },
   apiLinks: {
     description: 'Links names in code to their reference pages.',
+    page: 'features/api-auto-linking',
     fields: {
       adapters: {
         type: 'ApiLinkAdapter[]',
@@ -244,6 +261,8 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   },
   expandable: {
     description: 'Shows the first lines of long blocks, with a button to show the rest.',
+    page: 'features/expandable-blocks',
+    off: '`expandable` and `expandable={N}` then have no effect.',
     fields: {
       lines: {
         type: 'number',
@@ -255,6 +274,8 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   },
   playgrounds: {
     description: 'Adds a button that opens the code in an online playground.',
+    page: 'features/open-in-playground',
+    off: '`playground` attributes then have no effect.',
     entries: {
       type: 'an object with a `label` and one of `url` or `post`',
       description: 'Custom playgrounds by name, in addition to the built-in ones.',
@@ -264,10 +285,14 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         (typeof value.url === 'function') !== (typeof value.post === 'function'),
     },
   },
-  mentions: { description: 'Highlights lines when the reader hovers over a link in the prose.' },
-  permalinks: { description: 'Turns line numbers into links to each line.' },
+  mentions: {
+    description: 'Highlights lines when the reader hovers over a link in the prose.',
+    page: 'features/code-mentions',
+  },
+  permalinks: { description: 'Turns line numbers into links to each line.', page: 'features/line-permalinks' },
   placeholders: {
     description: 'Turns placeholder text into input fields.',
+    page: 'features/fill-in-placeholders',
     fields: {
       storage: {
         type: "'local' | 'session' | 'none'",
@@ -277,12 +302,26 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       },
     },
   },
-  codeSwitcher: { description: 'Combines several variants of a block, with a menu in the title bar.' },
-  transitions: { description: 'Animates the code between the steps of a `<CodeSteps>` component.' },
-  scrollycoding: { description: 'Changes the focus of a sticky block as the prose steps scroll past.' },
-  inlineHighlighting: { description: 'Adds syntax colours to inline code with a `{:lang}` suffix.' },
+  codeSwitcher: {
+    description: 'Combines several variants of a block, with a menu in the title bar.',
+    page: 'features/code-switcher',
+  },
+  transitions: {
+    description: 'Animates the code between the steps of a `<CodeSteps>` component.',
+    page: 'features/token-transitions',
+  },
+  scrollycoding: {
+    description: 'Changes the focus of a sticky block as the prose steps scroll past.',
+    page: 'features/scrollycoding',
+  },
+  inlineHighlighting: {
+    description: 'Adds syntax colours to inline code with a `{:lang}` suffix.',
+    page: 'features/inline-code-highlighting',
+  },
   runnable: {
     description: 'Adds a Run button that runs the code in the browser.',
+    page: 'features/run-in-the-browser',
+    off: '`runnable` attributes then have no effect.',
     fields: {
       runtimes: {
         type: 'Record<string, string>',

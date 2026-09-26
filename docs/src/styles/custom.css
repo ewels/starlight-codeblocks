@@ -1,0 +1,4 @@
+/* Long code in a table cell would otherwise widen the table past a phone screen. */
+.sl-markdown-content :is(td, th) code {
+  overflow-wrap: anywhere;
+}

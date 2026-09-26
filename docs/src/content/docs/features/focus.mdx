@@ -4,6 +4,7 @@ description: Blur the lines outside a range, so that readers look at the lines t
 ---
 
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
 A code block often shows a whole file, but the text around it is about a few lines. Focus blurs and fades every other line, so readers find those lines at once. The other lines stay in the block, because readers need them for context.
 
@@ -49,10 +50,7 @@ Lines 4 to 7 are sharp, and the other lines are blurred. Hover over the block, o
 
 ## Options
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `focus` | `false \| object` | on | Set to `false` to turn focus off. `[!code focus]` then stays in the code as written. |
-| `focus.style` | `'blur' \| 'dim'` | `'blur'` | `'blur'` blurs and fades the other lines. `'dim'` only fades them. |
+<Options />
 
 Blur makes the other lines hard to read for some readers. If your site does not need the blur, use the `dim` style:
 

@@ -4,6 +4,7 @@ description: Mark lines with directives in code comments. The plugin applies eac
 ---
 
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 import CommentSyntaxTable from '../../../components/CommentSyntaxTable.astro';
 
 Expressive Code marks lines with attributes on the fence line, such as `{3}` or `ins={5}`. An attribute counts lines, so it points at the wrong line when you add a line above it. A directive sits in a comment on the line that it marks, and moves with that line.
@@ -69,10 +70,7 @@ The directive then has no effect. An unknown directive stays in the code as writ
 
 ## Options
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `notation` | `false \| object` | on | Set to `false` to read no directives. Every comment then renders as written. |
-| `notation.comments` | `Record<string, string[]>` | `{}` | Comment syntax for each language, added to the built-in map. An empty list removes a language. |
+<Options />
 
 Each entry in `notation.comments` is a language and a list of comment syntaxes. A syntax with a space in it is a block comment: the opener, then the closer.
 

@@ -1,11 +1,12 @@
 ---
 title: Word-level diff
-description: Highlight only the words that changed in a diff, not the whole line, so readers see the change at a glance.
+description: Highlight the words that changed inside each line of a diff, so readers find a small edit in a long line.
 ---
 
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
-Expressive Code tints a `diff` block's added and removed lines. Word-level diff goes further. It highlights the exact words that changed inside each pair of lines, so a one-word edit in a long line stands out.
+Expressive Code tints the added and removed lines of a `diff` block. Word-level diff also highlights the words that changed inside each pair of lines, so readers can find a one-word edit in a long line.
 
 export const basic = `
 \`\`\`diff lang="js"
@@ -20,7 +21,7 @@ const client = createClient({
 
 <Example code={basic} />
 
-Only `5000` and `retries: 3` changed. The plugin pairs each removed line with the added line below it, compares them word by word, and gives the changed words a stronger tint. The rest of the line keeps the plain diff tint, and the syntax colours stay in place throughout.
+The new `timeout` line adds `options.timeout ??`, and `3` becomes `options.retries`. The plugin pairs each removed line with the added line below it, compares them word by word, and gives the changed words a stronger tint. The rest of the line keeps the plain diff tint, and the syntax colours stay in place.
 
 ## Syntax
 
@@ -31,24 +32,21 @@ Only `5000` and `retries: 3` changed. The plugin pairs each removed line with th
 | `[!code ++]`, `[!code --]` | Comment | `retries: 3, // [!code --]` |
 | `wordDiff=false` | Fence line | Turns the feature off for one block |
 
-Word-level diff applies automatically to every removed line directly followed by an added line, from any of these sources. You do not turn it on.
+Word-level diff applies to every removed line that has an added line below it, from any of these sources. You do not turn it on.
 
 ## Behaviour
 
-- The plugin pairs a run of removed lines with the run of added lines directly below it, one by one.
+- The plugin pairs a run of removed lines with the run of added lines below it, one by one.
 - Each pair is compared token by token: words, runs of whitespace and single punctuation characters.
 - The changed tokens get a stronger tint. Whitespace between two changed tokens is part of the highlight, so a run of changed words tints as one block.
 - Added words are also underlined, and removed words have a line through them, so the change does not rely on colour.
-- If a pair is less than 40% similar, it is too different to compare usefully. The plugin leaves the whole-line tints in place and adds no word highlight.
+- If a pair is less than 40% similar, it is too different to compare. The plugin leaves the whole-line tints in place and adds no word highlight.
 - The underlying syntax highlighting stays visible under the tint.
 - Word-level diff needs no JavaScript in the browser.
 
 ## Options
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `wordDiff` | `false \| object` | on | Set to `false` to turn word-level diff off everywhere. |
-| `wordDiff.minSimilarity` | `number` | `0.4` | The similarity, from 0 to 1, below which a pair keeps whole-line tints only. |
+<Options />
 
 Some codebases rewrite lines often enough that the word-level highlight adds noise more often than it helps. Raise the threshold to show it only for close edits:
 
@@ -75,8 +73,8 @@ const port = Number(process.env.PORT ?? 3000);
 
 export const directives = `
 \`\`\`py title="config.py"
-DEBUG = True  # [!code --]
-DEBUG = os.environ.get("DEBUG") == "1"  # [!code ++]
+TIMEOUT = 30  # [!code --]
+TIMEOUT = 60  # [!code ++]
 \`\`\`
 `;
 
@@ -98,7 +96,7 @@ export const different = `
 ## Limitations
 
 - Pairing is by position. The first removed line pairs with the first added line, the second with the second, and each later pair the same way. A block that adds or removes a different number of lines can pair the wrong lines.
-- The comparison works on the visible text of the line. It does not parse the language, so it cannot tell that `foo` and `bar` mean the same thing in different words.
+- The comparison works on the visible text of the line. It does not parse the language, so it cannot tell that `total` and `sum` are the same value with a new name.
 
 ## Related
 

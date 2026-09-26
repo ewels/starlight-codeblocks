@@ -610,3 +610,18 @@ Use this format:
 - Decision: `scripts/readme-media.mjs` (`pnpm readme:media [slug...]`) opens each feature page of the built docs site in Playwright (dark theme, device scale factor 2) and crops to the "Readers see" pane of the first example. Still features are palette PNGs. Interactive features are recorded as a sequence of clipped screenshots (about 25 per second) with a drawn pointer, and joined into an animated WebP with sharp, with identical frames merged. A dry run first measures how far popovers and expanded blocks reach, so each recording has one fixed clip; the recording then runs in a new browser context, because some features keep state in storage. `sharp` and `@playwright/test` are root dev dependencies, at the versions already in the lockfile. The package README is a committed copy of the root README, checked by a test. Images use absolute `raw.githubusercontent.com` URLs, so they also show on npm.
 - Reason: GitHub does not play `<video>` from repository files, and animated WebP plays on GitHub and npm. The local ffmpeg has no WebP encoder, and Chrome's screencast frames are at 1x only, so neither gives high-resolution animation; clipped screenshots at 2x do. A committed copy is simpler than a copy step in the build, and `pnpm pack` needs no build hook.
 - Alternatives: Playwright `recordVideo` and ffmpeg to GIF (1x, 256 colours, larger files). APNG (lossless, several MB per animation). A symlink for the package README (npm does not follow it reliably).
+
+## Manual selection of hidden lines
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: The hidden-line marker has `user-select: none`, so a manual selection never picks up "N hidden lines". A manual selection still leaves out the hidden lines that are closed. The docs say so: the copy button always includes hidden lines, and a manual selection includes only the open ones.
+- Reason: SPEC 5 says a manual copy must not contain decorations, and the marker text is one; the other decorations (line-state labels, prompts, badges) use the same rule. SPEC 5 asks for the same text as the copy button only "where the browser allows it", and a browser cannot select an element with `display: none`.
+- Alternatives: A `copy` event handler that rewrites the clipboard to add the closed lines (more client code, and the pasted text would differ from what the reader selected).
+
+## Options as sections
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: The options reference and the Options section of each feature page show one section per option (heading, description, type and default), from `<Options />`, which reads `optionsReference` in the package, in the same `ReferenceEntry` layout as the attributes and directives pages. `optionsReference` now has the `page` of each feature and, where it matters, `off`: what stays behind when the option is `false`. A feature page shows its options only if the feature has settings. The options of the built-in adapters are docs data in `docs/src/components/reference.ts`, because the adapters have only TypeScript types. The route middleware adds the headings to the table of contents. Inline code in table cells can break anywhere, and the comparison table of the annotation styles has three columns, so no table is wider than a 360 px screen. A Playwright test checks every page of the sitemap for horizontal overflow and wide tables.
+- Reason: Four-column tables overflowed on phones and on the options page at desktop width. One source for the option data keeps the feature pages and the reference in step.

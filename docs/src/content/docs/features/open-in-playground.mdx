@@ -4,6 +4,7 @@ description: Add a title bar button that opens the example in an online playgrou
 ---
 
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
 A code block in Starlight shows code that readers can copy, but not run. Many languages have an online playground that runs code in the browser. The `playground` attribute adds a button to the title bar that opens the example in one, with the code already filled in.
 
@@ -48,10 +49,7 @@ The name is a built-in playground, or a playground that the site adds in its con
 
 ## Options
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `playgrounds` | `false \| object` | on | Set to `false` to turn the feature off. `playground` attributes then have no effect. |
-| `playgrounds.<name>` | `{ label, url }` or `{ label, post }` | none | A custom playground. A custom playground with a built-in name replaces the built-in one. |
+<Options />
 
 A custom playground has a label and one function. `url` returns the URL to open. `post` returns a form action and its fields. This site adds Python Tutor, which takes the code in its URL:
 
@@ -96,7 +94,7 @@ print(median([3, 1, 4, 1, 5]))
 
 <Example code={python} />
 
-A JavaScript example opens in StackBlitz. StackBlitz takes a project in a form post, so the button is part of a form:
+This site adds StackBlitz, which takes a project in a form post ([Add a playground](/starlight-codeblocks/extend/add-a-playground/)). The button is then part of a form:
 
 export const post = `
 \`\`\`js title="index.js" playground="stackblitz"

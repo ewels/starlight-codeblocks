@@ -4,6 +4,7 @@ description: Show prompts and output in terminal blocks, while the copy button c
 ---
 
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
 A terminal block in Starlight often shows a session: commands after a prompt, and the output they print. Readers who copy that block get the prompts and the output too, and the paste fails in their shell. Smart shell copy reads the prompts, and makes the copy button copy the commands only.
 
@@ -46,9 +47,7 @@ A prompt is text at the start of a line. The default prompts are `$ ` and `> `, 
 
 ## Options
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `shellCopy.prompts` | `string[]` | `['$ ', '> ']` | Line starts that mark a command. |
+<Options />
 
 The default prompts do not include `#`, because `#` also starts a comment in shell code. If your examples use a root prompt, add it:
 

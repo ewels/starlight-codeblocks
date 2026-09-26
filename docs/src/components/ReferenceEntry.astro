@@ -12,12 +12,13 @@ interface Props {
   facts: [string, string][];
   /** Markdown for an `<Example>`. */
   example?: string | undefined;
+  level?: 2 | 3;
 }
 
-const { id, labels, description, facts, example } = Astro.props;
+const { id, labels, description, facts, example, level = 2 } = Astro.props;
 ---
 
-<AnchorHeading level={2} id={id} class="reference-name">
+<AnchorHeading level={level} id={id} class="reference-name">
   {labels.map((label, i) => (<>{i > 0 && ', '}<code>{label}</code></>))}
 </AnchorHeading>
 <p set:html={inlineCode(description)} />
@@ -40,6 +41,12 @@ const { id, labels, description, facts, example } = Astro.props;
   dl > dt,
   dl > dd {
     margin: 0;
+  }
+  dd {
+    min-width: 0;
+  }
+  dd :global(code) {
+    overflow-wrap: anywhere;
   }
   dt {
     font-weight: 600;

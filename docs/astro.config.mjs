@@ -14,6 +14,7 @@ export default defineConfig({
       title: 'starlight-codeblocks',
       logo: { src: './src/assets/logo.svg' },
       favicon: '/favicon.svg',
+      customCss: ['./src/styles/custom.css'],
       head: [{ tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/starlight-codeblocks/apple-touch-icon.png' } }],
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/ewels/starlight-codeblocks' }],
       disable404Route: true,

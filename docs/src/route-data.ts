@@ -3,7 +3,11 @@ import { componentHeadings } from './components/reference.ts';
 
 export const onRequest = defineRouteMiddleware(({ locals }) => {
   const { entry, toc } = locals.starlightRoute;
-  const headings = componentHeadings[entry.id];
-  if (!headings || !toc) return;
-  toc.items.push(...headings.map(({ slug, text }) => ({ depth: 2, slug, text, children: [] })));
+  const sections = componentHeadings[entry.id];
+  if (!sections || !toc) return;
+  for (const [parent, headings] of Object.entries(sections)) {
+    const items = headings.map((heading) => ({ ...heading, children: [] }));
+    if (parent === '') toc.items.push(...items);
+    else toc.items.find((item) => item.slug === parent)?.children.unshift(...items);
+  }
 });

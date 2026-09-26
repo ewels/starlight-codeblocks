@@ -5,6 +5,7 @@ description: Turn placeholders such as YOUR_TOKEN into fields, so readers type t
 
 import { Aside } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
 Examples for an API often contain values that each reader has to change, such as `YOUR_TOKEN`. In a normal code block, readers copy the code and then edit it by hand. The `placeholder` attribute turns those values into fields. What a reader types fills every block on the site, and the copied code.
 
@@ -51,9 +52,7 @@ Tell readers where their values go. With the default `storage: 'local'`, the bro
 
 ## Options
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `placeholders.storage` | `'local' \| 'session' \| 'none'` | `'local'` | Where the browser keeps the values that readers type. |
+<Options />
 
 `'local'` keeps values across visits. `'session'` keeps them until the reader closes the tab. `'none'` keeps them only while the page is open. For a site where readers type secrets, such as API tokens, use `'session'`:
 
