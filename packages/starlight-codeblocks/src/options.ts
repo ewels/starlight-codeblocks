@@ -309,6 +309,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   transitions: {
     description: 'Animates the code between the steps of a `<CodeSteps>` component.',
     page: 'features/token-transitions',
+    off: '`<CodeSteps>` then shows each step as a separate block, with its label after the title, and loads no script.',
   },
   scrollycoding: {
     description: 'Changes the focus of a sticky block as the prose steps scroll past.',

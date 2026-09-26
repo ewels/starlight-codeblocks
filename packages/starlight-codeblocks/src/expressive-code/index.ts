@@ -84,7 +84,8 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.playgrounds ? [pluginPlayground(options.playgrounds)] : []),
     ...(options.runnable ? [pluginRunnable(options.runnable)] : []),
     ...(options.codeSwitcher ? [pluginCodeSwitcher()] : []),
-    ...(options.transitions ? [pluginTransitions()] : []),
+    // Also with transitions off: the step label is how a block names its step without the stepper.
+    pluginTransitions(),
     // After hidden lines, which rebuilds the children of the code element.
     ...(options.callouts ? [pluginCallouts()] : []),
     ...(options.annotations ? [pluginAnnotations()] : []),

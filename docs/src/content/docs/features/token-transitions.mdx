@@ -97,7 +97,7 @@ Put two or more code blocks between the tags, with an empty line after `<CodeSte
 - When the reader's system asks for reduced motion, the steps change without the animation.
 - Screen readers announce the number and the label of the new step.
 - The copy button copies the code of the current step.
-- On screens narrower than 640 px, the label is hidden. The name of each numbered step still gives the label to screen readers.
+- When the steps are narrower than 640 px, the label is hidden. The name of each numbered step still gives the label to screen readers.
 - Without JavaScript, each step shows as a separate code block, in order, with its label after the title.
 
 ## Options
@@ -110,7 +110,7 @@ codeblocks({
 });
 ```
 
-With `transitions: false`, `<CodeSteps>` shows each step as a separate code block, as it does without JavaScript.
+With `transitions: false`, `<CodeSteps>` shows each step as a separate code block with its label after the title, as it does without JavaScript. The page loads no script for the steps.
 
 The style settings in the `codeblocksTransitions` group change the colours of the steps and the length of the animation. For example, `codeblocksTransitions.duration` sets the length of the animation.
 

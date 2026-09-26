@@ -1,4 +1,5 @@
 ---
+import '@shikijs/magic-move/style.css';
 import { getRegistry } from '../registry.ts';
 import { codeSteps } from './steps.ts';
 
@@ -8,10 +9,13 @@ const on = getRegistry()?.options.transitions !== false;
 
 <Fragment set:html={on ? codeSteps(html) : html} />
 
-<script>
-  import '@shikijs/magic-move/style.css';
-  import './code-steps-client.ts';
-</script>
+{
+  on && (
+    <script>
+      import './code-steps-client.ts';
+    </script>
+  )
+}
 
 <style is:global>
   .scb-steps {

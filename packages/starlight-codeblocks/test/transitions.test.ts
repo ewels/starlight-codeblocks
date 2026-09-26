@@ -3,6 +3,7 @@ import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { codeSteps, type StepTokens } from '../src/components/steps.ts';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
+import { pluginTransitions } from '../src/expressive-code/transitions.ts';
 import { render } from './render.ts';
 
 const block = (meta: string, code: string) => [`\`\`\`js ${meta}`, code, '```'].join('\n');
@@ -124,5 +125,18 @@ test('the step colours meet their contrast targets', async () => {
   }
   expect(ec.styleVariants.map((v) => v.resolvedStyleSettings.get('codeblocksTransitions.themeIndex' as never))).toEqual(
     ['0', '1'],
+  );
+});
+
+test('with the feature off, the plugin still shows the step label after the title', async () => {
+  const { html } = await render(steps[0], { transitions: false });
+  expect(html).toContain('<span class="scb-steps-label">Create the app</span>');
+});
+
+test('the label hides next to the stepper in a narrow container, not in a narrow window', () => {
+  const css = String((pluginTransitions().baseStyles as (c: unknown) => string)({ cssVar: (k: string) => k }));
+  expect(css).not.toMatch(/@media[^{]*max-width/);
+  expect(css).toMatch(
+    /@container \(max-width: 640px\) \{\s*\.scb-steps-head:has\(> \.scb-steps-stepper\) > \.scb-steps-label \{ display: none; \}/,
   );
 });

@@ -639,5 +639,13 @@ Use this format:
 - Date: 2026-09-26
 - Step: 12.5
 - Decision: `<Scrollycoding>` adds a suffix to every id in each copy of the block (`-s1`, `-s2`, … for the step copies and `-sticky` for the sticky copy), and rewrites `aria-controls`, `aria-describedby`, `aria-labelledby`, `popovertarget`, `#` links and CSS anchor names in the same copy to match. A line permalink id `<id>-L<n>` becomes `<id>-<suffix>-L<n>`, so the permalinks script still finds the lines of the block it belongs to. A link to `#<id>-L<n>` from outside the component does not select a line.
-- Reason: Every copy had the same ids, so a hidden-lines marker or an annotation in the sticky copy opened the lines or the popover of a step copy that was not on screen. Duplicate ids also fail WCAG 4.1.1 parsing checks in older tools.
+- Reason: Every copy had the same ids, so a hidden-lines marker or an annotation in the sticky copy opened the lines or the popover of a step copy that was not on screen.
 - Alternatives: Keep the original ids on one copy (which copy a reader sees depends on the width of the page, so no single copy is right).
+
+## CodeSteps with transitions off, and the narrow label rule
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: The Expressive Code plugin that renders the `step="…"` label is always registered, so with `transitions: false` each step still shows its label after the title. `<CodeSteps>` renders its `<script>` only when transitions are on, so the page then loads no magic-move code. The magic-move stylesheet is imported in the component frontmatter, so it lands only on pages whose modules import the components (about 1 kB, inert with the feature off). The label hides when the steps are narrower than 640 px (a container query, as for the other size rules of the steps), and only in a title bar that has the stepper.
+- Reason: SPEC 7.5 says that without the interactive steps each step shows its label, and AGENTS.md says pages must not load client code for features they do not use. Imported in the `<script>`, the stylesheet went into the CSS of every page. Expressive Code scopes base styles inside `.expressive-code`, so the rule cannot test the `[data-scb-steps]` wrapper outside the block; `:has(> .scb-steps-stepper)` tests the title bar itself.
+- Alternatives: A media query on the window (wrong in narrow columns, such as a side-by-side layout). Copying the magic-move rules into the component style (a copy of a dependency's CSS to keep in step).
