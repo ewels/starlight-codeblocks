@@ -113,6 +113,7 @@ test('screen readers get the card text as the description of the link', async ({
   await expect(link).toHaveAccessibleDescription(
     'channel.fromFilePairs(pattern: String, [opts]) -> Channel<?>. Creates a channel that emits the file pairs that match a glob pattern, grouped by their shared prefix. Nextflow reference.',
   );
+  await link.hover();
   await expect(card(page, 1)).toHaveAttribute('aria-hidden', 'true');
 });
 

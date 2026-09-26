@@ -61,6 +61,52 @@ test('the Run button runs a copy of the block', async ({ page }) => {
   await expect(example(page, 1).locator('.scb-run-output')).toBeEmpty();
 });
 
+test('a bracket pair lights up in a copy of the block', async ({ page }) => {
+  await page.goto('./features/colourised-brackets/');
+  const copy = await copyToOverlay(page, example(page));
+  const open = copy.locator('.scb-brackets-1').first();
+  await open.hover();
+  await expect(open).toHaveClass(/scb-brackets-on/);
+  await expect(copy.locator('.scb-brackets-1').last()).toHaveClass(/scb-brackets-on/);
+  await expect(example(page).locator('.scb-brackets-on')).toHaveCount(0);
+});
+
+test('an API link in a copy of the block shows its card in the copy', async ({ page }) => {
+  await page.goto('./features/api-auto-linking/');
+  const copy = await copyToOverlay(page, example(page));
+  await copy.locator('a.scb-api-link').first().hover();
+  await expect(copy.locator('.scb-api-card')).toBeVisible();
+  await expect(copy.locator('.scb-api-card-head')).not.toBeEmpty();
+});
+
+test('a side-by-side note lights its line in a copy of the block', async ({ page }) => {
+  await page.goto('./features/side-by-side-annotations/');
+  const copy = await copyToOverlay(page, example(page));
+  await copy.locator('.scb-annotation-notes li').nth(1).hover();
+  await expect(copy.locator('.ec-line[data-scb-anno="2"]')).toHaveClass(/scb-annotation-lit/);
+  await expect(example(page).locator('.scb-annotation-lit')).toHaveCount(0);
+});
+
+test('a field in a copy of the block fills its own copied code', async ({ page }) => {
+  await page.goto('./features/fill-in-placeholders/');
+  const copy = await copyToOverlay(page, example(page).first());
+  await copy.getByRole('textbox', { name: 'YOUR_TOKEN' }).fill('tok_123');
+  await expect(copy.locator('.copy button')).toHaveAttribute('data-code', /Bearer tok_123/);
+  await expect(example(page).first().locator('.copy button')).toHaveAttribute('data-code', /Bearer tok_123/);
+});
+
+test('the step buttons move between steps in a copy of the block', async ({ page }) => {
+  await page.goto('./features/token-transitions/');
+  const steps = page.locator('.example').first().locator('[data-scb-steps]');
+  const copy = await copyToOverlay(page, steps.locator('> .expressive-code:visible'));
+  await copy.getByRole('button', { name: 'Next' }).click();
+  await expect(copy.locator('[aria-current="step"]')).toHaveAttribute('aria-label', /^Step 2/);
+  await expect(copy.getByRole('button', { name: 'Next' })).toBeFocused();
+  await copy.getByRole('button', { name: /^Step 1/ }).click();
+  await expect(copy.locator('[aria-current="step"]')).toHaveAttribute('aria-label', /^Step 1/);
+  await expect(steps.locator('[aria-current="step"]:visible')).toHaveAttribute('aria-label', /^Step 1/);
+});
+
 test('a full screen button in the title bar leaves the step buttons free', async ({ page }) => {
   await page.goto('./features/token-transitions/');
   const current = page.locator('.example').first().locator('[data-scb-steps] > .expressive-code:visible');

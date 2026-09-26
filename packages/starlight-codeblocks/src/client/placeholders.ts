@@ -47,6 +47,11 @@ function filler(texts: string[], encode: (s: string) => string) {
     });
 }
 
+function templateOf(el: HTMLElement, value: string) {
+  el.dataset.scbTemplate ??= value;
+  return el.dataset.scbTemplate;
+}
+
 function setup(block: HTMLElement) {
   block.dataset.scbPlaceholdersReady = '';
   const inputs = [...block.querySelectorAll<HTMLInputElement>(FIELD)];
@@ -55,21 +60,22 @@ function setup(block: HTMLElement) {
   const encoded = filler(texts, encodeURIComponent);
   const targets: (() => void)[] = [];
   const button = block.querySelector<HTMLElement>('.copy button[data-code]');
+  // Templates go in an attribute, so that a copy of the block, as full screen plugins show, starts from them too.
   if (button) {
-    const template = button.dataset.code as string;
+    const template = templateOf(button, button.dataset.code as string);
     targets.push(() => {
       button.dataset.code = raw(template);
     });
   }
   // A link with data-scb-playground is rebuilt from the copied text by its own module.
   for (const link of block.querySelectorAll<HTMLAnchorElement>('a.scb-playground:not([data-scb-playground])')) {
-    const template = link.href;
+    const template = templateOf(link, link.href);
     targets.push(() => {
       link.href = encoded(template);
     });
   }
   for (const field of block.querySelectorAll<HTMLInputElement>('form.scb-playground input[type="hidden"]')) {
-    const template = field.value;
+    const template = templateOf(field, field.value);
     targets.push(() => {
       field.value = raw(template);
     });
@@ -95,8 +101,9 @@ function change(text: string, value: string) {
     if (input.placeholder !== text) continue;
     if (input.value !== value) input.value = value;
     size(input);
-    const block = input.closest('[data-scb-placeholders]');
-    if (block) updates.get(block)?.();
+    const block = input.closest<HTMLElement>('[data-scb-placeholders]');
+    if (block && !updates.has(block)) setup(block);
+    else if (block) updates.get(block)?.();
   }
 }
 

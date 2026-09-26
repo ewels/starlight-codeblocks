@@ -22,20 +22,28 @@ function click(event: MouseEvent) {
   popover.togglePopover();
 }
 
+/** Lights the note and the line number of `n` in the side-by-side block of `el`, and nothing elsewhere. */
+function light(el: Element | null, n?: string) {
+  const block = el?.closest('[data-scb-annotations]');
+  for (const on of document.querySelectorAll('.scb-annotation-on, .scb-annotation-lit')) {
+    if (!block?.contains(on)) on.classList.remove('scb-annotation-on', 'scb-annotation-lit');
+  }
+  for (const note of block?.querySelectorAll<HTMLElement>('[data-scb-anno]') ?? []) {
+    note.classList.toggle(
+      note.tagName === 'LI' ? 'scb-annotation-on' : 'scb-annotation-lit',
+      note.dataset.scbAnno === n,
+    );
+  }
+}
+
+const over = (event: Event) => {
+  const target = event.target as Element;
+  light(target, target.closest?.<HTMLElement>('[data-scb-anno]')?.dataset.scbAnno);
+};
+
 function side(block: HTMLElement) {
   const notes = block.querySelector<HTMLElement>('.scb-annotation-notes');
   if (!notes) return;
-  const light = (n?: string) => {
-    for (const el of block.querySelectorAll<HTMLElement>('[data-scb-anno]')) {
-      el.classList.toggle(el.tagName === 'LI' ? 'scb-annotation-on' : 'scb-annotation-lit', el.dataset.scbAnno === n);
-    }
-  };
-  const over = (event: Event) =>
-    light((event.target as Element).closest<HTMLElement>('[data-scb-anno]')?.dataset.scbAnno);
-  block.addEventListener('mouseover', over);
-  block.addEventListener('focusin', over);
-  block.addEventListener('mouseleave', () => light());
-  block.addEventListener('focusout', () => light());
   // A column taller than the space below the header cannot stick usefully.
   const checkHeight = () => {
     block.classList.remove('scb-side-static');
@@ -67,6 +75,11 @@ export default function initAnnotations() {
     // Toggle events do not bubble, so listen in the capture phase.
     document.addEventListener('toggle', toggle, true);
     document.addEventListener('click', click);
+    // On the document, so that copies of a block, as full screen plugins show, light up too.
+    document.addEventListener('mouseover', over);
+    document.addEventListener('focusin', over);
+    document.addEventListener('focusout', () => light(null));
+    document.addEventListener('mouseout', (event) => event.relatedTarget || light(null));
   }
   for (const block of document.querySelectorAll<HTMLElement>(
     '[data-scb-annotations]:not([data-scb-annotations-ready])',
