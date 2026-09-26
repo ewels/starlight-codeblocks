@@ -665,3 +665,83 @@ Use this format:
 - Decision: Output lines in a shell block have `user-select: none`, so a manual selection gives the commands only, as the copy button does. On a block with fill-in fields, a `copy` event handler (in the placeholders module, which such pages already load) replaces the clipboard text when the selection is inside the block's code: one line for each selected line, each field as its value or its placeholder text, and nothing that is not visible or not selectable. A selection that goes past the block keeps the browser's own text.
 - Reason: SPEC 5 asks for the same text as the copy button where the browser allows it. The browser's own copy put line breaks around each field and left out its value. Building the text from the live DOM keeps partial selections partial, where copying the button text would copy the whole block.
 - Alternatives: Write the copy button text for any selection in the block (wrong for a selection of one line). Record both as browser limits (the fix is small).
+
+## Code text on plugin tints
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: On lines whose tint is known at build time (line states, word-level diff words, footnote lines, side-by-side annotated lines, mention lines), the plugin corrects each syntax colour to `minSyntaxHighlightingColorContrast` on the tint, in `postprocessAnnotations`, the same way Expressive Code corrects its own marked lines (`ensureTextContrast` in `core.ts`). A site that sets that option to `0` opts out, as it does for Expressive Code. Tints that any line or token can get (permalink target, API and token link hover) cannot be corrected ahead of time, so their alpha is lower instead: target 0.08 dark and 0.12 light, link hover 0.1 dark. Word-diff tints drop to the mockup's 0.36 (ins) and 0.4 (del) in dark themes and 0.3 in light themes; the underline and the line-through carry the meaning, so the old 3:1 tint check is replaced by a check on the decoration. Inline code in the footnote list uses the code foreground, and the placeholder hint text has full opacity. `test/tints.test.ts` renders blocks with Starlight's default themes and Expressive Code's defaults and checks every text colour on every tint at 4.5:1.
+- Reason: The a11y review measured 2.2:1 for text on word-diff words and 4.0 to 4.5:1 on some line states. The mockup's tint strengths fail 4.5:1 with fixed colours; correcting the text keeps the design and works for any theme.
+- Alternatives: Lower every alpha until all theme colours pass (tints of 0.08 are hard to see); force one text colour on tints (loses syntax colours).
+
+## Focus rings and reduced motion beyond the plugin's own controls
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: The plugin's CSS sets the outline colour of `pre:focus-visible` (Expressive Code's scrollable code area) and of the focus code area to `codeblocks.focusRing`, and turns off the copy button transition under reduced motion. Both apply to every Expressive Code block on a site with the plugin.
+- Reason: Expressive Code's focus border measured 2.5:1 (light) and 1.1:1 (dark) on the code. The copy button kept a 0.2 s transition under reduced motion. Both are cheap to fix in the plugin's scoped CSS.
+- Alternatives: Leave them upstream. Still upstream: the `pre` elements with `role="region"` have no label, so axe reports `landmark-unique` on pages with more than one scrollable block. A label per block would still repeat for untitled blocks.
+
+## Accessible name of a block with title bar controls
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: When the plugin adds controls to a title bar (`addTitleBarControl`, and the step controls of `<CodeSteps>`), the figure gets an `aria-label` from the title bar text without its controls, such as the title or "Terminal window", or "Code block" when there is no text.
+- Reason: The figure takes its name from the whole `figcaption`, so the names read "summary.py Hide 5 lines" or "Run again". Moving the controls out of the `figcaption` breaks the title bar layout.
+- Alternatives: `aria-labelledby` on the title (needs ids, and gives no name for untitled blocks).
+
+## Hidden lines toggle state
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: The title bar button of hidden lines has a label that changes (**Show N hidden lines**, **Hide N lines**) and no `aria-pressed`. Its state comes from the markers.
+- Reason: A pressed state and a changing label together announce a contradiction ("Hide 5 lines, pressed"). The changing label matches the markers and the mockup.
+- Alternatives: A fixed label with `aria-pressed` (differs from the mockup).
+
+## Footnotes for keyboard and screen reader users
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: Each badge has `aria-describedby` on its note text. Activating a badge moves focus to its list item (`tabindex="-1"`), and activating the number moves focus back to the badge. A focused control in a line that falls under the sticky list scrolls up above it (a `focusin` handler). The number links are at least 24 by 24 px.
+- Reason: The script cancels the link navigation to keep the hash, so focus stayed on the badge and screen readers heard nothing. Browsers do not scroll a focused element that is in the viewport but under a sticky element (WCAG 2.4.11).
+- Alternatives: `scroll-margin` from a CSS variable (browsers do not use it when the element is already in the viewport).
+
+## Side-by-side notes and forced colours
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: The notes stay focusable list items, because SPEC 7.7 asks that focus on a note highlights its line, and now show the plugin's focus ring. Annotation markers have a transparent 1 px border and the current step of token transitions uses `Highlight` in forced colours mode.
+- Reason: The a11y review found `outline: none` on the notes, and markers and the current step that looked the same as the rest in forced colours.
+- Alternatives: Make the notes buttons (they do nothing on activation).
+
+## Layout details from the visual review
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: The side-by-side grid uses `minmax(0, auto) minmax(12rem, 1fr)`, so the code column takes its natural width and the notes the rest, and the docs example has shorter lines, so it fits at every desktop width. A block with diff lines adds 1ch to the code padding, which puts a gap between the + and - markers and the code. Plugin buttons in the title bar use the code font at 0.75rem, as in the mockup. A callout knows the length of its text (`--scb-callout-len`), so a short bubble near the right edge moves left instead of wrapping. The dashed rule of a hidden-lines marker on the first line stops before the copy button.
+- Reason: Findings of the visual review against the mockup.
+- Alternatives: None worth the extra code.
+
+## Feature-off attributes in docs examples
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: `<Example>` takes `hiddenAttributes`, which it adds to the fence line of each rendered block but not to the source pane. Examples use it for `apiLinks=false` and `wordDiff=false`, which only keep another feature out of the example. `scripts/examples.test.mjs` checks that live Markdown includes them and that no source pane shows them, except on the API auto-linking page, where the attribute is the subject.
+- Reason: The attributes confused readers of the "You write" pane: they are not needed to use the feature on the page.
+- Alternatives: Different example code for each case (not always possible for API links in Python).
+
+## Print
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: Controls that do not print (`scb-no-print`): hidden-lines markers and title bar button, playground links and the form button, the code switcher menu, the numbered steps and the Previous and Next buttons of token transitions, and the expandable fade. A fill-in field prints as plain text: its value, or its placeholder text if the reader typed nothing.
+- Reason: SPEC 5 Print. A field with a border on paper looks like a form to fill in; its value is what the reader needs.
+- Alternatives: Hide the fields in print (loses the code).
+
+## Port of the end-to-end tests
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: `docs/playwright.config.ts` reads the preview port from `SCB_E2E_PORT`, with 4329 as the default.
+- Reason: Two agents or two checkouts can run the tests at the same time.
+- Alternatives: None.
