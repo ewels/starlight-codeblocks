@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const port = 4329;
+const port = Number(process.env.SCB_E2E_PORT ?? 4329);
 const phone = { viewport: { width: 360, height: 780 }, isMobile: true, hasTouch: true };
 
 export default defineConfig({
