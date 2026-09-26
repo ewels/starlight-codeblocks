@@ -171,14 +171,14 @@ Hide the imports and set-up that readers need to run an example but not to under
 <details>
 <summary>Smart shell copy</summary>
 
-Show prompts and output in terminal blocks, while the copy button copies only the commands. It applies to every terminal block with a prompt line.
+Show prompts and output in terminal blocks. The Copy commands button copies the commands only, not the prompts or the output lines. It applies to every terminal block with a prompt line.
 
 ```sh
 $ uv tool install ruff
 Resolved 1 package in 180ms
 ```
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/smart-shell-copy.png" alt="A terminal block with two commands after a dollar prompt, and their output under each command.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/smart-shell-copy.webp" alt="A terminal block with prompts and their output. The pointer selects the Copy commands button in the title bar. A caption below the block then shows the copied text: the commands only, without the prompts or the output.">
 
 [Smart shell copy documentation](https://ewels.github.io/starlight-codeblocks/features/smart-shell-copy/)
 

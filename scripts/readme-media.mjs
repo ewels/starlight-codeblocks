@@ -67,7 +67,30 @@ const features = [
       await rec.hold(1000);
     },
   },
-  { slug: 'smart-shell-copy' },
+  {
+    slug: 'smart-shell-copy',
+    run: async (page, rec) => {
+      const button = block(page).locator('.copy button');
+      await rec.hold(1200);
+      await rec.click(button);
+      await rec.include(block(page).locator('.copy .feedback'));
+      await rec.hold(1600);
+      const copied = await page.evaluate(() => navigator.clipboard.readText());
+      await block(page).evaluate((el, text) => {
+        const box = document.createElement('aside');
+        box.className = 'starlight-aside starlight-aside--tip scb-readme-copied';
+        box.setAttribute('aria-label', 'Copied to clipboard');
+        box.style.marginTop = '0.75rem';
+        box.innerHTML =
+          '<p class="starlight-aside__title" aria-hidden="true">Copied to clipboard</p>' +
+          '<div class="starlight-aside__content"><pre style="margin:0;white-space:pre-wrap;font:inherit"></pre></div>';
+        box.querySelector('pre').textContent = text;
+        el.after(box);
+      }, copied);
+      await rec.include(page.locator('.scb-readme-copied'));
+      await rec.hold(2400);
+    },
+  },
   { slug: 'word-level-diff' },
   { slug: 'visible-whitespace' },
   { slug: 'colourised-brackets' },
@@ -268,12 +291,15 @@ async function open(context, feature) {
 }
 
 async function capture(browser, feature) {
-  const fresh = () =>
-    browser.newContext({
+  const fresh = async () => {
+    const context = await browser.newContext({
       viewport: { width, height: feature.viewport ?? height },
       deviceScaleFactor: scale,
       colorScheme: 'dark',
     });
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    return context;
+  };
   let context = await fresh();
   let { page, start } = await open(context, feature);
   let area = await rect(pane(page));
