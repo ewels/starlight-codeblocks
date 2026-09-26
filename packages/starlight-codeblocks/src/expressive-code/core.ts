@@ -81,10 +81,19 @@ function where(codeBlock: ExpressiveCodeBlock, line?: number) {
   ].join(', ');
 }
 
-/** Logs a build warning that names the file, the code block and, if given, the line in the block. */
-/** A relative, `http:` or `https:` URL, so that no link runs `javascript:`. */
-export const isSafeUrl = (href: string) => !/^[a-z][a-z0-9+.-]*:/i.test(href) || /^https?:/i.test(href);
+/**
+ * A relative, `http:` or `https:` URL, so that no link runs `javascript:`. `URL` strips spaces, tabs and
+ * control characters as a browser does, so they cannot hide the scheme.
+ */
+export function isSafeUrl(href: string) {
+  try {
+    return ['http:', 'https:'].includes(new URL(href, 'https://x.invalid/').protocol);
+  } catch {
+    return false;
+  }
+}
 
+/** Logs a build warning that names the file, the code block and, if given, the line in the block. */
 export function warn({ codeBlock, config }: Context, message: string, line?: number) {
   config.logger.warn(`${where(codeBlock, line)}: ${message}`);
 }

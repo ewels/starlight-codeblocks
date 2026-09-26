@@ -1,6 +1,7 @@
 import { getColorContrast } from '@expressive-code/core';
 import { ExpressiveCode } from 'expressive-code';
 import { afterEach, expect, test } from 'vitest';
+import { isSafeUrl } from '../src/expressive-code/core.ts';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import { withBase } from '../src/expressive-code/token-links.ts';
 import { resolveOptions } from '../src/options.ts';
@@ -98,4 +99,18 @@ test('does not link a javascript: URL', async () => {
   const { html, warnings } = await render(block('js', '// [!link /alert/ javascript:alert(1)]', 'alert(1)'));
   expect(html).not.toContain('javascript:');
   expect(warnings.join('\n')).toContain('http');
+});
+
+test('does not link a javascript: URL hidden by leading space, control characters or tabs', async () => {
+  for (const url of [
+    ' javascript:alert(1)',
+    '\x01javascript:alert(1)',
+    'java\tscript:alert(1)',
+    'JaVaScRiPt:alert(1)',
+  ]) {
+    expect(isSafeUrl(url), JSON.stringify(url)).toBe(false);
+  }
+  for (const url of ['https://example.com/', 'http://example.com/', '/docs/', '../x', '#y', 'page?q=a:b']) {
+    expect(isSafeUrl(url), url).toBe(true);
+  }
 });
