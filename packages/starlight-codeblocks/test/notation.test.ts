@@ -4,6 +4,7 @@ import { type DirectiveSpecs, parseLine, parseNotation } from '../src/expressive
 
 const specs: DirectiveSpecs = {
   'code focus': { placement: 'end' },
+  'code highlight': { placement: 'end' },
   'code error': { placement: 'end', text: true },
   annotate: { placement: 'end', text: true },
   mention: { placement: 'end' },
@@ -62,6 +63,34 @@ describe('parseLine', () => {
 
   test('finds the comment after a string that looks like one', () => {
     expect(parse('const url = "https://example.com" // [!code focus]').text).toBe('const url = "https://example.com"');
+  });
+
+  test('finds the comment after an unpaired quote when the comment holds an apostrophe', () => {
+    const rust = commentSyntaxFor('rust');
+    expect(parse(`const S: &'static str = "x"; // don't [!code highlight]`, rust)).toMatchObject({
+      text: `const S: &'static str = "x"; // don't`,
+      directives: [{ name: 'code highlight' }],
+    });
+    expect(parse("fn f(x: &'static str) {} // don't [!code focus]", rust).text).toBe(
+      "fn f(x: &'static str) {} // don't",
+    );
+    expect(parse("(setq x 'foo) ; it's [!code focus]", commentSyntaxFor('lisp')).text).toBe("(setq x 'foo) ; it's");
+    expect(parse("Don't <!-- it's [!code focus] -->", commentSyntaxFor('md')).text).toBe("Don't <!-- it's -->");
+  });
+
+  test('still reads quotes around and inside comments correctly', () => {
+    expect(parse("// don't [!code focus]")).toMatchObject({ text: "// don't", directives: [{ name: 'code focus' }] });
+    expect(parse(`x = "it's" # [!code focus]`, commentSyntaxFor('python')).text).toBe(`x = "it's"`);
+    expect(parse('const s = "// [!code focus]"')).toMatchObject({
+      text: 'const s = "// [!code focus]"',
+      directives: [],
+    });
+    expect(parse("fn f<'a>(x: &'a str) -> &'a str { x } // [!code focus]", commentSyntaxFor('rust')).text).toBe(
+      "fn f<'a>(x: &'a str) -> &'a str { x }",
+    );
+    expect(parse("fn f<'a, 'b>(x: &'a str, y: &'b str) // [!code focus]", commentSyntaxFor('rust')).text).toBe(
+      "fn f<'a, 'b>(x: &'a str, y: &'b str)",
+    );
   });
 
   test('handles block comments', () => {

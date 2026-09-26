@@ -134,17 +134,18 @@ function interpret(token: Token, specs: DirectiveSpecs, sourceLine: number) {
 }
 
 /**
- * Whether `index` is inside a quoted string that opens and closes on the line, before any comment.
- * An approximation, as in `findBrackets`: a quote with no partner on the line (a Rust lifetime) is not a string.
+ * Whether the comment opener at `index` is inside a quoted string, before any comment, that also holds
+ * the directive at `first`. An approximation, as in `findBrackets`: a quote with no partner before the
+ * directive (a Rust lifetime, or one whose partner is an apostrophe in the comment) is not a string.
  */
-function inString(text: string, index: number, syntaxes: CommentSyntax[]) {
+function inString(text: string, index: number, first: number, syntaxes: CommentSyntax[]) {
   for (let i = 0; i < index; i++) {
     if (syntaxes.some(({ open }) => text.startsWith(open, i))) return false;
     const quote = text[i];
     if (quote !== '"' && quote !== "'" && quote !== '`') continue;
     let j = i + 1;
     while (j < text.length && text[j] !== quote) j += text[j] === '\\' ? 2 : 1;
-    if (j >= text.length) continue;
+    if (j >= text.length || (index < j && j < first)) continue;
     if (index < j) return true;
     i = j;
   }
@@ -156,7 +157,7 @@ function findComment(text: string, first: number, syntaxes: CommentSyntax[]) {
   let best: [number, number, number, number] | undefined;
   for (const { open, close } of syntaxes) {
     const start = first - open.length < 0 ? -1 : text.lastIndexOf(open, first - open.length);
-    if (start === -1 || (best && start <= best[0]) || inString(text, start, syntaxes)) continue;
+    if (start === -1 || (best && start <= best[0]) || inString(text, start, first, syntaxes)) continue;
     const bodyStart = start + open.length;
     const closeAt = close ? text.indexOf(close, bodyStart) : -1;
     if (close && closeAt !== -1 && closeAt < first) continue;
