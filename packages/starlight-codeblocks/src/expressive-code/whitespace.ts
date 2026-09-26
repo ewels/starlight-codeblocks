@@ -24,9 +24,9 @@ export function pluginWhitespace(): CodeblocksPlugin {
     name: 'starlight-codeblocks:whitespace',
     baseStyles: ({ cssVar }) => `
 .${PREFIX}-ws, .${PREFIX}-ws-tab { position: relative; }
-.${PREFIX}-ws > [aria-hidden], .${PREFIX}-ws-tab > [aria-hidden] { position: absolute; inset: 0; }
+/* Centres the glyph's line box on the character, which is shorter than the line height. */
+.${PREFIX}-ws > [aria-hidden], .${PREFIX}-ws-tab > [aria-hidden] { position: absolute; inset: 0; display: grid; align-content: center; }
 .${PREFIX}-ws > [aria-hidden]::before, .${PREFIX}-ws-tab > [aria-hidden]::before {
-  display: block;
   text-align: center;
   color: ${cssVar('codeblocks.mutedForeground')};
 }

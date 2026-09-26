@@ -45,3 +45,28 @@ test('a manual selection gives the real tab and spaces, not the glyphs', async (
   expect(text).toContain('    cargo test');
   expect(text).not.toContain('·');
 });
+
+test('the glyphs sit on the middle of the line, like the text', async ({ page }) => {
+  await page.goto('./features/visible-whitespace/');
+  const spaces = page.locator('.example .pane .scb-ws');
+  await expect(spaces.first()).toBeAttached();
+  const offset = await spaces.first().evaluate((el) => {
+    const style = document.createElement('style');
+    style.textContent = '.scb-probe::before { content: none !important; }';
+    document.head.append(style);
+    const host = el.firstElementChild as HTMLElement;
+    host.classList.add('scb-probe');
+    const glyph = document.createElement('span');
+    glyph.style.display = 'block';
+    glyph.textContent = '·';
+    host.append(glyph);
+    const a = glyph.getBoundingClientRect();
+    const b = el.getBoundingClientRect();
+    const out = a.top + a.height / 2 - (b.top + b.height / 2);
+    glyph.remove();
+    host.classList.remove('scb-probe');
+    style.remove();
+    return out;
+  });
+  expect(Math.abs(offset)).toBeLessThan(1);
+});
