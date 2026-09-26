@@ -1,7 +1,7 @@
 import { PluginStyleSettings, setAlpha, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { blockUid, type CodeblocksPlugin, ensureTextContrast, warn } from './core.ts';
+import { blockUid, type CodeblocksPlugin, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
@@ -10,6 +10,7 @@ export interface AnnotationsStyleSettings {
   markerBackground: UnresolvedStyleValue;
   markerForeground: UnresolvedStyleValue;
   markerSize: UnresolvedStyleValue;
+  lineBackground: UnresolvedStyleValue;
 }
 
 declare module '@expressive-code/core' {
@@ -24,6 +25,9 @@ const styleSettings = new PluginStyleSettings({
       markerBackground: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),
       markerForeground: ({ resolveSetting }) => resolveSetting('codeblocks.accentForeground'),
       markerSize: '1.55em',
+      // Light enough for every syntax colour as it is, so that a line keeps its colours when it lights up.
+      lineBackground: ({ resolveSetting, theme }) =>
+        setAlpha(resolveSetting('codeblocks.accent'), theme.type === 'dark' ? 0.1 : 0.12),
     },
   },
 });
@@ -83,7 +87,7 @@ export function pluginAnnotations(): CodeblocksPlugin {
 .${cls('-popover')} a { color: inherit; text-underline-offset: 3px; }
 .${cls('-num')} { cursor: default; }
 .${cls('-num')}:hover { background: ${cssVar('codeblocksAnnotations.markerBackground')}; }
-.ec-line.${cls('-lit')} { background: color-mix(in srgb, ${cssVar('codeblocks.accent')} 17%, transparent); }
+.ec-line.${cls('-lit')} { background: ${cssVar('codeblocksAnnotations.lineBackground')}; }
 .ec-line.${cls('-lit')} .code { --ecLineBrdCol: ${cssVar('codeblocks.accent')}; --ecGtrBrdWd: 3px; }
 .${PREFIX}-side { container-type: inline-size; }
 .${cls('-notes')} {
@@ -145,16 +149,6 @@ export function pluginAnnotations(): CodeblocksPlugin {
 }`,
     jsModules: clientJsModules,
     hooks: {
-      postprocessAnnotations(context) {
-        if (context.codeBlock.metaOptions.getString('annotations') !== 'side') return;
-        for (const { lines } of getDirectives(context.codeBlock, 'annotate')) {
-          const line = lines[0];
-          if (line)
-            ensureTextContrast(context, line, (v) => [
-              setAlpha(v.resolvedStyleSettings.get('codeblocks.accent') ?? '', 0.17),
-            ]);
-        }
-      },
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
         const annotations = getDirectives(codeBlock, 'annotate');

@@ -64,27 +64,6 @@ const cases: { name: string; fence: string; lines: string[]; selector: string; l
     selector: `.scb-worddiff-${type}`,
     layers: (v: Variant) => [v.get(`textMarkers.${type}Background`), v.get(`codeblocksWordDiff.${type}Background`)],
   })),
-  {
-    name: 'footnote line',
-    fence: 'js',
-    lines: code.flatMap((line) => ['// [!ref] A note.', line]),
-    selector: '.ec-line .code',
-    layers: (v) => [v.get('codeblocksFootnotes.lineBackground')],
-  },
-  {
-    name: 'annotated line',
-    fence: 'js annotations="side"',
-    lines: code.map((line) => `${line} // [!annotate] A note.`),
-    selector: '.ec-line[data-scb-anno] .code',
-    layers: (v) => [setAlpha(v.get('codeblocks.accent'), 0.17)],
-  },
-  {
-    name: 'mention line',
-    fence: 'js',
-    lines: code.map((line) => `${line} // [!mention load]`),
-    selector: '.ec-line[data-scb-mention] .code',
-    layers: (v) => [v.get('codeblocksMentions.background')],
-  },
 ];
 
 test('code text meets 4.5:1 contrast on every line and word tint, in the dark and the light theme', async () => {
@@ -117,10 +96,34 @@ test('every syntax colour meets 4.5:1 contrast on the tints that any line or tok
       'permalink target': [v.get('codeblocksPermalinks.targetBackground')],
       'API link hover': [v.get('codeblocksApiLinks.hoverBackground')],
       'token link hover': [v.get('codeblocksTokenLinks.hoverBackground')],
+      'active footnote line': [v.get('codeblocksFootnotes.lineBackground')],
+      'active annotated line': [v.get('codeblocksAnnotations.lineBackground')],
+      'active mention line': [v.get('codeblocksMentions.background')],
     };
     for (const [name, tint] of Object.entries(layers)) {
       expect(minTextContrast(v, tint), `${name}, ${v.name}`).toBeGreaterThanOrEqual(4.5);
     }
+  }
+});
+
+test('a line with a tint that shows only when active keeps the syntax colours of the theme', async () => {
+  for (const themes of await themeSets()) {
+    const ec = new ExpressiveCode({ themes, plugins: [pluginCodeblocks()] });
+    const colours = async (lines: string[], meta = '') => {
+      const { renderedGroupAst } = await ec.render({ code: lines.join('\n'), language: 'js', meta });
+      return selectAll('.ec-line .code', renderedGroupAst).map((el) =>
+        ec.styleVariants.map((v, i) => textColours(el, i, v.resolvedStyleSettings.get('codeForeground') ?? '')),
+      );
+    };
+    const plain = await colours(code);
+    expect(await colours(code.flatMap((line) => ['// [!ref] A note.', line]))).toEqual(plain);
+    expect(
+      await colours(
+        code.map((line) => `${line} // [!annotate] A note.`),
+        'annotations="side"',
+      ),
+    ).toEqual(plain);
+    expect(await colours(code.map((line) => `${line} // [!mention load]`))).toEqual(plain);
   }
 });
 

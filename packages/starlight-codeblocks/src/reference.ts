@@ -293,7 +293,10 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
     page: 'features/code-mentions',
     settings: {
       bar: { description: 'The bar on the left edge of a highlighted line.', derived: accent },
-      background: { description: 'The tint of a highlighted line.', derived: '`bar` at 17% opacity.' },
+      background: {
+        description: 'The tint of a highlighted line. Needs 4.5:1 contrast for every syntax colour.',
+        derived: '`bar` at 10% opacity in dark themes and 12% in light themes.',
+      },
       fadeOpacity: { description: 'The opacity of the other lines while lines are highlighted.' },
     },
   },
@@ -362,6 +365,10 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
         derived: 'The value of `codeblocks.accentForeground`.',
       },
       markerSize: { description: 'The width and height of a marker.' },
+      lineBackground: {
+        description: 'The tint of the line of an open annotation. Needs 4.5:1 contrast for every syntax colour.',
+        derived: '`codeblocks.accent` at 10% opacity in dark themes and 12% in light themes.',
+      },
     },
   },
   codeblocksFootnotes: {
@@ -373,8 +380,8 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       numberForeground: { description: 'Badge numbers and list numbers. Needs 4.5:1 contrast on the code background.' },
       activeForeground: { description: 'The number of a selected badge, on an `accent` background.' },
       lineBackground: {
-        description: 'The tint of a selected line.',
-        derived: '`accent` at 17% opacity on the code background.',
+        description: 'The tint of a selected line. Needs 4.5:1 contrast for every syntax colour.',
+        derived: '`accent` at 10% opacity in dark themes and 12% in light themes, on the code background.',
       },
       stickyShadow: { description: 'The shadow above a sticky list of footnotes.' },
     },

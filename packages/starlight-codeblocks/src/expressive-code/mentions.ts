@@ -1,7 +1,7 @@
 import { PluginStyleSettings, type StyleResolverFn, setAlpha, type UnresolvedStyleValue } from '@expressive-code/core';
 import { select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { type CodeblocksPlugin, ensureTextContrast, warn } from './core.ts';
+import { type CodeblocksPlugin, warn } from './core.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
 
@@ -21,8 +21,9 @@ const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksMentions: {
       bar: ({ resolveSetting }: Parameters<StyleResolverFn>[0]) => resolveSetting('codeblocks.accent'),
-      background: ({ resolveSetting }: Parameters<StyleResolverFn>[0]) =>
-        setAlpha(resolveSetting('codeblocksMentions.bar'), 0.17),
+      // Light enough for every syntax colour as it is, so that a line keeps its colours when it lights up.
+      background: ({ resolveSetting, theme }: Parameters<StyleResolverFn>[0]) =>
+        setAlpha(resolveSetting('codeblocksMentions.bar'), theme.type === 'dark' ? 0.1 : 0.12),
       fadeOpacity: '0.42',
     },
   },
@@ -55,13 +56,6 @@ export function pluginMentions(): CodeblocksPlugin {
 }`,
     jsModules: clientJsModules,
     hooks: {
-      postprocessAnnotations(context) {
-        for (const { lines } of getDirectives(context.codeBlock, 'mention')) {
-          for (const line of lines) {
-            ensureTextContrast(context, line, (v) => [v.resolvedStyleSettings.get('codeblocksMentions.background')]);
-          }
-        }
-      },
       postprocessRenderedLine(context) {
         const names = getDirectives(context.codeBlock, 'mention')
           .filter((d) => d.lines.includes(context.line))

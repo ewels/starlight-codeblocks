@@ -7,7 +7,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, h, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { blockUid, type CodeblocksPlugin, ensureTextContrast, numberedLines, warn } from './core.ts';
+import { blockUid, type CodeblocksPlugin, numberedLines, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
@@ -35,8 +35,12 @@ const styleSettings = new PluginStyleSettings({
       accent: ['#c792ea', '#8a3fc7'],
       numberForeground: ['#d8b3f3', '#7a2fb5'],
       activeForeground: ['#1b1f2c', '#ffffff'],
-      lineBackground: ({ resolveSetting }: Parameters<StyleResolverFn>[0]) =>
-        onBackground(setAlpha(resolveSetting('codeblocksFootnotes.accent'), 0.17), resolveSetting('codeBackground')),
+      // Light enough for every syntax colour as it is, so that a line keeps its colours when it lights up.
+      lineBackground: ({ resolveSetting, theme }: Parameters<StyleResolverFn>[0]) =>
+        onBackground(
+          setAlpha(resolveSetting('codeblocksFootnotes.accent'), theme.type === 'dark' ? 0.1 : 0.12),
+          resolveSetting('codeBackground'),
+        ),
       stickyShadow: ['0 -8px 16px rgb(10 14 24 / 0.35)', '0 -6px 14px rgb(12 20 36 / 0.1)'],
     },
   },
@@ -143,15 +147,6 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
     },
     jsModules: clientJsModules,
     hooks: {
-      postprocessAnnotations(context) {
-        for (const { lines } of getDirectives(context.codeBlock, 'ref')) {
-          const line = lines[0];
-          if (line)
-            ensureTextContrast(context, line, (v) => [
-              v.resolvedStyleSettings.get('codeblocksFootnotes.lineBackground'),
-            ]);
-        }
-      },
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
         const refs = getDirectives(codeBlock, 'ref');
