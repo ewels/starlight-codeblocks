@@ -625,3 +625,11 @@ Use this format:
 - Step: 12.5
 - Decision: The options reference and the Options section of each feature page show one section per option (heading, description, type and default), from `<Options />`, which reads `optionsReference` in the package, in the same `ReferenceEntry` layout as the attributes and directives pages. `optionsReference` now has the `page` of each feature and, where it matters, `off`: what stays behind when the option is `false`. A feature page shows its options only if the feature has settings. The options of the built-in adapters are docs data in `docs/src/components/reference.ts`, because the adapters have only TypeScript types. The route middleware adds the headings to the table of contents. Inline code in table cells can break anywhere, and the comparison table of the annotation styles has three columns, so no table is wider than a 360 px screen. A Playwright test checks every page of the sitemap for horizontal overflow and wide tables.
 - Reason: Four-column tables overflowed on phones and on the options page at desktop width. One source for the option data keeps the feature pages and the reference in step.
+
+## Deterministic ids, and English UI strings
+
+- Date: 2026-09-26
+- Step: 12.5
+- Decision: Annotations, footnotes and hidden lines build their element ids from one id per block: the first 8 hex characters of a SHA-1 of the source file path, the meta string and the code, plus a count when the same engine renders an identical block again. The footnote label "for line N" counts from `startLineNumber`. The interface strings (such as "Footnote 1, for line 2", "Show 3 hidden lines", "Copy") stay in English, and there is no option to translate them.
+- Reason: Random ids changed the HTML on every build, so builds were not reproducible and every deploy changed every page. The hash keeps ids stable when unrelated blocks change; the count keeps two identical blocks on a page apart. The spec does not ask for translated interface strings, so translation is out of scope for this release.
+- Alternatives: A global counter (ids change when a block above is added, and depend on the order in which Astro renders pages). Starlight's i18n strings (a later release can add them).

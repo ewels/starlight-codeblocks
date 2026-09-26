@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { relative } from 'node:path';
 import {
   AttachedPluginData,
@@ -40,6 +41,28 @@ export const lineData = new AttachedPluginData<{ lines?: readonly ExpressiveCode
  */
 export function numberedLines(codeBlock: ExpressiveCodeBlock): readonly ExpressiveCodeLine[] {
   return lineData.getOrCreateFor(codeBlock).lines ?? codeBlock.getLines();
+}
+
+const uids = new WeakMap<ExpressiveCodeBlock, string>();
+const uidCounts = new WeakMap<object, Map<string, number>>();
+
+/**
+ * A short id for the block, the same in every build: a hash of the block, and a count for identical
+ * blocks rendered by the same engine.
+ */
+export function blockUid({ codeBlock, config }: Context) {
+  let uid = uids.get(codeBlock);
+  if (uid) return uid;
+  const source = `${codeBlock.parentDocument?.sourceFilePath}\0${codeBlock.meta}\0${codeBlock.code}`;
+  const hash = createHash('sha1').update(source).digest('hex').slice(0, 8);
+  // `config` is a new copy for each render; its `plugins` array belongs to the engine.
+  const counts = uidCounts.get(config.plugins) ?? new Map<string, number>();
+  uidCounts.set(config.plugins, counts);
+  const count = counts.get(hash) ?? 0;
+  counts.set(hash, count + 1);
+  uid = count ? `${hash}${count}` : hash;
+  uids.set(codeBlock, uid);
+  return uid;
 }
 
 function where(codeBlock: ExpressiveCodeBlock, line?: number) {

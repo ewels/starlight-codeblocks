@@ -1,7 +1,7 @@
 import { PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { type CodeblocksPlugin, warn } from './core.ts';
+import { blockUid, type CodeblocksPlugin, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
@@ -158,7 +158,7 @@ export function pluginAnnotations(): CodeblocksPlugin {
           .map((directive) => ({ directive, index: lines.indexOf(directive.lines[0] as never) }))
           .filter(({ index }) => index >= 0)
           .sort((a, b) => a.index - b.index);
-        const uid = Math.random().toString(36).slice(2, 8);
+        const uid = blockUid(context);
         const items = ordered.map(({ directive, index }, i) => {
           const n = String(i + 1);
           const text = inlineMarkdown(directive.text ?? '');

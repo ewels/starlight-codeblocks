@@ -9,7 +9,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, type ElementContent, h, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { addTitleBarControl, type CodeblocksPlugin, resolveRange } from './core.ts';
+import { addTitleBarControl, blockUid, type CodeblocksPlugin, resolveRange } from './core.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
 
@@ -113,7 +113,8 @@ export function pluginHiddenLines(): CodeblocksPlugin {
           for (const line of directive.lines) lines.add(line);
         }
       },
-      postprocessRenderedBlock({ codeBlock, renderData }) {
+      postprocessRenderedBlock(context) {
+        const { codeBlock, renderData } = context;
         const { lines: hidden } = hiddenData.getOrCreateFor(codeBlock);
         if (hidden.size === 0) return;
         const code = select('pre > code', renderData.blockAst);
@@ -121,7 +122,7 @@ export function pluginHiddenLines(): CodeblocksPlugin {
         if (!code || !figure) return;
         const lineEls = selectAll('.ec-line', code);
         const lines = codeBlock.getLines();
-        const uid = Math.random().toString(36).slice(2, 8);
+        const uid = blockUid(context);
         const children: ElementContent[] = [];
         const markerIds: string[] = [];
         let run = 0;

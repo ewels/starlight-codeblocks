@@ -7,7 +7,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, h, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { type CodeblocksPlugin, warn } from './core.ts';
+import { blockUid, type CodeblocksPlugin, numberedLines, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX } from './styles.ts';
@@ -154,7 +154,8 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
           .map((directive) => ({ directive, index: lines.indexOf(directive.lines[0] as never) }))
           .filter(({ index }) => index >= 0)
           .sort((a, b) => a.index - b.index);
-        const uid = Math.random().toString(36).slice(2, 8);
+        const start = codeBlock.metaOptions.getInteger('startLineNumber') ?? 1;
+        const uid = blockUid(context);
         const items = ordered.map(({ directive, index }, i) => {
           const n = String(i + 1);
           const note = `${PREFIX}-fn-${uid}-${n}`;
@@ -166,7 +167,11 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
           return h('li', { id: note, dataScbFn: n }, [
             h(
               'a',
-              { class: cls('-num'), href: `#${badge}`, ariaLabel: `Footnote ${n}, for line ${index + 1}` },
+              {
+                class: cls('-num'),
+                href: `#${badge}`,
+                ariaLabel: `Footnote ${n}, for line ${numberedLines(codeBlock).indexOf(lines[index] as never) + start}`,
+              },
               `${n}.`,
             ),
             h('span', inlineMarkdown(directive.text ?? '')),

@@ -69,3 +69,8 @@ test('footnote colours meet their contrast targets in both themes', async () => 
     expect(getColorContrast(get('numberForeground'), get('lineBackground'))).toBeGreaterThanOrEqual(4.5);
   }
 });
+
+test('the footnote label counts from startLineNumber', async () => {
+  const { html } = await render(block('py startLineNumber=10', 'import os', '# [!ref] Creates `app`.', 'app = 1'));
+  expect(html).toContain('aria-label="Footnote 1, for line 11"');
+});
