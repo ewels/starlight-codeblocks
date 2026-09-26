@@ -9,7 +9,7 @@ test('renders a callout above its line, pointing at the middle of the match', as
     block('js', 'const a = 1;', '// [!callout /signal/] Aborts the request.', 'fetch(url, { signal });'),
   );
   expect(html).toContain(
-    '<div class="scb-callout" role="note" style="--scb-callout-mid:16"><span class="scb-callout-bubble">Aborts the request.</span></div><div class="ec-line">',
+    '<div class="scb-callout" role="note" style="--scb-callout-mid:16;--scb-callout-len:19"><span class="scb-callout-bubble">Aborts the request.</span></div><div class="ec-line">',
   );
   expect(html.indexOf('scb-callout')).toBeLessThan(html.indexOf('fetch'));
   expect(html).not.toContain('[!callout');

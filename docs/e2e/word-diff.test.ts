@@ -19,3 +19,11 @@ test('marks changed words by shape as well as by tint', async ({ page }) => {
   await expect(block.locator('.scb-worddiff-ins').first()).toHaveAttribute('role', 'insertion');
   await expect(block.locator('.scb-worddiff-del').first()).toHaveAttribute('role', 'deletion');
 });
+
+test('a diff block leaves a gap between the + and - markers and the code', async ({ page }) => {
+  const pad = await example(page)
+    .locator('.ec-line.ins .code')
+    .first()
+    .evaluate((el) => Number.parseFloat(getComputedStyle(el).paddingInlineStart));
+  expect(pad).toBeGreaterThan(20);
+});

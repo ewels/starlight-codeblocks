@@ -80,3 +80,13 @@ test.describe('without JavaScript', () => {
     expect(notes?.x).toBeGreaterThan((code?.x ?? 0) + (code?.width ?? 0));
   });
 });
+
+test('the code of the example fits its column on a desktop, without a scroll bar', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'On a phone the code can scroll.');
+  for (const width of [1024, 1280, 1600]) {
+    await page.setViewportSize({ width, height: 900 });
+    const pre = example(page).locator('pre');
+    const [scroll, client] = await pre.evaluate((el) => [el.scrollWidth, el.clientWidth]);
+    expect(scroll, `at ${width}px`).toBeLessThanOrEqual(client);
+  }
+});

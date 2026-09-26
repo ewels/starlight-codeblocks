@@ -85,6 +85,8 @@ export function pluginHiddenLines(): CodeblocksPlugin {
   border-top: 1px dashed color-mix(in srgb, ${cssVar('codeblocks.mutedForeground')} 35%, transparent);
   transform: translateY(-50%);
 }
+/* The copy button sits over the end of the first line. */
+.${PREFIX}-hidden-marker:first-child::before { inset-inline-end: calc(${cssVar('codePaddingInline')} + 2.5rem); }
 .${PREFIX}-hidden-marker span {
   position: relative;
   z-index: 1;

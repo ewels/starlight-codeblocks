@@ -121,7 +121,7 @@ export function pluginAnnotations(): CodeblocksPlugin {
 @container (min-width: 600px) {
   .${PREFIX}-side-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.65fr) minmax(190px, 1fr);
+    grid-template-columns: minmax(0, auto) minmax(12rem, 1fr);
     gap: 18px;
     align-items: start;
   }

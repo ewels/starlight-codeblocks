@@ -67,3 +67,12 @@ test('a manual selection leaves the callout out', async ({ page }) => {
     .evaluate((el) => getComputedStyle(el).userSelect);
   expect(style).toBe('none');
 });
+
+test('a short bubble near the right edge moves left instead of wrapping on a desktop', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'A phone block is too narrow for every bubble on one line.');
+  await page.setViewportSize({ width: 1280, height: 900 });
+  for (const bubble of await page.locator('.scb-callout-bubble').all()) {
+    const box = await bubble.boundingBox();
+    expect(box?.height, (await bubble.textContent()) ?? '').toBeLessThan(40);
+  }
+});

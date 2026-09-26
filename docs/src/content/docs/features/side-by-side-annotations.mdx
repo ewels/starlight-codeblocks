@@ -15,18 +15,19 @@ from collections import Counter
 from pathlib import Path
 
 
-def read_rows(path: Path) -> list[dict]:
+def read_rows(path):
     with path.open() as fh:  # [!annotate] Opens the file and closes it when the block ends.
         return list(csv.DictReader(fh))  # [!annotate] Each row becomes a dict keyed by the header line.
 
 
-def summarise(rows: list[dict]) -> Counter:
-    return Counter(row["status"] for row in rows)  # [!annotate] Counts rows per status value.
+def summarise(rows, key):
+    return Counter(r[key] for r in rows)  # [!annotate] Counts the rows for each value in the column \`key\`.
 
 
-def main() -> None:
+def main():
     rows = read_rows(Path(sys.argv[1]))
-    for status, n in summarise(rows).most_common():
+    counts = summarise(rows, "status")
+    for status, n in counts.items():
         print(f"{status:<10} {n:>5}")  # [!annotate] Pads the status and count into columns of fixed width.
 
 

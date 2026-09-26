@@ -113,18 +113,20 @@ export function baseStyles({ cssVar }: ResolverContext) {
 .${PREFIX}-btn {
   display: inline-block;
   text-decoration: none;
-  line-height: 1.4;
   border: 1px solid color-mix(in srgb, ${cssVar('codeForeground')} 16%, transparent);
   border-radius: 4px;
   padding: 3px 8px;
   background: color-mix(in srgb, ${cssVar('codeForeground')} 6%, transparent);
   cursor: pointer;
-  font: inherit;
-  font-size: 0.75rem;
+  font: 0.75rem/1.4 ${cssVar('codeFontFamily')};
   color: ${cssVar('codeForeground')};
 }
 .${PREFIX}-btn:hover, .${PREFIX}-btn:focus-visible {
   background: color-mix(in srgb, ${cssVar('codeForeground')} 13%, transparent);
+}
+/* The + and - markers of diff lines sit in the padding, which leaves no gap before the code. */
+pre:has(> code > .ec-line:is(.ins, .del)) .ec-line .code {
+  padding-inline-start: calc(var(--ecIndent, 0ch) + ${cssVar('codePaddingInline')} + 1ch - var(--ecGtrBrdWd));
 }
 /* Expressive Code's own focus border can fall under 3:1 contrast on the code. */
 pre:focus-visible {

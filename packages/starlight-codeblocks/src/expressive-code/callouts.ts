@@ -75,8 +75,8 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
   box-sizing: border-box;
   display: flex;
   max-width: 100cqi;
-  /* On a narrow block, a token past the right edge still gets a readable bubble inside the block. */
-  padding: 8px 8px 10px max(8px, min(calc(${x} - 40px), calc(100cqi - 8px - 24ch)));
+  /* Near the right edge, the bubble moves left so that it does not wrap. --scb-callout-len is its text length. */
+  padding: 8px 8px 10px max(8px, min(calc(${x} - 40px), calc(100cqi - 30px - var(--scb-callout-len) * 0.925ch)));
   white-space: normal;
   user-select: none;
   -webkit-user-select: none;
@@ -135,7 +135,7 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
             {
               class: hidden ? `${cls()} ${cls('-hidden')}` : cls(),
               role: 'note',
-              style: `--scb-callout-mid:${calloutMiddle(line.text, directive.match)}`,
+              style: `--scb-callout-mid:${calloutMiddle(line.text, directive.match)};--scb-callout-len:${Math.min(60, (directive.text ?? '').length)}`,
             },
             [h('span', { class: cls('-bubble') }, inlineMarkdown(directive.text ?? ''))],
           );
