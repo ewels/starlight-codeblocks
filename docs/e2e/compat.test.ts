@@ -107,6 +107,16 @@ test('the step buttons move between steps in a copy of the block', async ({ page
   await expect(steps.locator('[aria-current="step"]:visible')).toHaveAttribute('aria-label', /^Step 1/);
 });
 
+test('the menu of a code switcher picks a variant in a copy of the block', async ({ page }) => {
+  await page.goto('./features/code-switcher/');
+  const group = page.locator('.example').first().locator('.pane').nth(1).locator('.scb-switcher');
+  const copy = await copyToOverlay(page, group.locator('> .expressive-code:visible'));
+  await copy.getByRole('combobox').selectOption({ label: 'pnpm' });
+  await expect(copy.locator('pre')).toContainText('pnpm');
+  await expect(copy.getByRole('combobox')).toHaveValue('1');
+  await expect(group.locator('> .expressive-code:visible pre')).toContainText('pnpm');
+});
+
 test('a full screen button in the title bar leaves the step buttons free', async ({ page }) => {
   await page.goto('./features/token-transitions/');
   const current = page.locator('.example').first().locator('[data-scb-steps] > .expressive-code:visible');

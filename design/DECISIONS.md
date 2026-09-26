@@ -838,7 +838,7 @@ Use this format:
 
 - Date: 2026-09-26
 - Step: after the plan (compatibility with other plugins)
-- Decision: The features that "Client modules work in copies of a block" left out now work in a copy too. Bracket pairs and side-by-side note highlights listen for `mouseover`, `focusin` and `focusout` on the document and light up inside the block of the event target. API link cards use one card, which moves into the block of the link it shows. Fill-in fields keep each template in `data-scb-template`, so that a copy fills its own copied code from the template, and a copy gets its own update function the first time a reader types in it. `<CodeSteps>` gives each step `data-scb-steps-of`; in a copy of a step, Previous, Next, the step numbers and the arrow keys swap in the title, step numbers, controls, code and copy button of the step they go to, without the animation, and keep what other plugins added to the copy, such as a full screen button.
+- Decision: The features that "Client modules work in copies of a block" left out now work in a copy too. Bracket pairs and side-by-side note highlights listen for `mouseover`, `focusin` and `focusout` on the document and light up inside the block of the event target. API link cards use one card, which moves into the block of the link it shows. Fill-in fields keep each template in `data-scb-template`, so that a copy fills its own copied code from the template, and a copy gets its own update function the first time a reader types in it. `<CodeSteps>` gives each step `data-scb-steps-of`; in a copy of a step, Previous, Next, the step numbers and the arrow keys swap in the title, step numbers, controls, code and copy button of the step they go to, without the animation, and keep what other plugins added to the copy, such as a full screen button. The menu of a code switcher in a copy of one variant swaps in the variant it picks the same way (`data-scb-switcher-of`), and switches the page too. Both use `swapInto()` in `src/client/shared/swap.ts`.
 - Reason: The user prefers working features in the copies that full screen plugins show over known limits.
 - Alternatives: The token animation in a copy (the copy has one step and no step data; the swap keeps the code correct).
 
@@ -849,3 +849,19 @@ Use this format:
 - Decision: Inline highlighting also takes the suffix inside the backticks, `` `fetch(url){:js}` ``, and the docs recommend that form. The form after the backtick, `` `fetch(url)`{:js} ``, still works, and the docs say to write `\{:js}` in `.mdx` files and on sites whose plugins read `.md` as MDX. Inline code that contains a backtick, or that is only a suffix, keeps its text, so that docs can show the syntax. The token form `{:.token}` is not supported, so a suffix that starts with a dot stays as text.
 - Reason: The form inside the backticks is the one that rehype-pretty-code documents (`` `[1, 2, 3]{:js}` ``); SPEC 8.1 names rehype-pretty-code as the source of the convention. It is valid Markdown and valid MDX, so it needs no backslash, and it works with starlight-versions and starlight-md-txt, which read `.md` files as MDX and fail on `{:js}` after the backtick.
 - Alternatives: Only document the backslash (every author has to remember it, and plain `.md` breaks as soon as a site adds one of those plugins). A different syntax, such as a `lang` attribute (no existing convention).
+
+## No toPlainMarkdown export
+
+- Date: 2026-09-26
+- Step: after the plan (compatibility with other plugins)
+- Decision: The package does not export a function that removes attributes and directives from Markdown. The "Use with other plugins" guide says that page action and raw Markdown plugins show the source as the author wrote it.
+- Reason: None of starlight-page-actions, starlight-page-context-action and starlight-md-txt has a hook that could call such a function, so sites could not use it. Directives are code comments, which readers and AI assistants can read, and fence line attributes are the Markdown that the author wrote.
+- Alternatives: Export it anyway (an unused API that must parse every comment syntax and every attribute).
+
+## A guide for other plugins
+
+- Date: 2026-09-26
+- Step: after the plan (compatibility with other plugins)
+- Decision: The guide "Use with other plugins" (`guides/use-with-other-plugins`, last in the Guides group of the sidebar and so in `llms.txt`) lists the tested plugins in groups, gives the plugin order, and has one section for each plugin that needs a set-up: `ec.config.mjs` and expressive-code-twoslash, starlight-links-validator, starlight-llms-txt and Pagefind, page actions, starlight-versions and starlight-md-txt, Markdoc, and `unified()`. It uses sections and lists, and no wide tables.
+- Reason: The compatibility tests found set-ups that readers cannot guess, and each belongs to no single feature page.
+- Alternatives: A page under Extend (those pages define interfaces). Notes on each feature page only (readers look for the other plugin's name, not the feature).

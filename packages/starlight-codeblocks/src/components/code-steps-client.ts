@@ -1,5 +1,6 @@
 import { MagicMoveRenderer } from '@shikijs/magic-move/renderer';
 import type { KeyedTokensInfo } from '@shikijs/magic-move/types';
+import { swapInto } from '../client/shared/swap.ts';
 import type { StepTokens } from './steps.ts';
 
 const S = 'scb-steps';
@@ -96,17 +97,14 @@ function arrow(event: KeyboardEvent) {
 }
 
 /**
- * A copy of one step, as full screen plugins show, has no other steps. It moves by swapping in the parts of
- * the step it goes to, without the animation, and keeps what other plugins added to it.
+ * A copy of one step, as full screen plugins show, has no other steps. It moves by swapping in the step it
+ * goes to, without the animation.
  */
 function goInCopy(copy: HTMLElement, to: (k: number) => number, control: string) {
   const k = to(Number(copy.querySelector('[aria-current="step"]')?.getAttribute('data-scb-steps-go')));
   const next = roots[Number(copy.dataset.scbStepsOf)]?.[k];
   if (!next) return;
-  for (const part of ['.header .title', `.${S}-head`, '.scb-tools', 'pre', '.copy']) {
-    const from = next.querySelector(part);
-    if (from) copy.querySelector(part)?.replaceWith(from.cloneNode(true));
-  }
+  swapInto(copy, next);
   focus(copy, control, k);
 }
 
