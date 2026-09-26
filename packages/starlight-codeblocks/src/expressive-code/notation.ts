@@ -135,8 +135,8 @@ function interpret(token: Token, specs: DirectiveSpecs, sourceLine: number) {
 
 /**
  * Whether the comment opener at `index` is inside a quoted string, before any comment, that also holds
- * the directive at `first`. An approximation, as in `findBrackets`: a quote with no partner before the
- * directive (a Rust lifetime, or one whose partner is an apostrophe in the comment) is not a string.
+ * the directive at `first`. An approximation, as in `findBrackets`: a quote with no partner (a Rust lifetime),
+ * or whose partner is an apostrophe between the opener and the directive, is not a string.
  */
 function inString(text: string, index: number, first: number, syntaxes: CommentSyntax[]) {
   for (let i = 0; i < index; i++) {
@@ -145,7 +145,7 @@ function inString(text: string, index: number, first: number, syntaxes: CommentS
     if (quote !== '"' && quote !== "'" && quote !== '`') continue;
     let j = i + 1;
     while (j < text.length && text[j] !== quote) j += text[j] === '\\' ? 2 : 1;
-    if (j >= text.length || (index < j && j < first)) continue;
+    if (j >= text.length || (index < j && j < first && /\w'\w/.test(text.slice(j - 1, j + 2)))) continue;
     if (index < j) return true;
     i = j;
   }

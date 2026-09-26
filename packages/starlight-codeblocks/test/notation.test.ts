@@ -88,6 +88,14 @@ describe('parseLine', () => {
     expect(parse("fn f<'a>(x: &'a str) -> &'a str { x } // [!code focus]", commentSyntaxFor('rust')).text).toBe(
       "fn f<'a>(x: &'a str) -> &'a str { x }",
     );
+    expect(parse('const a = "http://x", b = "[!code focus]";')).toMatchObject({
+      text: 'const a = "http://x", b = "[!code focus]";',
+      directives: [],
+    });
+    expect(parse('fetch("http://x") [!code focus]')).toMatchObject({
+      text: 'fetch("http://x") [!code focus]',
+      directives: [],
+    });
     expect(parse("fn f<'a, 'b>(x: &'a str, y: &'b str) // [!code focus]", commentSyntaxFor('rust')).text).toBe(
       "fn f<'a, 'b>(x: &'a str, y: &'b str)",
     );
