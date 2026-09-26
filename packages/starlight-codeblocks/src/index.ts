@@ -20,7 +20,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
         if (config.expressiveCode === false) {
           throw new AstroError(
             'starlight-codeblocks needs Expressive Code, but the Starlight config has `expressiveCode: false`.',
-            'Remove `expressiveCode: false` from the Starlight config.',
+            'Remove `expressiveCode: false` from the Starlight config. A plugin listed before starlight-codeblocks, such as starlight-theme-nova, can also turn Expressive Code off: list `codeblocks()` before that plugin, or set `expressiveCode: {}` in the Starlight config.',
           );
         }
         const ecConfigUrl = new URL('./ec.config.mjs', astroConfig.root);

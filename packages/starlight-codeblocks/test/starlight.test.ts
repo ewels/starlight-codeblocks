@@ -77,6 +77,12 @@ test('fails when Expressive Code is off', async () => {
   await expect(setup(undefined, false)).rejects.toThrow('needs Expressive Code');
 });
 
+test('says that a plugin listed earlier, such as a theme, can have turned Expressive Code off', async () => {
+  await expect(setup(undefined, false)).rejects.toMatchObject({
+    hint: expect.stringContaining('A plugin listed before starlight-codeblocks'),
+  });
+});
+
 test('validates options when the plugin is created', () => {
   expect(() => codeblocks({ fokus: {} } as never)).toThrow('unknown option `fokus`');
 });
