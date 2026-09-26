@@ -1,3 +1,4 @@
+import { readdirSync, readFileSync } from 'node:fs';
 import { expect, type Page, test } from '@playwright/test';
 
 const pane = (page: Page, n = 0) => page.locator('.example').nth(n).locator('.pane').nth(1);
@@ -5,6 +6,30 @@ const lines = (page: Page) => pane(page).locator('.ec-line');
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/code-mentions/');
+});
+
+test.describe('pairing a link with a block, in the browser', () => {
+  // No docs example needs the fallback rule: a link with no matching block after it, in its own
+  // section, pairs with the nearest matching block before it instead (SPEC "Behaviour").
+  const origin = 'http://codeblocks-mentions.test';
+  const dir = new URL('../../packages/starlight-codeblocks/dist/client/', import.meta.url);
+  const file = readdirSync(dir).find((name) => name.startsWith('scb-mentions.')) as string;
+  const html = `<h2>Section A</h2>
+  <figure data-scb-mentions><div class="ec-line" data-scb-mention="x">match in A</div></figure>
+  <h2>Section B</h2>
+  <p>See <a href="#mention:x">the value</a>.</p>
+  <script type="module">import init from '/mentions.js'; init();</script>`;
+
+  test('a link with nothing after it in its section pairs with the block before it', async ({ page }) => {
+    await page.route(`${origin}/**`, (route) =>
+      route.request().url().endsWith('.js')
+        ? route.fulfill({ body: readFileSync(new URL(file, dir), 'utf8'), contentType: 'text/javascript' })
+        : route.fulfill({ body: html, contentType: 'text/html' }),
+    );
+    await page.goto(`${origin}/`);
+    await page.getByRole('link', { name: 'the value' }).hover();
+    await expect(page.locator('[data-scb-mention="x"]')).toHaveClass(/scb-mention-on/);
+  });
 });
 
 test('hovering over a link highlights its lines and fades the others', async ({ page }) => {

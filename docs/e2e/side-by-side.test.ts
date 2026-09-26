@@ -34,6 +34,17 @@ test('the notes column sticks below the header while the block scrolls past', as
   expect(notes?.y).toBeLessThan((header?.height ?? 0) + 40);
 });
 
+test('the notes column stops sticking when it is taller than the space below the header', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'The phone layout has no column.');
+  await page.setViewportSize({ width: 1024, height: 260 });
+  const block = page.locator('[data-scb-annotations]').first();
+  await expect(block).toHaveClass(/scb-side-static/);
+  expect(await block.locator('.scb-annotation-notes').evaluate((el) => getComputedStyle(el).position)).toBe('static');
+});
+
 test('hovering over a note highlights its line, and hovering over a line highlights its note', async ({ page }) => {
   const block = example(page);
   const note = block.locator('.scb-annotation-notes li').nth(1);

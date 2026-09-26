@@ -68,6 +68,21 @@ test('a manual selection leaves the callout out', async ({ page }) => {
   expect(style).toBe('none');
 });
 
+test('on a phone, where the matched text is past the right edge, the arrow stays inside the block', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'The token is inside the visible block on a desktop.');
+  const block = example(page);
+  const arrowRight = await block.locator('.scb-callout').evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const after = getComputedStyle(el, '::after');
+    return box.left + Number.parseFloat(after.left) + Number.parseFloat(after.width);
+  });
+  const pre = await block.locator('pre').boundingBox();
+  expect(arrowRight).toBeLessThanOrEqual((pre?.x ?? 0) + (pre?.width ?? 0));
+});
+
 test('a short bubble near the right edge moves left instead of wrapping on a desktop', async ({ page, isMobile }) => {
   test.skip(isMobile, 'A phone block is too narrow for every bubble on one line.');
   await page.setViewportSize({ width: 1280, height: 900 });

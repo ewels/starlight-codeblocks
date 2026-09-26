@@ -23,6 +23,13 @@ test('turns [!ref] into a badge on the next line, described by an item in the li
   expect(warnings).toEqual([]);
 });
 
+test('an escaped [\\!ref] stays as a plain comment', async () => {
+  const { html, warnings } = await render(block('py', '# [\\!ref] Note', 'a = 1'));
+  expect(html).toContain('[!ref] Note');
+  expect(html).not.toContain('scb-footnote-badge');
+  expect(warnings).toEqual([]);
+});
+
 test('numbers footnotes from 1 in line order', async () => {
   const { html } = await render(block('py', '# [!ref] First', 'a = 1', '# [!ref] Second', 'b = 2'));
   expect(html.match(/aria-label="Footnote \d"/g)).toEqual(['aria-label="Footnote 1"', 'aria-label="Footnote 2"']);

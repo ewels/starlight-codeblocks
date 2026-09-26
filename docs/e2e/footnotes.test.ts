@@ -1,8 +1,30 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
+import { render } from '../../packages/starlight-codeblocks/test/render.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/footnotes/');
 });
+
+// A block longer than the docs examples, so the badge and its note in the static list are never both
+// on screen at once: no example shows this, the sticky one keeps the list on screen throughout.
+async function longBlock(page: Page) {
+  const lines = [
+    '```py footnotes="static"',
+    '# [!ref] Note about x.',
+    'x = 1',
+    ...Array.from({ length: 40 }, (_, i) => `y${i} = ${i}`),
+    '```',
+  ];
+  const { html } = await render(lines.join('\n'));
+  await page.evaluate((html) => {
+    const box = document.createElement('div');
+    box.id = 'long';
+    box.innerHTML = html;
+    document.querySelector('.sl-markdown-content')?.prepend(box);
+    document.dispatchEvent(new Event('astro:page-load'));
+  }, html);
+  return page.locator('#long');
+}
 
 const example = (page: import('@playwright/test').Page, n = 0) =>
   page.locator('.example').nth(n).locator('.pane').nth(1).locator('.expressive-code');
@@ -99,6 +121,17 @@ test('copying leaves the badges and notes out', async ({ page, context }) => {
   expect(copied).toBe(
     'from flask import Flask\n\napp = Flask(__name__)\n\n@app.get("/health")\ndef health():\n    return {"ok": True}',
   );
+});
+
+test('selecting a badge scrolls its note into view when the list is off screen', async ({ page }) => {
+  const block = await longBlock(page);
+  const badge = block.getByRole('link', { name: 'Footnote 1', exact: true });
+  await badge.scrollIntoViewIfNeeded();
+  const note = block.locator('.scb-footnotes li').first();
+  await expect(note).not.toBeInViewport();
+  await badge.click();
+  await expect(note).toBeInViewport();
+  await expect(note).toHaveClass(/scb-footnote-on/);
 });
 
 test('the page jumps instead of scrolling smoothly under reduced motion', async ({ page }) => {

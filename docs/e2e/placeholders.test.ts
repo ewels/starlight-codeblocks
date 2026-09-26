@@ -92,10 +92,14 @@ test.describe('without JavaScript', () => {
   });
 });
 
+const clientDir = new URL('../../packages/starlight-codeblocks/dist/client/', import.meta.url);
+const clientFile = readdirSync(clientDir).find((name) => name.startsWith('scb-placeholders.')) as string;
+const clientSource = readFileSync(new URL(clientFile, clientDir), 'utf8');
+
 test.describe('custom playgrounds', () => {
   const origin = 'http://codeblocks.test';
-  const dir = new URL('../../packages/starlight-codeblocks/dist/client/', import.meta.url);
-  const file = readdirSync(dir).find((name) => name.startsWith('scb-placeholders.')) as string;
+  const dir = clientDir;
+  const file = clientFile;
   const html = `<figure data-scb-placeholders="none">
     <input class="scb-placeholder" data-ph="MY KEY" placeholder="MY KEY" aria-label="MY KEY">
     <a class="scb-playground" href="https://example.com/?code=${encodeURIComponent('key = "MY KEY"')}">Open</a>
@@ -118,6 +122,53 @@ test.describe('custom playgrounds', () => {
     );
     await expect(page.locator('input[name="code"]')).toHaveValue('key = "a&b c"');
     await expect(page.locator('.copy button')).toHaveAttribute('data-code', 'key = "a&b c"');
+  });
+});
+
+test.describe('storage option', () => {
+  const origin = 'http://codeblocks-storage.test';
+  const field = (storage: string) =>
+    `<figure data-scb-placeholders="${storage}"><input class="scb-placeholder" data-ph="MY KEY" placeholder="MY KEY" aria-label="MY KEY"></figure>
+    <script type="module">import init from '/placeholders.js'; init();</script>`;
+
+  async function serve(page: Page, storage: string) {
+    await page.route(`${origin}/**`, (route) =>
+      route.request().url().endsWith('.js')
+        ? route.fulfill({ body: clientSource, contentType: 'text/javascript' })
+        : route.fulfill({ body: field(storage), contentType: 'text/html' }),
+    );
+  }
+
+  test('storage="session" saves the value in sessionStorage only, and it survives a reload', async ({ page }) => {
+    await serve(page, 'session');
+    await page.goto(`${origin}/`);
+    await page.getByRole('textbox', { name: 'MY KEY' }).fill('tok_123');
+    expect(await page.evaluate(() => sessionStorage.getItem('scb-placeholders'))).toContain('tok_123');
+    expect(await page.evaluate(() => localStorage.getItem('scb-placeholders'))).toBeNull();
+    await page.reload();
+    await expect(page.getByRole('textbox', { name: 'MY KEY' })).toHaveValue('tok_123');
+  });
+
+  test('storage="none" saves nothing, so a reload loses the value', async ({ page }) => {
+    await serve(page, 'none');
+    await page.goto(`${origin}/`);
+    await page.getByRole('textbox', { name: 'MY KEY' }).fill('tok_123');
+    expect(await page.evaluate(() => sessionStorage.getItem('scb-placeholders'))).toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem('scb-placeholders'))).toBeNull();
+    await page.reload();
+    await expect(page.getByRole('textbox', { name: 'MY KEY' })).toHaveValue('');
+  });
+
+  test('the default local storage keeps the value across a full navigation to another page', async ({ page }) => {
+    await page.route(`${origin}/**`, (route) => {
+      const url = new URL(route.request().url());
+      if (url.pathname.endsWith('.js')) return route.fulfill({ body: clientSource, contentType: 'text/javascript' });
+      return route.fulfill({ body: field('local'), contentType: 'text/html' });
+    });
+    await page.goto(`${origin}/a`);
+    await page.getByRole('textbox', { name: 'MY KEY' }).fill('tok_123');
+    await page.goto(`${origin}/b`);
+    await expect(page.getByRole('textbox', { name: 'MY KEY' })).toHaveValue('tok_123');
   });
 });
 

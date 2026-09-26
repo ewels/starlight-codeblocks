@@ -39,10 +39,11 @@ test('shares the title bar controls with hidden lines', async () => {
 });
 
 test('sends the copied text: directives removed, hidden lines kept', async () => {
-  const { html } = await render(
+  const { html, copyText } = await render(
     block('rust playground="rust" hidden={1}', 'use std::fmt;', 'fn main() {} // [!code focus]'),
   );
   expect(decodeURIComponent(href(html).split('code=')[1] as string)).toBe('use std::fmt;\nfn main() {}');
+  expect(copyText).toBe('use std::fmt;\nfn main() {}');
 });
 
 test('sends only the commands of a shell session', async () => {

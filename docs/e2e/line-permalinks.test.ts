@@ -47,6 +47,12 @@ test('highlights the lines in the address on load and scrolls to them', async ({
   await expect(line(page, 6)).toBeInViewport();
 });
 
+test('scrolls instantly instead of smoothly under reduced motion', async ({ page }, info) => {
+  test.skip(info.project.name !== 'reduced-motion', 'Only for the reduced-motion project.');
+  await page.goto('./features/line-permalinks/#cfg-L6-L8');
+  await expect(line(page, 6)).toBeInViewport({ timeout: 50 });
+});
+
 test('follows changes to the address', async ({ page }) => {
   await page.evaluate(() => {
     location.hash = '#cfg-L5';

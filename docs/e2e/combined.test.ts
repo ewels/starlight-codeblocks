@@ -1,10 +1,11 @@
 import { expect, type Page, test } from '@playwright/test';
+import type { CodeblocksOptions } from '../../packages/starlight-codeblocks/src/options.ts';
 import { render } from '../../packages/starlight-codeblocks/test/render.ts';
 
 // Feature combinations that no docs example shows: the test renders the block and adds it to a built page,
 // whose stylesheet has the styles of every feature, then starts the client modules the way a navigation does.
-async function inject(page: Page, lines: string[], hash = '') {
-  const { html } = await render(lines.join('\n'));
+async function inject(page: Page, lines: string[], hash = '', options: CodeblocksOptions = {}) {
+  const { html } = await render(lines.join('\n'), options);
   await page.goto('./features/expandable-blocks/');
   await page.evaluate(
     ([html, hash]) => {
@@ -97,4 +98,19 @@ test('a malformed address does not throw', async ({ page }) => {
   });
   await page.waitForTimeout(200);
   expect(errors).toEqual([]);
+});
+
+test("a Run button runs the code with the reader's placeholder values", async ({ page }) => {
+  await page.route('**/scb-test-runtime.js', (route) =>
+    route.fulfill({
+      contentType: 'text/javascript',
+      body: "export default { load: async () => {}, run: async (code) => ({ stdout: code, stderr: '' }) };",
+    }),
+  );
+  const block = await inject(page, ['```js runnable placeholder="TOKEN"', 'TOKEN', '```'], '', {
+    runnable: { runtimes: { javascript: '/scb-test-runtime.js' } },
+  });
+  await block.getByRole('textbox', { name: 'TOKEN' }).fill('abc123');
+  await block.locator('.scb-run').click();
+  await expect(block.locator('.scb-run-stdout')).toHaveText('abc123');
 });

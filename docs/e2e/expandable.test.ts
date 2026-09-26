@@ -55,3 +55,12 @@ test('has no transition, with or without reduced motion', async ({ page }) => {
   await example(page).locator('.scb-expandable-toggle').click();
   expect(await pre.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
 });
+
+test.describe('without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+  test('the block shows in full, with no button', async ({ page }) => {
+    const block = example(page);
+    await expect(block.locator('.scb-expandable-bar')).toBeHidden();
+    await expect(block.locator('.ec-line').last()).toBeVisible();
+  });
+});

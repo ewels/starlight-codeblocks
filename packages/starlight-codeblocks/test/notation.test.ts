@@ -76,6 +76,14 @@ describe('parseLine', () => {
     expect(parse('x // [!code error] Write [\\!code focus] here').directives[0]?.text).toBe('Write [!code focus] here');
   });
 
+  test('renders an escaped own-line directive as literal text, without removing the line', () => {
+    expect(parse('// [\\!callout /x/] Note')).toMatchObject({
+      text: '// [!callout /x/] Note',
+      removed: false,
+      directives: [],
+    });
+  });
+
   test('reports unknown and malformed directives, and keeps them in the code', () => {
     const unknown = parse('x // [!code fokus]');
     expect(unknown.text).toBe('x // [!code fokus]');

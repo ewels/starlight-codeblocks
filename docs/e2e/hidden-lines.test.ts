@@ -76,3 +76,16 @@ test('a manual selection leaves out the marker text', async ({ page }) => {
   expect(text).not.toContain('hidden line');
   expect(text).toContain('config = json.loads(Path("config.json").read_text())');
 });
+
+test.describe('without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+  test('hidden lines stay hidden, and the markers do nothing', async ({ page }) => {
+    const block = example(page);
+    const hidden = block.locator('.scb-hidden-line');
+    await expect(hidden.first()).toBeHidden();
+    await block.locator('.scb-hidden-marker').first().click();
+    await expect(hidden.first()).toBeHidden();
+    await block.locator('.scb-hidden-toggle').click();
+    await expect(hidden.first()).toBeHidden();
+  });
+});
