@@ -35,8 +35,8 @@ function renameIds(copy: Element, suffix: string) {
   for (const { properties } of elements) {
     const id = properties.id;
     if (typeof id !== 'string') continue;
-    const line = block ? id.match(new RegExp(`^${block}(-L\\d+)$`)) : null;
-    renamed.set(id, line ? `${block}-${suffix}${line[1]}` : `${id}-${suffix}`);
+    const line = typeof block === 'string' && id.startsWith(`${block}-L`) ? id.slice(block.length) : '';
+    renamed.set(id, /^-L\d+$/.test(line) ? `${block}-${suffix}${line}` : `${id}-${suffix}`);
   }
   const rename = (id: string) => renamed.get(id) ?? id;
   for (const { properties } of elements) {

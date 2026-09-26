@@ -126,3 +126,12 @@ test('gives each copy its own ids, and points its references at them', async () 
   expect(out).toContain('id="cfg-sticky-L1"');
   expect(out).toContain('href="#cfg-s2-L1"');
 });
+
+test('renames the line ids of a block whose id holds regular expression characters', async () => {
+  for (const id of ['c++', 'a+b']) {
+    const { html } = await render([`\`\`\`js id="${id}"`, 'a()', '```'].join('\n'));
+    const out = scrollycoding([html, steps[0]].join('\n'));
+    expect(out).toContain(`id="${id}-s1-L1"`);
+    expect(out).toContain(`href="#${id}-s1-L1"`);
+  }
+});
