@@ -6,7 +6,7 @@ The docs site lives in `docs/`. It is a Starlight site that uses the plugin thro
 
 - Starlight with Sätteri, no remark or rehype plugins.
 - The plugin, with every feature on.
-- `starlight-links-validator`, configured to ignore `#mention:` links.
+- `starlight-links-validator`, with the plugin's `linksValidatorExclude` function, which ignores `#mention:` links and line permalinks.
 - Pagefind search (Starlight's default).
 - Deploy to GitHub Pages from CI on pushes to `main` only. Write the workflow, but it does not run during the initial build, because the build never pushes to `main`.
 

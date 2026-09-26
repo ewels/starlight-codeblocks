@@ -1,6 +1,6 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
-import codeblocks from 'starlight-codeblocks';
+import codeblocks, { linksValidatorExclude } from 'starlight-codeblocks';
 import { nextflow } from 'starlight-codeblocks/adapters/nextflow';
 import { python } from 'starlight-codeblocks/adapters/python';
 import starlightLinksValidator from 'starlight-links-validator';
@@ -61,7 +61,7 @@ export default defineConfig({
           runnable: { runtimes: { javascript: './src/runtimes/javascript.ts' }, timeout: 5000 },
           lineStates: { states: { todo: { label: 'To do', colour: { dark: '#c792ea', light: '#7c3aed' } } } },
         }),
-        starlightLinksValidator({ exclude: ({ link }) => link.startsWith('#mention:') }),
+        starlightLinksValidator({ exclude: linksValidatorExclude }),
       ],
       sidebar,
     }),

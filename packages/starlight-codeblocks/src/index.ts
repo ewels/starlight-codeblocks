@@ -6,7 +6,7 @@ import { AstroError } from 'astro/errors';
 import { createPlugins, PLUGIN_PREFIX } from './expressive-code/index.ts';
 import { codeblocksIntegration } from './integration.ts';
 import { type CodeblocksOptions, resolveOptions } from './options.ts';
-import { setRegistry } from './registry.ts';
+import { getRegistry, setRegistry } from './registry.ts';
 import { INLINE_CSS_ID } from './satteri/inline-code.ts';
 
 export type * from './options.ts';
@@ -37,6 +37,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
           root: fileURLToPath(astroConfig.root),
           cacheDir: fileURLToPath(astroConfig.cacheDir),
           expressiveCode: { ...ec, ...ecConfig },
+          blockIds: new Set(),
         });
         const css = options.inlineHighlighting ? { customCss: [...(config.customCss ?? []), INLINE_CSS_ID] } : {};
         if (Array.isArray(ecConfig?.plugins)) {
@@ -68,6 +69,18 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
       },
     },
   };
+}
+
+/**
+ * An `exclude` function for starlight-links-validator. It skips links to code mentions and to lines of
+ * code blocks with an `id`, which the validator cannot see because they exist only in rendered code.
+ */
+export function linksValidatorExclude({ link }: { link: string }): boolean {
+  const at = link.indexOf('#');
+  if (at < 0) return false;
+  const hash = link.slice(at + 1);
+  if (hash.startsWith('mention:')) return true;
+  return getRegistry()?.blockIds?.has(hash.replace(/-L\d+(?:-L\d+)?$/, '')) ?? false;
 }
 
 const isOurs = (plugin: unknown) => (plugin as ExpressiveCodePlugin | undefined)?.name?.startsWith(PLUGIN_PREFIX);

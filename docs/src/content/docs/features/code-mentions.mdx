@@ -67,13 +67,17 @@ With `mentions: false`, `[!mention]` tags stay in the code, and `#mention:` link
 
 ### Links validator
 
-The `starlight-links-validator` plugin reports `#mention:` links as broken, because no heading has that id. Exclude them in `astro.config.mjs`:
+The `starlight-links-validator` plugin reports `#mention:` links as broken, because no heading has that id. Give it the `linksValidatorExclude` function from this plugin in `astro.config.mjs`:
 
 ```js title="astro.config.mjs"
+import codeblocks, { linksValidatorExclude } from 'starlight-codeblocks';
+
 starlightLinksValidator({
-  exclude: ({ link }) => link.startsWith('#mention:'),
+  exclude: linksValidatorExclude,
 }),
 ```
+
+The function also skips links to [line permalinks](/starlight-codeblocks/features/line-permalinks/).
 
 ## Examples
 

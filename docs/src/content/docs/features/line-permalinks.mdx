@@ -91,6 +91,7 @@ createServer(handler).listen(port);
 - Line numbers take space on the left of every line. On a phone, a block with long lines scrolls sooner.
 - The plugin highlights one range at a time on a page. A new selection in any block removes the old highlight.
 - An `id` must not match the `id` of a heading on the page. Heading ids come from the heading text, such as `#options`.
+- The `starlight-links-validator` plugin reports links to a block or a line, such as `#cfg-L2`, as broken. Give it `exclude: linksValidatorExclude`, imported from `starlight-codeblocks`.
 
 ## Related
 

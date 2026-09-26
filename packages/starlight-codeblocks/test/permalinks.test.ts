@@ -4,7 +4,9 @@ import { ExpressiveCode } from 'expressive-code';
 import { markdownToHtml } from 'satteri';
 import { expect, test } from 'vitest';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
+import { linksValidatorExclude } from '../src/index.ts';
 import { resolveOptions } from '../src/options.ts';
+import { setRegistry } from '../src/registry.ts';
 import { mdastPlugins } from '../src/satteri/index.ts';
 import { render } from './render.ts';
 
@@ -80,4 +82,18 @@ test('warns when two blocks on one page have the same id', async () => {
   expect(warnings).toHaveLength(1);
   expect(warnings[0]).toContain('two code blocks have `id="a"`');
   expect(warnings[0]).toContain('page.md');
+});
+
+test('linksValidatorExclude skips mention links and links to blocks with an id', async () => {
+  setRegistry({ options: resolveOptions(), plugins: [], clientAssets: true, blockIds: new Set() });
+  const plugins = mdastPlugins(resolveOptions(), { warn() {} });
+  await markdownToHtml(block('js id="cfg"', 'x'), { mdastPlugins: plugins, fileURL: new URL('file:///site/page.md') });
+  const excluded = (link: string) => linksValidatorExclude({ link });
+  expect(['#cfg', '#cfg-L2', '#cfg-L2-L5', '/guide/#cfg-L1', '#mention:x', '../a/#mention:y'].map(excluded)).toEqual(
+    Array(6).fill(true),
+  );
+  expect(['#other', '#other-L2', '#cfg-X', '/guide/', 'https://example.com/#cfgx'].map(excluded)).toEqual(
+    Array(5).fill(false),
+  );
+  setRegistry(undefined);
 });

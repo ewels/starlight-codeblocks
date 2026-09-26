@@ -12,6 +12,7 @@ import type {
 import { bundledLanguagesInfo } from 'shiki/langs';
 import { encodeVariant, SWITCHER_META } from '../expressive-code/code-switcher.ts';
 import type { ResolvedOptions } from '../options.ts';
+import { getRegistry } from '../registry.ts';
 import { inlineCode } from './inline-code.ts';
 
 type ContainerDirective = Parameters<NonNullable<MdastPluginDefinition['containerDirective']>>[0];
@@ -33,6 +34,7 @@ function checkIds(codes: Code[], file: string, logger: Logger) {
   for (const code of codes) {
     const id = new MetaOptions(code.meta ?? '').getString('id');
     if (!id) continue;
+    getRegistry()?.blockIds?.add(id);
     if (seen.has(id)) {
       logger.warn(`${file}: two code blocks have \`id="${id}"\`. Line permalinks need a different id for each block.`);
     }

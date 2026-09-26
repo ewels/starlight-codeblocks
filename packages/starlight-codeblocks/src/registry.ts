@@ -16,6 +16,8 @@ export interface Registry {
   cacheDir?: string;
   /** The site's Expressive Code options that inline highlighting copies: theme selectors and `shiki`. */
   expressiveCode?: Record<string, unknown>;
+  /** The `id` of every code block in Markdown, for `linksValidatorExclude()`. */
+  blockIds?: Set<string>;
   /** The site engine's themes and resolved style settings, set when it creates its base styles. */
   styleVariants?: StyleVariant[];
 }
