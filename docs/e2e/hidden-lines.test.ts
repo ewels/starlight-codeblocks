@@ -63,3 +63,14 @@ test('the marker changes state instantly, with or without reduced motion', async
   await marker.click();
   expect(await marker.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
 });
+
+test('a manual selection leaves out the marker text', async ({ page }) => {
+  const text = await example(page)
+    .locator('pre code')
+    .evaluate((code) => {
+      getSelection()?.selectAllChildren(code);
+      return getSelection()?.toString();
+    });
+  expect(text).not.toContain('hidden line');
+  expect(text).toContain('config = json.loads(Path("config.json").read_text())');
+});

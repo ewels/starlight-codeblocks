@@ -74,6 +74,8 @@ export function pluginHiddenLines(): CodeblocksPlugin {
   cursor: pointer;
   font: inherit;
   text-align: left;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .${PREFIX}-hidden-marker::before {
   content: '';
