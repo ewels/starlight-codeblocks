@@ -10,7 +10,7 @@ VitePress marks code blocks with the `[!code …]` directives of the Shiki trans
 This block uses four VitePress directives together, to show that they need no change:
 
 export const unchanged = `
-\`\`\`js title="server.js" wordDiff=false
+\`\`\`js title="server.js"
 import { createServer } from 'node:http';
 
 const port = 3000; // [!code --]
@@ -20,9 +20,9 @@ server.listen(port); // [!code error]
 \`\`\`
 `;
 
-<Example code={unchanged} />
+<Example code={unchanged} hiddenAttributes="wordDiff=false" />
 
-The copy button copies the code without the directives, the same as in VitePress. `wordDiff=false` is not VitePress syntax. It turns off [word-level diff](/starlight-codeblocks/features/word-level-diff/), which the plugin applies to `[!code --]` and `[!code ++]` pairs by default.
+The copy button copies the code without the directives, the same as in VitePress.
 
 ## Directives that work unchanged
 

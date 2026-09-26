@@ -10,7 +10,7 @@ import CommentSyntaxTable from '../../../components/CommentSyntaxTable.astro';
 Expressive Code marks lines with attributes on the fence line, such as `{3}` or `ins={5}`. An attribute counts lines, so it points at the wrong line when you add a line above it. A directive sits in a comment on the line that it marks, and moves with that line.
 
 export const markers = `
-\`\`\`ts title="config.ts" wordDiff=false
+\`\`\`ts title="config.ts"
 export const config = {
   port: 3000, // [!code --]
   port: Number(process.env.PORT ?? 3000), // [!code ++]
@@ -19,7 +19,7 @@ export const config = {
 \`\`\`
 `;
 
-<Example code={markers} />
+<Example code={markers} hiddenAttributes="wordDiff=false" />
 
 Each directive changes its line. Each comment holds only a directive, so the plugin removes the whole comment. The copy button copies the code without the directives.
 
@@ -94,7 +94,7 @@ An entry replaces the built-in syntax of that language. The built-in map:
 Python and shell blocks use `#` comments:
 
 export const python = `
-\`\`\`py apiLinks=false
+\`\`\`py
 import json
 
 data = json.loads(text)  # [!code highlight]
@@ -102,7 +102,7 @@ print(data["name"])
 \`\`\`
 `;
 
-<Example code={python} />
+<Example code={python} hiddenAttributes="apiLinks=false" />
 
 HTML blocks use `<!-- -->` comments. `:2` marks two lines with one directive:
 

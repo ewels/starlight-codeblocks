@@ -8,7 +8,7 @@ import Example from '../../../components/Example.astro';
 [Annotations](/starlight-codeblocks/features/annotations/) hide each note in a popover until a reader opens it. For a walkthrough, where readers need every note, that is one selection too many. Side-by-side annotations use the same `[!annotate]` directive, but show the notes in a column beside the code.
 
 export const basic = `
-\`\`\`py title="report.py" annotations="side" apiLinks=false
+\`\`\`py title="report.py" annotations="side"
 import csv
 import sys
 from collections import Counter
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 \`\`\`
 `;
 
-<Example code={basic} />
+<Example code={basic} hiddenAttributes="apiLinks=false" />
 
 Each annotated line has a small number, and the note with the same number is in the column on the right. Hover over a note, or move keyboard focus to it, to highlight its line. Hover over a line to highlight its note.
 

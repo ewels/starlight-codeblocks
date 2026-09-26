@@ -9,12 +9,17 @@ interface Props {
   code: string;
   /** `side` puts the two panes next to each other when there is room. */
   layout?: 'stack' | 'side';
+  /**
+   * Attributes for the fence line of each rendered block that the source pane leaves out, such as
+   * `apiLinks=false` to keep another feature out of the example. Live Markdown must include them.
+   */
+  hiddenAttributes?: string;
 }
 
-const { code, layout = 'stack' } = Astro.props;
+const { code, layout = 'stack', hiddenAttributes = '' } = Astro.props;
 const live = Astro.slots.has('default');
 const blocks = [...code.matchAll(/^(`{3,}|~{3,})([^\s`]*)[ \t]*(.*)\n([\s\S]*?)\n?^\1[ \t]*$/gm)].map(
-  ([, , lang, meta, body]) => ({ lang, meta, code: body }),
+  ([, , lang, meta, body]) => ({ lang, meta: `${meta} ${hiddenAttributes}`.trim(), code: body }),
 );
 if (!live && blocks.length === 0) throw new Error(`<Example> found no fenced code block in:\n${code}`);
 ---

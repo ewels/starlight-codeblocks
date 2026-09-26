@@ -80,7 +80,7 @@ Two blocks with the same `sync` key and no labels switch together by language. S
 
 export const languages = `
 :::code-switcher{sync="lang"}
-\`\`\`py apiLinks=false
+\`\`\`py
 import json
 
 with open("config.json") as fh:
@@ -104,7 +104,7 @@ await writeFile('config.json', JSON.stringify(config, null, 2));
 :::
 `;
 
-<Example code={languages}>
+<Example code={languages} hiddenAttributes="apiLinks=false">
 
 :::code-switcher{sync="lang"}
 ```py apiLinks=false
@@ -113,7 +113,7 @@ import json
 with open("config.json") as fh:
     config = json.load(fh)
 ```
-```js
+```js apiLinks=false
 import { readFile } from 'node:fs/promises';
 
 const config = JSON.parse(await readFile('config.json', 'utf8'));
@@ -121,11 +121,11 @@ const config = JSON.parse(await readFile('config.json', 'utf8'));
 :::
 
 :::code-switcher{sync="lang"}
-```py
+```py apiLinks=false
 with open("config.json", "w") as fh:
     json.dump(config, fh, indent=2)
 ```
-```js
+```js apiLinks=false
 await writeFile('config.json', JSON.stringify(config, null, 2));
 ```
 :::

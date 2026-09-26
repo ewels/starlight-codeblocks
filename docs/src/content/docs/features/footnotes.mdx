@@ -9,7 +9,7 @@ import Options from '../../../components/Options.astro';
 A code block often comes with a list of notes in the prose after it, where each note names the line it is about. Footnotes put that list inside the block. Each line with a note gets a numbered badge, and the notes are a numbered list under the code.
 
 export const basic = `
-\`\`\`py title="app.py" apiLinks=false
+\`\`\`py title="app.py"
 from flask import Flask
 
 # [!ref] Creates the application object.
@@ -22,7 +22,7 @@ def health():
 \`\`\`
 `;
 
-<Example code={basic} />
+<Example code={basic} hiddenAttributes="apiLinks=false" />
 
 The two `[!ref]` comment lines are gone from the output. Their lines have the badges 1 and 2, and the notes are in the list under the code. Select a badge to highlight its line and its note together. Select a note to do the same from the list.
 
@@ -65,7 +65,7 @@ With `footnotes: false`, the plugin does not know the `[!ref]` directive. It lea
 A sticky list suits a long block, where the notes would otherwise be far from the lines they are about. Scroll past this block to see the list stay at the bottom of the window:
 
 export const sticky = `
-\`\`\`py title="count.py" footnotes="sticky" apiLinks=false
+\`\`\`py title="count.py" footnotes="sticky"
 import argparse
 import logging
 from pathlib import Path
@@ -101,7 +101,7 @@ if __name__ == "__main__":
 \`\`\`
 `;
 
-<Example code={sticky} />
+<Example code={sticky} hiddenAttributes="apiLinks=false" />
 
 ## Limitations
 

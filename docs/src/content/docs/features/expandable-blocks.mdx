@@ -9,7 +9,7 @@ import Options from '../../../components/Options.astro';
 A full file is sometimes the clearest example, but a reader who scans the page does not need every line in view at once. The `expandable` attribute caps the block at a line count, with a fade at the cut and a button that reveals the rest.
 
 export const basic = `
-\`\`\`py title="report.py" expandable={8} apiLinks=false
+\`\`\`py title="report.py" expandable={8}
 import csv
 import sys
 from collections import Counter
@@ -37,7 +37,7 @@ if __name__ == "__main__":
 \`\`\`
 `;
 
-<Example code={basic} />
+<Example code={basic} hiddenAttributes="apiLinks=false" />
 
 The block shows its first eight lines, faded at the bottom, with "Show all 24 lines" underneath. Selecting the button reveals the rest, and the button then reads "Show fewer lines".
 

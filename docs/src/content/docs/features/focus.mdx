@@ -75,7 +75,7 @@ export default {
 A directive moves with its line when you edit the code. Use one when the block can change:
 
 export const directive = `
-\`\`\`py title="app.py" apiLinks=false
+\`\`\`py title="app.py"
 import os
 
 token = os.environ["API_TOKEN"]  # [!code focus]
@@ -83,12 +83,12 @@ url = "https://api.example.com/v1/items"
 \`\`\`
 `;
 
-<Example code={directive} />
+<Example code={directive} hiddenAttributes="apiLinks=false" />
 
 Focus combines with the other line markers. Here the focused lines also show a change:
 
 export const diff = `
-\`\`\`ts title="server.ts" focus={3-4} wordDiff=false
+\`\`\`ts title="server.ts" focus={3-4}
 import { createServer } from 'node:http';
 
 const port = 3000; // [!code --]
@@ -98,7 +98,7 @@ createServer(handler).listen(port);
 \`\`\`
 `;
 
-<Example code={diff} />
+<Example code={diff} hiddenAttributes="wordDiff=false" />
 
 ## Limitations
 

@@ -9,7 +9,7 @@ import Options from '../../../components/Options.astro';
 A code block in Starlight shows code, but readers must copy it to a terminal to see what it does. The `runnable` attribute adds a **Run** button to the title bar. The button runs the code in the browser and shows the output under the block.
 
 export const basic = `
-\`\`\`py runnable apiLinks=false
+\`\`\`py runnable
 from statistics import mean, stdev
 
 reads = [1520, 1610, 1480, 1575]
@@ -17,7 +17,7 @@ print(f"mean {mean(reads):.0f}, sd {stdev(reads):.1f}")
 \`\`\`
 `;
 
-<Example code={basic} />
+<Example code={basic} hiddenAttributes="apiLinks=false" />
 
 Select **Run**. The first time, the browser downloads Python (Pyodide, a build of Python for the browser), which takes a few seconds. The output panel shows "Loading the Python runtime…" until it is ready, then the output of the code.
 

@@ -9,7 +9,7 @@ import Options from '../../../components/Options.astro';
 Expressive Code can mark a line, but a mark does not say what is wrong with the line. A line state tints the line as an error, a warning or a note. It can also show a message after the code, as a code editor does.
 
 export const basic = `
-\`\`\`py title="loop.py" info={1} apiLinks=false
+\`\`\`py title="loop.py" info={1}
 import sys
 
 for name in sys.argv[1:]  # [!code error] SyntaxError: expected ':'
@@ -19,7 +19,7 @@ count = len(sys.argv)  # [!code warning] Includes the script name
 \`\`\`
 `;
 
-<Example code={basic} />
+<Example code={basic} hiddenAttributes="apiLinks=false" />
 
 Each state has its own colour and a bar on the left edge. The text after the directive becomes the message. The copy button copies the code without the messages.
 

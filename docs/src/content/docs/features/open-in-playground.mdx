@@ -85,14 +85,14 @@ fn main() {
 A Python example opens in Python Tutor, the custom playground from the configuration above:
 
 export const python = `
-\`\`\`py playground="pythontutor" apiLinks=false
+\`\`\`py playground="pythontutor"
 from statistics import median
 
 print(median([3, 1, 4, 1, 5]))
 \`\`\`
 `;
 
-<Example code={python} />
+<Example code={python} hiddenAttributes="apiLinks=false" />
 
 This site adds StackBlitz, which takes a project in a form post ([Add a playground](/starlight-codeblocks/extend/add-a-playground/)). The button is then part of a form:
 
