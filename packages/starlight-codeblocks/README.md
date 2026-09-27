@@ -290,7 +290,7 @@ Colour matching brackets by nesting depth, so readers can match the pairs on a d
 Give inline code in the prose the same syntax colours as the code blocks, with a language suffix at the end of the code.
 
 ```md
-Call `await fetch(url){:js}` before you read the body.
+> `codeblocks(){:js}` in `astro.config.mjs` adds a set of Expressive Code plugins to the site.
 ```
 
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/inline-code-highlighting.png" alt="A quoted paragraph with several pieces of inline code in syntax colours, in JavaScript, shell, TypeScript, CSS, Python and HTML.">

@@ -79,7 +79,9 @@ const data = await res.json();
 
 ```py title="report.py" annotations="side" apiLinks=false
 import csv
+import sys
 from collections import Counter
+from pathlib import Path
 
 
 def read_rows(path):
@@ -89,6 +91,17 @@ def read_rows(path):
 
 def summarise(rows, key):
     return Counter(r[key] for r in rows)  # [!annotate] Counts the rows for each value in the column `key`.
+
+
+def main():
+    rows = read_rows(Path(sys.argv[1]))
+    counts = summarise(rows, "status")
+    for status, n in counts.items():
+        print(f"{status:<10} {n:>5}")  # [!annotate] Pads the status and count into columns of fixed width.
+
+
+if __name__ == "__main__":
+    main()
 ```
 
 </Feature>
@@ -103,12 +116,18 @@ import express from 'express';
 const app = express();
 app.use(express.json());
 
+app.get('/health', (req, res) => {
+  res.json({ ok: true });
+});
+
 app.listen(3000);
 ```
 
 <Step focus="1">Import Express. Nothing else is needed for a small server.</Step>
-<Step focus="3-4">Create the app object, and parse JSON request bodies.</Step>
-<Step focus="6">Start listening on port 3000.</Step>
+<Step focus="3">Create the app object that holds routes and middleware.</Step>
+<Step focus="4">Parse JSON request bodies before any route sees them.</Step>
+<Step focus="6-8">Answer health checks with a small JSON payload.</Step>
+<Step focus="10">Start listening on port 3000.</Step>
 
 </Scrollycoding>
 
@@ -269,9 +288,20 @@ const slug = encodeURIComponent(kebabCase(trim(title.toLowerCase())));
 
 </Feature>
 
-<Feature page="features/inline-code-highlighting">
+<Feature page="features/inline-code-highlighting" tall>
 
-Call `await fetch(url){:js}` and check `res.ok{:js}` before you read the body.
+> `codeblocks(){:js}` in `astro.config.mjs` adds a set of Expressive
+> Code plugins to the site. One of them reads a directive on its own
+> comment line, such as `// [!code focus]{:js}` or `# [!code focus]{:sh}`.
+> It removes the directive from `codeBlock.code{:ts}` before the block
+> renders, so the copy button never sees it.
+>
+> A different plugin colours the inline code in this sentence. A Sätteri
+> visitor finds the `{:lang}` suffix, such as `background: none{:css}` or
+> `sorted(names)[0]{:py}`, then highlights it with the site's theme and
+> removes the suffix. Interactive features add
+> `<pre data-scb-expandable="12">{:html}` to their own blocks, and a
+> loader script imports the matching client module.
 
 </Feature>
 
@@ -316,17 +346,15 @@ logging:
 
 <Feature page="features/code-switcher">
 
-:::code-switcher{sync="lang"}
-```py apiLinks=false
-import json
-
-with open("config.json") as fh:
-    config = json.load(fh)
+:::code-switcher{sync="pm"}
+```sh label="npm"
+npm install starlight-codeblocks
 ```
-```js
-import { readFile } from 'node:fs/promises';
-
-const config = JSON.parse(await readFile('config.json', 'utf8'));
+```sh label="pnpm"
+pnpm add starlight-codeblocks
+```
+```sh label="Yarn"
+yarn add starlight-codeblocks
 ```
 :::
 
@@ -337,6 +365,12 @@ const config = JSON.parse(await readFile('config.json', 'utf8'));
 ```sh placeholder="YOUR_TOKEN,WORKSPACE_ID"
 curl -H "Authorization: Bearer YOUR_TOKEN" \
   https://api.example.com/workspaces/WORKSPACE_ID/runs
+```
+
+```py placeholder="YOUR_TOKEN"
+from example import Client
+
+client = Client(token="YOUR_TOKEN")
 ```
 
 </Feature>
@@ -370,11 +404,11 @@ console.log(label('done'));
 
 <Feature page="features/run-in-the-browser">
 
-```js runnable
-const sizes = [3, 1, 4, 1, 5];
-const total = sizes.reduce((sum, size) => sum + size, 0);
-console.log('Total:', total);
-console.error('Sizes of 1 are deprecated.');
+```py runnable apiLinks=false
+from statistics import mean, stdev
+
+reads = [1520, 1610, 1480, 1575]
+print(f"mean {mean(reads):.0f}, sd {stdev(reads):.1f}")
 ```
 
 </Feature>

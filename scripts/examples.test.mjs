@@ -6,8 +6,9 @@ import { test } from 'node:test';
 const root = new URL('../docs/src/content/docs/', import.meta.url).pathname;
 const pages = readdirSync(root, { recursive: true }).filter((f) => f.endsWith('.mdx'));
 
-// Strings in `export const x = \`…\`` escape backticks, and the live copy between the tags does not.
-const unescapeTemplate = (s) => s.replace(/\\([`$\\])/g, '$1');
+// Strings in `export const x = \`…\`` escape backticks, dollars and backslashes, and also use `\t` for a
+// real tab (Prettier would otherwise reindent a literal tab in the file); the live copy has none of this.
+const unescapeTemplate = (s) => s.replace(/\\([`$\\t])/g, (_, c) => (c === 't' ? '\t' : c));
 // MDX needs `\{:lang}` after inline code, and the source shows the `.md` form.
 const unescapeMdx = (s) => s.replaceAll('`\\{:', '`{:');
 
@@ -30,6 +31,26 @@ test('each <Example> with live Markdown shows the same Markdown as its source pa
       );
       checked++;
     }
+  }
+  assert.ok(checked > 0);
+});
+
+test("the home page carousel shows the same example as each feature page's first <Example>", () => {
+  const indexText = readFileSync(join(root, 'index.mdx'), 'utf8');
+  let checked = 0;
+  for (const [, pageId, slide] of indexText.matchAll(/<Feature page="([^"]+)"[^>]*>\n([\s\S]*?)\n<\/Feature>/g)) {
+    const pageText = readFileSync(join(root, `${pageId}.mdx`), 'utf8');
+    const example = pageText.match(/<Example code=\{(\w+)\}(?:\s+hiddenAttributes="([^"]*)")?\s*\/?>/);
+    assert.ok(example, `index.mdx: "${pageId}" slide, but that page has no <Example> to compare it against`);
+    const [, name, hidden] = example;
+    const source = pageText.match(new RegExp(`export const ${name} = \`([\\s\\S]*?)\`;\\n`))?.[1];
+    assert.ok(source !== undefined, `${pageId}.mdx: no export const ${name}`);
+    assert.equal(
+      unescapeMdx(slide.trim()),
+      withAttributes(unescapeTemplate(source).trim(), hidden),
+      `index.mdx: the "${pageId}" slide differs from that page's first <Example> — a page example changed without its carousel slide`,
+    );
+    checked++;
   }
   assert.ok(checked > 0);
 });
