@@ -222,5 +222,13 @@ export function pageMarkdown(entry: Entry) {
 
   const head = [`# ${entry.data.title}`];
   if (entry.data.description) head.push(`> ${entry.data.description}`);
+  const tagline = entry.data.hero?.tagline;
+  if (tagline)
+    head.push(
+      tagline
+        .trim()
+        .replace(/\s+/g, ' ')
+        .replace(/<a href="([^"]+)">([^<]+)<\/a>/g, '[$2]($1)'),
+    );
   return `${head.join('\n\n')}\n\n${out.join('\n').trim()}\n`;
 }

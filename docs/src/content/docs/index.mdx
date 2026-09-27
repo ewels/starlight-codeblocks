@@ -3,22 +3,26 @@ title: starlight-codeblocks
 description: A Starlight plugin that adds focus, line states, annotations, API links and 20 more features to the code blocks of a site.
 template: splash
 hero:
-  tagline: More ways to explain code in Starlight code blocks.
+  image:
+    file: ../../assets/logo.svg
+    alt: A terminal window with a star in it
+  tagline: |
+    This plugin adds 24 features to the <a href="https://expressive-code.com">Expressive Code</a> blocks of
+    <a href="https://starlight.astro.build">Starlight</a>, such as focus, annotations and runnable examples.
+    A feature starts only when a block uses its attribute or directive, so existing pages do not change.
   actions:
     - text: Get started
       link: /starlight-codeblocks/getting-started/
       icon: right-arrow
-    - text: View on GitHub
+    - text: GitHub
       link: https://github.com/ewels/starlight-codeblocks
-      icon: external
       variant: minimal
+      icon: external
 ---
 
 import { CodeSteps, Scrollycoding, Step } from 'starlight-codeblocks/components';
 import Feature from '../../components/Feature.astro';
 import FeatureCarousel from '../../components/FeatureCarousel.astro';
-
-Starlight renders every code block with Expressive Code. The plugin adds 24 features to those code blocks, such as focus, line states, annotations, links to API docs and runnable examples. Each feature starts when a code block uses its attribute or its directive, so existing pages do not change.
 
 ## Features
 

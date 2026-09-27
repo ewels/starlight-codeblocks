@@ -1,3 +1,14 @@
+/* Michroma is the face of the logotype. It has one weight, so titles use 400 instead of a faked bold. */
+@import "@fontsource/michroma/400.css";
+
+h1#_top,
+.hero h1 {
+  font-family: Michroma, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.75rem, 1.1rem + 2.2vw, 2.5rem);
+  line-height: 1.3;
+}
+
 /* Long code in a table cell would otherwise widen the table past a phone screen. */
 .sl-markdown-content :is(td, th) code {
   overflow-wrap: anywhere;
