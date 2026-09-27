@@ -993,3 +993,11 @@ Use this format:
 - Decision: Supersedes the pane order in "Example component reverts to stacked panes, output and Markdown both visible". `docs/src/components/Example.astro` puts the rendered output ("Readers see", `.pane.output`) first and the Markdown source ("You write", `.pane.source`) second, in the stacked and the `side` layouts. The panes have `output` and `source` classes, and every e2e test and `scripts/readme-media.mjs` find a pane by class, not by position. The focus test that tabbed from the source pane's copy button into the output now tabs from a button put before the example.
 - Reason: The user asked for the output first on every docs page: readers come to see what a feature does, then how to write it. Class names keep the tests correct if the order changes again.
 - Alternatives: `flex-direction: column-reverse` (the visual order would differ from the DOM and tab order, which fails WCAG 1.3.2 and 2.4.3).
+
+## Home page carousel: the buttons read down each column
+
+- Date: 2026-09-27
+- Step: after the plan (docs polish, user request)
+- Decision: Supersedes the layout part of "Home page carousel: one flat button grid, no group headings". The `.picker` list in `docs/src/components/FeatureCarousel.astro` is a CSS multi-column list, `columns: 14rem` with a 0.5rem column gap, and each `li` has `break-inside: avoid` and 0.5rem of bottom padding. The browser balances the columns, so the 23 tiles fill each column top to bottom in sidebar order: 6/6/6/5 at 1440 and 1024 px, 8/8/7 at 768 px, one column at 360 px, with the tiles of every column on the same rows and every label on one line. `docs/e2e/carousel.test.ts` checks the column order, the even lengths and the row alignment.
+- Reason: The user asked for the buttons to go top to bottom, not left to right. Multi-column keeps the same `14rem` basis, so the column counts do not change, and it needs no count of the tiles or rules for each width. The DOM and tab order are the sidebar order, which is now also the visual reading order down each column.
+- Alternatives: Grid with `grid-auto-flow: column` and `grid-template-rows: repeat(n, auto)` (needs the row count for each column count, so a media or container query for each width).

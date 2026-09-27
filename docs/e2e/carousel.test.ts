@@ -195,6 +195,23 @@ test('the buttons are a flat list in sidebar order, with no group headings', asy
   expect(tileIds).toEqual(sidebarIds.filter((id) => tileIds.includes(id)));
 });
 
+test('the buttons fill each column from top to bottom, in columns of even length with aligned rows', async ({
+  page,
+}) => {
+  await page.goto('./');
+  const boxes = await page
+    .locator('.carousel .tile')
+    .evaluateAll((els) => els.map((el) => el.getBoundingClientRect()).map((r) => [Math.round(r.x), Math.round(r.y)]));
+  const columns = [...new Set(boxes.map(([x]) => x))].map((x) => boxes.filter(([bx]) => bx === x).map(([, y]) => y));
+  const lengths = columns.map((c) => c.length);
+  expect(Math.max(...lengths) - Math.min(...lengths)).toBeLessThanOrEqual(1);
+  // Each column holds the next run of tiles in order, so the x of the tiles never goes back.
+  expect(boxes.every(([x], i) => i === 0 || x >= (boxes[i - 1]?.[0] ?? 0))).toBe(true);
+  for (const column of columns) {
+    expect(column).toEqual((columns[0] ?? []).slice(0, column.length));
+  }
+});
+
 test('has one dot per slide, before the pause control', async ({ page }) => {
   await page.goto('./');
   await expect(page.locator('.carousel .dot')).toHaveCount(23);
