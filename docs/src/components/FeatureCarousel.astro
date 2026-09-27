@@ -68,6 +68,10 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
     <div class="slides" set:html={slides} />
   </div>
   <div class="controls not-content">
+    <button type="button" class="nav prev" hidden>
+      <span aria-hidden="true" set:html={lucide.ChevronLeft} />
+      Previous<span class="sr-only">feature</span>
+    </button>
     <div class="dots" role="group" aria-label="Slides" hidden>
       {
         features.map((feature, i) => (
@@ -86,6 +90,10 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
         ))
       }
     </div>
+    <button type="button" class="nav next" hidden>
+      Next<span class="sr-only">feature</span>
+      <span aria-hidden="true" set:html={lucide.ChevronRight} />
+    </button>
     <button type="button" class="rotation" hidden>
       <span class="pause"><span aria-hidden="true" set:html={lucide.Pause} />Pause</span>
       <span class="play"><span aria-hidden="true" set:html={lucide.Play} />Play</span>
@@ -100,6 +108,8 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
     const slides = [...root.querySelectorAll<HTMLElement>('.slide')];
     const status = root.querySelector('[data-status]') as HTMLElement;
     const rotation = root.querySelector('.rotation') as HTMLButtonElement;
+    const prevBtn = root.querySelector('.nav.prev') as HTMLButtonElement;
+    const nextBtn = root.querySelector('.nav.next') as HTMLButtonElement;
     const dotsWrap = root.querySelector('.dots') as HTMLElement;
     const dots = [...root.querySelectorAll<HTMLButtonElement>('.dot')];
     const interval = Number(root.dataset.interval);
@@ -233,6 +243,16 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
       show((next + dots.length) % dots.length, true);
       dots[current].focus();
     });
+    prevBtn.addEventListener('click', () => {
+      setPlaying(false);
+      show(current - 1, true);
+      revealCard();
+    });
+    nextBtn.addEventListener('click', () => {
+      setPlaying(false);
+      show(current + 1, true);
+      revealCard();
+    });
     rotation.addEventListener('click', () => setPlaying(!playing));
     root.addEventListener('mouseenter', () => {
       hovered = true;
@@ -254,6 +274,8 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
 
     rotation.hidden = false;
     rotation.toggleAttribute('data-playing', playing);
+    prevBtn.hidden = false;
+    nextBtn.hidden = false;
     dotsWrap.hidden = false;
     root.toggleAttribute('data-ready', true);
     show(0);
@@ -346,6 +368,7 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
       outline: 2px solid Highlight;
     }
   }
+  .nav,
   .rotation {
     display: inline-flex;
     align-items: center;
@@ -359,9 +382,14 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
     font-size: var(--sl-text-sm);
     cursor: pointer;
   }
+  .nav {
+    gap: 0.375rem;
+  }
+  .nav[hidden],
   .rotation[hidden] {
     display: none;
   }
+  .nav:hover,
   .rotation:hover {
     border-color: var(--sl-color-gray-2);
   }
@@ -374,6 +402,7 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
   .rotation[data-playing] .play {
     display: none;
   }
+  .nav :global(svg),
   .rotation :global(svg),
   .icon :global(svg) {
     display: block;
