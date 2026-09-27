@@ -897,3 +897,11 @@ Use this format:
 - Decision: The feature buttons use icons from `lucide-static` (ISC licence), a dev dependency of the docs site only. The component imports the SVG strings at build time and puts them inline with `aria-hidden`, so the page loads no icon library. `@axe-core/playwright` (MPL-2.0, dev dependency of the docs site) checks the home page in the e2e tests, with Expressive Code's `landmark-unique` rule off (an upstream issue) and contrast results allowed only on faded lines.
 - Reason: Starlight's built-in icon set has no suitable icon for most of the 24 features. Lucide has one for each, in one consistent style.
 - Alternatives: Tabler icons (also suitable; MIT). Copying the SVG paths into the repository, which would need the licence text next to them.
+
+## Comment notation dropped from the home page carousel
+
+- Date: 2026-09-26
+- Step: after the plan (docs polish)
+- Decision: `<FeatureCarousel>` excludes `features/comment-notation` from the slides and the picker, even though it is still a `features/…` page in the "Start here" sidebar group. `docs/src/index.mdx` no longer has a `<Feature page="features/comment-notation">` slide. "Start here" then has no features, so it drops out of the carousel groups (its `.filter((group) => group.features.length > 0)` already handles this), and the carousel opens on "Explain code" → Annotations. The sidebar keeps comment notation under "Start here", because that is where authors learn the directive syntax before they use it in a feature.
+- Reason: The user said comment notation is shared syntax, not a feature in its own right, and one of the least impressive things to lead with on the home page.
+- Alternatives: Move comment notation to a different sidebar group so the existing "every `features/…` item is a slide" rule keeps working unchanged. Rejected: the sidebar placement under "Start here" is deliberate (see the "docs structure" decision above) and the user did not ask to change it.

@@ -4,7 +4,6 @@ import * as lucide from 'lucide-static';
 import { sidebar } from '../sidebar.mjs';
 
 const icons: Record<string, string> = {
-  'features/comment-notation': lucide.MessageSquareCode,
   'features/annotations': lucide.MessageSquareMore,
   'features/footnotes': lucide.Superscript,
   'features/inline-callouts': lucide.StickyNote,
@@ -31,13 +30,17 @@ const icons: Record<string, string> = {
 };
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+// Shared syntax, not a feature in its own right: authors learn it under "Start here" but it gets no carousel slide.
+const excluded = new Set(['features/comment-notation']);
 const groups = (
   await Promise.all(
     sidebar.map(async ({ label, items }) => ({
       label,
       features: await Promise.all(
         items
-          .filter((item): item is string => typeof item === 'string' && item.startsWith('features/'))
+          .filter(
+            (item): item is string => typeof item === 'string' && item.startsWith('features/') && !excluded.has(item),
+          )
           .map(async (id) => {
             const icon = icons[id];
             if (!icon) throw new Error(`<FeatureCarousel> has no icon for ${id}`);

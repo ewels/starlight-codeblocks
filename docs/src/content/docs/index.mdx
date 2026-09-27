@@ -26,18 +26,6 @@ Select a feature to see its example. Until you select one, the example changes e
 
 <FeatureCarousel>
 
-<Feature page="features/comment-notation">
-
-```ts title="config.ts" wordDiff=false
-export const config = {
-  port: 3000, // [!code --]
-  port: Number(process.env.PORT ?? 3000), // [!code ++]
-  host: 'localhost', // [!code highlight]
-};
-```
-
-</Feature>
-
 <Feature page="features/annotations">
 
 ```yaml title=".github/workflows/test.yml"

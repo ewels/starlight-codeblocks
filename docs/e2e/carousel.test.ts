@@ -15,10 +15,10 @@ test.describe('rotation', () => {
   });
 
   test('advances on its own without an announcement', async ({ page }) => {
-    await expect(current(page)).toHaveAttribute('data-feature', 'features/comment-notation');
-    await page.clock.runFor(interval);
     await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
-    await expect(tile(page, 'Annotations')).toHaveAttribute('aria-pressed', 'true');
+    await page.clock.runFor(interval);
+    await expect(current(page)).toHaveAttribute('data-feature', 'features/footnotes');
+    await expect(tile(page, 'Footnotes')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('.carousel [data-status]')).toHaveText('');
   });
 
@@ -29,30 +29,30 @@ test.describe('rotation', () => {
     await page.mouse.move(0, 0);
     await expect(rotation).toHaveAccessibleName('Play');
     await page.clock.runFor(interval * 2);
-    await expect(current(page)).toHaveAttribute('data-feature', 'features/comment-notation');
+    await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
     await rotation.click();
     await page.mouse.move(0, 0);
     await page.clock.runFor(interval);
-    await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
+    await expect(current(page)).toHaveAttribute('data-feature', 'features/footnotes');
   });
 
   test('pauses while the pointer is over the carousel', async ({ page }) => {
     await page.locator('.carousel .slide[data-current] .expressive-code').hover();
     await page.clock.runFor(interval * 2);
-    await expect(current(page)).toHaveAttribute('data-feature', 'features/comment-notation');
+    await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
     await page.mouse.move(0, 0);
     await page.clock.runFor(interval);
-    await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
+    await expect(current(page)).toHaveAttribute('data-feature', 'features/footnotes');
   });
 
   test('pauses while focus is in the carousel', async ({ page }) => {
     await tile(page, 'Focus').focus();
     await page.clock.runFor(interval * 2);
-    await expect(current(page)).toHaveAttribute('data-feature', 'features/comment-notation');
+    await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
     await page.locator('h1').click();
     await page.mouse.move(0, 0);
     await page.clock.runFor(interval);
-    await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
+    await expect(current(page)).toHaveAttribute('data-feature', 'features/footnotes');
   });
 
   test('pauses while a reader uses an example', async ({ page }) => {
@@ -89,7 +89,7 @@ test('selecting a button shows its example and announces it', async ({ page }) =
   await expect(page.locator('.carousel .slide:not([data-current])').first()).toBeHidden();
   await expect(page.locator('.carousel .tile[aria-pressed="true"]')).toHaveCount(1);
   await expect(tile(page, 'Word-level diff')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('.carousel [data-status]')).toHaveText('Word-level diff, 10 of 24');
+  await expect(page.locator('.carousel [data-status]')).toHaveText('Word-level diff, 9 of 23');
 });
 
 test('the current button differs by more than colour', async ({ page }) => {
@@ -106,8 +106,8 @@ test('the buttons follow the sidebar groups', async ({ page }) => {
   await page.goto('./');
   const labels = await page.locator('.carousel .group-label').allTextContents();
   expect(sidebar.map((s) => s.trim()).filter((s) => labels.includes(s))).toEqual(labels);
-  await expect(page.locator('.carousel .tile')).toHaveCount(24);
-  await expect(page.locator('.carousel .tile svg[aria-hidden], .carousel .tile [aria-hidden] svg')).toHaveCount(24);
+  await expect(page.locator('.carousel .tile')).toHaveCount(23);
+  await expect(page.locator('.carousel .tile svg[aria-hidden], .carousel .tile [aria-hidden] svg')).toHaveCount(23);
 });
 
 test('works with the keyboard', async ({ page }) => {
@@ -132,7 +132,7 @@ test('does not rotate or animate under reduced motion', async ({ page }, testInf
   await page.goto('./');
   await expect(page.locator('.carousel .rotation')).toHaveAccessibleName('Play');
   await page.clock.runFor(interval * 3);
-  await expect(current(page)).toHaveAttribute('data-feature', 'features/comment-notation');
+  await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
   await tile(page, 'Focus').click();
   expect(await current(page).evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
 });
@@ -172,6 +172,6 @@ test.describe('without JavaScript', () => {
     await expect(page.locator('.carousel .rotation')).toBeHidden();
     const link = page.locator('.carousel a.tile', { hasText: 'Focus' });
     await expect(link).toHaveAttribute('href', '/starlight-codeblocks/features/focus/');
-    await expect(page.locator('.carousel a.tile')).toHaveCount(24);
+    await expect(page.locator('.carousel a.tile')).toHaveCount(23);
   });
 });
