@@ -5,13 +5,15 @@ test.beforeEach(async ({ page }) => {
 });
 
 const example = (page: import('@playwright/test').Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane').nth(1).locator('.expressive-code');
+  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 test('a marker opens its note under it, with the pointer', async ({ page }) => {
   const block = example(page);
   const marker = block.getByRole('button', { name: 'Annotation 1' });
   const note = block.locator('.scb-annotation-popover').first();
   await expect(note).toBeHidden();
+  // With room below, the note opens under the marker.
+  await marker.evaluate((el) => el.scrollIntoView({ block: 'center' }));
   await marker.click();
   await expect(note).toBeVisible();
   await expect(note).toHaveText('One job per version, run in parallel.');

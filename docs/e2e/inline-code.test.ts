@@ -20,7 +20,7 @@ const token = (span: Locator) =>
 const theme = (locator: Locator) => locator.page().evaluate(() => document.documentElement.dataset.theme as string);
 
 test('draws each token in the colour of the current theme, and switches with the theme', async ({ page }) => {
-  const code = page.locator('.example .pane').nth(1).locator('code.scb-inline').first();
+  const code = page.locator('.example .pane.output').first().locator('code.scb-inline').first();
   await expect(code).toHaveText('await fetch(url)');
   const keyword = code.locator('span').first();
   const current = await theme(code);
@@ -35,7 +35,7 @@ test('draws each token in the colour of the current theme, and switches with the
 });
 
 test('uses the background of the code blocks, and removes the suffix', async ({ page }) => {
-  const pane = page.locator('.example .pane').nth(1);
+  const pane = page.locator('.example .pane.output').first();
   const code = pane.locator('code.scb-inline').first();
   const block = page.locator('.example .expressive-code pre').first();
   const background = (l: Locator) => l.evaluate((el) => getComputedStyle(el).backgroundColor);

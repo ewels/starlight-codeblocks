@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const example = (page: import('@playwright/test').Page) =>
-  page.locator('.example').first().locator('.pane').nth(1).locator('.expressive-code');
+  page.locator('.example').first().locator('.pane.output').locator('.expressive-code');
 
 test('marks changed words by shape as well as by tint', async ({ page }) => {
   const block = example(page);

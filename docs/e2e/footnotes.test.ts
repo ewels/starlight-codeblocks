@@ -27,7 +27,7 @@ async function longBlock(page: Page) {
 }
 
 const example = (page: import('@playwright/test').Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane').nth(1).locator('.expressive-code');
+  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 test('a badge highlights its line and its note, and a click elsewhere clears it', async ({ page }) => {
   const block = example(page);

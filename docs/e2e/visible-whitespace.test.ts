@@ -32,7 +32,7 @@ test('a tab keeps its width to the next tab stop, with the arrow at its start', 
 
 test('a manual selection gives the real tab and spaces, not the glyphs', async ({ page }) => {
   await page.goto('./features/visible-whitespace/');
-  const pre = page.locator('.example').first().locator('.pane').nth(1).locator('pre');
+  const pre = page.locator('.example').first().locator('.pane.output').locator('pre');
   const text = await pre.evaluate((el) => {
     const range = document.createRange();
     range.selectNodeContents(el);

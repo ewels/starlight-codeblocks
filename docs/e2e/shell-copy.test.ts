@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const example = (page: Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane').nth(1).locator('.expressive-code');
+  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 const commands = 'uv tool install ruff\nruff check src/ \\\n    --fix';
 const clipboard = (page: Page) => page.evaluate(() => navigator.clipboard.readText());

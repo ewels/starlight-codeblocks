@@ -15,7 +15,7 @@ const pad = 20;
 const width = 1280;
 const height = 1100;
 
-const pane = (page, n = 0) => page.locator('.example').nth(n).locator('.pane').nth(1);
+const pane = (page, n = 0) => page.locator('.example').nth(n).locator('.pane.output');
 const block = (page) => pane(page).locator('.expressive-code').first();
 
 // `run` gets the page and a recorder (see `recorder`). A feature without `run` is a still image.
@@ -278,6 +278,7 @@ async function open(context, feature) {
   await pane(page).evaluate((el) => {
     const example = el.closest('.example');
     for (let next = example.nextElementSibling; next; next = next.nextElementSibling) next.style.visibility = 'hidden';
+    for (const source of example.querySelectorAll('.pane.source')) source.style.visibility = 'hidden';
     for (const aside of document.querySelectorAll('.right-sidebar-container')) aside.style.visibility = 'hidden';
     window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 100);
   });

@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const example = (page: Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane').nth(1).locator('.expressive-code');
+  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 const card = (page: Page, n = 0) => example(page, n).locator('.scb-api-card');
 
 test('links the names that the imports bind, and nothing else', async ({ page }) => {
@@ -45,6 +45,8 @@ test('the link keeps its token colours, with a dotted underline that turns solid
 
 test('hovering shows the card after a short delay, and moving away hides it', async ({ page }) => {
   const link = example(page).locator('a.scb-api-link').nth(3);
+  // With room below, the card opens under the link.
+  await link.evaluate((el) => el.scrollIntoView({ block: 'center' }));
   await link.hover();
   await expect(card(page)).toBeVisible();
   await expect(card(page)).toHaveText('function json.loadsPython 3.14 documentation');

@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 
-const example = (page: Page, n = 0) => page.locator('.example').nth(n).locator('.pane').nth(1);
+const example = (page: Page, n = 0) => page.locator('.example').nth(n).locator('.pane.output');
 
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ media: 'print' });

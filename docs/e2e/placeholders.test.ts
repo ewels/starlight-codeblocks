@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('./features/fill-in-placeholders/');
 });
 
-const example = (page: Page, n = 0) => page.locator('.example').nth(n).locator('.pane').nth(1);
+const example = (page: Page, n = 0) => page.locator('.example').nth(n).locator('.pane.output');
 const token = (page: Page) => example(page).getByRole('textbox', { name: 'YOUR_TOKEN' });
 
 async function copied(page: Page, block: ReturnType<Page['locator']>) {

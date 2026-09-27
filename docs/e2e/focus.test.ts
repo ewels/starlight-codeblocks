@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const example = (page: import('@playwright/test').Page) =>
-  page.locator('.example').first().locator('.pane').nth(1).locator('.expressive-code');
+  page.locator('.example').first().locator('.pane.output').locator('.expressive-code');
 
 test('blurs the lines outside the focus', async ({ page }) => {
   const block = example(page);
@@ -37,7 +37,15 @@ test('shows every line when keyboard focus is in the block', async ({ page }) =>
   const block = example(page);
   const code = block.locator('pre > code');
   await expect(code).toHaveAttribute('tabindex', '0');
-  await page.locator('.example').first().locator('.pane').first().locator('.copy button').focus();
+  await page
+    .locator('.example')
+    .first()
+    .evaluate((el) => {
+      const before = document.createElement('button');
+      before.id = 'before-example';
+      el.before(before);
+    });
+  await page.locator('#before-example').focus();
   await page.keyboard.press('Tab');
   await expect(code).toBeFocused();
   expect(await code.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');

@@ -7,7 +7,7 @@ interface Props {
    * prose or a directive, put the same Markdown between the tags too. `scripts/examples.test.mjs` checks that they match.
    */
   code: string;
-  /** `side` puts the two panes next to each other when there is room. */
+  /** `side` puts the two panes next to each other when there is room, the output first. */
   layout?: 'stack' | 'side';
   /**
    * Attributes for the fence line of each rendered block that the source pane leaves out, such as
@@ -25,13 +25,13 @@ if (!live && blocks.length === 0) throw new Error(`<Example> found no fenced cod
 ---
 
 <div class:list={['example', layout]}>
-  <div class="pane not-content">
-    <p class="label">You write</p>
-    <Code code={code.trim()} lang="md" />
-  </div>
-  <div class:list={['pane', { 'not-content': !live }]}>
+  <div class:list={['pane output', { 'not-content': !live }]}>
     <p class="label not-content">Readers see</p>
     {live ? <slot /> : blocks.map((block) => <Code {...block} />)}
+  </div>
+  <div class="pane source not-content">
+    <p class="label">You write</p>
+    <Code code={code.trim()} lang="md" />
   </div>
 </div>
 

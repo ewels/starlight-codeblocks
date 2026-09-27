@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 
 const example = (page: Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane').nth(1).locator('.expressive-code');
+  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 const line = (page: Page, n: number) => page.locator(`#cfg-L${n}`);
 
 test.beforeEach(async ({ page }) => {

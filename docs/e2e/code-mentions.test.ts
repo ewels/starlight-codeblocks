@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { expect, type Page, test } from '@playwright/test';
 
-const pane = (page: Page, n = 0) => page.locator('.example').nth(n).locator('.pane').nth(1);
+const pane = (page: Page, n = 0) => page.locator('.example').nth(n).locator('.pane.output');
 const lines = (page: Page) => pane(page).locator('.ec-line');
 
 test.beforeEach(async ({ page }) => {

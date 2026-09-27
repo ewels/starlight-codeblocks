@@ -115,7 +115,7 @@ description: <One sentence, 25 words or fewer, that says what the feature does f
 
 ## The `Example` component
 
-Build an `Example` component for the docs site. It takes the Markdown for one or more code blocks as a string. It shows that source as a code block labelled "You write", and renders it with the plugin under the label "Readers see", as in the mockups.
+Build an `Example` component for the docs site. It takes the Markdown for one or more code blocks as a string. It renders the Markdown with the plugin under the label "Readers see", and shows the source below that as a code block labelled "You write". (The mockups show the source first; the user asked for the output first.)
 
 Use Starlight's `<Code>` component for the rendering if the spike confirms that the plugin works with it. Features that need a directive or a component (code switcher, token transitions, scrollycoding) cannot render through `<Code>`. For those, write the source in a `md` or `mdx` code block, followed by the live version. Add a unit test that checks that the two stay the same.
 

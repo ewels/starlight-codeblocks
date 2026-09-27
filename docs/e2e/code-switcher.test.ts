@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 
 const groups = (page: Page, n: number) =>
-  page.locator('.example').nth(n).locator('.pane').nth(1).locator('.scb-switcher');
+  page.locator('.example').nth(n).locator('.pane.output').locator('.scb-switcher');
 const visible = (page: Page, n: number, g = 0) => groups(page, n).nth(g).locator(':scope > .expressive-code:visible');
 
 test.beforeEach(async ({ page }) => {

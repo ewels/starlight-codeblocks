@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const example = (page: Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane').nth(1).locator('.expressive-code');
+  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 test('links the text, keeps its token colour, and underlines it', async ({ page }) => {
   const link = example(page).getByRole('link', { name: 'linspace' });

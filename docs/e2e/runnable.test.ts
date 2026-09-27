@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 
 const example = (page: Page, n: number) =>
-  page.locator('.example').nth(n).locator('.pane').nth(1).locator('.expressive-code');
+  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 const PYTHON = 0;
 const JS = 1;
