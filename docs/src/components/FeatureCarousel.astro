@@ -265,6 +265,7 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
 <style>
   .carousel {
     margin-top: 1.5rem;
+    container-type: inline-size;
   }
   .card {
     padding: clamp(1rem, 0.25rem + 2.5vw, 2rem);
@@ -383,9 +384,22 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
     height: 1rem;
   }
   .picker {
-    column-width: 15rem;
+    columns: 1;
     column-gap: 1rem;
     margin-bottom: 2rem;
+  }
+  /* Explicit column counts, not `column-width`: groups vary from 2 to 5 buttons, so the auto column
+     count from a fixed column-width can't hit 3 columns at both 736px and 1080px (its floor() picks
+     4 at the wider one). These two width thresholds are picked by eye against the actual group sizes. */
+  @container (min-width: 420px) {
+    .picker {
+      columns: 2;
+    }
+  }
+  @container (min-width: 640px) {
+    .picker {
+      columns: 3;
+    }
   }
   .group {
     break-inside: avoid;
