@@ -54,6 +54,7 @@ Each variant keeps its own attributes, such as `title`. A variant with no `label
 ## Behaviour
 
 - Only one variant shows at a time. The title bar shows the `title` of that variant, if it has one, and the menu on the right.
+- The menu starts with an icon for the language of the variant, such as the Python logo for `py`. A language with no icon gets a generic code icon.
 - Selecting a menu entry shows that variant. Keyboard focus stays on the menu.
 - Blocks with the same `sync` key switch together, matched by label. The browser keeps the choice for each key in `localStorage`, so it applies across the site and on the next visit.
 - If a block does not have the saved label, it shows its first variant.

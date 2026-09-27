@@ -41,6 +41,37 @@ test('blocks with the same sync key switch together', async ({ page }) => {
   await expect(visible(page, 1, 1).getByRole('combobox')).toHaveValue('1');
 });
 
+test('the icon left of the menu shows the language of the variant, and is hidden from screen readers', async ({
+  page,
+}) => {
+  const icon = () => visible(page, 1, 0).locator('.scb-switcher-icon');
+  await expect(icon()).toHaveAttribute('aria-hidden', 'true');
+  const python = await icon().locator('path').getAttribute('d');
+  await visible(page, 1, 0).getByRole('combobox').selectOption({ label: 'JavaScript' });
+  expect(await icon().locator('path').getAttribute('d')).not.toBe(python);
+  const [iconBox, menuBox] = await Promise.all([
+    icon().boundingBox(),
+    visible(page, 1, 0).getByRole('combobox').boundingBox(),
+  ]);
+  expect(iconBox && menuBox && iconBox.x - menuBox.x).toBeGreaterThanOrEqual(6);
+  expect(await icon().evaluate((el) => getComputedStyle(el).color)).toBe(
+    await visible(page, 1, 0)
+      .getByRole('combobox')
+      .evaluate((el) => getComputedStyle(el).color),
+  );
+});
+
+test('the chevron keeps a gap from the right edge of the menu', async ({ page }) => {
+  const field = visible(page, 0).locator('.scb-switcher-field');
+  const [chevron, menu] = await Promise.all([
+    field.locator('.scb-switcher-chevron').boundingBox(),
+    field.getByRole('combobox').boundingBox(),
+  ]);
+  expect(chevron && menu && menu.x + menu.width - (chevron.x + chevron.width)).toBeGreaterThanOrEqual(6);
+  const text = await field.getByRole('combobox').evaluate((el) => parseFloat(getComputedStyle(el).paddingInlineEnd));
+  expect(text).toBeGreaterThanOrEqual(20);
+});
+
 test('a block without the saved label shows its first variant', async ({ page }) => {
   await page.evaluate(() => localStorage.setItem('scb-code-switcher:lang', 'Rust'));
   await page.reload();

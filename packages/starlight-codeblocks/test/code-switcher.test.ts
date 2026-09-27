@@ -9,10 +9,24 @@ const variant = (index: number, labels: string[]) => `scbSwitcher="${encodeVaria
 
 test('renders the menu in the title bar, with the variant selected', async () => {
   const { html, copyText } = await render([`\`\`\`sh ${variant(1, ['npm', 'pnpm'])}`, 'pnpm add x', '```'].join('\n'));
-  expect(html).toContain('<select class="scb-btn scb-switcher-menu scb-no-print" aria-label="Variant">');
+  expect(html).toContain('<span class="scb-switcher-field scb-no-print">');
+  expect(html).toContain('<select class="scb-btn scb-switcher-menu" aria-label="Variant">');
   expect(html).toContain('<option value="0">npm</option><option value="1" selected>pnpm</option>');
   expect(html).toContain('class="scb-tools"');
   expect(copyText).toBe('pnpm add x');
+});
+
+test('shows a decorative icon for the language of the variant, and a code icon for other languages', async () => {
+  const icon = async (lang: string) => {
+    const { html } = await render([`\`\`\`${lang} ${variant(0, ['a', 'b'])}`, 'x', '```'].join('\n'));
+    return html.match(/<svg class="scb-switcher-icon"[^>]*>(.*?)<\/svg>/)?.[0] ?? '';
+  };
+  const python = await icon('py');
+  expect(python).toContain('aria-hidden="true"');
+  expect(python).toContain('fill="currentColor"');
+  expect(await icon('python')).toBe(python);
+  expect(await icon('js')).not.toBe(python);
+  expect(await icon('nextflow')).toContain('stroke="currentColor"');
 });
 
 test('hides every variant after the first, for readers without JavaScript', async () => {
