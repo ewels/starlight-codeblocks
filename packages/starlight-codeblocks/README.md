@@ -31,50 +31,11 @@ export default defineConfig({
 
 A feature starts when a code block uses its attribute or its directive, so existing pages do not change.
 
-## Example
-
-This code block focuses lines 4 to 7 and adds an annotation to line 5:
-
-````md
-```js title="src/config.js" focus={4-7}
-import { defineConfig } from './lib.js';
-
-export default defineConfig({
-  cache: {
-    dir: '.cache', // [!annotate] Relative to the root of the site.
-    maxAge: 3600,
-  },
-  retries: 2,
-});
-```
-````
-
 The [documentation](https://ewels.github.io/starlight-codeblocks/) has a page for each feature, with live examples, and a reference for every option.
 
 ## Features
 
 Each section below shows the smallest syntax for a feature and how it looks to readers. Open a section to see it.
-
-### Start here
-
-<details>
-<summary>Comment notation</summary>
-
-Mark lines with directives in code comments. The plugin applies each directive and removes it from the code that readers see and copy.
-
-```ts
-  host: 'localhost', // [!code highlight]
-  protocol: 'https',
-  port: 3000, // [!code --]
-  port: Number(process.env.PORT ?? 3000), // [!code ++]
-  timeout: 5000,
-```
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/comment-notation.png" alt="A TypeScript block with a removed line, an added line and a highlighted line, set by comments that the reader does not see.">
-
-[Comment notation documentation](https://ewels.github.io/starlight-codeblocks/features/comment-notation/)
-
-</details>
 
 ### Explain code
 
