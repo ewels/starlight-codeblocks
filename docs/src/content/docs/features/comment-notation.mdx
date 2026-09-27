@@ -12,9 +12,11 @@ Expressive Code marks lines with attributes on the fence line, such as `{3}` or 
 export const markers = `
 \`\`\`ts title="config.ts"
 export const config = {
+  host: 'localhost', // [!code highlight]
+  protocol: 'https',
   port: 3000, // [!code --]
   port: Number(process.env.PORT ?? 3000), // [!code ++]
-  host: 'localhost', // [!code highlight]
+  timeout: 5000,
 };
 \`\`\`
 `;

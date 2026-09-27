@@ -63,9 +63,11 @@ Each section below shows the smallest syntax for a feature and how it looks to r
 Mark lines with directives in code comments. The plugin applies each directive and removes it from the code that readers see and copy.
 
 ```ts
+  host: 'localhost', // [!code highlight]
+  protocol: 'https',
   port: 3000, // [!code --]
   port: Number(process.env.PORT ?? 3000), // [!code ++]
-  host: 'localhost', // [!code highlight]
+  timeout: 5000,
 ```
 
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/comment-notation.png" alt="A TypeScript block with a removed line, an added line and a highlighted line, set by comments that the reader does not see.">

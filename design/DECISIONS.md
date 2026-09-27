@@ -905,3 +905,11 @@ Use this format:
 - Decision: `<FeatureCarousel>` excludes `features/comment-notation` from the slides and the picker, even though it is still a `features/…` page in the "Start here" sidebar group. `docs/src/index.mdx` no longer has a `<Feature page="features/comment-notation">` slide. "Start here" then has no features, so it drops out of the carousel groups (its `.filter((group) => group.features.length > 0)` already handles this), and the carousel opens on "Explain code" → Annotations. The sidebar keeps comment notation under "Start here", because that is where authors learn the directive syntax before they use it in a feature.
 - Reason: The user said comment notation is shared syntax, not a feature in its own right, and one of the least impressive things to lead with on the home page.
 - Alternatives: Move comment notation to a different sidebar group so the existing "every `features/…` item is a slide" rule keeps working unchanged. Rejected: the sidebar placement under "Start here" is deliberate (see the "docs structure" decision above) and the user did not ask to change it.
+
+## Comment notation example: highlight first, diff pair set off by plain lines
+
+- Date: 2026-09-26
+- Step: after the plan (docs polish)
+- Decision: The canonical comment-notation example (`config.ts`, previously `port: 3000 [!code --]` / `port: Number(...) [!code ++]` / `host: 'localhost' [!code highlight]` back to back) is now: a highlighted line first (`host`), a plain line (`protocol`), the `--`/`++` pair, then a plain line (`timeout`). Updated everywhere it appeared: `docs/src/content/docs/features/comment-notation.mdx`, `docs/src/content/docs/index.mdx` (removed, see above), `README.md` (and its copy in `packages/starlight-codeblocks/README.md`), `docs/e2e/comment-notation.test.ts`, and the README media PNG (`pnpm readme:media comment-notation`).
+- Reason: The user asked for the highlighted line to lead and for un-highlighted lines to separate each marked line, here and in the README, so each marker reads as its own thing instead of a wall of coloured lines.
+- Alternatives: None; this replaces `design/mockups.html`'s version of the same example (diff pair first, highlight last, no spacing), which is now out of date for this one example.
