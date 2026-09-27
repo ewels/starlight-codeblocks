@@ -119,14 +119,20 @@ test('the current button differs by more than colour', async ({ page }) => {
   expect(await weight('Footnotes')).toBe('400');
 });
 
-test('the buttons follow the sidebar groups', async ({ page }) => {
+test('the buttons are a flat list in sidebar order, with no group headings', async ({ page }) => {
   await page.goto('./getting-started/');
-  const sidebar = await page.locator('nav[aria-label="Main"] summary .group-label').allTextContents();
+  const sidebarIds = await page
+    .locator('nav[aria-label="Main"] a[href*="/features/"]')
+    .evaluateAll((els) =>
+      els.map((el) => new URL((el as HTMLAnchorElement).href).pathname.replace(/^\/starlight-codeblocks\/|\/$/g, '')),
+    );
   await page.goto('./');
-  const labels = await page.locator('.carousel .group-label').allTextContents();
-  expect(sidebar.map((s) => s.trim()).filter((s) => labels.includes(s))).toEqual(labels);
-  await expect(page.locator('.carousel .tile')).toHaveCount(23);
+  await expect(page.locator('.carousel .group-label')).toHaveCount(0);
+  const tiles = page.locator('.carousel .tile');
+  await expect(tiles).toHaveCount(23);
   await expect(page.locator('.carousel .tile svg[aria-hidden], .carousel .tile [aria-hidden] svg')).toHaveCount(23);
+  const tileIds = await tiles.evaluateAll((els) => els.map((el) => el.getAttribute('data-feature')));
+  expect(tileIds).toEqual(sidebarIds.filter((id) => tileIds.includes(id)));
 });
 
 test('has one dot per slide, before the pause control', async ({ page }) => {
