@@ -21,7 +21,7 @@ const theme = (locator: Locator) => locator.page().evaluate(() => document.docum
 
 test('draws each token in the colour of the current theme, and switches with the theme', async ({ page }) => {
   const code = page.locator('.example .pane.output').first().locator('code.scb-inline').first();
-  await expect(code).toHaveText('await fetch(url)');
+  await expect(code).toHaveText('codeblocks()');
   const keyword = code.locator('span').first();
   const current = await theme(code);
   const colours = await token(keyword);
@@ -41,7 +41,9 @@ test('uses the background of the code blocks, and removes the suffix', async ({ 
   const background = (l: Locator) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(await background(code)).toBe(await background(block));
   await expect(pane.locator('p:not(.label)').first()).toHaveText(
-    'Call await fetch(url) and check res.ok before you read the body.',
+    'codeblocks() in astro.config.mjs adds a set of Expressive Code plugins to the site. ' +
+      'One of them reads a directive on its own comment line, such as // [!code focus] or # [!code focus]. ' +
+      'It removes the directive from codeBlock.code before the block renders, so the copy button never sees it.',
   );
 });
 

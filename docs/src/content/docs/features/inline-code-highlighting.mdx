@@ -9,12 +9,34 @@ import Example from '../../../components/Example.astro';
 Starlight shows inline code in the prose in one colour, with no syntax highlighting. A short expression such as a function call is then harder to read than the same code in a block. A `{:lang}` suffix at the end of the inline code gives it the syntax colours of that language.
 
 export const basic = `
-Call \`await fetch(url){:js}\` and check \`res.ok{:js}\` before you read the body.
+> \`codeblocks(){:js}\` in \`astro.config.mjs\` adds a set of Expressive
+> Code plugins to the site. One of them reads a directive on its own
+> comment line, such as \`// [!code focus]{:js}\` or \`# [!code focus]{:sh}\`.
+> It removes the directive from \`codeBlock.code{:ts}\` before the block
+> renders, so the copy button never sees it.
+>
+> A different plugin colours the inline code in this sentence. A Sätteri
+> visitor finds the \`{:lang}\` suffix, such as \`background: none{:css}\` or
+> \`sorted(names)[0]{:py}\`, then highlights it with the site's theme and
+> removes the suffix. Interactive features add
+> \`<pre data-scb-expandable="12">{:html}\` to their own blocks, and a
+> loader script imports the matching client module.
 `;
 
 <Example code={basic}>
 
-Call `await fetch(url){:js}` and check `res.ok{:js}` before you read the body.
+> `codeblocks(){:js}` in `astro.config.mjs` adds a set of Expressive
+> Code plugins to the site. One of them reads a directive on its own
+> comment line, such as `// [!code focus]{:js}` or `# [!code focus]{:sh}`.
+> It removes the directive from `codeBlock.code{:ts}` before the block
+> renders, so the copy button never sees it.
+>
+> A different plugin colours the inline code in this sentence. A Sätteri
+> visitor finds the `{:lang}` suffix, such as `background: none{:css}` or
+> `sorted(names)[0]{:py}`, then highlights it with the site's theme and
+> removes the suffix. Interactive features add
+> `<pre data-scb-expandable="12">{:html}` to their own blocks, and a
+> loader script imports the matching client module.
 
 </Example>
 
