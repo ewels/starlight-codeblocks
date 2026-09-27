@@ -197,7 +197,7 @@ test('the buttons are a flat list in sidebar order, with no group headings', asy
 
 test('the buttons fill each column from top to bottom, in columns of even length with aligned rows', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto('./');
   const boxes = await page
     .locator('.carousel .tile')
@@ -209,6 +209,10 @@ test('the buttons fill each column from top to bottom, in columns of even length
   expect(boxes.every(([x], i) => i === 0 || x >= (boxes[i - 1]?.[0] ?? 0))).toBe(true);
   for (const column of columns) {
     expect(column).toEqual((columns[0] ?? []).slice(0, column.length));
+  }
+  // The phone viewport (360px) is too narrow for the auto column width, so it's forced to two.
+  if (testInfo.project.name.startsWith('phone')) {
+    expect(lengths).toEqual([12, 11]);
   }
 });
 
