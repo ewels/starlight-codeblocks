@@ -4,6 +4,8 @@ import { expect, type Page, test } from '@playwright/test';
 const current = (page: Page) => page.locator('.carousel .slide[data-current]');
 const tile = (page: Page, name: string) =>
   page.locator('.carousel .tile', { hasText: new RegExp(`^\\s*${name}\\s*$`) });
+const dot = (page: Page, name: string) =>
+  page.locator('.carousel').getByRole('button', { name: new RegExp(`^Show slide \\d+: ${name}$`) });
 const interval = 7000;
 
 test.describe('rotation', () => {
@@ -20,6 +22,23 @@ test.describe('rotation', () => {
     await expect(current(page)).toHaveAttribute('data-feature', 'features/footnotes');
     await expect(tile(page, 'Footnotes')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('.carousel [data-status]')).toHaveText('');
+  });
+
+  test('the current dot follows the rotation', async ({ page }) => {
+    await expect(dot(page, 'Annotations')).toHaveAttribute('aria-current', 'true');
+    await page.clock.runFor(interval);
+    await expect(dot(page, 'Annotations')).toHaveAttribute('aria-current', 'false');
+    await expect(dot(page, 'Footnotes')).toHaveAttribute('aria-current', 'true');
+  });
+
+  test('the current dot animates its fill towards the next slide', async ({ page }) => {
+    const fill = () => page.locator('.carousel .dot[aria-current="true"] .fill');
+    await expect(fill()).toHaveCSS('transition-duration', '7s');
+    expect(await fill().evaluate((el) => (el as HTMLElement).style.width)).toBe('100%');
+    await page.clock.runFor(interval);
+    // The next dot is now current, and its fill starts a fresh 7s transition from 0.
+    await expect(fill()).toHaveCSS('transition-duration', '7s');
+    expect(await fill().evaluate((el) => (el as HTMLElement).style.width)).toBe('100%');
   });
 
   test('the pause control stops and starts the rotation', async ({ page }) => {
@@ -110,6 +129,24 @@ test('the buttons follow the sidebar groups', async ({ page }) => {
   await expect(page.locator('.carousel .tile svg[aria-hidden], .carousel .tile [aria-hidden] svg')).toHaveCount(23);
 });
 
+test('has one dot per slide, before the pause control', async ({ page }) => {
+  await page.goto('./');
+  await expect(page.locator('.carousel .dot')).toHaveCount(23);
+  const order = await page.locator('.carousel .controls > *').evaluateAll((els) => els.map((el) => el.className));
+  expect(order[order.length - 1]).toContain('rotation');
+});
+
+test('clicking a dot shows its slide, announces it and stops the rotation', async ({ page }) => {
+  await page.goto('./');
+  await dot(page, 'Word-level diff').click();
+  await expect(current(page)).toHaveAttribute('data-feature', 'features/word-level-diff');
+  await expect(dot(page, 'Word-level diff')).toHaveAttribute('aria-current', 'true');
+  await expect(dot(page, 'Annotations')).toHaveAttribute('aria-current', 'false');
+  await expect(tile(page, 'Word-level diff')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.carousel [data-status]')).toHaveText('Word-level diff, 9 of 23');
+  await expect(page.locator('.carousel .rotation')).toHaveAccessibleName('Play');
+});
+
 test('works with the keyboard', async ({ page }) => {
   await page.goto('./');
   const button = tile(page, 'Hidden lines');
@@ -126,6 +163,26 @@ test('works with the keyboard', async ({ page }) => {
   await expect(rotation).toHaveAccessibleName(/Pause|Play/);
 });
 
+test('the dots use a roving tabindex and arrow keys', async ({ page }) => {
+  await page.goto('./');
+  await dot(page, 'Annotations').focus();
+  await expect(dot(page, 'Annotations')).toHaveAttribute('tabindex', '0');
+  await expect(dot(page, 'Footnotes')).toHaveAttribute('tabindex', '-1');
+  await page.keyboard.press('ArrowRight');
+  await expect(current(page)).toHaveAttribute('data-feature', 'features/footnotes');
+  await expect(dot(page, 'Footnotes')).toBeFocused();
+  await expect(dot(page, 'Footnotes')).toHaveAttribute('tabindex', '0');
+  await expect(dot(page, 'Annotations')).toHaveAttribute('tabindex', '-1');
+  expect(await dot(page, 'Footnotes').evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none');
+  await page.keyboard.press('ArrowLeft');
+  await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
+  await page.keyboard.press('End');
+  await expect(current(page)).toHaveAttribute('data-feature', 'features/run-in-the-browser');
+  await expect(dot(page, 'Run in the browser')).toBeFocused();
+  await page.keyboard.press('Home');
+  await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
+});
+
 test('does not rotate or animate under reduced motion', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'reduced-motion', 'Only for the reduced-motion project.');
   await page.clock.install();
@@ -133,6 +190,7 @@ test('does not rotate or animate under reduced motion', async ({ page }, testInf
   await expect(page.locator('.carousel .rotation')).toHaveAccessibleName('Play');
   await page.clock.runFor(interval * 3);
   await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
+  await expect(page.locator('.carousel .dot[aria-current="true"] .fill')).toHaveCSS('width', '0px');
   await tile(page, 'Focus').click();
   expect(await current(page).evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
 });
@@ -140,6 +198,8 @@ test('does not rotate or animate under reduced motion', async ({ page }, testInf
 test('fits a phone screen', async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith('phone'), 'Only for phones.');
   await page.goto('./');
+  await expect(page.locator('.carousel .dots')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
   for (const name of ['Side-by-side annotations', 'Scrollycoding', 'Code switcher']) {
     await tile(page, name).click();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -170,6 +230,7 @@ test.describe('without JavaScript', () => {
     await expect(page.locator('.carousel .slide').first()).toBeVisible();
     await expect(page.locator('.carousel .slide').nth(1)).toBeHidden();
     await expect(page.locator('.carousel .rotation')).toBeHidden();
+    await expect(page.locator('.carousel .dots')).toBeHidden();
     const link = page.locator('.carousel a.tile', { hasText: 'Focus' });
     await expect(link).toHaveAttribute('href', '/starlight-codeblocks/features/focus/');
     await expect(page.locator('.carousel a.tile')).toHaveCount(23);

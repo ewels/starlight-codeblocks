@@ -50,24 +50,17 @@ const groups = (
     })),
   )
 ).filter((group) => group.features.length > 0);
+const features = groups.flatMap((group) => group.features);
 
 const slides = await Astro.slots.render('default');
-const order = groups.flatMap((group) => group.features).map(({ id }) => slides.indexOf(`data-feature="${id}"`));
-const missing = groups.flatMap((group) => group.features).filter((_, i) => order[i] === -1);
+const order = features.map(({ id }) => slides.indexOf(`data-feature="${id}"`));
+const missing = features.filter((_, i) => order[i] === -1);
 if (missing.length) throw new Error(`<FeatureCarousel> has no slide for ${missing.map((f) => f.id).join(', ')}`);
 if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
   throw new Error('<FeatureCarousel> slides must be in sidebar order');
 ---
 
 <section class="carousel" aria-roledescription="carousel" aria-label="Features" data-interval="7000">
-  <div class="card">
-    <button type="button" class="rotation not-content" hidden>
-      <span class="pause"><span aria-hidden="true" set:html={lucide.Pause} />Pause</span>
-      <span class="play"><span aria-hidden="true" set:html={lucide.Play} />Play</span>
-    </button>
-    <div class="slides" set:html={slides} />
-  </div>
-  <p class="sr-only" aria-live="polite" data-status></p>
   <div class="picker not-content">
     {
       groups.map((group, g) => (
@@ -89,6 +82,34 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
       ))
     }
   </div>
+  <div class="card">
+    <div class="slides" set:html={slides} />
+  </div>
+  <div class="controls not-content">
+    <div class="dots" role="group" aria-label="Slides" hidden>
+      {
+        features.map((feature, i) => (
+          <button
+            type="button"
+            class="dot"
+            data-feature={feature.id}
+            aria-label={`Show slide ${i + 1}: ${feature.title}`}
+            aria-current={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+          >
+            <span class="bullet">
+              <span class="fill" />
+            </span>
+          </button>
+        ))
+      }
+    </div>
+    <button type="button" class="rotation" hidden>
+      <span class="pause"><span aria-hidden="true" set:html={lucide.Pause} />Pause</span>
+      <span class="play"><span aria-hidden="true" set:html={lucide.Play} />Play</span>
+    </button>
+  </div>
+  <p class="sr-only" aria-live="polite" data-status></p>
 </section>
 
 <script>
@@ -97,6 +118,8 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
     const slides = [...root.querySelectorAll<HTMLElement>('.slide')];
     const status = root.querySelector('[data-status]') as HTMLElement;
     const rotation = root.querySelector('.rotation') as HTMLButtonElement;
+    const dotsWrap = root.querySelector('.dots') as HTMLElement;
+    const dots = [...root.querySelectorAll<HTMLButtonElement>('.dot')];
     const interval = Number(root.dataset.interval);
     const reduce = matchMedia('(prefers-reduced-motion: reduce)');
     let current = 0;
@@ -104,6 +127,46 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
     let hovered = false;
     let focused = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+
+    // Grows the current dot's fill towards the next auto-advance, as a CSS transition (so it animates in real
+    // time regardless of the interval's fake-clock tests); frozen at its current width, not reset, while paused.
+    let elapsed = 0;
+    let startedAt: number | null = null;
+
+    const currentFill = () => dots[current]?.querySelector<HTMLElement>('.fill');
+
+    const startProgress = () => {
+      if (reduce.matches) return;
+      const fill = currentFill();
+      if (!fill) return;
+      startedAt = Date.now();
+      fill.style.transitionDuration = `${interval - elapsed}ms`;
+      fill.style.width = '100%';
+    };
+
+    const stopProgress = () => {
+      if (startedAt !== null) {
+        elapsed = Math.min(interval, elapsed + (Date.now() - startedAt));
+        startedAt = null;
+      }
+      const fill = currentFill();
+      if (fill) {
+        const width = getComputedStyle(fill).width;
+        fill.style.transitionDuration = '0s';
+        fill.style.width = width;
+      }
+    };
+
+    const resetProgress = () => {
+      startedAt = null;
+      elapsed = 0;
+      const fill = currentFill();
+      if (fill) {
+        fill.style.transitionDuration = '0s';
+        fill.style.width = '0%';
+        fill.offsetWidth; // Force a reflow, so the 0s/0% reset commits before startProgress animates from it.
+      }
+    };
 
     const tiles = [...root.querySelectorAll<HTMLAnchorElement>('a.tile')].map((link) => {
       const button = document.createElement('button');
@@ -117,7 +180,12 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
 
     const schedule = () => {
       clearTimeout(timer);
-      if (playing && !hovered && !focused) timer = setTimeout(() => show(current + 1), interval);
+      if (playing && !hovered && !focused) {
+        timer = setTimeout(() => show(current + 1), interval);
+        startProgress();
+      } else {
+        stopProgress();
+      }
     };
 
     const show = (index: number, byUser = false) => {
@@ -125,6 +193,11 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
       const slide = slides[current] as HTMLElement;
       for (const s of slides) s.toggleAttribute('data-current', s === slide);
       for (const t of tiles) t.setAttribute('aria-pressed', String(t.dataset.feature === slide.dataset.feature));
+      for (const [i, dot] of dots.entries()) {
+        dot.setAttribute('aria-current', String(i === current));
+        dot.tabIndex = i === current ? 0 : -1;
+      }
+      resetProgress();
       if (byUser) status.textContent = `${slide.getAttribute('aria-label')}, ${current + 1} of ${slides.length}`;
       schedule();
     };
@@ -144,6 +217,24 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
           card.scrollIntoView({ block: 'start', behavior: reduce.matches ? 'auto' : 'smooth' });
       });
     }
+    for (const [i, dot] of dots.entries()) {
+      dot.addEventListener('click', () => {
+        setPlaying(false);
+        show(i, true);
+      });
+    }
+    // Roving tabindex (WAI carousel pattern): arrow keys move focus and jump to that slide.
+    dotsWrap.addEventListener('keydown', (event) => {
+      const i = dots.indexOf(document.activeElement as HTMLButtonElement);
+      if (i === -1) return;
+      const moves: Record<string, number> = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: dots.length - 1 };
+      const next = moves[event.key];
+      if (next === undefined) return;
+      event.preventDefault();
+      setPlaying(false);
+      show((next + dots.length) % dots.length, true);
+      dots[current].focus();
+    });
     rotation.addEventListener('click', () => setPlaying(!playing));
     root.addEventListener('mouseenter', () => {
       hovered = true;
@@ -165,6 +256,7 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
 
     rotation.hidden = false;
     rotation.toggleAttribute('data-playing', playing);
+    dotsWrap.hidden = false;
     root.toggleAttribute('data-ready', true);
     show(0);
   }
@@ -175,7 +267,6 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
     margin-top: 1.5rem;
   }
   .card {
-    position: relative;
     padding: clamp(1rem, 0.25rem + 2.5vw, 2rem);
     border: 1px solid var(--sl-color-gray-5);
     border-radius: 0.5rem;
@@ -195,11 +286,69 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
   .carousel[data-ready] .slides > :global(.slide.tall:not([data-current])) {
     display: none;
   }
-  .rotation {
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .dots {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+  }
+  .dots[hidden] {
+    display: none;
+  }
+  .dot {
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: none;
+    border-radius: 999rem;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+  .bullet {
+    position: relative;
+    display: block;
+    width: 0.5rem;
+    height: 0.5rem;
+    overflow: hidden;
+    border-radius: 999rem;
+    background: var(--sl-color-gray-3);
+    transition: width 0.2s;
+  }
+  .dot:hover .bullet {
+    background: var(--sl-color-gray-2);
+  }
+  .dot[aria-current='true'] .bullet {
+    width: 1.25rem;
+  }
+  .fill {
     position: absolute;
-    top: clamp(1rem, 0.25rem + 2.5vw, 2rem);
-    inset-inline-end: clamp(1rem, 0.25rem + 2.5vw, 2rem);
-    z-index: 1;
+    inset: 0;
+    width: 0%;
+    background: var(--sl-color-text-accent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bullet {
+      transition: none;
+    }
+  }
+  @media (forced-colors: active) {
+    .dot[aria-current='true'] .bullet {
+      outline: 2px solid Highlight;
+    }
+  }
+  .rotation {
     display: inline-flex;
     align-items: center;
     min-height: 2rem;
@@ -233,13 +382,10 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
     width: 1rem;
     height: 1rem;
   }
-  .carousel :global(.slide h3) {
-    padding-inline-end: 6rem;
-  }
   .picker {
     column-width: 15rem;
     column-gap: 1rem;
-    margin-top: 2rem;
+    margin-bottom: 2rem;
   }
   .group {
     break-inside: avoid;
