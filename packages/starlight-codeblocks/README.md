@@ -218,7 +218,7 @@ Step through versions of one code block, and watch the code move from each versi
 
 </details>
 
-### Shorten long code
+### Make code easier to read
 
 <details>
 <summary>Hidden lines</summary>
@@ -251,8 +251,6 @@ Show the first lines of a long block, with a fade and a button to reveal the res
 [Expandable blocks documentation](https://ewels.github.io/starlight-codeblocks/features/expandable-blocks/)
 
 </details>
-
-### Make code easier to read
 
 <details>
 <summary>Visible whitespace</summary>

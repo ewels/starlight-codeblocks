@@ -38,10 +38,9 @@ Draw attention
 Show what changed
   Word-level diff
   Token transitions
-Shorten long code
+Make code easier to read
   Hidden lines
   Expandable blocks
-Make code easier to read
   Visible whitespace
   Colourised brackets
   Inline code highlighting

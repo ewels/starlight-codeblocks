@@ -31,12 +31,14 @@ export const sidebar = [
     items: ['features/word-level-diff', 'features/token-transitions'],
   },
   {
-    label: 'Shorten long code',
-    items: ['features/hidden-lines', 'features/expandable-blocks'],
-  },
-  {
     label: 'Make code easier to read',
-    items: ['features/visible-whitespace', 'features/colourised-brackets', 'features/inline-code-highlighting'],
+    items: [
+      'features/hidden-lines',
+      'features/expandable-blocks',
+      'features/visible-whitespace',
+      'features/colourised-brackets',
+      'features/inline-code-highlighting',
+    ],
   },
   {
     label: 'Link code',
