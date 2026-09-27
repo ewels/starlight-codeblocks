@@ -228,7 +228,8 @@ export function pageMarkdown(entry: Entry) {
       tagline
         .trim()
         .replace(/\s+/g, ' ')
-        .replace(/<a href="([^"]+)">([^<]+)<\/a>/g, '[$2]($1)'),
+        .replace(/<\/?span[^>]*>/g, '')
+        .replace(/<a href="([^"]+)">([^<]+)<\/a>/g, (_, href, text) => absoluteLinks(`[${text}](${href})`)),
     );
   return `${head.join('\n\n')}\n\n${out.join('\n').trim()}\n`;
 }

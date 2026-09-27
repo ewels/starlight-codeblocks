@@ -25,6 +25,7 @@ Guides
   Code switcher or tabs
   Migrate from VitePress
   Use with other plugins
+  Use with an AI agent
 Explain code
   Annotations
   Footnotes
@@ -125,6 +126,7 @@ Use Starlight's `<Code>` component for the rendering if the spike confirms that 
 - Code switcher or tabs: when to use the code switcher and when to use Starlight's `<Tabs>`.
 - Migrate from VitePress: the VitePress features and their equivalents, the directives that work unchanged, and the ones that differ.
 - Use with other plugins: the plugins that were tested with this one, the order of plugins, and the set-up for plugins that need one (links validator, llms.txt, page actions, versions, Markdoc, `unified()`).
+- Use with an AI agent: the `npx skills add` command for the agent skill in `skills/starlight-codeblocks/`, what it covers, and every skill file, imported with `?raw` so the page cannot drift.
 
 ## Extend pages
 

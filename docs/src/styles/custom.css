@@ -21,3 +21,9 @@ h1#_top,
     padding-bottom: 1.5rem;
   }
 }
+
+.hero .tagline .agent-skill {
+  display: block;
+  margin-top: 0.75rem;
+  font-size: var(--sl-text-base);
+}

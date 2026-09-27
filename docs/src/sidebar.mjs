@@ -10,6 +10,7 @@ export const sidebar = [
       'guides/code-switcher-or-tabs',
       'guides/migrate-from-vitepress',
       'guides/use-with-other-plugins',
+      'guides/agent-skill',
     ],
   },
   {
