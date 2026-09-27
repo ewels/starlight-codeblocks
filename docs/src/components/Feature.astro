@@ -18,12 +18,17 @@ const href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${page}/`;
 ---
 
 <section class:list={['slide', { tall }]} data-feature={page} aria-roledescription="slide" aria-label={title}>
-  <h3>{title}</h3>
-  <p class="summary">{summary}</p>
+  <div class="head">
+    <div class="text">
+      <h3>{title}</h3>
+      <p class="summary">{summary}</p>
+    </div>
+    <a class="docs-link" href={href}>
+      Read docs<span class="sr-only">: {title}</span>
+      <Icon name="right-arrow" />
+    </a>
+  </div>
   <div class="body"><slot /></div>
-  <p class="more">
-    <a href={href}>Read the {title} <span class="last">documentation<Icon name="right-arrow" /></span></a>
-  </p>
 </section>
 
 <style>
@@ -39,6 +44,15 @@ const href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${page}/`;
   .slide > :global(* + *) {
     margin-top: 1rem;
   }
+  .head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .text {
+    min-width: 0;
+  }
   h3 {
     margin: 0;
     font-size: var(--sl-text-h3);
@@ -53,16 +67,29 @@ const href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${page}/`;
   .body > :global(* + *) {
     margin-top: 1rem;
   }
-  .more a {
+  .docs-link {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2rem;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 999rem;
+    color: var(--sl-color-white);
     font-weight: 600;
-  }
-  .last {
+    font-size: var(--sl-text-sm);
+    line-height: 1.3;
+    text-decoration: none;
     white-space: nowrap;
   }
-  .more :global(svg) {
-    display: inline;
-    margin-inline-start: 0.25rem;
-    vertical-align: -0.125em;
+  .docs-link:hover {
+    border-color: var(--sl-color-gray-2);
+  }
+  .docs-link :global(svg) {
+    display: block;
+    width: 1rem;
+    height: 1rem;
   }
   @media (prefers-reduced-motion: reduce) {
     .slide:global([data-current]) {

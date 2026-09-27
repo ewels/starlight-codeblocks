@@ -127,7 +127,7 @@ test('selecting a button shows its example and announces it', async ({ page }) =
   await expect(slide).toHaveAttribute('data-feature', 'features/word-level-diff');
   await expect(slide).toBeVisible();
   await expect(slide.locator('.ec-line').first()).toBeVisible();
-  await expect(slide.getByRole('link', { name: 'Read the Word-level diff documentation' })).toHaveAttribute(
+  await expect(slide.getByRole('link', { name: 'Read docs : Word-level diff' })).toHaveAttribute(
     'href',
     '/starlight-codeblocks/features/word-level-diff/',
   );
@@ -135,6 +135,40 @@ test('selecting a button shows its example and announces it', async ({ page }) =
   await expect(page.locator('.carousel .tile[aria-pressed="true"]')).toHaveCount(1);
   await expect(tile(page, 'Word-level diff')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.carousel [data-status]')).toHaveText('Word-level diff, 9 of 23');
+});
+
+const box = async (locator: ReturnType<Page['locator']>) => {
+  const b = await locator.boundingBox();
+  if (!b) throw new Error('Element has no bounding box');
+  return b;
+};
+
+test('the docs link sits in the same top-right spot on every slide, with a 24px+ target and visible focus', async ({
+  page,
+}) => {
+  await page.goto('./');
+  const docsLink = (name: string) => page.getByRole('link', { name: `Read docs : ${name}` });
+  // Position relative to the card, not the viewport: clicking a tile can scroll the page.
+  const offsetFromCard = async (name: string) => {
+    const card = await box(page.locator('.carousel .card'));
+    const link = await box(docsLink(name));
+    return { top: link.y - card.y, right: card.x + card.width - (link.x + link.width) };
+  };
+
+  const first = await box(docsLink('Annotations'));
+  expect(first.width).toBeGreaterThanOrEqual(24);
+  expect(first.height).toBeGreaterThanOrEqual(24);
+  const firstOffset = await offsetFromCard('Annotations');
+
+  // Checked before any mouse click switches slides: a prior pointer interaction puts Chromium into
+  // mouse input modality, where a later programmatic .focus() no longer matches :focus-visible.
+  await docsLink('Annotations').focus();
+  expect(await docsLink('Annotations').evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none');
+
+  await tile(page, 'Word-level diff').click();
+  const secondOffset = await offsetFromCard('Word-level diff');
+  expect(Math.round(secondOffset.top)).toBe(Math.round(firstOffset.top));
+  expect(Math.round(secondOffset.right)).toBe(Math.round(firstOffset.right));
 });
 
 test('the current button differs by more than colour', async ({ page }) => {
@@ -330,5 +364,8 @@ test.describe('without JavaScript', () => {
     const link = page.locator('.carousel a.tile', { hasText: 'Focus' });
     await expect(link).toHaveAttribute('href', '/starlight-codeblocks/features/focus/');
     await expect(page.locator('.carousel a.tile')).toHaveCount(23);
+    const docsLink = page.getByRole('link', { name: 'Read docs : Annotations' });
+    await expect(docsLink).toBeVisible();
+    await expect(docsLink).toHaveAttribute('href', '/starlight-codeblocks/features/annotations/');
   });
 });
