@@ -150,6 +150,24 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
       }
     };
 
+    const header = document.querySelector<HTMLElement>('.header');
+
+    // Scrolls the card into view only far enough to matter: nothing if it's already half visible,
+    // otherwise the least distance that gets it fully in view, or (if it's taller than the space
+    // below the sticky header) that puts its top just below the header.
+    const revealCard = () => {
+      const card = root.querySelector('.card') as HTMLElement;
+      const headerHeight = header?.getBoundingClientRect().height ?? 0;
+      const viewportHeight = window.innerHeight;
+      const available = viewportHeight - headerHeight;
+      const rect = card.getBoundingClientRect();
+      const visible = Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, headerHeight));
+      if (visible / Math.min(rect.height, available) >= 0.5) return;
+      const top =
+        rect.height > available || rect.top < headerHeight ? rect.top - headerHeight : rect.bottom - viewportHeight;
+      window.scrollBy({ top, behavior: reduce.matches ? 'auto' : 'smooth' });
+    };
+
     const tiles = [...root.querySelectorAll<HTMLAnchorElement>('a.tile')].map((link) => {
       const button = document.createElement('button');
       button.type = 'button';
@@ -194,9 +212,7 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
       tile.addEventListener('click', () => {
         setPlaying(false);
         show(i, true);
-        const card = root.querySelector('.card') as HTMLElement;
-        if (card.getBoundingClientRect().top < 0)
-          card.scrollIntoView({ block: 'start', behavior: reduce.matches ? 'auto' : 'smooth' });
+        revealCard();
       });
     }
     for (const [i, dot] of dots.entries()) {

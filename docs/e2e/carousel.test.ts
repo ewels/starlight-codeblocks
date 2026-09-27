@@ -8,6 +8,32 @@ const dot = (page: Page, name: string) =>
   page.locator('.carousel').getByRole('button', { name: new RegExp(`^Show slide \\d+: ${name}$`) });
 const interval = 7000;
 
+// Positions the page so the current card sits at a chosen visible fraction, cut off at the
+// given edge, so a test can set up "already visible enough" or "needs to scroll" precisely.
+const scrollToFraction = (page: Page, fraction: number, cut: 'top' | 'bottom') =>
+  page.evaluate(
+    ({ fraction, cut }) => {
+      const header = document.querySelector('.header') as HTMLElement;
+      const card = document.querySelector('.carousel .card') as HTMLElement;
+      const headerHeight = header.getBoundingClientRect().height;
+      const viewportHeight = window.innerHeight;
+      const available = viewportHeight - headerHeight;
+      const rect = card.getBoundingClientRect();
+      const visible = fraction * Math.min(rect.height, available);
+      const top = cut === 'bottom' ? viewportHeight - visible : headerHeight + visible - rect.height;
+      window.scrollBy({ top: rect.top - top, behavior: 'auto' });
+    },
+    { fraction, cut },
+  );
+
+const headerHeight = (page: Page) =>
+  page.evaluate(() => (document.querySelector('.header') as HTMLElement).getBoundingClientRect().height);
+const cardEdge = (page: Page, edge: 'top' | 'bottom') =>
+  page.evaluate(
+    (edge) => Math.round((document.querySelector('.carousel .card') as HTMLElement).getBoundingClientRect()[edge]),
+    edge,
+  );
+
 test.describe('rotation', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'reduced-motion', 'Rotation is off under reduced motion.');
@@ -226,6 +252,70 @@ test('has no accessibility violations apart from the fade', async ({ page }) => 
   const other = violations.filter((v) => v.id !== 'color-contrast');
   expect(other.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`)).toEqual([]);
   for (const node of contrast?.nodes ?? []) expect(node.html).toMatch(/scb-focus-out|scb-mention/);
+});
+
+test.describe('scrolling the chosen example into view', () => {
+  test('does not scroll when the example is already at least half visible', async ({ page }) => {
+    await page.goto('./');
+    await expect(page.locator('.carousel[data-ready]')).toBeAttached();
+    await scrollToFraction(page, 0.65, 'bottom');
+    const before = await page.evaluate(() => window.scrollY);
+    await tile(page, 'Focus').evaluate((el) => (el as HTMLElement).click());
+    expect(await page.evaluate(() => window.scrollY)).toBe(before);
+  });
+
+  test('scrolls down the minimum distance to bring a short example fully into view', async ({ page }) => {
+    await page.goto('./');
+    await expect(page.locator('.carousel[data-ready]')).toBeAttached();
+    await scrollToFraction(page, 0.2, 'bottom');
+    const [header, viewportHeight] = await Promise.all([headerHeight(page), page.evaluate(() => window.innerHeight)]);
+    await tile(page, 'Focus').evaluate((el) => (el as HTMLElement).click());
+    await expect.poll(() => cardEdge(page, 'bottom')).toBe(Math.round(viewportHeight));
+    expect(await cardEdge(page, 'top')).toBeGreaterThanOrEqual(Math.round(header) - 1);
+  });
+
+  test('scrolls up the minimum distance to bring a short example fully into view', async ({ page }) => {
+    await page.goto('./');
+    await expect(page.locator('.carousel[data-ready]')).toBeAttached();
+    await scrollToFraction(page, 0.2, 'top');
+    const header = await headerHeight(page);
+    await tile(page, 'Focus').evaluate((el) => (el as HTMLElement).click());
+    await expect.poll(() => cardEdge(page, 'top')).toBe(Math.round(header));
+  });
+
+  test('aligns a tall example under the header on a phone screen', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.startsWith('phone'), 'Only phones make this example taller than the screen.');
+    await page.goto('./');
+    await expect(page.locator('.carousel[data-ready]')).toBeAttached();
+    const header = await headerHeight(page);
+    await tile(page, 'Side-by-side annotations').evaluate((el) => (el as HTMLElement).click());
+    await expect.poll(() => cardEdge(page, 'top')).toBe(Math.round(header));
+  });
+
+  test('scrolls instantly under reduced motion', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'reduced-motion', 'Only meaningful where scrolling would otherwise animate.');
+    await page.goto('./');
+    await expect(page.locator('.carousel[data-ready]')).toBeAttached();
+    await scrollToFraction(page, 0.2, 'bottom');
+    const viewportHeight = await page.evaluate(() => window.innerHeight);
+    const bottom = await page.evaluate(() => {
+      (document.querySelector('.carousel .tile[data-feature="features/focus"]') as HTMLElement).click();
+      return (document.querySelector('.carousel .card') as HTMLElement).getBoundingClientRect().bottom;
+    });
+    expect(Math.round(bottom)).toBe(Math.round(viewportHeight));
+  });
+
+  test('never scrolls on auto-rotation', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'reduced-motion', 'Rotation is off under reduced motion.');
+    await page.clock.install();
+    await page.goto('./');
+    await expect(page.locator('.carousel[data-ready]')).toBeAttached();
+    await scrollToFraction(page, 0.2, 'bottom');
+    const before = await page.evaluate(() => window.scrollY);
+    await page.clock.runFor(interval);
+    await expect(current(page)).toHaveAttribute('data-feature', 'features/footnotes');
+    expect(await page.evaluate(() => window.scrollY)).toBe(before);
+  });
 });
 
 test.describe('without JavaScript', () => {
