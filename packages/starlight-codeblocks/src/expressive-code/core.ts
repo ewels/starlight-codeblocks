@@ -68,6 +68,7 @@ const decorations = [
   'hidden-marker',
   'expandable-bar',
   'steps-stepper',
+  'steps-controls',
   'run-output',
   'permalink',
 ]

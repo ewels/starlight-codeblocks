@@ -32,7 +32,10 @@ const styleSettings = new PluginStyleSettings({
 
 const S = `${PREFIX}-steps`;
 
-/** Shows the `step="…"` label after the title, and styles the steps that `<CodeSteps>` adds to the title bar. */
+/**
+ * Shows the `step="…"` label after the title, and styles the numbered steps that `<CodeSteps>` adds to the
+ * title bar and the Previous/Next/counter row it adds under the block.
+ */
 export function pluginTransitions(): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:transitions',
@@ -86,8 +89,6 @@ export function pluginTransitions(): CodeblocksPlugin {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.${S}-nav:disabled { opacity: 0.45; cursor: default; }
-.${S}-nav-icon { font-size: 1.25em; line-height: 1; }
 .${S}-anim {
   flex: 1 0 100%;
   box-sizing: border-box;
@@ -98,13 +99,38 @@ export function pluginTransitions(): CodeblocksPlugin {
   font-weight: ${cssVar('codeFontWeight')};
   line-height: ${cssVar('codeLineHeight')};
 }
+.${S}-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  padding-block-start: 12px;
+}
+.${S}-count {
+  color: ${cssVar('codeblocks.mutedForeground')};
+  font: 0.8125rem/1.4 ${cssVar('uiFontFamily')};
+}
+.${S}-nav {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2rem;
+  min-width: 2rem;
+  padding: 0.25rem 0.9rem;
+  border: 1px solid ${cssVar('codeblocksTransitions.stepBorder')};
+  border-radius: 999px;
+  background: ${cssVar('codeBackground')};
+  color: ${cssVar('codeForeground')};
+  font: 600 0.8125rem/1.3 ${cssVar('uiFontFamily')};
+  cursor: pointer;
+}
+.${S}-nav:hover:not(:disabled) { border-color: ${cssVar('codeblocks.accent')}; }
+.${S}-nav:disabled { opacity: 0.45; cursor: default; }
+.${S}-nav-icon { font-size: 1rem; line-height: 1; }
 @container (max-width: 480px) {
   .${S}-line { width: 10px; }
-  .${S}-nav { padding-inline: 6px; }
-  .${S}-nav-text { display: none; }
-}
-@container (min-width: 481px) {
-  .${S}-nav-icon { display: none; }
 }
 @media screen and (scripting: enabled) {
   @container (max-width: 640px) {
@@ -112,7 +138,7 @@ export function pluginTransitions(): CodeblocksPlugin {
   }
 }
 @media (scripting: none) {
-  .${S}-stepper, .${S}-nav { display: none; }
+  .${S}-stepper, .${S}-controls { display: none; }
 }`,
     hooks: {
       postprocessRenderedBlock({ codeBlock, renderData }) {

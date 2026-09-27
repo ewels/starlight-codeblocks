@@ -22,20 +22,36 @@ test('shows the first step, with the steps and the label in the title bar', asyn
   else await expect(current(page).locator('.scb-steps-label')).toHaveText('Create the app');
 });
 
+test('Previous, Next and the step counter sit under the block, not in the title bar', async ({ page }) => {
+  const header = current(page).locator('.header');
+  await expect(header.getByRole('button', { name: 'Previous' })).toHaveCount(0);
+  await expect(header.getByRole('button', { name: 'Next' })).toHaveCount(0);
+  const controls = current(page).locator('.scb-steps-controls');
+  await expect(controls.locator('.scb-steps-count')).toHaveText('Step 1 of 3');
+  for (const nav of await controls.getByRole('button').all()) {
+    const box = await nav.boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(24);
+    expect(box?.height).toBeGreaterThanOrEqual(24);
+  }
+});
+
 test('Next and Previous change the step, keep focus and announce it', async ({ page }) => {
   await current(page).getByRole('button', { name: 'Next' }).click();
   await expect(current(page)).toContainText('app.use(express.json());');
   await expect(current(page).getByRole('button', { name: 'Next' })).toBeFocused();
   await expect(steps(page).locator(':scope > [aria-live]')).toHaveText('Step 2: Parse JSON bodies');
+  await expect(current(page).locator('.scb-steps-count')).toHaveText('Step 2 of 3');
   await current(page).getByRole('button', { name: 'Next' }).click();
   await expect(current(page)).toContainText("app.get('/health'");
   await expect(current(page).getByRole('button', { name: 'Next' })).toBeDisabled();
   await expect(current(page).getByRole('button', { name: 'Step 3: Add a health route' })).toBeFocused();
+  await expect(current(page).locator('.scb-steps-count')).toHaveText('Step 3 of 3');
   await current(page).getByRole('button', { name: 'Previous' }).click();
   await expect(current(page).getByRole('button', { name: 'Step 2: Parse JSON bodies' })).toHaveAttribute(
     'aria-current',
     'step',
   );
+  await expect(current(page).locator('.scb-steps-count')).toHaveText('Step 2 of 3');
 });
 
 test('a numbered step goes to its step, and the arrow keys move between steps', async ({ page }) => {
@@ -52,6 +68,9 @@ test('the keyboard reaches the steps with Tab', async ({ page }) => {
   await current(page).getByRole('button', { name: 'Step 1: Create the app' }).focus();
   await page.keyboard.press('ArrowRight');
   await expect(current(page)).toContainText('app.use(express.json());');
+  await expect(current(page).locator('.scb-steps-anim')).toHaveCount(0);
+  // Past the last dot and the copy button, to the controls under the block.
+  await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await expect(current(page).getByRole('button', { name: 'Previous' })).toBeFocused();
@@ -101,7 +120,7 @@ test('without JavaScript, every step shows as its own block, with its label', as
     'Add a health route',
   ]);
   await expect(current(page).first().getByRole('group', { name: 'Steps' })).toBeHidden();
-  await expect(current(page).first().getByRole('button', { name: 'Next' })).toBeHidden();
+  await expect(current(page).first().locator('.scb-steps-controls')).toBeHidden();
   await context.close();
 });
 

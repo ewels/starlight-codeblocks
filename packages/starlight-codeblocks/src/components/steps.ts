@@ -12,19 +12,25 @@ export type StepTokens = [number, string, string][];
 
 function navButton(go: 'prev' | 'next', disabled: boolean) {
   const text = go === 'prev' ? 'Previous' : 'Next';
-  return h(
-    'button',
-    { type: 'button', class: `scb-btn ${S}-nav scb-no-print`, dataScbStepsGo: go, ariaLabel: text, disabled },
-    [
-      h('span', { class: `${S}-nav-text` }, text),
-      h('span', { class: `${S}-nav-icon`, ariaHidden: 'true' }, go === 'prev' ? '‹' : '›'),
-    ],
-  );
+  const icon = h('span', { class: `${S}-nav-icon`, ariaHidden: 'true' }, go === 'prev' ? '‹' : '›');
+  const label = h('span', { class: `${S}-nav-text` }, text);
+  return h('button', { type: 'button', class: `${S}-nav`, dataScbStepsGo: go, ariaLabel: text, disabled }, [
+    ...(go === 'prev' ? [icon, label] : [label, icon]),
+  ]);
+}
+
+/** The Previous and Next buttons and a "Step N of M" counter, in a row under the block. */
+function controlsRow(current: number, total: number) {
+  return h('div', { class: `${S}-controls scb-no-print` }, [
+    navButton('prev', current === 0),
+    h('span', { class: `${S}-count` }, `Step ${current + 1} of ${total}`),
+    navButton('next', current === total - 1),
+  ]);
 }
 
 /**
  * Turns the blocks that Expressive Code rendered inside `<CodeSteps>` into steps: adds the numbered steps
- * and the Previous and Next buttons to each title bar, and keys the tokens of every step for the animation.
+ * to each title bar, a Previous/Next/counter row under each block, and keys the tokens for the animation.
  */
 export function codeSteps(html: string): string {
   const root = fromHtml(html, { fragment: true });
@@ -70,14 +76,9 @@ export function codeSteps(html: string): string {
         }),
       );
       head.children.unshift(stepper);
-      let tools = select('.scb-tools', header);
-      if (!tools) {
-        tools = h('span', { class: 'scb-tools' });
-        header.children.push(tools);
-      }
-      tools.children.push(navButton('prev', current === 0), navButton('next', current === groups.length - 1));
       nameFigure(figure);
     }
+    group.children.push(controlsRow(current, groups.length));
     if (current === 0)
       group.properties.className = [...((group.properties.className as string[]) ?? []), `${S}-current`];
 
