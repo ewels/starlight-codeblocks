@@ -12,7 +12,7 @@ The first version of the plugin. It added these features to the code blocks of S
 - Footnotes: numbered notes under the block, with an optional sticky list.
 - Side-by-side annotations: notes in a column next to the code.
 - Hidden lines: lines that readers can show, and that the copy button still copies.
-- Smart shell copy: the copy button copies the commands without prompts or output.
+- Smart shell copy: a Copy commands button in the title bar of terminal blocks copies the commands without prompts or output.
 - Word-level diff: a highlight on the words that changed between a removed line and an added line.
 - Visible whitespace: glyphs for spaces and tabs.
 - Colourised brackets: bracket colours by nesting depth.

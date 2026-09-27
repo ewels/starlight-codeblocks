@@ -59,9 +59,9 @@ function setup(block: HTMLElement) {
   const raw = filler(texts, (s) => s);
   const encoded = filler(texts, encodeURIComponent);
   const targets: (() => void)[] = [];
-  const button = block.querySelector<HTMLElement>('.copy button[data-code]');
+  // The copy button, and the Copy commands button of smart shell copy.
   // Templates go in an attribute, so that a copy of the block, as full screen plugins show, starts from them too.
-  if (button) {
+  for (const button of block.querySelectorAll<HTMLElement>('button[data-code]')) {
     const template = templateOf(button, button.dataset.code as string);
     targets.push(() => {
       button.dataset.code = raw(template);

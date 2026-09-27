@@ -15,10 +15,22 @@ const session = [
   'Found 3 errors (3 fixed, 0 remaining).',
 ];
 
-test('copies the commands without prompts or output, and keeps continuation lines', async () => {
+test('the Copy commands button copies the commands without prompts or output, and keeps continuation lines', async () => {
+  const { commandsText, html } = await render(block('sh frame="terminal"', ...session));
+  expect(commandsText).toBe('uv tool install ruff\nruff check src/ \\\n    --fix');
+  expect(html).toContain('>Copy commands</button>');
+  expect(html).toContain('data-scb-shell-copy');
+});
+
+test('the copy button copies the whole block, prompts and output included', async () => {
   const { copyText, html } = await render(block('sh frame="terminal"', ...session));
-  expect(copyText).toBe('uv tool install ruff\nruff check src/ \\\n    --fix');
-  expect(html).toContain('title="Copy commands"');
+  expect(copyText).toBe(session.join('\n'));
+  expect(html).toContain('title="Copy to clipboard"');
+});
+
+test('the copy button leaves out comment lines, as Expressive Code does in terminals', async () => {
+  const { copyText } = await render(block('sh', '# set up', '$ ls', 'a.txt'));
+  expect(copyText).toBe('$ ls\na.txt');
 });
 
 test('moves each prompt into its own span, and marks output lines', async () => {
@@ -35,15 +47,16 @@ test('shows output lines without syntax colours', async () => {
 
 test('applies to the automatic terminal frame of shell languages', async () => {
   for (const lang of ['sh', 'bash', 'shell', 'powershell', 'console']) {
-    const { copyText } = await render(block(lang, '$ ls', 'a.txt'));
-    expect(copyText).toBe('ls');
+    const { commandsText } = await render(block(lang, '$ ls', 'a.txt'));
+    expect(commandsText).toBe('ls');
   }
 });
 
 test('leaves blocks that are not terminals alone', async () => {
   const md = block('sh frame="code"', '$ ls', 'a.txt');
-  const { copyText, html } = await render(md);
+  const { copyText, commandsText, html } = await render(md);
   expect(copyText).toBe('$ ls\na.txt');
+  expect(commandsText).toBeUndefined();
   expect(html).not.toContain('scb-shell');
 });
 
@@ -53,26 +66,27 @@ test('leaves terminal blocks with no prompt alone', async () => {
 });
 
 test('uses the prompts from the options', async () => {
-  const { copyText } = await render(block('sh', '% ls', 'a.txt', '$ not a prompt here'), {
+  const { commandsText } = await render(block('sh', '% ls', 'a.txt', '$ not a prompt here'), {
     shellCopy: { prompts: ['% '] },
   });
-  expect(copyText).toBe('ls');
+  expect(commandsText).toBe('ls');
 });
 
 test('a continuation needs a command above it', async () => {
-  const { copyText } = await render(block('sh', 'output ending in \\', 'more output', '$ ls'));
-  expect(copyText).toBe('ls');
+  const { commandsText } = await render(block('sh', 'output ending in \\', 'more output', '$ ls'));
+  expect(commandsText).toBe('ls');
 });
 
 test('reads the commands after directives are removed', async () => {
-  const { copyText, html } = await render(block('sh', '$ npm test # [!code highlight]', 'ok'));
-  expect(copyText).toBe('npm test');
+  const { copyText, commandsText, html } = await render(block('sh', '$ npm test # [!code highlight]', 'ok'));
+  expect(commandsText).toBe('npm test');
+  expect(copyText).toBe('$ npm test\nok');
   expect(html).toContain('class="ec-line highlight mark"');
 });
 
 test('includes hidden commands in the copied text', async () => {
-  const { copyText } = await render(block('sh hidden={1}', '$ cd app', '$ npm test', 'ok'));
-  expect(copyText).toBe('cd app\nnpm test');
+  const { commandsText } = await render(block('sh hidden={1}', '$ cd app', '$ npm test', 'ok'));
+  expect(commandsText).toBe('cd app\nnpm test');
 });
 
 test('the prompt colour meets 4.5:1 contrast in both themes', async () => {

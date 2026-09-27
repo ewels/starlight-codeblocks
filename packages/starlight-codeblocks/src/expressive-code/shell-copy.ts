@@ -7,7 +7,8 @@ import {
 } from '@expressive-code/core';
 import { addClassName, h, select } from '@expressive-code/core/hast';
 import { LanguageGroups } from '@expressive-code/plugin-frames';
-import type { CodeblocksPlugin } from './core.ts';
+import { clientJsModules } from '../client-modules.ts';
+import { addTitleBarControl, type CodeblocksPlugin } from './core.ts';
 import { PREFIX } from './styles.ts';
 
 export interface ShellCopyStyleSettings {
@@ -37,7 +38,7 @@ const shellData = new AttachedPluginData<{
 
 /**
  * In terminal blocks with prompts, moves each prompt out of the code into an unselectable span,
- * mutes the output, and makes the copy button copy the commands only.
+ * mutes the output, and adds a title bar button that copies the commands only.
  */
 export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[] } = {}): CodeblocksPlugin {
   return {
@@ -52,7 +53,10 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
 .${PREFIX}-shell-output .code {
   color: ${cssVar('codeblocksShellCopy.outputForeground')};
 }
-.${PREFIX}-shell-output { user-select: none; -webkit-user-select: none; }`,
+@media (scripting: none) {
+  .${PREFIX}-shell-copy { display: none; }
+}`,
+    jsModules: clientJsModules,
     hooks: {
       preprocessCode({ codeBlock }) {
         const { frame = 'auto' } = codeBlock.props;
@@ -92,17 +96,35 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
         else if (!commands.has(line)) addClassName(renderData.lineAst, `${PREFIX}-shell-output`);
       },
       postprocessRenderedBlock({ codeBlock, renderData }) {
-        const { commands } = shellData.getOrCreateFor(codeBlock);
+        const { prompts: linePrompts, commands } = shellData.getOrCreateFor(codeBlock);
         if (commands.size === 0) return;
-        const button = select('button[data-code]', renderData.blockAst);
-        if (!button) return;
-        const text = codeBlock
-          .getLines()
+        const lines = codeBlock.getLines();
+        const encode = (text: string) => text.replaceAll('\n', '\x7F');
+        const copy = select('.copy button[data-code]', renderData.blockAst);
+        // The prompts are out of the code, so give Expressive Code's copy button the block as the reader sees it.
+        if (copy) {
+          let whole = lines.map((line) => (linePrompts.get(line) ?? '') + line.text).join('\n');
+          if (copy.properties.dataCode !== encode(codeBlock.code)) {
+            whole = whole.replace(/(?<=^|\n)\s*#.*($|\n+)/g, '').trim();
+          }
+          copy.properties.dataCode = encode(whole);
+        }
+        const figure = select('figure', renderData.blockAst);
+        if (!figure) return;
+        figure.properties.dataScbShellCopy = '';
+        const text = lines
           .filter((line) => commands.has(line))
           .map((line) => line.text)
           .join('\n');
-        button.properties.dataCode = text.replaceAll('\n', '\x7F');
-        button.properties.title = 'Copy commands';
+        addTitleBarControl(
+          figure,
+          h(
+            'button',
+            { type: 'button', class: `${PREFIX}-btn ${PREFIX}-shell-copy ${PREFIX}-no-print`, dataCode: encode(text) },
+            'Copy commands',
+          ),
+        );
+        addTitleBarControl(figure, h('span', { class: `${PREFIX}-sr-only`, ariaLive: 'polite' }));
       },
     },
   };

@@ -209,7 +209,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     page: 'features/hidden-lines',
   },
   shellCopy: {
-    description: 'Copies only the commands from terminal blocks with prompts.',
+    description: 'Adds a Copy commands button to terminal blocks with prompts, which copies the commands only.',
     page: 'features/smart-shell-copy',
     fields: {
       prompts: {

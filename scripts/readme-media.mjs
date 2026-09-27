@@ -70,10 +70,9 @@ const features = [
   {
     slug: 'smart-shell-copy',
     run: async (page, rec) => {
-      const button = block(page).locator('.copy button');
+      const button = block(page).locator('.scb-shell-copy');
       await rec.hold(1200);
       await rec.click(button);
-      await rec.include(block(page).locator('.copy .feedback'));
       await rec.hold(1600);
       const copied = await page.evaluate(() => navigator.clipboard.readText());
       await block(page).evaluate((el, text) => {

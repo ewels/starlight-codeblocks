@@ -7,25 +7,62 @@ test.beforeEach(async ({ page }) => {
 const example = (page: Page, n = 0) =>
   page.locator('.example').nth(n).locator('.pane').nth(1).locator('.expressive-code');
 
-test('the copy button copies the commands only, with the keyboard', async ({ page, context }) => {
+const commands = 'uv tool install ruff\nruff check src/ \\\n    --fix';
+const clipboard = (page: Page) => page.evaluate(() => navigator.clipboard.readText());
+
+test('Copy commands copies the commands only, with the keyboard', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  const button = example(page).locator('.copy button');
-  await expect(button).toHaveAttribute('title', 'Copy commands');
+  const button = example(page).locator('.scb-shell-copy');
+  await expect(button).toHaveAccessibleName('Copy commands');
   await button.focus();
+  expect(await button.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
   await page.keyboard.press('Enter');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-    'uv tool install ruff\nruff check src/ \\\n    --fix',
-  );
+  await expect.poll(() => clipboard(page)).toBe(commands);
+  await expect(button).toHaveText('Copied');
+  await expect(example(page).locator('.scb-tools [aria-live="polite"]')).toHaveText('Copied');
+  await expect(button).toHaveText('Copy commands', { timeout: 3000 });
 });
 
-test('the copy button copies the commands with the pointer', async ({ page, context }) => {
+test('Copy commands copies the commands with the pointer', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  const block = example(page, 1);
+  await example(page, 1).getByRole('button', { name: 'Copy commands' }).click();
+  await expect.poll(() => clipboard(page)).toBe('Get-ChildItem -Name\nGet-Content summary.txt');
+});
+
+test('Copy commands keeps its width while it shows Copied', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const button = example(page).locator('.scb-shell-copy');
+  await expect(button).toHaveAccessibleName('Copy commands');
+  const before = (await button.boundingBox())?.width;
+  await button.click();
+  await expect(button).toHaveText('Copied');
+  expect((await button.boundingBox())?.width).toBe(before);
+});
+
+test('the copy button copies the whole block, prompts and output included', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const block = example(page);
+  const button = block.locator('.copy button');
+  await expect(button).toHaveAttribute('title', 'Copy to clipboard');
   await block.hover();
-  await block.locator('.copy button').click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-    'Get-ChildItem -Name\nGet-Content summary.txt',
-  );
+  await button.click();
+  await expect
+    .poll(() => clipboard(page))
+    .toBe(
+      '$ uv tool install ruff\nResolved 1 package in 180ms\nInstalled 1 executable: ruff\n$ ruff check src/ \\\n    --fix\nFound 3 errors (3 fixed, 0 remaining).',
+    );
+});
+
+test('Copy commands works in a copy of the block', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await example(page).evaluate((el) => {
+    const copy = el.cloneNode(true) as HTMLElement;
+    copy.id = 'scb-clone';
+    document.body.append(copy);
+  });
+  await page.locator('#scb-clone').getByRole('button', { name: 'Copy commands' }).click();
+  await expect.poll(() => clipboard(page)).toBe(commands);
+  await expect(page.locator('#scb-clone').getByRole('button', { name: 'Copied' })).toBeVisible();
 });
 
 test('prompts cannot be selected, and have their own colour', async ({ page }) => {
@@ -70,13 +107,20 @@ test('a manual selection leaves out the prompts', async ({ page }) => {
   expect(text).toContain('uv tool install ruff');
 });
 
-test('a manual copy leaves out the output lines, as the copy button does', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await example(page)
+test('a manual selection includes the output lines', async ({ page }) => {
+  const text = await example(page)
     .locator('pre')
-    .evaluate((pre) => getSelection()?.selectAllChildren(pre));
-  await page.keyboard.press('ControlOrMeta+c');
-  const text = await page.evaluate(() => navigator.clipboard.readText());
-  expect(text).not.toContain('Resolved 1 package');
-  expect(text).toContain('uv tool install ruff');
+    .evaluate((pre) => {
+      getSelection()?.selectAllChildren(pre);
+      return getSelection()?.toString() ?? '';
+    });
+  expect(text).toContain('Resolved 1 package');
+});
+
+test.describe('without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+
+  test('the Copy commands button is hidden', async ({ page }) => {
+    await expect(example(page).locator('.scb-shell-copy')).toBeHidden();
+  });
 });

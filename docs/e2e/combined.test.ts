@@ -114,3 +114,13 @@ test("a Run button runs the code with the reader's placeholder values", async ({
   await block.locator('.scb-run').click();
   await expect(block.locator('.scb-run-stdout')).toHaveText('abc123');
 });
+
+test('Copy commands copies the reader value of a placeholder', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const block = await inject(page, ['```sh placeholder="MY_APP"', '$ cd MY_APP', 'ok', '```']);
+  await block.getByRole('textbox', { name: 'MY_APP' }).fill('shop');
+  await block.getByRole('button', { name: 'Copy commands' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('cd shop');
+  await block.locator('.copy button').click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('$ cd shop\nok');
+});
