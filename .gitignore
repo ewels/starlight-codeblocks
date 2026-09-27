@@ -4,3 +4,4 @@ dist/
 .astro/
 test-results/
 playwright-report/
+packages/starlight-codeblocks/skills/

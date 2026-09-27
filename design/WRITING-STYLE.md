@@ -1,6 +1,6 @@
 # Docs writing style
 
-This guide covers every word in the docs site, the README and the package description. It is self-contained: follow it without looking up any other style guide.
+This guide covers every word in the docs site, the README, the agent skill and the package description. It is self-contained: follow it without looking up any other style guide.
 
 The guide combines three sources:
 
@@ -272,7 +272,7 @@ Check every page against this list before you commit it:
 
 ## 11. Rules for `pnpm lint:docs`
 
-`scripts/lint-docs.mjs` checks every `.md` and `.mdx` file in `docs/src/content/docs/`, and the README. It ignores code blocks, inline code, front matter, import lines and JSX tags. It reports the file, the line and the rule for each problem, and exits with an error if there is one.
+`scripts/lint-docs.mjs` checks every `.md` and `.mdx` file in `docs/src/content/docs/` and `skills/`, and the README. It ignores code blocks, inline code, front matter, import lines and JSX tags. It reports the file, the line and the rule for each problem, and exits with an error if there is one.
 
 It checks:
 

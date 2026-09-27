@@ -240,11 +240,13 @@ function* blocks(lines) {
 }
 
 function files() {
-  const dir = join(root, 'docs/src/content/docs');
-  const found = readdirSync(dir, { recursive: true, withFileTypes: true })
-    .filter((e) => e.isFile() && /\.mdx?$/.test(e.name))
-    .map((e) => join(e.parentPath, e.name));
-  return [...found.sort(), join(root, 'README.md')];
+  const found = ['docs/src/content/docs', 'skills'].flatMap((dir) =>
+    readdirSync(join(root, dir), { recursive: true, withFileTypes: true })
+      .filter((e) => e.isFile() && /\.mdx?$/.test(e.name))
+      .map((e) => join(e.parentPath, e.name))
+      .sort(),
+  );
+  return [...found, join(root, 'README.md')];
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

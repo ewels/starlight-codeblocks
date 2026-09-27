@@ -57,12 +57,14 @@
     "dist",
     "src",
     "!src/reference.ts",
+    "skills",
     "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepack": "node -e \"fs.rmSync('skills',{recursive:true,force:true});fs.cpSync('../../skills','skills',{recursive:true})\""
   },
   "peerDependencies": {
     "@astrojs/starlight": ">=0.42.0",

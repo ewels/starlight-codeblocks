@@ -1,0 +1,80 @@
+# Draw attention
+
+Focus and line states mark lines for every reader. Code mentions, in [explain-code.md](explain-code.md), mark lines only when the reader hovers over a link in the prose.
+
+- If the text is about a few lines and the rest is context, use focus.
+- If a line has a problem or a status, and the reader needs its name or a message, use a line state.
+- If the highlight has no meaning of its own, use `{3}` or `[!code highlight]`, the `mark` of Expressive Code.
+
+## Focus
+
+Docs: https://ewels.github.io/starlight-codeblocks/features/focus/
+
+Use when a block shows a whole file but the text is about a few lines. Focus blurs and fades the other lines, which stay in the block for context. Do not use to point at one word: use an inline callout.
+
+| Syntax | Where |
+|---|---|
+| `focus={range}` | Fence line, such as `focus={4-7}` or `focus={1, 4-6}` |
+| `[!code focus]` | Comment at the end of the line |
+| `[!code focus:N]` | Comment: its line and the next N-1 lines |
+
+````md
+```js title="src/config.js" focus={4-7}
+import { defineConfig } from './lib.js';
+
+export default defineConfig({
+  cache: {
+    dir: '.cache',
+    maxAge: 3600,
+  },
+  retries: 2,
+});
+```
+````
+
+- Prefer the directive when the block can change, because it moves with its line.
+- Hover over the block, or keyboard focus in it, makes every line sharp in 250 ms.
+- Screen readers and the copy button get every line. Needs no JavaScript.
+- Option: `focus.style` is `'blur'` (default) or `'dim'`. Use `'dim'` if the site does not need the blur, which is hard to read for some readers. `focus: false` leaves `[!code focus]` in the code.
+- Style settings: `codeblocksFocus.blur`, `codeblocksFocus.opacity` and `codeblocksFocus.transitionDuration`.
+- Limits: whole lines only. On a touch screen, the reader sees every line after a touch.
+
+## Line states
+
+Docs: https://ewels.github.io/starlight-codeblocks/features/line-states/
+
+Use to tint a line as an error, a warning or a note. An optional message shows after the code, as in a code editor. Do not use for a plain highlight: use `[!code highlight]`.
+
+| Syntax | Where |
+|---|---|
+| `error={range}`, `warning={range}`, `info={range}` | Fence line. Tints the lines, with no message. |
+| `[!code error] message` | Comment. The message is optional. |
+| `[!code warning] message` | Comment |
+| `[!code info] message` | Comment. The label reads **Note**. |
+| `[!code <state>:N] message` | Comment: tints N lines, with the message on the first |
+| `<state>={range}`, `[!code <state>]` | A custom state from the options |
+
+```py
+for name in sys.argv[1:]  # [!code error] SyntaxError: expected ':'
+    print(name)
+count = len(sys.argv)  # [!code warning] Includes the script name
+```
+
+- Use the attribute when the text around the block explains the problem. Use the directive to show a message.
+- The label starts with the name of the state in bold: **Error**, **Warning** or **Note**. Screen readers hear the name before the line.
+- The copy button leaves out the messages. Needs no JavaScript.
+- Add a custom state in `lineStates.states`:
+
+  ```js
+  codeblocks({
+    lineStates: {
+      states: {
+        todo: { label: 'To do', colour: { dark: '#c792ea', light: '#7c3aed' } },
+      },
+    },
+  });
+  ```
+
+  Then use `todo={9}` or `[!code todo]`. A name uses lower-case letters, digits and hyphens, and cannot be the name of another attribute, such as `title` or `focus`. Each colour needs a contrast of 3:1 or more on the code background. A state with the name `error`, `warning` or `info` changes the built-in state.
+- Option: `lineStates: false` leaves the directives in the code.
+- Limits: a message is one line of text. `[!code <state>]` on a line with only a comment marks an empty line.
