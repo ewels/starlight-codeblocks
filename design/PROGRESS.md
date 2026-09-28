@@ -9,7 +9,7 @@ The plan is complete. No step is blocked.
 - **All 24 features**, each with unit tests, a docs page and (for interactive features) Playwright tests for keyboard, pointer, reduced motion and no JavaScript.
 - **Docs site** with every page from DOCS-SITE.md: features, guides (including the VitePress migration guide), extend pages and generated reference tables. Deployed to <https://ewels.github.io/starlight-codeblocks/>.
 - **Tests:** 380 Vitest unit tests in 37 files and 6 Node tests for the docs scripts. 1,150 Playwright tests pass over 5 projects; 50 skip by design (phone-only or one-project tests).
-- **CI** (`ci.yml`) and **Deploy docs** (`deploy-docs.yml`) both run and pass on `main`. GitHub Pages is on, with source "GitHub Actions".
+- **CI** (`ci.yml`) runs and passes on `main`, and its `deploy` job publishes the docs only after the checks pass. GitHub Pages is on, with source "GitHub Actions".
 - **README** with a logo and a section, image or animation and docs link for each feature (media from `pnpm readme:media`). The package README is a copy, checked by a test.
 - **Logo and favicon** (terminal window with a star).
 - **Agent-ready docs site:** a Markdown version of each page at `<page>.md` (examples keep their fence lines), `llms.txt` and `llms-full.txt`, a `rel="alternate"` Markdown link in the head of each page, and page actions under each title (**Copy as Markdown**, **View as Markdown**, **Open in Claude**, **Open in ChatGPT**).

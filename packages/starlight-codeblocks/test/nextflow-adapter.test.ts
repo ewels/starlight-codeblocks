@@ -85,6 +85,16 @@ test('follows aliases in include, and leaves modules plain without the modules o
   expect(await texts(lines)).toEqual([]);
 });
 
+test('never counts a string as a bracket', async () => {
+  expect(await texts(["channel.of('a').map { it.split('(') }.view()", 'channel.of(1).view()'])).toEqual([
+    'channel.of',
+    'map',
+    'view',
+    'channel.of',
+    'view',
+  ]);
+});
+
 test('uses the kind and summary that the modules option gives', async () => {
   const { html } = await render(
     block('nextflow', "include { FASTQC } from './fastqc'"),

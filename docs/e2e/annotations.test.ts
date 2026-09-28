@@ -236,6 +236,18 @@ test('several notes can stay open, and Escape closes them, with the keyboard', a
   await expect(second).toBeFocused();
 });
 
+test('the badge in an open note shows that its marker has keyboard focus', async ({ page }) => {
+  const block = example(page);
+  const marker = block.getByRole('button', { name: 'Annotation 1' });
+  const badge = block.locator('.scb-annotation-popover').first().locator('.scb-annotation-badge');
+  await marker.focus();
+  await page.keyboard.press('Enter');
+  await expect(marker).toBeFocused();
+  await expect.poll(() => css(badge, 'outlineStyle')).toBe('solid');
+  await page.keyboard.press('Tab');
+  await expect.poll(() => css(badge, 'outlineStyle')).toBe('none');
+});
+
 test('the badge in the note is hidden from screen readers', async ({ page }) => {
   const badge = example(page).locator('.scb-annotation-badge').first();
   await expect(badge).toHaveAttribute('aria-hidden', 'true');
@@ -297,7 +309,7 @@ test.describe('without JavaScript', () => {
   });
 });
 
-test('prints the notes as a numbered list under the block', async ({ page }) => {
+test('prints the notes as a numbered list under the block, and the numbers in the code', async ({ page }) => {
   const block = example(page);
   await expect(block.locator('.scb-annotation-list')).toBeHidden();
   await page.emulateMedia({ media: 'print' });
@@ -305,7 +317,8 @@ test('prints the notes as a numbered list under the block', async ({ page }) => 
     'One job per version, run in parallel.',
     'Installs uv and caches its downloads between runs.',
   ]);
-  await expect(block.locator('.scb-annotation').first()).toBeHidden();
+  await expect(block.locator('.scb-annotation').first()).toBeVisible();
+  await expect(block.locator('.scb-annotation-popover').first()).toBeHidden();
 });
 
 test('a marker keeps its circle in forced colours', async ({ page }) => {

@@ -77,6 +77,13 @@ test('wraps the code blocks, and gives each its index and every label', async ()
   expect(metas[1]).toMatch(/^title="a.py" scbSwitcher=/);
 });
 
+test('labels a diff variant with its lang', async () => {
+  const { decoded } = await directive(
+    [':::code-switcher', '```diff lang="py"', '+x = 1', '```', '```diff lang="js"', '+x = 1', '```', ':::'].join('\n'),
+  );
+  expect(decoded[0]).toEqual({ index: 0, labels: ['Python', 'JavaScript'] });
+});
+
 test('a switcher without sync gets an empty key', async () => {
   const { html } = await directive([':::code-switcher', '```js', 'a()', '```', ':::'].join('\n'));
   expect(html).toContain('data-scb-code-switcher=""');
@@ -86,6 +93,12 @@ test('fails the build for anything but code blocks inside the directive', async 
   await expect(
     directive([':::code-switcher', 'Some text.', '', '```js', 'a()', '```', ':::'].join('\n')),
   ).rejects.toThrow('page.md: `:::code-switcher` can contain only fenced code blocks');
+});
+
+test('fails the build when two variants have the same label', async () => {
+  await expect(
+    directive([':::code-switcher', '```sh', 'npm i x', '```', '```bash', 'pnpm add x', '```', ':::'].join('\n')),
+  ).rejects.toThrow('page.md: two variants in a `:::code-switcher` have the label "Shell"');
 });
 
 test('leaves the directive alone with the feature off', async () => {

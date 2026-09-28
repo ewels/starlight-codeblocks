@@ -36,7 +36,9 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
   const url = new URL(figure.dataset.scbRunnable as string, document.baseURI).href;
   const name = figure.dataset.scbRunnableName;
   const timeout = Number(figure.dataset.scbRunnableTimeout) || 10000;
-  const code = decodeCode(copiedCode(figure));
+  const commands = figure.dataset.scbRunnableSession;
+  const code = decodeCode(commands ?? copiedCode(figure));
+  const session = commands !== undefined || figure.querySelector('.scb-shell-copy[data-code]') !== null;
   let runtime: Runtime;
   try {
     if (!loaded.has(url)) show(panel, status(`Loading the ${name} runtime…`));
@@ -46,7 +48,7 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
       runtimes.set(url, module);
     }
     runtime = await module;
-    await runtime.load();
+    await runtime.load(code);
     loaded.add(url);
   } catch (e) {
     runtimes.delete(url);
@@ -61,7 +63,7 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
   });
   const timer = setTimeout(() => controller.abort(new DOMException('Timed out', 'TimeoutError')), timeout);
   try {
-    const { stdout, stderr } = await Promise.race([runtime.run(code, { signal: controller.signal }), stopped]);
+    const { stdout, stderr } = await Promise.race([runtime.run(code, { signal: controller.signal, session }), stopped]);
     const parts = [];
     if (stdout) parts.push(line('pre', 'scb-run-stdout', stdout));
     if (stderr) parts.push(error(stderr));

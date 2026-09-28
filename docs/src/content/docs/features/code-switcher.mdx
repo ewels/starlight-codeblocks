@@ -49,7 +49,7 @@ Select **pnpm** in the menu, and the block shows the pnpm command. The choice st
 
 Put two or more fenced code blocks between the `:::code-switcher` line and the `:::` line. The directive can contain only code blocks. Anything else, such as a paragraph, fails the build with a message that names the file.
 
-Each variant keeps its own attributes, such as `title`. A variant with no `label` shows the name of its language in the menu, such as "Python" for `py`.
+Each variant keeps its own attributes, such as `title`. A variant with no `label` shows the name of its language in the menu, such as "Python" for `py`. Two variants with the same label fail the build. For example, `sh` and `bash` both show "Shell", so give each one a `label`.
 
 ## Behaviour
 
@@ -74,7 +74,7 @@ codeblocks({
 });
 ```
 
-With `codeSwitcher: false`, the directive shows as text, and each code block renders on its own.
+With `codeSwitcher: false`, each code block in the directive renders on its own, one after the other. The directive lines do not show.
 
 ## Examples
 

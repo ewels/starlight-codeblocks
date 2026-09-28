@@ -1,7 +1,7 @@
 ---
 import * as lucide from 'lucide-static';
 import { titles } from '../markdown.ts';
-import { sidebar } from '../sidebar.mjs';
+import { carouselGroups } from '../sidebar.mjs';
 import { pageHref } from './feature-link.ts';
 
 const icons: Record<string, string> = {
@@ -30,11 +30,8 @@ const icons: Record<string, string> = {
   'features/run-in-the-browser': lucide.Play,
 };
 
-// Shared syntax, not a feature in its own right: authors learn it under "Start here" but it gets no carousel slide.
-const excluded = new Set(['features/comment-notation']);
-const features = sidebar
-  .flatMap(({ items }) => items)
-  .filter((item): item is string => typeof item === 'string' && item.startsWith('features/') && !excluded.has(item))
+const features = carouselGroups
+  .flatMap(({ ids }) => ids)
   .map((id) => {
     const icon = icons[id];
     if (!icon) throw new Error(`<FeatureCarousel> has no icon for ${id}`);
@@ -134,11 +131,15 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
       fill.style.width = '100%';
     };
 
-    const stopProgress = () => {
+    const addRunningTime = () => {
       if (startedAt !== null) {
         elapsed = Math.min(interval, elapsed + (Date.now() - startedAt));
         startedAt = null;
       }
+    };
+
+    const stopProgress = () => {
+      addRunningTime();
       const fill = currentFill();
       if (fill) {
         const width = getComputedStyle(fill).width;
@@ -189,7 +190,8 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
     const schedule = () => {
       clearTimeout(timer);
       if (playing && !hovered && !focused) {
-        timer = setTimeout(() => show(current + 1), interval);
+        addRunningTime();
+        timer = setTimeout(() => show(current + 1), interval - elapsed);
         startProgress();
       } else {
         stopProgress();
@@ -197,6 +199,7 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
     };
 
     const show = (index: number, byUser = false) => {
+      resetProgress();
       current = (index + slides.length) % slides.length;
       const slide = slides[current] as HTMLElement;
       for (const s of slides) s.toggleAttribute('data-current', s === slide);
@@ -205,7 +208,6 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
         dot.setAttribute('aria-current', String(i === current));
         dot.tabIndex = i === current ? 0 : -1;
       }
-      resetProgress();
       if (byUser) status.textContent = `${slide.getAttribute('aria-label')}, ${current + 1} of ${slides.length}`;
       schedule();
     };
@@ -238,11 +240,13 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
     prevBtn.addEventListener('click', () => pick(current - 1, true));
     nextBtn.addEventListener('click', () => pick(current + 1, true));
     rotation.addEventListener('click', () => setPlaying(!playing));
-    root.addEventListener('mouseenter', () => {
+    // A tap is not hover: touch fires no leave event until the next tap outside, so Play would do nothing.
+    root.addEventListener('pointerenter', (event) => {
+      if (event.pointerType !== 'mouse') return;
       hovered = true;
       schedule();
     });
-    root.addEventListener('mouseleave', () => {
+    root.addEventListener('pointerleave', () => {
       hovered = false;
       schedule();
     });
@@ -258,8 +262,8 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
 
     for (const control of [rotation, prevBtn, nextBtn, dotsWrap]) control.hidden = false;
     rotation.toggleAttribute('data-playing', playing);
-    root.toggleAttribute('data-ready', true);
     show(0);
+    root.toggleAttribute('data-ready', true);
   }
 </script>
 

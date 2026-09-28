@@ -50,20 +50,27 @@ function inheritedColour(root: Element, el: Element, index: number, fallback: st
 const cases: { name: string; fence: string; lines: string[]; selector: string; layers: (v: Variant) => string[] }[] = [
   ...['error', 'warning', 'info', 'todo'].map((state) => ({
     name: `${state} line`,
-    fence: `js ${state}={1-4}`,
+    fence: `js ${state}={1-4} brackets`,
     lines: code,
     selector: `.ec-line.scb-state-${state} .code`,
     layers: (v: Variant) => [v.get(`codeblocksLineStates.${state}Background`)],
   })),
   ...(['ins', 'del'] as const).map((type) => ({
     name: `word diff ${type}`,
-    fence: 'diff lang="js"',
+    fence: 'diff lang="js" brackets',
     lines: code.flatMap((line, n) => {
       let i = n;
       return [`-${line}`, `+${line.replace(/\w+/g, (w) => (i++ % 3 ? w : `${w}X`))}`];
     }),
     selector: `.scb-worddiff-${type}`,
     layers: (v: Variant) => [v.get(`textMarkers.${type}Background`), v.get(`codeblocksWordDiff.${type}Background`)],
+  })),
+  ...(['mark', 'ins', 'del'] as const).map((type) => ({
+    name: `brackets on a ${type} line`,
+    fence: `js ${type}={1-4} brackets`,
+    lines: code,
+    selector: '[class^="scb-brackets-"]',
+    layers: (v: Variant) => [v.get(`textMarkers.${type}Background`)],
   })),
 ];
 

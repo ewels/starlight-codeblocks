@@ -78,6 +78,6 @@ export default function initApiLinks() {
     if (link) show(link);
   });
   document.addEventListener('focusout', (event) => {
-    if (linkOf(event.target)) hide();
+    if (linkOf(event.target) === current) hide();
   });
 }

@@ -24,7 +24,7 @@ x = np.linspace(0, 1, 50)
 - The plugin links the first match of the literal text on the line below. Make the text longer to match a later place.
 - Stack several `[!link]` lines above one line to link several texts on it.
 - A URL that starts with `/` is a link inside the site. The plugin adds Astro's `base`.
-- If the text has no match, or the URL is missing, the build logs a warning.
+- The URL is relative, `http` or `https`. If the text has no match, or the URL is missing or has another scheme, the build logs a warning.
 - Names on the target line of a `[!link]` do not get API links, so a link is never inside another link.
 - Option: `tokenLinks: false` turns the feature off. The directive then stays in the code, with a warning.
 - Limits: a link cannot span two lines. JSON has no comments: use `jsonc`.
@@ -40,7 +40,7 @@ API auto-linking finds library names in a block and links each one to its refere
 | `apiLinks=false` | Fence line: turns the feature off for one block |
 | `pydocsBase="<base>"` | Fence line of a Python block: prefers the starlight-pydocs package at this base |
 
-- The Python adapter runs on `py` and `python` blocks. It reads `import x`, `import x as y` and `from a import b as c`, then links the names that they bind and attribute chains on them, such as `os.path.join`.
+- The Python adapter runs on `py`, `python` and `pycon` blocks. It reads `import x`, `import x as y` and `from a import b as c`, then links the names that they bind and attribute chains on them, such as `os.path.join`.
 - The Nextflow adapter runs on `nextflow` and `nf` blocks. It links channel factories, such as `channel.of`, and operators after them. With the `modules` option, it links processes and workflows from `include` statements.
 - The build caches fetched indexes in `node_modules/.cache/starlight-codeblocks/`. A failed fetch logs a warning and does not fail the build.
 - Option: `apiLinks.adapters` (default `[python(), nextflow()]`). A list replaces the default list, so give every adapter that you want:

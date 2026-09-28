@@ -43,7 +43,7 @@ export default {
 };
 ```
 
-`pluginCodeblocks()` can go before or after the other plugins. The features find each line wherever another plugin puts it, such as inside a collapsed section.
+`pluginCodeblocks()` can go before or after most other plugins. The features find each line wherever another plugin puts it, such as inside a collapsed section. `pluginCollapsibleSections()` must come before `pluginCodeblocks()`, and the build stops with a message if it does not.
 
 `expressive-code-twoslash` removes some lines of a block, such as the last lines after a `^?` query. A directive on a line that it removes has no effect, and the build logs a warning. Put the directive on a line that stays.
 

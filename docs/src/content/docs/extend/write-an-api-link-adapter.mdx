@@ -35,7 +35,7 @@ interface SymbolRef {
 | Property | Description |
 |---|---|
 | `name` | The name of the adapter. Build warnings start with it. |
-| `languages` | The languages of the code blocks that the adapter reads, as written on the fence line, such as `py`. |
+| `languages` | The languages of the code blocks that the adapter reads, such as `py`. A name also covers the other names of its language: `py` covers `python`. |
 | `setup` | Loads the indexes. The plugin calls it once, before the first code block in one of the languages. |
 | `findSymbols` | Returns the names in the code that are links, with the link and the text of the card. `attributes` has the attributes of the fence line that have a text value, such as `title`. |
 
@@ -60,7 +60,7 @@ A `SymbolRef` is one name in `code`, its link and the text of its card:
 |---|---|
 | `root` | The project root, as an absolute path. |
 | `cacheDir` | Astro's cache folder, where other integrations keep their data. |
-| `fetch(url)` | Gets a URL once, and keeps the body on disk. Returns the body as a `Uint8Array`, or `null`. |
+| `fetch(url, check?)` | Gets a URL once, and keeps the body on disk. Returns the body as a `Uint8Array`, or `null`. |
 | `warn(message)` | Logs a build warning with the name of the adapter. |
 
 Use `fetch` from the context to load an index from another site. The body stays in `node_modules/.cache/starlight-codeblocks/`, so later builds read it from disk and work without the network. If the request fails and there is no copy on disk, `fetch` logs a warning and returns `null`. Continue without that index:
@@ -69,6 +69,16 @@ Use `fetch` from the context to load an index from another site. The body stays 
 async setup(context) {
   const data = await context.fetch('https://example.com/docs/index.json');
   if (data) index = JSON.parse(new TextDecoder().decode(data));
+},
+```
+
+A server can send an HTML error page with a success status. To stop `fetch` from keeping that page, give it a `check` function that throws for a body you cannot use. `fetch` then keeps nothing, logs a warning that ends with the error message, and returns `null`. If a copy on disk fails the check, `fetch` gets the URL again:
+
+```js
+async setup(context) {
+  await context.fetch('https://example.com/docs/index.json', (data) => {
+    index = JSON.parse(new TextDecoder().decode(data));
+  });
 },
 ```
 

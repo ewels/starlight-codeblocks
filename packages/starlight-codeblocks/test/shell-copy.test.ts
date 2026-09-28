@@ -30,6 +30,12 @@ test('the copy button leaves out comment lines, as Expressive Code does in termi
   expect(copyText).toBe('$ ls\na.txt');
 });
 
+test('the copy button keeps commands with a `# ` prompt when it leaves out comment lines', async () => {
+  const lines = ['# apt update', '# apt install curl', '$ # now as a user', '', '$ curl --version', 'curl 8.0'];
+  const { copyText } = await render(block('sh', ...lines), { shellCopy: { prompts: ['$ ', '# '] } });
+  expect(copyText).toBe('# apt update\n# apt install curl\n$ curl --version\ncurl 8.0');
+});
+
 test('moves each prompt into its own span, and marks output lines', async () => {
   const { html } = await render(block('sh', ...session));
   expect(html.match(/<span class="scb-shell-prompt">\$ <\/span>/g)).toHaveLength(2);
@@ -142,9 +148,21 @@ test('a line that starts with ... continues a command only while the statement i
   expect(await text('>>> @cache', '... def f(): ...', '...', '...')).toBe('@cache\ndef f(): ...\n');
 });
 
+test('an unclosed string with many escapes does not stall the build', async () => {
+  const started = performance.now();
+  await render(block('pycon', `>>> p = "${'a\\t'.repeat(40)}`, '... x'));
+  expect(performance.now() - started).toBeLessThan(1000);
+});
+
 test('leaves Python blocks without >>> prompts alone', async () => {
   const md = block('py', 'print(">>> x")', '... = 1');
   expect((await render(md)).html).toBe((await render(md, { shellCopy: false })).html);
+});
+
+test('a py block that starts with code is not a session, even with a doctest in its docstring', async () => {
+  const md = block('py', '"""Add numbers.', '', '>>> add(1, 2)', '3', '"""', '', 'def add(a, b):', '    return a + b');
+  expect((await render(md)).html).toBe((await render(md, { shellCopy: false })).html);
+  expect((await render(block('pycon', 'Text', '>>> 1 + 1', '2'))).commandsText).toBe('1 + 1');
 });
 
 test('links API names in the commands of a Python session, and not in its output', async () => {

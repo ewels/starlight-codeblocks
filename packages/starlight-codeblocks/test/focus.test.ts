@@ -4,14 +4,14 @@ import { baseStyles, block, lineClasses, render } from './render.ts';
 test('blurs the lines outside focus={range}', async () => {
   const { html, copyText, warnings } = await render(block('js focus={2-3}', 'a()', 'b()', 'c()', 'd()'));
   expect(lineClasses(html)).toEqual(['ec-line scb-focus-out', 'ec-line', 'ec-line', 'ec-line scb-focus-out']);
-  expect(html).toContain('<pre data-language="js"><code tabindex="0" aria-label="Code block">');
+  expect(html).toContain('<pre data-language="js"><code tabindex="0" role="region" aria-label="Code block">');
   expect(copyText).toBe('a()\nb()\nc()\nd()');
   expect(warnings).toEqual([]);
 });
 
 test('names the focusable code after the title', async () => {
   const { html } = await render(block('js title="app.js" focus={1}', 'a()', 'b()'));
-  expect(html).toContain('<code tabindex="0" aria-label="Code: app.js">');
+  expect(html).toContain('<code tabindex="0" role="region" aria-label="Code: app.js">');
 });
 
 test('focuses lines with [!code focus] and [!code focus:N]', async () => {
@@ -61,6 +61,7 @@ test('blurs by default and only fades with style: dim', async () => {
   expect(blur).toMatch(/\.scb-focus-out\{[^}]*filter:blur\(var\(--ec-codeblocksFocus-blur\)\)/);
   expect(blur).toMatch(/\.frame:not\(\.scb-scrolly-frame\):hover \.scb-focus-out/);
   expect(blur).toMatch(/\.frame:focus-within \.scb-focus-out/);
+  expect(blur).toMatch(/\.scb-focus-out:is\(\.scb-mention-on, \.scb-permalink-target, \.scb-annotation-lit,/);
   const dim = await baseStyles({ focus: { style: 'dim' } });
   expect(dim).toMatch(/\.scb-focus-out\{opacity:var\(--ec-codeblocksFocus-opa\);transition/);
 });

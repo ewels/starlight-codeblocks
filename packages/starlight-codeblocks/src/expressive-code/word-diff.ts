@@ -38,7 +38,7 @@ const styleSettings = new PluginStyleSettings({
 
 /** Splits a line into word, whitespace and punctuation tokens, for the longest-common-subsequence diff. */
 export function splitTokens(text: string): string[] {
-  return text.match(/\w+|\s+|[^\w\s]/g) ?? [];
+  return text.match(/\w+|\s+|[^\w\s]/gu) ?? [];
 }
 
 /** Marks the tokens of `a` and `b` that are not part of their longest common subsequence. */
@@ -106,8 +106,10 @@ export function wordDiff(a: string, b: string, minSimilarity: number): WordDiffR
   // The table has one cell for each pair of tokens.
   if (tokensA.length * tokensB.length > MAX_CELLS) return null;
   const [keepA, keepB] = diffMask(tokensA, tokensB);
-  const matched = tokensA.reduce((sum, token, i) => sum + (keepA[i] ? token.length : 0), 0);
-  const similarity = a.length + b.length === 0 ? 1 : (2 * matched) / (a.length + b.length);
+  // Whitespace is left out, or a shared deep indent makes unrelated lines look similar.
+  const matched = tokensA.reduce((sum, token, i) => sum + (keepA[i] && /\S/.test(token) ? token.length : 0), 0);
+  const total = a.replace(/\s/g, '').length + b.replace(/\s/g, '').length;
+  const similarity = total === 0 ? 1 : (2 * matched) / total;
   if (similarity < minSimilarity) return null;
   return { a: changedRanges(tokensA, keepA), b: changedRanges(tokensB, keepB) };
 }
@@ -126,9 +128,10 @@ class ChangedTokenAnnotation extends ExpressiveCodeAnnotation {
   }
 }
 
-/** The kind a text-markers annotation carries. The class itself is not exported by the plugin. */
+/** The kind a whole-line text-markers annotation carries. The class itself is not exported by the plugin. */
 function markerType(line: ExpressiveCodeLine): 'ins' | 'del' | undefined {
   for (const annotation of line.getAnnotations()) {
+    if (annotation.inlineRange) continue;
     const type = (annotation as { markerType?: string }).markerType;
     if (type === 'ins' || type === 'del') return type;
   }

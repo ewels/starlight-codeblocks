@@ -1,6 +1,4 @@
 import { pathToFileURL } from 'node:url';
-import type { Element } from '@expressive-code/core/hast';
-import { fromHtml } from 'hast-util-from-html';
 import type { Nodes, Parent, Root } from 'mdast';
 import type { MdastPluginDefinition, MdastPluginEntry, MdastVisitorContext, PluginFactoryContext } from 'satteri';
 
@@ -61,17 +59,7 @@ async function run(definition: MdastPluginDefinition, tree: Root) {
     const visit = (definition as unknown as Record<string, Visitor | undefined>)[node.type];
     if (typeof visit !== 'function' || !parents.get(node)?.children.includes(node as never)) continue;
     const result = (await visit(node, ctx)) as Nodes | undefined;
-    if (result) replaceNode(node, result.type === 'html' ? htmlNode(result.value) : result);
+    if (result) replaceNode(node, result);
   }
   await definition.after?.(tree as never, ctx);
-}
-
-/** Raw HTML as a node that remark-rehype renders in `.md` and `.mdx`, with or without `allowDangerousHtml`. */
-function htmlNode(html: string): Nodes {
-  const element = fromHtml(html, { fragment: true }).children[0] as Element;
-  return {
-    type: 'text',
-    value: '',
-    data: { hName: element.tagName, hProperties: element.properties, hChildren: element.children },
-  } as Nodes;
 }

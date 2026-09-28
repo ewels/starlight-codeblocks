@@ -5,7 +5,6 @@ type Values = Record<string, string>;
 
 let store: Storage | undefined;
 let values: Values | undefined;
-const updates = new Map<Element, () => void>();
 
 function openStore(mode: string | undefined) {
   try {
@@ -67,11 +66,23 @@ function setup(block: HTMLElement) {
       button.dataset.code = raw(template);
     });
   }
+  if (block.dataset.scbCode !== undefined) {
+    block.dataset.scbCodeTemplate ??= block.dataset.scbCode;
+    const template = block.dataset.scbCodeTemplate;
+    targets.push(() => {
+      block.dataset.scbCode = raw(template);
+    });
+  }
   // A link with data-scb-playground is rebuilt from the copied text by its own module.
   for (const link of block.querySelectorAll<HTMLAnchorElement>('a.scb-playground:not([data-scb-playground])')) {
-    const template = templateOf(link, link.href);
+    // The attribute as written, because the parsed href encodes some characters that encodeURIComponent() does not.
+    const template = templateOf(link, link.getAttribute('href') ?? '');
     targets.push(() => {
-      link.href = encoded(template);
+      // Query values and the fragment only, so that a text that is also a host, path or key does not change them.
+      link.setAttribute(
+        'href',
+        template.replace(/([=#])([^&#]*)/g, (_, mark, value) => mark + encoded(value)),
+      );
     });
   }
   for (const field of block.querySelectorAll<HTMLInputElement>('form.scb-playground input[type="hidden"]')) {
@@ -80,16 +91,12 @@ function setup(block: HTMLElement) {
       field.value = raw(template);
     });
   }
-  const update = () => {
-    for (const target of targets) target();
-    block.dispatchEvent(new CustomEvent('scb-placeholders-change', { bubbles: true }));
-  };
-  updates.set(block, update);
   for (const input of inputs) {
     input.value = values?.[input.placeholder] ?? '';
     size(input);
   }
-  update();
+  for (const target of targets) target();
+  block.dispatchEvent(new CustomEvent('scb-placeholders-change', { bubbles: true }));
 }
 
 function change(text: string, value: string) {
@@ -105,11 +112,8 @@ function change(text: string, value: string) {
     const block = input.closest<HTMLElement>('[data-scb-placeholders]');
     if (block) blocks.add(block);
   }
-  for (const block of blocks) {
-    const update = updates.get(block);
-    if (update) update();
-    else setup(block);
-  }
+  // Set up again each time, because swapInto() replaces the targets in a copy of a block.
+  for (const block of blocks) setup(block);
 }
 
 /**
@@ -139,7 +143,8 @@ function selectedText(pre: HTMLElement, range: Range) {
       const value = node.nodeValue ?? '';
       const start = node === range.startContainer ? range.startOffset : 0;
       const end = node === range.endContainer ? range.endOffset : value.length;
-      text += value.slice(start, end);
+      // An empty line holds a newline text node, and the line boundaries already give the newlines.
+      text += value.slice(start, end).replaceAll('\n', '');
     }
   }
   return text;
@@ -181,6 +186,5 @@ export default function initPlaceholders() {
       if (input && event.key === 'Escape') change(input.placeholder, '');
     });
   }
-  for (const [block] of updates) if (!block.isConnected) updates.delete(block);
   for (const block of blocks) setup(block);
 }

@@ -80,7 +80,7 @@ test.describe('without JavaScript', () => {
 test.describe('custom playgrounds', () => {
   const origin = 'http://codeblocks.test';
   const html = `<figure data-scb-placeholders="none">
-    <input class="scb-placeholder" data-ph="MY KEY" placeholder="MY KEY" aria-label="MY KEY">
+    <input class="scb-placeholder" placeholder="MY KEY" aria-label="MY KEY">
     <a class="scb-playground" href="https://example.com/?code=${encodeURIComponent('key = "MY KEY"')}">Open</a>
     <form class="scb-playground"><input type="hidden" name="code" value='key = "MY KEY"'></form>
     <div class="copy"><button data-code='key = "MY KEY"'></button></div>
@@ -103,7 +103,7 @@ test.describe('custom playgrounds', () => {
 test.describe('storage option', () => {
   const origin = 'http://codeblocks-storage.test';
   const field = (storage: string) =>
-    `<figure data-scb-placeholders="${storage}"><input class="scb-placeholder" data-ph="MY KEY" placeholder="MY KEY" aria-label="MY KEY"></figure>
+    `<figure data-scb-placeholders="${storage}"><input class="scb-placeholder" placeholder="MY KEY" aria-label="MY KEY"></figure>
     <script type="module">import init from '/placeholders.js'; init();</script>`;
 
   const serve = (page: Page, storage: string) => serveClient(page, origin, 'placeholders', field(storage));

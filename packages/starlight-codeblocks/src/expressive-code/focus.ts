@@ -29,9 +29,18 @@ const focusData = new AttachedPluginData<{ lines: Set<ExpressiveCodeLine> }>(() 
 
 const OUT = `${PREFIX}-focus-out`;
 
-/** Blurs the lines outside `focus={…}` and `[!code focus]` until the reader hovers over or tabs into the block. */
-export function pluginFocus({ style = 'blur' }: { style?: 'blur' | 'dim' } = {}): CodeblocksPlugin {
-  return {
+/**
+ * Blurs the lines outside `focus={…}` and `[!code focus]` until the reader hovers over or tabs into the block.
+ * With `stylesOnly`, it adds only the styles, which the steps of `<Scrollycoding>` also use.
+ */
+export function pluginFocus({
+  style = 'blur',
+  stylesOnly = false,
+}: {
+  style?: 'blur' | 'dim';
+  stylesOnly?: boolean;
+} = {}): CodeblocksPlugin {
+  const plugin: CodeblocksPlugin = {
     name: 'starlight-codeblocks:focus',
     directives: {
       'code focus': {
@@ -62,11 +71,15 @@ pre > code[tabindex]:focus-visible {
   opacity: 1;
   filter: none;
 }
+.${OUT}:is(.${PREFIX}-mention-on, .${PREFIX}-permalink-target, .${PREFIX}-annotation-lit, .${PREFIX}-footnote-on, .${PREFIX}-footnote-peek) {
+  opacity: 1;
+  filter: none;
+}
 @media print {
   .${OUT} { opacity: 0.6; filter: none; }
 }`,
     hooks: {
-      preprocessMetadata(context) {
+      preprocessCode(context) {
         focusData.getOrCreateFor(context.codeBlock).lines = markedLines(context, 'focus', 'code focus');
       },
       postprocessRenderedLine({ codeBlock, line, renderData }) {
@@ -79,8 +92,11 @@ pre > code[tabindex]:focus-visible {
         const code = select('pre > code', renderData.blockAst);
         if (!code) return;
         code.properties.tabindex = '0';
+        // `code` prohibits a name, so it needs a role that takes one.
+        code.properties.role = 'region';
         code.properties.ariaLabel = codeBlock.props.title ? `Code: ${codeBlock.props.title}` : 'Code block';
       },
     },
   };
+  return stylesOnly ? { ...plugin, directives: {}, hooks: {} } : plugin;
 }

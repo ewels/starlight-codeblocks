@@ -22,14 +22,31 @@ function newLines(from: StepTokens, to: StepTokens) {
   });
 }
 
+/** A CSS time in milliseconds, or `fallback` when `value` is not one. */
+export function toMs(value: string, fallback: number) {
+  const n = Number.parseFloat(value);
+  if (!Number.isFinite(n)) return fallback;
+  return /\ds$/.test(value.trim()) ? n * 1000 : n;
+}
+
 /** Animates the tokens from one step to the next inside the `pre` of the new step, then shows its real code again. */
 export function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
   const pre = group.querySelector('pre');
   const code = pre?.querySelector('code');
   if (!pre || !code) return () => {};
+  // Keep in step with readTokens(), which leaves out the lines that are hidden at build time.
+  const real = code.querySelectorAll<HTMLElement>(
+    '.ec-line:not(summary > *, [hidden], .scb-hidden-line:not(.scb-hidden-open), details:not([open]) *)',
+  );
+  // The tokens end every line with a line break. A different count means that the reader opened or closed
+  // lines since the build, so the animation would not match the block.
+  if (real.length !== lines(to).length - 1) return () => {};
+  // Callouts, hidden-line markers and section summaries take up height but have no tokens, so the block would jump.
+  const rows = code.querySelectorAll(':scope > :not(.ec-line, details), summary');
+  if ([...rows].some((row) => row.checkVisibility())) return () => {};
   const style = getComputedStyle(group.querySelector('figure') ?? group);
   const i = style.getPropertyValue('--ec-codeblocksWalkthrough-themeIndex').trim() || '0';
-  const duration = Number.parseFloat(style.getPropertyValue('--ec-codeblocksWalkthrough-duration')) || 480;
+  const duration = toMs(style.getPropertyValue('--ec-codeblocksWalkthrough-duration'), 480);
   // New tokens enter at this point of the move, so the tint of a new line starts there too.
   const enter = duration * DELAY_ENTER;
   // Expressive Code picks the token colour of the theme with a selector that needs `.ec-line`, so each token names its own.
@@ -72,7 +89,6 @@ export function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
     code.style.display = '';
     if (!ended) return;
     // The real lines take over the tint where the animation left it.
-    const real = code.querySelectorAll<HTMLElement>('.ec-line:not(summary > *)');
     for (const n of added) {
       const line = real[n];
       if (!line) continue;

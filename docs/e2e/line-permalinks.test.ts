@@ -61,7 +61,7 @@ test('follows changes to the address', async ({ page }) => {
 
 test('a link to a hidden line opens its marker', async ({ page }) => {
   await page.goto('./features/line-permalinks/#server-L1');
-  await expect(page.locator('#server-L1')).toBeVisible();
+  await expect(page.locator('#server-L1')).toBeInViewport();
   await expect(page.locator('#server-L1')).toHaveClass(/scb-permalink-target/);
 });
 

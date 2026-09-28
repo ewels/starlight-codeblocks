@@ -1,4 +1,4 @@
-import { getColorContrast } from '@expressive-code/core';
+import { getColorContrast, getFirstStaticColor, mix } from '@expressive-code/core';
 import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { pluginCore } from '../src/expressive-code/core.ts';
@@ -29,6 +29,21 @@ test('every shared colour meets its contrast target in each theme', async () => 
     expect(getColorContrast(get('popoverForeground'), get('popoverBackground')), name).toBeGreaterThanOrEqual(4.5);
     expect(getColorContrast(get('mutedForeground'), get('popoverBackground')), name).toBeGreaterThanOrEqual(4.5);
     expect(getColorContrast(get('focusRing'), get('popoverBackground')), name).toBeGreaterThanOrEqual(3);
+  }
+});
+
+test('muted text meets 4.5:1 on the tinted surfaces it sits on', async () => {
+  for (const { get, name } of await variants()) {
+    const muted = get('codeblocks.mutedForeground');
+    const bg = get('codeBackground');
+    const surfaces = [
+      get('codeblocksHiddenLines.badgeBackground'),
+      mix(bg, get('codeForeground'), 0.05),
+      getFirstStaticColor(get('frames.editorTabBarBackground')),
+    ];
+    for (const surface of surfaces.filter((s): s is string => !!s)) {
+      expect(getColorContrast(muted, surface), `${name} on ${surface}`).toBeGreaterThanOrEqual(4.5);
+    }
   }
 });
 

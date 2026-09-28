@@ -69,5 +69,19 @@ export const sidebar = [
   },
 ];
 
+/**
+ * The feature pages on the home page carousel, by sidebar group. Comment notation is shared syntax, not a feature
+ * in its own right, so it gets no slide.
+ */
+export const carouselGroups = sidebar
+  .map(({ label, items }) => ({
+    label,
+    ids: items.filter(
+      /** @returns {item is string} */
+      (item) => typeof item === 'string' && item.startsWith('features/') && item !== 'features/comment-notation',
+    ),
+  }))
+  .filter(({ ids }) => ids.length > 0);
+
 /** Pages that the sidebar and `llms.txt` leave out, such as demos that a feature page links to. */
 export const unlisted = ['features/side-by-side-annotations/wide', 'features/scrollycoding/wide'];

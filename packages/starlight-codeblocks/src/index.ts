@@ -35,7 +35,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
           assets: astroConfig.build?.assets,
           root: fileURLToPath(astroConfig.root),
           cacheDir: fileURLToPath(astroConfig.cacheDir),
-          expressiveCode: { ...ec, ...ecConfig },
+          expressiveCode: mergeEcOptions(ec, ecConfig, astroConfig.markdown?.shikiConfig),
           blockIds: new Set(),
         });
         const css = options.inlineHighlighting ? { customCss: [...(config.customCss ?? []), INLINE_CSS_ID] } : {};
@@ -92,4 +92,38 @@ function hideFunctions(plugin: ExpressiveCodePlugin): ExpressiveCodePlugin {
     if (key !== 'name') Object.defineProperty(shell, key, { value, enumerable: false });
   }
   return shell;
+}
+
+type Shiki = Record<string, unknown> & { langs?: unknown[]; langAlias?: unknown };
+
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
+/**
+ * Merges `shiki` the way astro-expressive-code does, including its fallback to Astro's
+ * `markdown.shikiConfig`, so that inline code gets the grammars and aliases that blocks get.
+ */
+function mergeEcOptions(
+  ec: { shiki?: unknown },
+  ecConfig: { shiki?: unknown } = {},
+  astroShiki: { langs?: unknown[]; langAlias?: unknown } = {},
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...ec, ...ecConfig };
+  const [a, b] = [ec.shiki, ecConfig.shiki];
+  if (isObject(a) && isObject(b)) {
+    const shiki: Shiki = { ...a };
+    for (const [key, value] of Object.entries(b)) {
+      const prev = shiki[key];
+      if (key === 'langs' && Array.isArray(prev) && Array.isArray(value)) shiki[key] = [...prev, ...value];
+      else if (isObject(prev) && isObject(value)) shiki[key] = { ...prev, ...value };
+      else shiki[key] = value;
+    }
+    merged.shiki = shiki;
+  }
+  if (merged.shiki === false) return merged;
+  const shiki: Shiki = isObject(merged.shiki) ? { ...merged.shiki } : {};
+  if (!shiki.langs && astroShiki.langs) shiki.langs = astroShiki.langs;
+  if (!shiki.langAlias && astroShiki.langAlias) shiki.langAlias = astroShiki.langAlias;
+  merged.shiki = shiki;
+  return merged;
 }

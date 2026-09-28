@@ -20,6 +20,12 @@ function parse(text: string, syntaxes = js) {
 }
 
 describe('parseLine', () => {
+  test('warns that text before an own-line directive is dropped', () => {
+    const { removed, problems } = parse('// Setup: [!callout /x/] Why');
+    expect(removed).toBe(true);
+    expect(problems).toEqual(['`Setup:` is dropped, because the line holds a directive that removes it.']);
+  });
+
   test('leaves lines without directives unchanged', () => {
     expect(parse('const a = 1 // counter')).toMatchObject({ text: 'const a = 1 // counter', directives: [] });
   });
@@ -28,6 +34,30 @@ describe('parseLine', () => {
     const { text, directives } = parse('const a = 1   // [!code focus]');
     expect(text).toBe('const a = 1');
     expect(directives).toMatchObject([{ name: 'code focus', count: 1 }]);
+  });
+
+  test('removes a comment before the code, and keeps the indentation', () => {
+    const css = commentSyntaxFor('css');
+    expect(parse('/* [!code focus] */ color: red;', css).text).toBe('color: red;');
+    expect(parse('  /* [!code focus] */ color: red;', css).text).toBe('  color: red;');
+    expect(parse('  /* [!code focus] */', css)).toMatchObject({ text: '', removed: true });
+  });
+
+  test('removes a JSX comment with its braces', () => {
+    const tsx = commentSyntaxFor('tsx');
+    expect(parse('  <Button />{/* [!code focus] */}', tsx).text).toBe('  <Button />');
+    expect(parse('  {/* [!callout] Note */}', tsx)).toMatchObject({ removed: true, directives: [{ text: 'Note' }] });
+    expect(parse('  {/* [!code focus] */ x', tsx).text).toBe('  { x');
+  });
+
+  test('reads a directive after a `[!word]` that is not in a comment', () => {
+    expect(parse('log("[!x]"); // [!code focus]')).toMatchObject({
+      text: 'log("[!x]");',
+      directives: [{ name: 'code focus' }],
+    });
+    expect(parse('arr[!flag] // [!code focus]').text).toBe('arr[!flag]');
+    const md = parse('> [!NOTE] <!-- [!code highlight] -->', commentSyntaxFor('md'));
+    expect(md).toMatchObject({ text: '> [!NOTE]', directives: [{ name: 'code highlight' }], problems: [] });
   });
 
   test('keeps the rest of the comment', () => {
@@ -130,6 +160,12 @@ describe('parseLine', () => {
     expect(parse('x // [!code focus:x]').problems[0]).toContain('count of 1 or more');
   });
 
+  test('reads a comment opener inside the comment text as text', () => {
+    expect(parse('# fixes #12 [!callout /x/] Why', commentSyntaxFor('py'))).toMatchObject({ removed: true });
+    expect(parse('// see https://x.com [!callout /x/] Why')).toMatchObject({ removed: true });
+    expect(parse('x // see https://x.com [!callout /x/] Why').problems[0]).toContain('must be on a line of its own');
+  });
+
   test('reports own-line directives at the end of a line of code', () => {
     const result = parse('x // [!callout /x/] Note');
     expect(result).toMatchObject({ removed: false, text: 'x // [!callout /x/] Note', directives: [] });
@@ -150,6 +186,12 @@ describe('parseNotation', () => {
     expect(parsed[2]?.directives.map((d) => d.text)).toEqual(['One', 'Two']);
   });
 
+  test('moves the directives of a line with no code to the line below, as own-line directives', () => {
+    const { parsed } = block(['// [!code highlight:2]', 'a()', 'b()']);
+    expect(parsed.map((line) => line.removed)).toEqual([true, false, false]);
+    expect(parsed[1]?.directives).toMatchObject([{ name: 'code highlight', count: 2 }]);
+  });
+
   test('reports literal text with no match on the target line', () => {
     const { parsed, problems } = block(['// [!callout /c/] One', 'a + b']);
     expect(parsed[1]?.directives).toEqual([]);
@@ -167,6 +209,12 @@ describe('commentSyntaxFor', () => {
     expect(commentSyntaxFor('Python')).toEqual([{ open: '#', close: undefined }]);
     expect(commentSyntaxFor('css')).toEqual([{ open: '/*', close: '*/' }]);
     expect(commentSyntaxFor('json')).toEqual([]);
+  });
+
+  test('resolves Shiki ids and aliases of listed languages', () => {
+    expect(commentSyntaxFor('pwsh')).toEqual(commentSyntaxFor('powershell'));
+    expect(commentSyntaxFor('shellsession')).toEqual([{ open: '#', close: undefined }]);
+    expect(commentSyntaxFor('pwsh', { powershell: ['//'] })).toEqual([{ open: '//', close: undefined }]);
   });
 
   test('lets options add, replace and remove languages', () => {

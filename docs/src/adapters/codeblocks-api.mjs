@@ -24,7 +24,7 @@ const pages = {
 
 // Comments and strings come first, so that names inside them never match as names.
 const TOKENS = /\/\/.*|\/\*[\s\S]*?\*\/|'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`|[A-Za-z_$][\w$]*/g;
-const IMPORT = /^import\s+(?:(\w+)|\{([^}]*)\})\s+from\s+'starlight-codeblocks(?:\/[\w/-]+)?';?$/gm;
+const IMPORT = /^import\s+(?:(\w+)\s*,?\s*)?(?:\{([^}]*)\})?\s+from\s+'starlight-codeblocks(?:\/[\w/-]+)?';?$/gm;
 
 /** Links the names that a JavaScript block imports from starlight-codeblocks to their reference pages. */
 export function codeblocksApi() {
@@ -35,12 +35,13 @@ export function codeblocksApi() {
     findSymbols(code) {
       const imported = new Set();
       for (const [, name, list] of code.matchAll(IMPORT)) {
-        for (const item of name ? [name] : list.split(',')) imported.add(item.trim());
+        for (const item of [name, ...(list?.split(',') ?? [])]) if (item) imported.add(item.trim());
       }
       const symbols = [];
       for (const { 0: name, index } of code.matchAll(TOKENS)) {
         const page = imported.has(name) && pages[name];
-        if (page) {
+        const isKeyOrProperty = code[index - 1] === '.' || /^\s*:(?!:)/.test(code.slice(index + name.length));
+        if (page && !isKeyOrProperty) {
           symbols.push({
             start: index,
             end: index + name.length,

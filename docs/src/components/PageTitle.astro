@@ -71,9 +71,12 @@ const chatgptHref = `https://chatgpt.com/?q=${prompt}`;
     button.addEventListener('click', async () => {
       let text = 'Copied';
       try {
-        const response = await fetch(button.dataset.copyMarkdown ?? '');
-        if (!response.ok) throw new Error(String(response.status));
-        await navigator.clipboard.writeText(await response.text());
+        // Safari allows the write only inside the click, so the fetch goes in as a promise.
+        const markdown = fetch(button.dataset.copyMarkdown ?? '').then((response) => {
+          if (!response.ok) throw new Error(String(response.status));
+          return response.blob().then((blob) => new Blob([blob], { type: 'text/plain' }));
+        });
+        await navigator.clipboard.write([new ClipboardItem({ 'text/plain': markdown })]);
       } catch {
         text = 'Copy failed';
       }
@@ -107,7 +110,7 @@ const chatgptHref = `https://chatgpt.com/?q=${prompt}`;
         addEventListener('scroll', place, { passive: true, capture: true });
         addEventListener('resize', place);
       } else {
-        trigger.focus();
+        if (menu.contains(document.activeElement) || document.activeElement === document.body) trigger.focus();
         removeEventListener('scroll', place, { capture: true });
         removeEventListener('resize', place);
       }

@@ -54,27 +54,33 @@ export {
 export const PLUGIN_PREFIX = 'starlight-codeblocks:';
 
 /**
- * Every feature as Expressive Code plugins. With no argument on a Starlight site,
- * it uses the options given to `codeblocks()`.
+ * Every feature as Expressive Code plugins. With no options on a Starlight site,
+ * it uses the options given to `codeblocks()`. `base` is Astro's `base`, for site-relative links in code,
+ * and defaults to the one `codeblocks()` found.
  */
-export function pluginCodeblocks(options?: CodeblocksOptions): ExpressiveCodePlugin[] {
+export function pluginCodeblocks(
+  options?: CodeblocksOptions,
+  { base }: { base?: string } = {},
+): ExpressiveCodePlugin[] {
   const resolved = options ? resolveOptions(options) : (getRegistry()?.options ?? resolveOptions());
-  return createPlugins(resolved);
+  return createPlugins(resolved, base);
 }
 
 /** The core plugin comes first, then notation, so that features can read the directives. */
-export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] {
+export function createPlugins(options: ResolvedOptions, base?: string): ExpressiveCodePlugin[] {
   return [
     pluginCore(),
     ...(options.notation ? [pluginNotation(options.notation)] : []),
-    ...(options.focus ? [pluginFocus(options.focus)] : []),
+    pluginFocus(options.focus || { stylesOnly: true }),
     ...(options.lineStates ? [pluginLineStates(options.lineStates)] : []),
     ...(options.wordDiff ? [pluginWordDiff(options.wordDiff)] : []),
     ...(options.whitespace ? [pluginWhitespace()] : []),
-    ...(options.brackets ? [pluginBrackets(options.brackets)] : []),
+    ...(options.brackets
+      ? [pluginBrackets({ ...options.brackets, comments: options.notation ? options.notation.comments : {} })]
+      : []),
     ...(options.shellCopy ? [pluginShellCopy(options.shellCopy)] : []),
-    ...(options.tokenLinks ? [pluginTokenLinks()] : []),
-    ...(options.apiLinks ? [pluginApiLinks(options.apiLinks)] : []),
+    ...(options.tokenLinks ? [pluginTokenLinks({ base })] : []),
+    ...(options.apiLinks ? [pluginApiLinks({ ...options.apiLinks, base })] : []),
     ...(options.placeholders ? [pluginPlaceholders(options.placeholders)] : []),
     ...(options.mentions ? [pluginMentions()] : []),
     ...(options.permalinks ? [pluginPermalinks()] : []),

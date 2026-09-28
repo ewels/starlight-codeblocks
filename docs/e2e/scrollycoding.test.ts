@@ -202,6 +202,20 @@ test.describe('versions of the code', () => {
     await expect(lines(page)).toHaveCount(3);
     await expect.poll(() => sharp(page)).toEqual([3]);
   });
+
+  test('keyboard focus in the sticky block moves to the new version', async ({ page }) => {
+    test.skip(phone(), 'The two columns need 600 px.');
+    await centre(page, 2, 0);
+    await sticky(page, 2).locator('.scb-scrolly-current pre > code').focus();
+    await centre(page, 2, 2);
+    await expect(steps(page, 2).nth(2)).toHaveClass(/scb-scrolly-on/);
+    await expect(sticky(page, 2).locator('.scb-scrolly-current pre > code')).toBeFocused();
+    await expect(lines(page)).toHaveCount(4);
+    await expect(sticky(page, 2).locator('.scb-scrolly-current .ec-line.scb-focus-out').first()).toHaveCSS(
+      'opacity',
+      '1',
+    );
+  });
 });
 
 test('the active step stays still at every scroll position near a new version', async ({ page }) => {

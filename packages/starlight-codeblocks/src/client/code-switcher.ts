@@ -1,3 +1,4 @@
+import { scrollTo } from './shared/scroll.ts';
 import { swapInto } from './shared/swap.ts';
 
 const KEY = 'scb-code-switcher:';
@@ -33,7 +34,7 @@ function pick(group: HTMLElement, index: number) {
   const label = labels(group)[index] ?? '';
   save(sync, label);
   for (const other of document.querySelectorAll(`[data-scb-code-switcher="${CSS.escape(sync)}"]`)) {
-    show(other, Math.max(0, labels(other).indexOf(label)));
+    show(other, other === group ? index : Math.max(0, labels(other).indexOf(label)));
   }
 }
 
@@ -53,12 +54,25 @@ function changeInCopy(event: Event) {
   copy.querySelector('select')?.focus();
 }
 
+/** Shows the hidden variant that holds `target`, as a line permalink asks with a `beforematch` event. */
+// show(), not pick(): following a link must not change the reader's saved choice.
+function reveal(target: Element) {
+  const variant = target.closest<HTMLElement>('[data-scb-code-switcher] > .expressive-code[hidden]');
+  const group = variant?.parentElement;
+  if (!variant || !group) return false;
+  show(group, variants(group).indexOf(variant));
+  return true;
+}
+
 /** Switches the variants of a `:::code-switcher` block from its menu, and keeps groups with one sync key in step. */
 export default function initCodeSwitcher() {
   if (!listening) {
     listening = true;
     document.addEventListener('change', changeInCopy);
+    document.addEventListener('beforematch', (event) => reveal(event.target as Element), true);
   }
+  // After a page swap, the groups of the old page are gone, and so are any copies that point to them.
+  if (!groups.some((group) => group.isConnected)) groups.length = 0;
   for (const group of document.querySelectorAll<HTMLElement>('[data-scb-code-switcher]:not([data-scb-ready])')) {
     group.dataset.scbReady = '';
     for (const variant of variants(group)) variant.dataset.scbSwitcherOf = String(groups.length);
@@ -72,4 +86,7 @@ export default function initCodeSwitcher() {
       variants(group)[menu.selectedIndex]?.querySelector('select')?.focus();
     });
   }
+  // A line permalink can target a hidden variant before this script is ready, and could not scroll to it then.
+  const target = document.querySelector('[data-scb-code-switcher] > .expressive-code[hidden] .scb-permalink-target');
+  if (target && reveal(target)) scrollTo(target, 'center');
 }

@@ -8,7 +8,7 @@ import { getRegistry, setRegistry } from '../src/registry.ts';
 
 afterEach(() => setRegistry(undefined));
 
-async function setup(ecConfig?: string, expressiveCode: unknown = {}, options = {}) {
+async function setup(ecConfig?: string, expressiveCode: unknown = {}, options = {}, markdown?: object) {
   const root = mkdtempSync(join(tmpdir(), 'scb-'));
   if (ecConfig) writeFileSync(join(root, 'ec.config.mjs'), ecConfig);
   const updates: Record<string, unknown>[] = [];
@@ -18,7 +18,11 @@ async function setup(ecConfig?: string, expressiveCode: unknown = {}, options = 
     config: { expressiveCode },
     updateConfig: (update: Record<string, unknown>) => updates.push(update),
     addIntegration: (integration: { name: string }) => integrations.push(integration),
-    astroConfig: { root: pathToFileURL(`${root}/`), cacheDir: pathToFileURL(`${root}/node_modules/.astro/`) },
+    astroConfig: {
+      root: pathToFileURL(`${root}/`),
+      cacheDir: pathToFileURL(`${root}/node_modules/.astro/`),
+      markdown,
+    },
   } as never);
   return { updates, integrations };
 }
@@ -78,7 +82,35 @@ test('adds no stylesheet with inline highlighting off', async () => {
 
 test('keeps the site Expressive Code options for inline highlighting', async () => {
   await setup('export default { themeCssRoot: "html" };', { useStarlightDarkModeSwitch: false });
-  expect(getRegistry()?.expressiveCode).toEqual({ themeCssRoot: 'html', useStarlightDarkModeSwitch: false });
+  expect(getRegistry()?.expressiveCode).toEqual({
+    themeCssRoot: 'html',
+    useStarlightDarkModeSwitch: false,
+    shiki: {},
+  });
+});
+
+test('merges shiki options from both configs for inline highlighting, as astro-expressive-code does', async () => {
+  await setup('export default { shiki: { engine: "javascript", langs: ["b"] } };', {
+    shiki: { langs: ['a'], langAlias: { x: 'y' } },
+  });
+  expect(getRegistry()?.expressiveCode?.shiki).toEqual({
+    engine: 'javascript',
+    langs: ['a', 'b'],
+    langAlias: { x: 'y' },
+  });
+});
+
+test('deep-merges shiki.langAlias from both configs', async () => {
+  await setup('export default { shiki: { langAlias: { b: "c" } } };', { shiki: { langAlias: { a: 'c' } } });
+  expect(getRegistry()?.expressiveCode?.shiki).toEqual({ langAlias: { a: 'c', b: 'c' } });
+});
+
+test("falls back to Astro's markdown.shikiConfig langs and langAlias, as astro-expressive-code does", async () => {
+  const shikiConfig = { langs: ['m'], langAlias: { nf: 'groovy' } };
+  await setup(undefined, {}, {}, { shikiConfig });
+  expect(getRegistry()?.expressiveCode?.shiki).toEqual(shikiConfig);
+  await setup(undefined, { shiki: { langs: ['own'] } }, {}, { shikiConfig });
+  expect(getRegistry()?.expressiveCode?.shiki).toEqual({ langs: ['own'], langAlias: { nf: 'groovy' } });
 });
 
 test('fails when Expressive Code is off', async () => {

@@ -39,7 +39,7 @@ Pick an `id` from what the block contains, such as its file name. The `id` keeps
 - Each line number links to `#<id>-L<n>`, where `<n>` is the number that the reader sees. If the fence line has `startLineNumber`, the numbers start there.
 - Selecting a number highlights that line and changes the address with `history.replaceState`. The page does not scroll, and the browser history gets no new entry.
 - Selecting a number with Shift held highlights the range from the last number you selected, as `#<id>-L<a>-L<b>`.
-- When the page loads, or the address changes, the plugin highlights the lines in the address and scrolls them into view. If a line is a [hidden line](/starlight-codeblocks/features/hidden-lines/), its marker opens.
+- When the page loads, or the address changes, the plugin highlights the lines in the address and scrolls them into view. If a line is a [hidden line](/starlight-codeblocks/features/hidden-lines/), its marker opens. If a line is in a `<Tabs>` panel that is not selected, its tab opens.
 - The line numbers are links, so you can reach them with the Tab key and select them with Enter. Shift and Enter together selects a range. Screen readers announce each one as "Link to line N", and the highlighted numbers have `aria-current`.
 - Line numbers are not part of the copied text, and a manual selection of the code leaves them out.
 - Two blocks with the same `id` on one page cause a build warning.

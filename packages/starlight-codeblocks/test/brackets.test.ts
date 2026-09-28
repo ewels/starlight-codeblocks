@@ -23,6 +23,33 @@ test('findBrackets skips brackets in strings and comments', () => {
   expect(findBrackets(['// (comment)', 'const s = "(str)";'], js)).toEqual([]);
 });
 
+test('findBrackets skips escaped characters outside strings', () => {
+  const lines = ["s.replace(/\\(/g, '');", 'foo(bar);', '/^https?:\\/\\//.test(url) && f(x);'];
+  const matches = findBrackets(lines, js);
+  expect(matches.map((m) => [m.line, m.column, m.depth])).toEqual([
+    [0, 9, 0],
+    [0, 19, 0],
+    [1, 3, 0],
+    [1, 7, 0],
+    [2, 19, 0],
+    [2, 23, 0],
+    [2, 29, 0],
+    [2, 31, 0],
+  ]);
+});
+
+test('findBrackets counts brackets in template literal interpolations, also in a nested template', () => {
+  const at = (text: string) => findBrackets([text], js).map((m) => text.slice(0, m.column + 1));
+  // biome-ignore lint/suspicious/noTemplateCurlyInString: JavaScript source as test input
+  const simple = 'const u = `${base}/${encode(path[0])}`;';
+  expect(at(simple).map((s) => s.at(-1))).toEqual(['{', '}', '[', ']', '(', ')', '{', '}']);
+  // biome-ignore lint/suspicious/noTemplateCurlyInString: JavaScript source as test input
+  const nested = "const s = `<ul>${xs.map((x) => `<li>${x}</li>`).join('')}</ul>`;";
+  const pairs = findBrackets([nested], js);
+  expect(pairs).toHaveLength(10);
+  expect(pairs.map((m) => nested[m.column]).join('')).not.toContain('<');
+});
+
 test('findBrackets leaves an unmatched bracket out', () => {
   expect(findBrackets(['const a = (1;'], js)).toEqual([]);
 });
@@ -63,4 +90,64 @@ test('every bracket colour meets 4.5:1 contrast on the code background', async (
       expect(getColorContrast(colour, v.get('codeBackground')), `${key}, ${v.name}`).toBeGreaterThanOrEqual(4.5);
     }
   }
+});
+
+test('findBrackets treats a Rust lifetime as text, not the start of a string', () => {
+  const lines = ['impl Foo {', "    fn name<'a>(&'a self) -> &'static str {", "        let c = '{';", '    }', '}'];
+  const pairs = findBrackets(lines, commentSyntaxFor('rust'), true);
+  const closers = pairs.filter((m) => '}'.includes(lines[m.line]?.[m.column] ?? ''));
+  expect(closers.map((m) => m.line)).toEqual([3, 4]);
+});
+
+test('findBrackets treats a single quote with no partner on the line as text', () => {
+  expect(findBrackets(["it's (fine)"], [])).toHaveLength(2);
+});
+
+test('brackets=false turns it off for a language in brackets.languages', async () => {
+  const { html } = await render(block('js brackets=false', 'f(a);'), { brackets: { languages: ['js'] } });
+  expect(html).not.toContain('scb-brackets-');
+});
+
+test('skips comments in the syntax that notation.comments gives', async () => {
+  const { html } = await render(block('matlab brackets', 'y = f(a) % see (note', 'z = g(b)'), {
+    notation: { comments: { matlab: ['%'] } },
+  });
+  expect(html.match(/data-scb-pair=/g)).toHaveLength(4);
+});
+
+test('findBrackets skips brackets in a triple-quoted string over several lines', () => {
+  const lines = ['result = run(', '    """', '    Steps: 1) load', "    ''' [ '''", '    """,', ')'];
+  const pairs = findBrackets(lines, commentSyntaxFor('python'));
+  expect(pairs.map((m) => m.line)).toEqual([0, 5]);
+});
+
+test('turns on for an alias of a language in brackets.languages', async () => {
+  const { html } = await render(block('javascript', 'f(1);'), { brackets: { languages: ['js'] } });
+  expect(html).toContain('scb-brackets-1');
+});
+
+test('keeps a text marker and word diff on a bracket', async () => {
+  const marked = (await render(block('js brackets ins="foo(1)"', 'const a = foo(1);'))).html;
+  expect(marked).toMatch(/<ins>[\s\S]*scb-brackets-1[\s\S]*<\/ins>/);
+  expect(marked).not.toMatch(/<\/ins><span class="scb-brackets/);
+  const diff = (await render(block('diff lang="js" brackets', '-const a = f(1, 2);', '+const a = f[1, 2];'))).html;
+  expect(diff).toContain('scb-worddiff-del');
+  expect(diff).toContain('scb-worddiff-ins');
+});
+
+test('findBrackets skips a closing bracket of another type', () => {
+  const lines = ['deploy() {', '  case "$1" in', '    prod) run ;;', '  esac', '}'];
+  const pairs = findBrackets(lines, commentSyntaxFor('bash'));
+  expect(pairs.map(({ line, column }) => [line, column])).toEqual([
+    [0, 6],
+    [0, 7],
+    [0, 9],
+    [4, 0],
+  ]);
+});
+
+test('findBrackets treats a `#` inside a word as text, not a comment', () => {
+  const pairs = findBrackets(['count() {', `  n=\${#items[@]} # (note)`, '}'], commentSyntaxFor('bash'));
+  expect(pairs).toHaveLength(8);
+  expect(pairs.at(-1)).toMatchObject({ line: 2, column: 0, depth: 0 });
 });

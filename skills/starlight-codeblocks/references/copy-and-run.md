@@ -32,7 +32,7 @@ $ ruff check src/ \
 - Option: `shellCopy.prompts` (default `['$ ', '> ']`). `#` is not a default, because it also starts a shell comment. Add `'# '` or `'PS> '` if the site uses them. `shellCopy: false` turns the feature off.
 - Limits: a prompt must be the first text on the line.
 
-A `python`, `py` or `pycon` block with a line that starts with `>>> ` is a Python session. It keeps its editor frame, and needs no `frame="terminal"`.
+A `pycon` block with a line that starts with `>>> ` is a Python session. A `python` or `py` block is a session when its first line starts with `>>> `. It keeps its editor frame, and needs no `frame="terminal"`.
 
 ```py
 >>> from pathlib import Path
@@ -97,8 +97,9 @@ print(mean([1520, 1610, 1480]))
 ```
 ````
 
-- The language of the block chooses the runtime. `py` and `python` use the built-in Python runtime.
-- Standard output and standard error show in the output panel. A run stops after the timeout.
+- The language of the block chooses the runtime. `py` and `python` use the built-in Python runtime. Sites without Starlight must add a Python runtime URL to `runnable.runtimes`.
+- Standard output and standard error show in the output panel. A run stops after the timeout. The download of the runtime and of imported packages does not count towards the timeout.
+- A Python session with `>>>` prompts runs its commands only, as in the Python REPL: the output shows the value of each expression.
 - Packages outside the standard library must be part of Pyodide. The runtime installs them from the `import` lines.
 - Options: `runnable.timeout` (default `10000` ms) and `runnable.runtimes`, a map of language to a runtime module (a package path or a path from the project root). Guide: https://ewels.github.io/starlight-codeblocks/extend/add-a-runtime/
 - Limits: Pyodide loads from the jsDelivr CDN and runs its worker from a `blob:` URL, so a Content Security Policy must allow both. Without JavaScript, the button is hidden.

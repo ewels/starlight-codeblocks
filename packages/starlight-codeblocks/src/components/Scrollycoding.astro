@@ -13,8 +13,9 @@ if (codeSide !== undefined && codeSide !== 'left' && codeSide !== 'right') {
   throw new Error(`<Scrollycoding codeSide="${codeSide}">: codeSide must be "left" or "right".`);
 }
 const options = getRegistry()?.options;
+const interactive = options?.scrollycoding !== false;
 const html = scrollycoding(await Astro.slots.render('default'), {
-  interactive: options?.scrollycoding !== false,
+  interactive,
   animate: options?.walkthrough !== false,
   codeSide,
 });
@@ -22,9 +23,13 @@ const html = scrollycoding(await Astro.slots.render('default'), {
 
 <Fragment set:html={html} />
 
-<script>
-  import './scrolly-client.ts';
-</script>
+{
+  interactive && (
+    <script>
+      import './scrolly-client.ts';
+    </script>
+  )
+}
 
 {firstOnPage(Astro.request) && <style is:inline set:html={scrollyStyles} />}
 
@@ -41,7 +46,8 @@ const html = scrollycoding(await Astro.slots.render('default'), {
   .scb-scrolly-text + .expressive-code {
     margin-top: 0.75rem;
   }
-  .scb-scrolly-code {
+  .scb-scrolly-code,
+  .scb-scrolly-spoken {
     display: none;
   }
   /* Hidden versions keep their space: a change of height would move the steps and pick the other version again. */

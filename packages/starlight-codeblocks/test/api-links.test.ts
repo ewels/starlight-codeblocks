@@ -99,11 +99,12 @@ test('skips names that cross a line, and names that overlap a linked name', asyn
   expect(html.match(/class="scb-api-link"/g)).toHaveLength(1);
 });
 
-test('only runs adapters for their languages, and not with apiLinks=false', async () => {
+test('only runs adapters for their languages and aliases, and not with apiLinks=false', async () => {
   const adapter = fakeAdapter();
   expect((await render(block('py', 'lib'), withAdapters(adapter))).html).not.toContain('scb-api-link');
   expect((await render(block('js apiLinks=false', 'lib'), withAdapters(adapter))).html).not.toContain('scb-api-link');
   expect(adapter.setup).not.toHaveBeenCalled();
+  expect((await render(block('javascript', 'lib'), withAdapters(adapter))).html).toContain('scb-api-link');
 });
 
 test('runs setup once for every block, and gives it the context', async () => {
@@ -119,6 +120,17 @@ test('runs setup once for every block, and gives it the context', async () => {
 
 test('an adapter that fails in setup links nothing, with a warning', async () => {
   const adapter = fakeAdapter({ setup: async () => Promise.reject(new Error('no index')) });
+  const { html, warnings } = await render(block('js', 'lib'), withAdapters(adapter));
+  expect(html).not.toContain('scb-api-link');
+  expect(warnings).toEqual(['API links, fake adapter: setup failed, so it links nothing: no index']);
+});
+
+test('an adapter whose setup throws before it returns links nothing, with a warning', async () => {
+  const adapter = fakeAdapter({
+    setup: () => {
+      throw new Error('no index');
+    },
+  });
   const { html, warnings } = await render(block('js', 'lib'), withAdapters(adapter));
   expect(html).not.toContain('scb-api-link');
   expect(warnings).toEqual(['API links, fake adapter: setup failed, so it links nothing: no index']);
@@ -163,6 +175,33 @@ test('cachedFetch keeps the body on disk, so a later build does not fetch again'
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(readdirSync(dir)).toHaveLength(1);
     expect(warn).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllGlobals();
+    rmSync(dir, { recursive: true });
+  }
+});
+
+test('cachedFetch keeps no body that fails the check, and fetches again for a kept one that fails it', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'scb-cache-'));
+  let reply = '<!doctype html>';
+  const fetch = vi.fn(async () => new Response(reply));
+  vi.stubGlobal('fetch', fetch);
+  const check = (body: Uint8Array) => {
+    if (new TextDecoder().decode(body) !== 'inventory') throw new Error('not an inventory');
+  };
+  try {
+    const warn = vi.fn();
+    expect(await cachedFetch('https://example.com/objects.inv', dir, warn, check)).toBeNull();
+    expect(warn.mock.calls).toEqual([
+      ['https://example.com/objects.inv is not an inventory. Names from it stay plain text.'],
+    ]);
+    expect(readdirSync(dir)).toEqual([]);
+    reply = 'stale';
+    await cachedFetch('https://example.com/objects.inv', dir, warn);
+    reply = 'inventory';
+    const body = await cachedFetch('https://example.com/objects.inv', dir, warn, check);
+    expect(new TextDecoder().decode(body ?? undefined)).toBe('inventory');
+    expect(fetch).toHaveBeenCalledTimes(3);
   } finally {
     vi.unstubAllGlobals();
     rmSync(dir, { recursive: true });

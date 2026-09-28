@@ -1,4 +1,11 @@
-import { type Element, type ElementContent, matches, select, selectAll } from '@expressive-code/core/hast';
+import {
+  type Element,
+  type ElementContent,
+  getClassNames,
+  matches,
+  select,
+  selectAll,
+} from '@expressive-code/core/hast';
 import { DECORATION } from '../expressive-code/core.ts';
 
 export interface Token {
@@ -18,11 +25,16 @@ export function codeLines(root: Element): Element[] {
 
 /**
  * Reads the syntax tokens of a block that Expressive Code rendered. Each token keeps the colour variables
- * (`--0:…;--1:…`) of every span around it. Decorations, such as labels for screen readers, are left out.
+ * (`--0:…;--1:…`) of every span around it. Decorations, such as labels for screen readers, and the lines that
+ * the block hides (hidden lines, closed sections) are left out.
  */
 export function readTokens(figure: Element): { code: string; lines: Token[][] } {
   let offset = 0;
-  const lines = codeLines(figure).map((line) => {
+  const closed = new Set(selectAll('details:not([open]) .ec-line', figure));
+  const shown = codeLines(figure).filter(
+    (line) => !closed.has(line) && !getClassNames(line).includes('scb-hidden-line'),
+  );
+  const lines = shown.map((line) => {
     const tokens: Token[] = [];
     const walk = (nodes: ElementContent[], styles: string[]) => {
       for (const node of nodes) {

@@ -59,7 +59,7 @@ test('adds a sticky copy in the state of the first step, and marks the first ste
   expect(out).toContain('class="scb-scrolly-step scb-scrolly-on" data-scb-focus="0" data-scb-mark=""');
   expect(outLines('.scb-scrolly-code')).toEqual(outLines('.scb-scrolly-step:nth-child(1)'));
   expect(out).toContain('<figure class="frame has-title scb-scrolly-frame">');
-  expect(out.match(/<code tabindex="0" aria-label="Code block">/g)).toHaveLength(3);
+  expect(out.match(/<code tabindex="0" role="region" aria-label="Code block">/g)).toHaveLength(3);
 });
 
 test('each copy keeps the copy text of the whole block', async () => {
@@ -73,6 +73,12 @@ test('each copy keeps the copy text of the whole block', async () => {
 test('replaces a focus from the fence line', async () => {
   const { outLines } = await build(steps, 'focus={4}');
   expect(outLines('.scb-scrolly-step:nth-child(1)')[0]).toBe('ec-line');
+});
+
+test('the sticky copy lists the marks from the fence line, which the client keeps', async () => {
+  const { tree } = await build(steps, '{2}');
+  const [sticky] = selectAll('.scb-scrolly-code > .expressive-code', tree);
+  expect(sticky.properties.dataScbMarked).toBe('1');
 });
 
 test('a step with no focus leaves every line clear', async () => {
@@ -94,6 +100,9 @@ test('fails the build for a range that is not valid, or without one block and a 
   expect(() => scrollycoding(html)).toThrow('needs a code block, then one or more <Step> components');
   expect(() => scrollycoding([steps[0], html, steps[1]].join(''))).toThrow('does not start with a code block');
   expect(() => scrollycoding([html, steps[0], html].join(''))).toThrow('end with a step');
+  expect(() => scrollycoding([html, html, steps[0]].join(''))).toThrow('follow each code block with a step');
+  expect(() => scrollycoding([html, '<p>Intro</p>', steps[0]].join(''))).toThrow('but it has a <p>');
+  expect(() => scrollycoding([html, 'Loose text', steps[0]].join(''))).toThrow('the text "Loose text"');
 });
 
 test('gives each copy its own ids, and points its references at them', async () => {
@@ -104,7 +113,8 @@ test('gives each copy its own ids, and points its references at them', async () 
       '// [!ref] Calls `b`.',
       'b()',
       'c() // [!code hide]',
-      'd()',
+      'd() // [!code hide]',
+      'e()',
       '```',
     ].join('\n'),
   );
@@ -116,10 +126,13 @@ test('gives each copy its own ids, and points its references at them', async () 
   const refs = selectAll('*', tree).flatMap((el) => {
     const p = el.properties;
     const hash = typeof p.href === 'string' && p.href.startsWith('#') ? [p.href.slice(1)] : [];
-    const list = [p.ariaControls, p.popoverTarget].flatMap((v) => (v ? String(v).split(/[\s,]+/) : []));
+    const list = [p.ariaControls, p.popoverTarget].flatMap((v) =>
+      v === undefined ? [] : Array.isArray(v) ? v.map(String) : String(v).split(/\s+/),
+    );
     return [...hash, ...list];
   });
   expect(refs.length).toBeGreaterThan(10);
+  expect(out).not.toMatch(/aria-controls="[^"]*,/);
   for (const ref of refs) expect(ids).toContain(ref);
   const anchors = [...out.matchAll(/(anchor-name|position-anchor):(--[\w-]+)/g)].map((m) => `${m[1]}${m[2]}`);
   expect(new Set(anchors).size).toBe(anchors.length);
@@ -168,6 +181,11 @@ test('a block between steps is the code from the next step on, with a sticky cop
   const key = (i: number, text: string) => data[i].find((t: [number, string]) => t[1] === text)?.[0];
   expect(key(0, 'listen')).toBe(key(1, 'listen'));
   expect(scrollycoding([first, steps[0], second, steps[1]].join('\n'), { animate: false })).not.toContain('<script');
+  // The wide layout hides the step copies, so screen readers get each version as text where it starts.
+  const spoken = selectAll('.scb-scrolly-spoken pre', tree).map((pre) =>
+    pre.children.map((c) => ('value' in c ? c.value : '')).join(''),
+  );
+  expect(spoken).toEqual([code.slice(1, -1).join('\n'), version2.slice(1, -1).join('\n')]);
 });
 
 test('a block with one version has no token data', async () => {

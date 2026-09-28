@@ -1,4 +1,5 @@
 import { anchored, below, EDGE, follow } from './shared/position.ts';
+import { unhide } from './shared/scroll.ts';
 
 const END = 'scb-annotation-end';
 const WAIT = 'scb-annotation-wait';
@@ -19,7 +20,10 @@ function textEnd(line: Element) {
   return right;
 }
 
-/** True when the box, beside the marker, stays in the visible block and the viewport and covers no code. */
+const intersects = (a: DOMRect, b: DOMRect) =>
+  a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+
+/** True when the box, beside the marker, stays in the visible block and the viewport and covers no code or other marker. */
 function fitsBeside(popover: HTMLElement, pre: HTMLElement) {
   const box = popover.getBoundingClientRect();
   const block = pre.getBoundingClientRect();
@@ -36,6 +40,9 @@ function fitsBeside(popover: HTMLElement, pre: HTMLElement) {
     const r = line.getBoundingClientRect();
     if (r.bottom > box.top && r.top < box.bottom && textEnd(line) > box.left) return false;
   }
+  for (const marker of pre.querySelectorAll('button.scb-annotation')) {
+    if (marker !== popover.previousElementSibling && intersects(marker.getBoundingClientRect(), box)) return false;
+  }
   return true;
 }
 
@@ -43,7 +50,7 @@ function fitsBeside(popover: HTMLElement, pre: HTMLElement) {
 function open(popover: HTMLElement, button: HTMLElement) {
   const pre = button.closest('pre');
   const css = anchored();
-  return follow(() => {
+  return follow(popover, () => {
     popover.classList.add(END);
     if (!css) {
       const badge = popover.querySelector('.scb-annotation-badge')?.getBoundingClientRect();
@@ -173,11 +180,13 @@ function pointerOut(event: PointerEvent) {
 let lit: Element | null | undefined;
 let litN: string | undefined;
 
+// `n` and a line's `data-scb-anno` can each list several numbers, for a line with several notes.
 const mark = (block: Element | null | undefined, n?: string) => {
+  const on = n?.split(' ') ?? [];
   for (const note of block?.querySelectorAll<HTMLElement>('[data-scb-anno]') ?? []) {
     note.classList.toggle(
       note.tagName === 'LI' ? 'scb-annotation-on' : 'scb-annotation-lit',
-      note.dataset.scbAnno === n,
+      note.dataset.scbAnno?.split(' ').some((m) => on.includes(m)) ?? false,
     );
   }
 };
@@ -197,6 +206,17 @@ const over = (event: Event) => {
   light(target, target.closest?.<HTMLElement>('[data-scb-anno]')?.dataset.scbAnno);
 };
 
+/** A focused side-by-side note opens its lines when an expandable block or hidden lines hide them. */
+function show(event: FocusEvent) {
+  const note = (event.target as Element).closest?.<HTMLElement>('.scb-annotation-notes li[data-scb-anno]');
+  const on = note?.dataset.scbAnno?.split(' ') ?? [];
+  for (const line of note
+    ?.closest('[data-scb-annotations]')
+    ?.querySelectorAll<HTMLElement>('.ec-line[data-scb-anno]') ?? []) {
+    if (line.dataset.scbAnno?.split(' ').some((m) => on.includes(m))) unhide(line);
+  }
+}
+
 const sides = new Set<HTMLElement>();
 
 /** A column taller than the space below the header cannot stick usefully. */
@@ -208,11 +228,22 @@ function checkHeight(block: HTMLElement) {
   block.classList.toggle('scb-side-static', notes.offsetHeight > innerHeight - top);
 }
 
-function checkHeights() {
+// A block that starts hidden (a code switcher variant, a closed <details>) is 0px tall until it shows.
+const resized = new ResizeObserver((entries) => {
+  for (const { target } of entries) checkHeight(target as HTMLElement);
+});
+
+function prune() {
   for (const block of sides) {
-    if (block.isConnected) checkHeight(block);
-    else sides.delete(block);
+    if (!block.isConnected) {
+      sides.delete(block);
+      resized.unobserve(block);
+    }
   }
+}
+
+function checkHeights() {
+  for (const block of sides) checkHeight(block);
 }
 
 let ready = false;
@@ -235,14 +266,16 @@ export default function initAnnotations() {
     // On the document, so that copies of a block, as full screen plugins show, light up too.
     document.addEventListener('mouseover', over);
     document.addEventListener('focusin', over);
+    document.addEventListener('focusin', show);
     document.addEventListener('focusout', () => light(null));
     document.addEventListener('mouseout', (event) => event.relatedTarget || light(null));
   }
+  prune();
   for (const block of document.querySelectorAll<HTMLElement>(
     '[data-scb-annotations]:not([data-scb-annotations-ready])',
   )) {
     block.dataset.scbAnnotationsReady = '';
     sides.add(block);
-    checkHeight(block);
+    resized.observe(block);
   }
 }

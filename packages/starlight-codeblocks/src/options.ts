@@ -27,8 +27,10 @@ export interface AdapterContext {
   /**
    * Gets a URL and keeps the body on disk, so that later builds do not fetch it again.
    * Returns `null`, with a build warning, when the request fails and there is no copy on disk.
+   * `check` throws for a body that is not usable, such as an HTML error page. That body is not kept, and its
+   * error message completes the warning "<url> is …".
    */
-  fetch(url: string): Promise<Uint8Array | null>;
+  fetch(url: string, check?: (body: Uint8Array) => void): Promise<Uint8Array | null>;
   /** Logs a build warning that names the adapter. */
   warn(message: string): void;
 }
@@ -87,8 +89,10 @@ export interface CodeblocksOptions {
 
 /** The default export of a runtime module, which runs code for the Run button. */
 export interface Runtime {
-  load(): Promise<void>;
-  run(code: string, options: { signal: AbortSignal }): Promise<{ stdout: string; stderr: string }>;
+  /** Downloads and starts the runtime, and anything that `code` needs, such as its packages. Not timed. */
+  load(code: string): Promise<void>;
+  /** `session` is true when `code` is the commands of a session with prompts, which run as a REPL runs them. */
+  run(code: string, options: { signal: AbortSignal; session?: boolean }): Promise<{ stdout: string; stderr: string }>;
 }
 
 type Settings<T> = Exclude<T, false | undefined>;
@@ -135,7 +139,7 @@ const oneOf =
 
 // Attributes and directives of other features, which a custom state name would clash with.
 const reservedStateNames = new Set(
-  'title frame mark ins del collapse wrap lang focus hidden hide highlight whitespace brackets expandable playground id placeholder annotations footnotes label step runnable'.split(
+  'title frame mark ins del collapse wrap lang focus hidden hide highlight whitespace brackets expandable playground id placeholder annotations footnotes label prefix step runnable'.split(
     ' ',
   ),
 );
@@ -256,7 +260,16 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         default: () => [python(), nextflow()],
         defaultText: '`[python(), nextflow()]`',
         description: 'Adapters that find and resolve names.',
-        valid: (value) => Array.isArray(value) && value.every((adapter) => isObject(adapter) && isString(adapter.name)),
+        valid: (value) =>
+          Array.isArray(value) &&
+          value.every(
+            (adapter) =>
+              isObject(adapter) &&
+              isString(adapter.name) &&
+              isStringArray(adapter.languages) &&
+              typeof adapter.setup === 'function' &&
+              typeof adapter.findSymbols === 'function',
+          ),
       },
     },
   },
@@ -351,8 +364,8 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       timeout: {
         type: 'number',
         default: 10000,
-        description: 'Milliseconds before a run stops.',
-        valid: (value) => typeof value === 'number' && value > 0,
+        description: 'Milliseconds before a run stops, from 1 to 2147483647, the largest delay browsers accept.',
+        valid: (value) => typeof value === 'number' && value > 0 && value <= 2 ** 31 - 1,
       },
     },
   },

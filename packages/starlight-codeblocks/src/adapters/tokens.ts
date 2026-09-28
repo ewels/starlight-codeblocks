@@ -8,10 +8,11 @@ export function stringEnd(code: string, i: number, quote: string) {
   return Math.min(i + quote.length, code.length);
 }
 
-/** The index after the brackets that open at `tokens[i]`. */
-export function skipBrackets(tokens: { value: string }[], i: number) {
+/** The index after the brackets that open at `tokens[i]`. String tokens never count as brackets. */
+export function skipBrackets(tokens: { type: string; value: string }[], i: number) {
   let depth = 0;
   for (; i < tokens.length; i++) {
+    if (tokens[i]?.type === 'string') continue;
     const value = tokens[i]?.value;
     if (value === '(' || value === '[' || value === '{') depth++;
     if (value === ')' || value === ']' || value === '}') depth--;

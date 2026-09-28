@@ -31,6 +31,25 @@ test('a permalink to a collapsed line expands the block', async ({ page }) => {
   await expect(block.locator('.scb-expandable-toggle')).toHaveAttribute('aria-expanded', 'true');
 });
 
+test('the title bar toggle expands the block to show hidden lines in the collapsed lines', async ({ page }) => {
+  const block = await inject(page, ['```js title="a.js" hidden={6-7} expandable={3}', ...eight, '```']);
+  await block.locator('.scb-hidden-toggle').click();
+  await expect(block.locator('.scb-hidden-line').first()).toBeVisible();
+  await expect(block.locator('.scb-expandable-toggle')).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('a permalink finds its block when a heading before it has the same id', async ({ page }) => {
+  const block = await inject(page, ['```js id="combo" expandable={3}', ...eight, '```']);
+  await page.evaluate(() => {
+    const heading = document.createElement('h2');
+    heading.id = 'combo';
+    document.getElementById('combined')?.prepend(heading);
+    location.hash = '#combo-L8';
+  });
+  await expect(page.locator('#combo-L8')).toHaveClass(/scb-permalink-target/);
+  await expect(block.locator('.scb-expandable-toggle')).toHaveAttribute('aria-expanded', 'true');
+});
+
 test('collapsing hides the hidden-lines markers and callouts of the collapsed lines', async ({ page }) => {
   const block = await inject(page, [
     '```js expandable={3}',

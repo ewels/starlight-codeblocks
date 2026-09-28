@@ -53,6 +53,14 @@ test('keeps a link with a tagged block after it in its section, or anywhere befo
   expect(before.warnings).toEqual([]);
 });
 
+test('reads the comments of the `lang` of a diff block', async () => {
+  const diff = await page(
+    ['See [x](#mention:total).', '', '```diff lang="py"', '+total = 1  # [!mention total]', '```'].join('\n'),
+  );
+  expect(diff.html).toContain('href="#mention:total"');
+  expect(diff.warnings).toEqual([]);
+});
+
 test('turns a link with no block into plain text, with a warning', async () => {
   const other = await page(['See [the value](#mention:x).', '', '## Next', '', code('x')].join('\n'));
   expect(other.html).not.toContain('href="#mention:x"');
@@ -81,4 +89,14 @@ test('warns about a mention link with a malformed escape, and leaves it as plain
   const { html, warnings } = await page(`${code('a')}\n\nSee [bad](#mention:a%E0%A4%A).`);
   expect(warnings).toEqual([expect.stringMatching(/page\.md: .*#mention:a%E0%A4%A.*malformed/)]);
   expect(html).not.toContain('href="#mention:');
+});
+
+test('pairs links only with tags that the notation parser reads', async () => {
+  const link = 'See [it](#mention:x).';
+  const extra = await page([link, '', '```py', 'x = 1  # [!mention x extra]', '```'].join('\n'));
+  expect(extra.html).toContain('href="#mention:x"');
+  const txt = await page([link, '', '```txt', 'x = 1  # [!mention x]', '```'].join('\n'));
+  expect(txt.html).not.toContain('href="#mention:x"');
+  const off = await page([link, '', code('x')].join('\n'), { notation: false });
+  expect(off.html).not.toContain('href="#mention:x"');
 });

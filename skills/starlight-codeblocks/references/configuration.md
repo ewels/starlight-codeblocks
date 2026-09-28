@@ -40,7 +40,7 @@ codeblocks({
 | `walkthrough` | None | Code walkthrough |
 | `scrollycoding` | None | Scrollycoding |
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
-| `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms | Run in the browser |
+| `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms, at most `2147483647` | Run in the browser |
 
 A directive of a feature that is off stays in the code, with a build warning. With `notation: false`, the plugin reads no directives, and every comment renders as written. Attributes still work.
 
@@ -84,7 +84,7 @@ export default {
 };
 ```
 
-Keep `codeblocks()` in `astro.config.mjs`, and give it all the options. `pluginCodeblocks()` with no argument reads the same options. `styleOverrides` can stay in `ec.config.mjs`. `pluginCodeblocks()` can go before or after the other plugins.
+Keep `codeblocks()` in `astro.config.mjs`, and give it all the options. `pluginCodeblocks()` with no argument reads the same options. `styleOverrides` can stay in `ec.config.mjs`. `pluginCodeblocks()` can go before or after most other plugins. `pluginCollapsibleSections()` must come before it, or the build stops.
 
 ## Other plugins
 
@@ -115,4 +115,6 @@ export default {
 };
 ```
 
-The code switcher, inline code highlighting, `<CodeWalkthrough>` and `<Scrollycoding>` need Starlight. The features inside code blocks work on every site. `runnable.runtimes` values are then URLs that the browser imports as they are. The single plugins, such as `pluginFocus()`, are in https://ewels.github.io/starlight-codeblocks/reference/expressive-code-plugins/
+If the site has a `base`, give it as the second argument, `pluginCodeblocks(options, { base: '/docs' })`, so that links in code that start with `/` get it. The code switcher, inline code highlighting, `<CodeWalkthrough>` and `<Scrollycoding>` need Starlight. The features inside code blocks work on every site. Set `tabWidth: 0` in the Expressive Code options, so that tabs reach the code blocks unchanged.
+
+`runnable.runtimes` values are then URLs that the browser imports as they are. There is no built-in Python runtime. Map `python` to the URL of the Pyodide runtime module, such as `https://cdn.jsdelivr.net/npm/starlight-codeblocks/dist/runtimes/pyodide.mjs`. The single plugins, such as `pluginFocus()`, are in https://ewels.github.io/starlight-codeblocks/reference/expressive-code-plugins/

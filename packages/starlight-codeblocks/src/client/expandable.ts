@@ -1,6 +1,9 @@
 const COLLAPSED = 'scb-expandable-collapsed';
 
-const linesOf = (pre: HTMLElement) => pre.querySelectorAll<HTMLElement>('.ec-line:not(summary > *)');
+const linesOf = (pre: HTMLElement) =>
+  pre.querySelectorAll<HTMLElement>('.ec-line:not(summary > *):not(.scb-hidden-line)');
+// Without until-found support the attribute value is ignored, and the lines are plainly hidden.
+const HIDDEN = 'onbeforematch' in HTMLElement.prototype ? 'until-found' : '';
 
 function tail(pre: HTMLElement) {
   const last = linesOf(pre)[Number(pre.dataset.scbExpandable) - 1];
@@ -12,7 +15,8 @@ function tail(pre: HTMLElement) {
 function set(pre: HTMLElement, expanded: boolean) {
   for (const line of tail(pre)) {
     if (expanded) line.removeAttribute('hidden');
-    else line.setAttribute('hidden', 'until-found');
+    // until-found keeps the element's own box, so a marker button would stay an invisible tab stop.
+    else line.setAttribute('hidden', line.classList.contains('scb-hidden-marker') ? '' : HIDDEN);
   }
   pre.classList.toggle(COLLAPSED, !expanded);
   const button = pre.parentElement?.querySelector('.scb-expandable-toggle');
@@ -34,7 +38,12 @@ export default function initExpandable() {
     document.addEventListener('click', (event) => {
       const button = (event.target as Element).closest('.scb-expandable-toggle');
       const pre = button && preOf(button);
-      if (pre) set(pre, button.getAttribute('aria-expanded') !== 'true');
+      if (!pre) return;
+      const expand = button.getAttribute('aria-expanded') !== 'true';
+      const { top } = button.getBoundingClientRect();
+      set(pre, expand);
+      // The button sits under the tail, and scroll anchoring does not follow it when the tail collapses.
+      if (!expand) scrollBy({ top: button.getBoundingClientRect().top - top, behavior: 'instant' });
     });
     document.addEventListener(
       'beforematch',

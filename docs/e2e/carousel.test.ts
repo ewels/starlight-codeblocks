@@ -82,6 +82,17 @@ test.describe('rotation', () => {
     await expect(current(page)).toHaveAttribute('data-feature', 'features/footnotes');
   });
 
+  test('Play works after a tap on a touch screen', async ({ page }) => {
+    test.skip(!phone(), 'Tap needs a touch screen.');
+    const rotation = page.locator('.carousel .rotation');
+    await rotation.tap();
+    await expect(rotation).toHaveAccessibleName('Play');
+    await rotation.tap();
+    await expect(rotation).toHaveAccessibleName('Pause');
+    await page.clock.runFor(interval);
+    await expect(current(page)).toHaveAttribute('data-feature', 'features/footnotes');
+  });
+
   test('pauses while the pointer is over the carousel', async ({ page }) => {
     await page.locator('.carousel .slide[data-current] .expressive-code').hover();
     await page.clock.runFor(interval * 2);

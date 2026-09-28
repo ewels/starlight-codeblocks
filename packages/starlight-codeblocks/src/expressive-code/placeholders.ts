@@ -29,7 +29,6 @@ class PlaceholderAnnotation extends ExpressiveCodeAnnotation {
     const input = h('input', {
       type: 'text',
       class: `${PREFIX}-placeholder`,
-      dataPh: this.text,
       placeholder: this.text,
       ariaLabel: this.text,
       spellcheck: 'false',

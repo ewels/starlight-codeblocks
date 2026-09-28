@@ -6,7 +6,7 @@ import { block, lineClasses, render } from './render.ts';
 
 const todo = { todo: { label: 'To do', colour: { dark: '#c792ea', light: '#7c3aed' } } };
 
-test('tints lines from error, warning and info ranges, with a hidden prefix', async () => {
+test('tints lines from error, warning and info ranges, with a hidden prefix and a visible name', async () => {
   const { html, copyText, warnings } = await render(
     block('js error={1} warning={2} info={3}', 'a()', 'b()', 'c()', 'd()'),
   );
@@ -18,7 +18,8 @@ test('tints lines from error, warning and info ranges, with a hidden prefix', as
   ]);
   expect(html).toContain('<div class="code"><span class="scb-state-prefix scb-sr-only">Error:</span>');
   expect(html).toContain('<span class="scb-state-prefix scb-sr-only">Note:</span>');
-  expect(html).not.toContain('scb-state-label');
+  expect(html).toContain('<span class="scb-state-label"><strong aria-hidden="true">Warning</strong></span></div>');
+  expect(html.match(/scb-state-label/g)).toHaveLength(3);
   expect(copyText).toBe('a()\nb()\nc()\nd()');
   expect(warnings).toEqual([]);
 });
@@ -30,12 +31,12 @@ test('renders a directive message as a label and leaves it out of the copied tex
   expect(html).toContain(
     '<span class="scb-state-label"><strong aria-hidden="true">Error</strong> SyntaxError: expected <code>:</code></span></div>',
   );
-  expect(html.match(/scb-state-label/g)).toHaveLength(1);
+  expect(html.match(/scb-state-label/g)).toHaveLength(2);
   expect(lineClasses(html)).toEqual(['ec-line scb-state scb-state-error', 'ec-line scb-state scb-state-warning']);
   expect(copyText).toBe('for x in y\n    print(x)');
 });
 
-test('applies [!code info:N] to N lines, with the message on the first', async () => {
+test('applies [!code info:N] to N lines, with the message on the first and no name on the others', async () => {
   const { html } = await render(block('js', 'a() // [!code info:2] Two lines', 'b()', 'c()'));
   expect(lineClasses(html)).toEqual([
     'ec-line scb-state scb-state-info',
@@ -49,6 +50,14 @@ test('keeps the rest of a comment and renders only inline code, links and bold',
   const { html, copyText } = await render(block('js', 'a() // keep [!code warning] **Slow** <b>x</b>'));
   expect(copyText).toBe('a() // keep');
   expect(html).toContain('<strong>Slow</strong> &#x3C;b>x&#x3C;/b>');
+});
+
+test('shows the name on the first visible line of a run that starts on a hidden line', async () => {
+  const { html } = await render(block('js error={2-4} hidden={2}', 'a()', 'b()', 'c()', 'd()'));
+  expect(html.match(/<strong aria-hidden="true">Error<\/strong>/g)).toHaveLength(2);
+  const lines = html.split('<div class="ec-line');
+  expect(lines[3]).toContain('>c<');
+  expect(lines[3]).toContain('<strong aria-hidden="true">Error</strong>');
 });
 
 test('combines states on one line', async () => {

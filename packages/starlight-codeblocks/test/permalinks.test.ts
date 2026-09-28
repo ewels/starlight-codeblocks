@@ -31,6 +31,13 @@ test('counts the lines that readers see, from startLineNumber', async () => {
   expect(html).toContain('--scb-gutter:6ch');
 });
 
+test('does not count a file name comment that the frames plugin removes', async () => {
+  const { html } = await render(block('js id="q"', '// src/a.js', 'a1(); // [!code focus]', 'a2();'));
+  expect(html).toContain('id="q-L1"');
+  expect(html).toContain('id="q-L2"');
+  expect(html).not.toContain('q-L3');
+});
+
 test('widens the gutter for three-digit line numbers', async () => {
   const { html } = await render(block('js id="big" startLineNumber=99', 'a()', 'b()'));
   expect(html).toContain('--scb-gutter:7ch');
@@ -80,10 +87,9 @@ test('warns when two blocks on one page have the same id', async () => {
   expect(warnings[0]).toContain('page.md');
 });
 
-test('linksValidatorExclude skips mention links and links to blocks with an id', async () => {
+test('linksValidatorExclude skips mention links and links to any rendered block with an id', async () => {
   setRegistry({ options: resolveOptions(), plugins: [], blockIds: new Set() });
-  const plugins = mdastPlugins(resolveOptions(), { warn() {} });
-  await markdownToHtml(block('js id="cfg"', 'x'), { mdastPlugins: plugins, fileURL: new URL('file:///site/page.md') });
+  await render(block('js id="cfg"', 'x'));
   const excluded = (link: string) => linksValidatorExclude({ link });
   expect(['#cfg', '#cfg-L2', '#cfg-L2-L5', '/guide/#cfg-L1', '#mention:x', '../a/#mention:y'].map(excluded)).toEqual(
     Array(6).fill(true),

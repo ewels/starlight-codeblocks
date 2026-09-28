@@ -33,6 +33,13 @@ test('highlights inline code with a {:lang} suffix, with and without directives'
   expect(warnings).toEqual([]);
 });
 
+test('takes a suffix language with + or #', async () => {
+  const { html } = await md('`int x`{:c++} and `var x`{:c#}.');
+  expect(html).toContain('data-lang="c++"');
+  expect(html).toContain('data-lang="c#"');
+  expect(html).not.toContain('{');
+});
+
 test('keeps text after the suffix and leaves code without one alone', async () => {
   const { html } = await md('`x`{:js}, then `y` {:py}');
   // Starlight restores the unused `:py` directive as text on a real site.

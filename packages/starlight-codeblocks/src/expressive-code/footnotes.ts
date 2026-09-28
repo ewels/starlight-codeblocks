@@ -82,7 +82,7 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
     baseStyles: ({ cssVar }) => {
       const v = (key: string) => cssVar(`codeblocksFootnotes.${key}` as never);
       return `
-.frame:has(> .${cls('s')}) > pre { border-end-start-radius: 0; border-end-end-radius: 0; }
+.frame:has(> .${cls('s')}) > :is(pre, .${PREFIX}-expandable-bar) { border-end-start-radius: 0; border-end-end-radius: 0; }
 .${cls('-badge')} {
   display: inline-flex;
   align-items: center;
@@ -226,7 +226,18 @@ ${litLine(`.${cls('-on')}, .${cls('-peek')}`, v('lineBackground'), v('accent'))}
         });
         figure.properties.dataScbFootnotes = '';
         if (sticky) addClassName(figure, cls('s-sticky'));
-        figure.children.splice(figure.children.indexOf(pre) + 1, 0, h('ol', { class: cls('s') }, items));
+        // Below the expandable bar, so that the bar stays under the code it expands, and above the run output.
+        const find = (name: string) =>
+          figure.children.find(
+            (child) =>
+              child.type === 'element' &&
+              (child.properties.className as string[] | undefined)?.includes(`${PREFIX}-${name}`),
+          );
+        const bar = find('expandable-bar');
+        const output = find('run-output');
+        const list = h('ol', { class: cls('s') }, items);
+        if (output) figure.children.splice(figure.children.indexOf(output), 0, list);
+        else figure.children.splice(figure.children.indexOf(bar ?? pre) + 1, 0, list);
       },
     },
   };

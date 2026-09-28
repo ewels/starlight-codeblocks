@@ -1,5 +1,5 @@
 import type { ExpressiveCodeTheme, StyleVariant } from '@expressive-code/core';
-import { select, toHtml } from '@expressive-code/core/hast';
+import { select } from '@expressive-code/core/hast';
 import { ExpressiveCode } from 'expressive-code';
 import type { InlineCode, Nodes, Text } from 'mdast';
 import type { MdastVisitorContext } from 'satteri';
@@ -77,28 +77,36 @@ code.${CLASS} span[style^='--'] {
   return css;
 }
 
-let engine: ExpressiveCode | undefined;
+let engine: { variants: StyleVariant[]; ec: ExpressiveCode } | undefined;
 let failed = false;
 let queue: Promise<unknown> = Promise.resolve();
 
 /** The token spans for `code`, or `undefined` when Expressive Code does not know the language. */
 function highlight(code: string, language: string) {
-  engine ??= new ExpressiveCode({
-    themes: styleVariants().map((v) => v.theme),
-    // The site engine already corrected the contrast of these themes against its own backgrounds.
-    minSyntaxHighlightingColorContrast: 0,
-    frames: false,
-    textMarkers: false,
-    useStyleReset: false,
-    shiki: siteOptions().shiki,
-    logger: { warn: () => (failed = true), error: () => (failed = true) },
-  });
+  const variants = styleVariants();
+  // A dev server restart keeps this module but sets new site themes.
+  if (!engine || engine.variants !== variants) {
+    engine = {
+      variants,
+      ec: new ExpressiveCode({
+        themes: variants.map((v) => v.theme),
+        // The site engine already corrected the contrast of these themes against its own backgrounds.
+        minSyntaxHighlightingColorContrast: 0,
+        frames: false,
+        textMarkers: false,
+        useStyleReset: false,
+        shiki: siteOptions().shiki,
+        logger: { warn: () => (failed = true), error: () => (failed = true) },
+      }),
+    };
+  }
+  const { ec } = engine;
   // One render at a time, so that a warning belongs to the render that logged it.
   const result = queue.then(async () => {
     failed = false;
-    const { renderedGroupAst } = (await engine?.render({ code, language })) ?? {};
+    const { renderedGroupAst } = (await ec.render({ code, language })) ?? {};
     const line = renderedGroupAst && select('.ec-line .code', renderedGroupAst);
-    return failed || !line ? undefined : toHtml(line.children);
+    return failed || !line ? undefined : line.children;
   });
   queue = result.catch(() => {});
   return result;
@@ -117,15 +125,21 @@ function suffix(siblings: readonly Nodes[], index: number) {
       restValue: first.value.slice(text[0].length),
     };
   // With directives on, `{:js}` parses as the text `{`, a `js` text directive and text that starts with `}`.
+  // A directive name stops at `+` or `#`, so `{:c++}` leaves `++}` in the text.
+  const tail = third?.type === 'text' ? third.value.match(/^([\w#+.-]*)\}/) : null;
   if (
     first.value === '{' &&
     second?.type === 'textDirective' &&
     second.children.length === 0 &&
     Object.keys(second.attributes ?? {}).length === 0 &&
-    third?.type === 'text' &&
-    third.value.startsWith('}')
+    tail
   ) {
-    return { lang: second.name, remove: [first, second] as Nodes[], rest: third, restValue: third.value.slice(1) };
+    return {
+      lang: second.name + tail[1],
+      remove: [first, second] as Nodes[],
+      rest: third as Nodes,
+      restValue: (third as Text).value.slice(tail[0].length),
+    };
   }
 }
 
@@ -167,5 +181,10 @@ export async function inlineCode(
     warn(`inline code \`${code}\` has the unknown language \`${lang}\`. It shows as plain inline code.`);
     return plain;
   }
-  return { type: 'html', value: `<code class="${CLASS}" data-lang="${lang}">${tokens}</code>` } as const;
+  // Real hast, not raw HTML, so that heading ids and the table of contents see the text.
+  return {
+    type: 'inlineCode',
+    value: code,
+    data: { hName: 'code', hProperties: { className: [CLASS], dataLang: lang }, hChildren: tokens },
+  } as InlineCode;
 }

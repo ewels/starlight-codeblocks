@@ -109,6 +109,7 @@ export function pluginWalkthrough(): CodeblocksPlugin {
   flex: 1 0 100%;
   box-sizing: border-box;
   padding: ${cssVar('codePaddingBlock')} ${cssVar('codePaddingInline')};
+  padding-inline-start: calc(${cssVar('codePaddingInline')} + var(--scb-gutter, 0px));
   color: ${cssVar('codeForeground')};
   font-family: ${cssVar('codeFontFamily')};
   font-size: ${cssVar('codeFontSize')};

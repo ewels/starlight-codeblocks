@@ -11,7 +11,7 @@ import {
   pageOptions,
   styleGroups,
 } from './components/reference.ts';
-import { sidebar, unlisted } from './sidebar.mjs';
+import { carouselGroups, sidebar, unlisted } from './sidebar.mjs';
 
 export const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 export const siteUrl = new URL(`${base}/`, import.meta.env.SITE).href;
@@ -131,12 +131,7 @@ const component: Record<string, (props: Record<string, string>, id: string) => s
 
 /** The home page carousel as a list of the features in each sidebar group. */
 function featureList() {
-  return sidebar
-    .map(({ label, items }) => ({
-      label,
-      ids: items.filter((item): item is string => typeof item === 'string' && item.startsWith('features/')),
-    }))
-    .filter(({ ids }) => ids.length > 0)
+  return carouselGroups
     .map(({ label, ids }) =>
       [`### ${label}`, ids.map((id) => `- ${featureLink(id)}: ${descriptions.get(id)}`).join('\n')].join('\n\n'),
     )
@@ -184,7 +179,7 @@ export function pageMarkdown(entry: Entry) {
         if (i >= lines.length) throw new Error(`Unclosed export in ${entry.id}`);
         body.push(lines[i] as string);
       }
-      strings[exp[1] as string] = body.join('\n').replace(/\\([`\\$])/g, '$1');
+      strings[exp[1] as string] = body.join('\n').replace(/\\([`$\\t])/g, (_, c: string) => (c === 't' ? '\t' : c));
       continue;
     }
     if (/^(import|export) /.test(line)) throw new Error(`No Markdown version of this line in ${entry.id}: ${line}`);

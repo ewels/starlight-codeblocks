@@ -47,7 +47,7 @@ Use to tint a line as an error, a warning or a note. An optional message shows a
 
 | Syntax | Where |
 |---|---|
-| `error={range}`, `warning={range}`, `info={range}` | Fence line. Tints the lines, with no message. |
+| `error={range}`, `warning={range}`, `info={range}` | Fence line. Tints the lines, with no message. The first line of each group shows the name of the state. |
 | `[!code error] message` | Comment. The message is optional. |
 | `[!code warning] message` | Comment |
 | `[!code info] message` | Comment. The label reads **Note**. |
@@ -77,4 +77,4 @@ count = len(sys.argv)  # [!code warning] Includes the script name
 
   Then use `todo={9}` or `[!code todo]`. A name uses lower-case letters, digits and hyphens, and cannot be the name of another attribute, such as `title` or `focus`. Each colour needs a contrast of 3:1 or more on the code background. A state with the name `error`, `warning` or `info` changes the built-in state.
 - Option: `lineStates: false` leaves the directives in the code.
-- Limits: a message is one line of text. `[!code <state>]` on a line with only a comment marks an empty line.
+- Limits: a message is one line of text. `[!code <state>]` on a line with only a comment marks the line below, and the comment line goes.

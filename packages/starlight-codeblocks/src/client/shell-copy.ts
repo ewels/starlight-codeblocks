@@ -1,15 +1,11 @@
-import { decodeCode } from './shared/copy.ts';
+import { decodeCode, writeClipboard } from './shared/copy.ts';
 
 const timers = new WeakMap<HTMLElement, number>();
 
 async function click(event: MouseEvent) {
   const button = (event.target as Element).closest?.<HTMLButtonElement>('.scb-shell-copy');
   if (!button) return;
-  try {
-    await navigator.clipboard.writeText(decodeCode(button.dataset.code));
-  } catch {
-    return;
-  }
+  if (!(await writeClipboard(decodeCode(button.dataset.code)))) return;
   const live = button.parentElement?.querySelector('[aria-live]');
   // Keeps the width, so that the shorter label does not move the buttons beside it.
   button.style.minWidth = `${button.getBoundingClientRect().width}px`;

@@ -3,7 +3,7 @@ title: Accessibility
 description: What each feature does for keyboard users, screen reader users and readers who ask for reduced motion, and the contrast that the default styles meet.
 ---
 
-The features meet WCAG 2.2 AA in the light and the dark themes of Starlight, with the default style settings. The one known exception is the fade of three features, which the [contrast](#contrast) section explains. This page lists what each feature does for readers who use a keyboard or a screen reader, or who ask for reduced motion. It also says where colour is part of the meaning, and what else carries that meaning.
+The features meet WCAG 2.2 AA in the light and the dark themes of Starlight, with the default style settings. The known exceptions are the fade of four features and the dimmed open lines of hidden lines, which the [contrast](#contrast) section explains. This page lists what each feature does for readers who use a keyboard or a screen reader, or who ask for reduced motion. It also says where colour is part of the meaning, and what else carries that meaning.
 
 ## Rules for every feature
 
@@ -18,7 +18,7 @@ These rules apply to all features, so the sections below do not repeat them:
 - When the reader's system asks for reduced motion, every transition and animation of the plugin stops, and so does the transition of the copy button. The change still happens, at once, and pages jump instead of scrolling smoothly.
 - The copy button and a manual selection give the code only. Messages, markers, notes, line numbers and glyphs are not part of the copied text.
 - The copy button includes [hidden lines](/starlight-codeblocks/features/hidden-lines/). A manual selection includes only the hidden lines that are open.
-- Code stays in the page for screen readers, also when it is blurred, faded or collapsed. [Hidden lines](/starlight-codeblocks/features/hidden-lines/) are the exception: they stay hidden until the reader opens them.
+- Code stays in the page for screen readers, also when it is blurred or faded. [Hidden lines](/starlight-codeblocks/features/hidden-lines/) and the collapsed lines of [expandable blocks](/starlight-codeblocks/features/expandable-blocks/) are the exceptions: screen readers do not read them until the reader opens them.
 - Controls do not print. An expandable block prints in full, and hidden lines stay hidden.
 
 ## Contrast
@@ -32,15 +32,17 @@ The default colours come from the Expressive Code theme. The plugin makes each o
 | Messages of line states | 5:1 |
 | Bars, underlines, markers, badges and focus rings | 3:1 |
 
-Three features fade lines or text on purpose: [focus](/starlight-codeblocks/features/focus/), [code mentions](/starlight-codeblocks/features/code-mentions/) and [scrollycoding](/starlight-codeblocks/features/scrollycoding/). While it is faded, the text is below 4.5:1. This is a known exception to WCAG 1.4.3, and the plugin limits it in these ways:
+Four features fade lines or text on purpose: [focus](/starlight-codeblocks/features/focus/), [code mentions](/starlight-codeblocks/features/code-mentions/), [scrollycoding](/starlight-codeblocks/features/scrollycoding/) and [expandable blocks](/starlight-codeblocks/features/expandable-blocks/). A collapsed expandable block fades its last visible lines. While it is faded, the text is below 4.5:1. This is a known exception to WCAG 1.4.3, and the plugin limits it in these ways:
 
 - The faded text stays in the page. Screen readers read it the same as the other text, and a copy gives it in full.
-- The reader can always bring the text back to full contrast. For focus, hover over the block or move keyboard focus into it. For code mentions, the fade lasts only while a mention link has hover or focus. For scrollycoding, scroll to the step, or move focus into the sticky block.
+- The reader can always bring the text back to full contrast. For focus, hover over the block or move keyboard focus into it. For code mentions, the fade lasts only while a mention link has hover or focus. For scrollycoding, scroll to the step, or move focus into the sticky block. For expandable blocks, select the button under the code.
 - The fade does not hide information. It shows where to look.
 
 Some tints are on known lines, such as a line state or a word-level diff. There, the plugin changes each syntax colour that falls below 4.5:1 on the tint. Expressive Code does the same for its own marked lines. A tint that any line can get, such as a permalink target, is light enough for every syntax colour of the default themes.
 
-If your site must meet 4.5:1 in every state, set `codeblocksFocus.opacity` and `codeblocksMentions.fadeOpacity` to `1` and `codeblocksFocus.blur` to `0px` in the style settings. Do not use scrollycoding on that site.
+[Hidden lines](/starlight-codeblocks/features/hidden-lines/) that show are dimmed to 75% opacity, so some syntax colours fall below 4.5:1, but stay at 3:1 or more.
+
+If your site must meet 4.5:1 in every state, set `codeblocksFocus.opacity`, `codeblocksMentions.fadeOpacity` and `codeblocksHiddenLines.openOpacity` to `1` and `codeblocksFocus.blur` to `0px` in the style settings. Do not use scrollycoding or expandable blocks on that site.
 
 If you change a colour in the [style settings](/starlight-codeblocks/reference/style-settings/), check its contrast in both themes.
 
@@ -80,7 +82,7 @@ The plugin reads directives at build time and removes them from the page. Reader
 
 ### Scrollycoding
 
-- Screen readers read the steps in order, then the code block. On a narrow screen, each step has its own copy of the block.
+- Screen readers read the steps in order, then the code block. On a narrow screen, each step has its own copy of the block. When the code changes between steps, the step where each version starts also has that version as text for screen readers.
 - The pointer does not clear the focus of the sticky block. Move keyboard focus into the block to make every line sharp.
 - Under reduced motion, the focus and the fade of the steps change at once.
 
@@ -115,7 +117,7 @@ The plugin reads directives at build time and removes them from the page. Reader
 
 ### Hidden lines
 
-- Each marker is a button with `aria-expanded`. The label of the title bar button changes from **Show** to **Hide**. Both have `aria-controls`, which names the lines they show.
+- Each marker is a button with `aria-expanded`. The title bar button also has `aria-expanded`, and its label changes from **Show** to **Hide**. Both have `aria-controls`, which names the lines they show.
 - The marker text gives the number of lines, such as "3 hidden lines", so readers know what the button opens.
 - Hidden lines that show are dimmed to 75% opacity. Some syntax colours then have less than 4.5:1 contrast, but at least 3:1. To turn the dimming off, set the `codeblocksHiddenLines.openOpacity` style setting to `1`.
 
@@ -123,6 +125,8 @@ The plugin reads directives at build time and removes them from the page. Reader
 
 - The button under the code says how many lines it shows, such as "Show all 24 lines". It has `aria-expanded`.
 - The collapsed lines use `hidden="until-found"`, so Find in the browser still finds text in them, and the block expands to show the match.
+- The last lines that show fade into the background while the block is collapsed, so they are below 4.5:1. The [contrast](#contrast) section explains this exception.
+- Screen readers do not read the collapsed lines. They read the lines that show, then the button. When the reader selects the button, or Find in the browser opens the block, all the lines are read.
 
 ### Visible whitespace
 

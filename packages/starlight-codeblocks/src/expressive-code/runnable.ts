@@ -1,8 +1,17 @@
 import { PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
+import { encodeCode } from '../client/shared/copy.ts';
 import { clientJsModules } from '../client-modules.ts';
 import { getRegistry } from '../registry.ts';
-import { addTitleBarControl, bundledLanguage, type CodeblocksPlugin, warn } from './core.ts';
+import {
+  addTitleBarControl,
+  bundledLanguage,
+  type CodeblocksPlugin,
+  keepCopiedText,
+  languageId,
+  warn,
+} from './core.ts';
+import { pythonSessionPrompts } from './shell-copy.ts';
 import { onCode, PREFIX, themeColour } from './styles.ts';
 
 export interface RunnableStyleSettings {
@@ -39,7 +48,8 @@ interface RunnableSettings {
  * values are URLs as written and there is no built-in Python runtime.
  */
 export function runtimeModules(runtimes: Record<string, string> | undefined, bundled: boolean): Record<string, string> {
-  return bundled ? { python: PYODIDE_RUNTIME, ...runtimes } : { ...runtimes };
+  const site = Object.fromEntries(Object.entries(runtimes ?? {}).map(([lang, path]) => [languageId(lang), path]));
+  return bundled ? { python: PYODIDE_RUNTIME, ...site } : site;
 }
 
 /** The file name of a bundled runtime module, in Astro's assets folder. */
@@ -53,7 +63,7 @@ export function pluginRunnable({ runtimes, timeout = 10000 }: RunnableSettings =
     name: 'starlight-codeblocks:runnable',
     styleSettings,
     baseStyles: ({ cssVar }) => `
-.frame:has(> .${cls('-output')}:not(:empty)) > pre { border-end-start-radius: 0; border-end-end-radius: 0; }
+.frame:has(> .${cls('-output')}:not(:empty)) > :is(pre, .${PREFIX}-footnotes) { border-end-start-radius: 0; border-end-end-radius: 0; }
 .${cls('-output')}:not(:empty) {
   padding: 9px 16px;
   border: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
@@ -85,8 +95,9 @@ export function pluginRunnable({ runtimes, timeout = 10000 }: RunnableSettings =
         if (!figure) return;
         const registry = getRegistry();
         const modules = runtimeModules(runtimes, !!registry);
-        const info = bundledLanguage(codeBlock.language);
-        const language = [codeBlock.language, info?.id].find((l) => l && Object.hasOwn(modules, l));
+        // Shiki has no pycon, but a pycon session runs on the Python runtime.
+        const id = codeBlock.language === 'pycon' ? 'python' : languageId(codeBlock.language);
+        const language = id && Object.hasOwn(modules, id) ? id : undefined;
         if (!language) {
           warn(
             context,
@@ -97,8 +108,17 @@ export function pluginRunnable({ runtimes, timeout = 10000 }: RunnableSettings =
         figure.properties.dataScbRunnable = registry
           ? `${(registry.base ?? '/').replace(/\/?$/, '/')}${registry.assets ?? '_astro'}/${runtimeFileName(language)}`
           : modules[language];
-        figure.properties.dataScbRunnableName = info?.name ?? language;
+        figure.properties.dataScbRunnableName = bundledLanguage(language)?.name ?? language;
         figure.properties.dataScbRunnableTimeout = String(timeout);
+        keepCopiedText(renderData.blockAst, codeBlock.code);
+        // With smart shell copy off, nothing else has taken the prompts and output out of a session.
+        if (!select('.scb-shell-copy', figure)) {
+          const session = pythonSessionPrompts(codeBlock.language, codeBlock.getLines());
+          if (session.size > 0)
+            figure.properties.dataScbRunnableSession = encodeCode(
+              [...session].map(([line, prompt]) => line.text.slice(prompt.length)).join('\n'),
+            );
+        }
         addTitleBarControl(
           renderData.blockAst,
           h(

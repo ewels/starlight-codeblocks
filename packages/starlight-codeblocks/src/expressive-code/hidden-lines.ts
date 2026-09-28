@@ -1,5 +1,6 @@
 import {
   AttachedPluginData,
+  type ExpressiveCodeBlock,
   type ExpressiveCodeLine,
   onBackground,
   PluginStyleSettings,
@@ -43,6 +44,10 @@ const styleSettings = new PluginStyleSettings({
 });
 
 const hiddenData = new AttachedPluginData<{ lines: Set<ExpressiveCodeLine> }>(() => ({ lines: new Set() }));
+
+/** Whether the hidden lines plugin hides `line`. Known from `preprocessMetadata` on. */
+export const isHiddenLine = (codeBlock: ExpressiveCodeBlock, line: ExpressiveCodeLine) =>
+  hiddenData.getOrCreateFor(codeBlock).lines.has(line);
 
 const plural = (n: number) => `${n} hidden line${n === 1 ? '' : 's'}`;
 
@@ -120,7 +125,7 @@ export function pluginHiddenLines(): CodeblocksPlugin {
 `,
     jsModules: clientJsModules,
     hooks: {
-      preprocessMetadata(context) {
+      preprocessCode(context) {
         hiddenData.getOrCreateFor(context.codeBlock).lines = markedLines(context, 'hidden', 'code hide');
       },
       postprocessRenderedBlock(context) {
@@ -133,7 +138,7 @@ export function pluginHiddenLines(): CodeblocksPlugin {
         const lines = codeBlock.getLines();
         const isHidden = (i: number) => hidden.has(lines[i] as ExpressiveCodeLine);
         const uid = blockUid(context);
-        const markerIds: string[] = [];
+        const allIds: string[] = [];
         for (let i = 0; i < lines.length; i++) {
           const first = lineElement(lines[i] as ExpressiveCodeLine);
           if (!first || !isHidden(i) || isHidden(i - 1)) continue;
@@ -148,8 +153,7 @@ export function pluginHiddenLines(): CodeblocksPlugin {
             addClassName(el, `${PREFIX}-no-print`);
             ids.push(id);
           }
-          const markerId = `${PREFIX}-hidden-${uid}-m${markerIds.length + 1}`;
-          markerIds.push(markerId);
+          allIds.push(...ids);
           insertBefore(
             code,
             first,
@@ -157,7 +161,6 @@ export function pluginHiddenLines(): CodeblocksPlugin {
               'button',
               {
                 type: 'button',
-                id: markerId,
                 class: `${PREFIX}-hidden-marker ${PREFIX}-no-print`,
                 ariaExpanded: 'false',
                 ariaControls: ids.join(' '),
@@ -166,6 +169,7 @@ export function pluginHiddenLines(): CodeblocksPlugin {
             ),
           );
         }
+        if (allIds.length === 0) return;
         figure.properties.dataScbHiddenLines = '';
         addTitleBarControl(
           figure,
@@ -174,9 +178,10 @@ export function pluginHiddenLines(): CodeblocksPlugin {
             {
               type: 'button',
               class: `${PREFIX}-btn ${PREFIX}-hidden-toggle ${PREFIX}-no-print ${PREFIX}-needs-js`,
-              ariaControls: markerIds.join(' '),
+              ariaExpanded: 'false',
+              ariaControls: allIds.join(' '),
             },
-            `Show ${plural(hidden.size)}`,
+            `Show ${plural(allIds.length)}`,
           ),
         );
       },

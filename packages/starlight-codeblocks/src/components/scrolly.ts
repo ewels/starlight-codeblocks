@@ -56,7 +56,9 @@ function renameIds(copy: Element, suffix: string) {
     if (typeof properties.id === 'string') properties.id = rename(properties.id);
     for (const key of ['ariaControls', 'ariaDescribedBy', 'ariaLabelledBy', 'popoverTarget']) {
       const value = properties[key];
-      if (value !== undefined) properties[key] = String(value).split(/\s+/).map(rename).join(' ');
+      if (value === undefined) continue;
+      const ids = Array.isArray(value) ? value.map(String) : String(value).split(/\s+/);
+      properties[key] = ids.map(rename).join(' ');
     }
     if (typeof properties.href === 'string' && properties.href.startsWith('#')) {
       properties.href = `#${rename(properties.href.slice(1))}`;
@@ -81,6 +83,7 @@ function apply(group: Element, { focus, mark }: StepState, suffix: string, focus
   const code = select('pre > code', copy);
   if (code && focusable) {
     code.properties.tabindex = '0';
+    code.properties.role ??= 'region';
     code.properties.ariaLabel ??= 'Code block';
   }
   return copy;
@@ -103,6 +106,17 @@ function longestLine(groups: Element[]) {
   );
 }
 
+/**
+ * The code of a version as plain text for screen readers, at the step where it starts. The wide layout hides the
+ * step's copy of the block, and the sticky column shows only the current version.
+ */
+function spokenCode(group: Element) {
+  return h('div', { class: `${S}-spoken`, dataPagefindIgnore: '' }, [
+    h('p', {}, 'Code from this step on:'),
+    h('pre', {}, readTokens(group).code),
+  ]);
+}
+
 const is = (node: Element, name: string) => getClassNames(node).includes(name);
 
 /**
@@ -117,6 +131,23 @@ export function scrollycoding(html: string, { interactive = true, animate = true
     (node): node is Element =>
       node.type === 'element' && (is(node, `${S}-step`) || (is(node, 'expressive-code') && !!select('figure', node))),
   );
+  const other = root.children.find(
+    (node) =>
+      (node.type === 'text' && node.value.trim() !== '') ||
+      (node.type === 'element' &&
+        !items.includes(node) &&
+        !['script', 'style', 'link'].includes(node.tagName) &&
+        !is(node, 'expressive-code')),
+  );
+  if (other) {
+    const what =
+      other.type === 'element'
+        ? `a <${other.tagName}>`
+        : `the text "${'value' in other ? other.value.trim().slice(0, 40) : ''}"`;
+    throw new Error(
+      `<Scrollycoding> holds only code blocks and <Step> components, but it has ${what}. Put the text in a <Step>, or before or after <Scrollycoding>.`,
+    );
+  }
   const versions: Element[] = [];
   const steps: { step: Element; version: number }[] = [];
   for (const item of items) {
@@ -127,10 +158,11 @@ export function scrollycoding(html: string, { interactive = true, animate = true
     versions.length === 0 ||
     steps.length === 0 ||
     steps[0].version < 0 ||
+    versions.some((_, v) => !steps.some((step) => step.version === v)) ||
     is(items.at(-1) as Element, 'expressive-code')
   ) {
     throw new Error(
-      `<Scrollycoding> needs a code block, then one or more <Step> components. A code block between steps changes the code from the next step on. It has ${versions.length} code blocks and ${steps.length} steps${steps.length > 0 ? ', and it does not start with a code block and end with a step' : ''}.`,
+      `<Scrollycoding> needs a code block, then one or more <Step> components. A code block between steps changes the code from the next step on. It has ${versions.length} code blocks and ${steps.length} steps${steps.length > 0 ? ', and it does not start with a code block, follow each code block with a step, and end with a step' : ''}.`,
     );
   }
   const states = steps.map(({ step, version }) => {
@@ -152,7 +184,13 @@ export function scrollycoding(html: string, { interactive = true, animate = true
         dataScbMark: states[k].mark.join(','),
         dataScbVersion: versions.length > 1 ? String(version) : undefined,
       },
-      [h('div', { class: `${S}-text` }, step.children), apply(versions[version], states[k], `s${k + 1}`)],
+      [
+        h('div', { class: `${S}-text` }, step.children),
+        ...(interactive && versions.length > 1 && steps.findIndex((other) => other.version === version) === k
+          ? [spokenCode(versions[version])]
+          : []),
+        apply(versions[version], states[k], `s${k + 1}`),
+      ],
     );
   });
   const grid = h('div', { class: `${S}-grid` }, [h('div', { class: `${S}-steps` }, column)]);
@@ -164,6 +202,9 @@ export function scrollycoding(html: string, { interactive = true, animate = true
       const figure = select('figure', copy);
       if (figure) addClassName(figure, `${S}-frame`);
       if (v === 0) addClassName(copy, `${S}-current`);
+      // The client keeps these marks from the fence line when it sets the marks of each step.
+      const marked = codeLines(group).flatMap((line, i) => (is(line, 'mark') ? [i] : []));
+      if (marked.length > 0) copy.properties.dataScbMarked = marked.join(',');
       return copy;
     });
     const data = animate && versions.length > 1 ? [h('script', { type: 'application/json' }, stepsData(versions))] : [];
@@ -223,6 +264,15 @@ ${SIDE_SIZES.map((w) => {
   ${on} .${S}-step.${S}-on { opacity: 1; }
   ${on} .${S}-code > .expressive-code { grid-area: 1 / 1; margin: 0; }
   ${on} .${S}-step > .expressive-code { display: none; }
+  ${on} .${S}-spoken {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
   ${on} .${S}-code {
     /* The versions share one cell, so the block keeps the height of the tallest one. */
     display: grid;

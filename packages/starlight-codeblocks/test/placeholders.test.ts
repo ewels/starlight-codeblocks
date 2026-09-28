@@ -3,7 +3,7 @@ import { findPlaceholders } from '../src/expressive-code/placeholders.ts';
 import { block, render } from './render.ts';
 
 const field = (text: string) =>
-  `<input type="text" class="scb-placeholder" data-ph="${text}" placeholder="${text}" aria-label="${text}" spellcheck="false" autocomplete="off" style="width: ${text.length}ch"><span class="scb-placeholder-text">${text}</span>`;
+  `<input type="text" class="scb-placeholder" placeholder="${text}" aria-label="${text}" spellcheck="false" autocomplete="off" style="width: ${text.length}ch"><span class="scb-placeholder-text">${text}</span>`;
 
 test('turns every match of each text into a field, named by its text', async () => {
   const { html, copyText, warnings } = await render(

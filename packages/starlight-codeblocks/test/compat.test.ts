@@ -6,6 +6,7 @@ import {
 } from '@expressive-code/core';
 import { type Element, select, selectAll, toText } from '@expressive-code/core/hast';
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
+import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
 import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { codeLines } from '../src/components/tokens.ts';
@@ -55,6 +56,32 @@ test('hidden lines keep the other plugin’s markup and put the marker before th
   const hidden = select('.scb-hidden-line', root) as Element;
   expect(text(hidden)).toBe('secret();');
   expect(previous(root, hidden)?.properties.className).toContain('scb-hidden-marker');
+});
+
+test('callouts and hidden-line markers offset by the line numbers plugin’s gutter', async () => {
+  const root = await renderAfter([pluginLineNumbers()], '', ...code);
+  const figure = select('figure', root) as Element;
+  expect(select('.ec-line > .gutter > .ln', figure)).toBeTruthy();
+  expect(String(figure.properties.style ?? '')).not.toContain('--scb-gutter');
+  const ec = new ExpressiveCode({ plugins: [pluginLineNumbers(), pluginCodeblocks()] });
+  const css = (await ec.getBaseStyles()).replace(/\s+/g, '');
+  expect(css).toContain('figure:has(.ec-line>.gutter>.ln){--scb-gutter:calc(var(--lnWidth,2ch)+4ch)');
+});
+
+test('collapse counts the lines that readers see, like the other range attributes', async () => {
+  const root = await renderAfter(
+    [pluginCollapsibleSections()],
+    'collapse={2-3}',
+    '// [!callout] Note',
+    'a()',
+    'b()',
+    'c()',
+    'd()',
+  );
+  expect(selectAll('.ec-line', select('details', root) as Element).map(text)).toEqual(
+    expect.arrayContaining(['b()', 'c()']),
+  );
+  expect(selectAll('details .ec-line', root).map(text)).not.toContain('a()');
 });
 
 test('components count code lines without a collapsed section’s summary', async () => {
@@ -109,4 +136,13 @@ test('drops annotations and footnotes whose line another plugin removed, with a 
   }
   expect(warnings).toHaveLength(3);
   expect(warnings[0]).toContain('another plugin removed its line');
+});
+
+test('collapsible sections after pluginCodeblocks() fail with the fix', async () => {
+  for (const options of [{}, { notation: false as const }]) {
+    const ec = new ExpressiveCode({ plugins: [pluginCodeblocks(options), pluginCollapsibleSections()] });
+    await expect(ec.render({ code: 'a()', language: 'js', meta: 'collapse={1-1}' })).rejects.toThrow(
+      /Put `pluginCollapsibleSections\(\)` before `pluginCodeblocks\(\)`/,
+    );
+  }
 });

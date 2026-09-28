@@ -39,7 +39,7 @@ A directive is text in square brackets that starts with `!`. It goes in a commen
 
 There are two kinds of directive:
 
-- An end-of-line directive applies to the line it is on.
+- An end-of-line directive applies to the line it is on. On a line with no code, it applies to the line below, and the plugin removes the line that holds it, as Shiki does.
 - An own-line directive takes a whole line and applies to the line below it. The plugin removes the line that holds it.
 
 The [directives reference](/starlight-codeblocks/reference/directives/) lists every directive and says which kind it is.
@@ -50,6 +50,7 @@ The plugin reads the directives when the site builds. It needs no JavaScript in 
 
 - The plugin removes every directive from the rendered code and from the copied text.
 - If a comment holds only directives, the plugin removes the whole comment and the whitespace before it. Other text in the comment stays.
+- In JSX and TSX, the plugin also reads comments in braces, `{/* [!code focus] */}`, and removes the braces with the comment.
 - The copy button leaves out messages, annotations, callouts and footnotes.
 - `[!code highlight]`, `[!code ++]` and `[!code --]` give the same result as the `mark`, `ins` and `del` attributes of Expressive Code.
 - A backslash after the bracket, as in `[\!code focus]`, turns a directive into plain text. The plugin removes the backslash.
@@ -57,7 +58,7 @@ The plugin reads the directives when the site builds. It needs no JavaScript in 
 
 ### Line numbers
 
-Line numbers in attributes count the lines that readers see. The plugin removes own-line directives before it counts, so they do not change the numbers. This applies to the attributes of Expressive Code as well, such as `{2}` and `ins={3}`.
+Line numbers in attributes count the lines that readers see. The plugin removes lines that hold only directives before it counts, so they do not change the numbers. This applies to the attributes of Expressive Code as well, such as `{2}` and `ins={3}`.
 
 ### Warnings
 
@@ -69,6 +70,8 @@ The build logs a warning with the file, the code block and the line when:
 - an own-line directive has no line below it.
 
 The directive then has no effect. An unknown directive stays in the code as written, so you can see it on the page.
+
+The build also logs a warning when a comment has text before an own-line directive. The directive works, but the plugin removes the whole line, so the text is not on the page.
 
 ## Options
 
@@ -87,7 +90,7 @@ codeblocks({
 });
 ```
 
-An entry replaces the built-in syntax of that language. The built-in map:
+An entry replaces the built-in syntax of that language. A language name or its alias works: an entry for `powershell` also applies to ` ```pwsh `. The built-in map:
 
 <CommentSyntaxTable />
 
@@ -133,7 +136,7 @@ const port = 8080; // [\\!code highlight]
 
 - JSON has no comments, so a `json` block cannot use directives. Use `jsonc`, or use attributes.
 - The plugin skips a comment opener inside a string that opens and closes on the same line, such as `"// [!code ++]"`. A string that continues on the next line, such as a template literal, is not skipped. Escape a directive in it with a backslash.
-- One comment on each line can hold directives.
+- One comment on each line can hold directives. Text such as `[!NOTE]` outside a comment, as in a Markdown alert, stays in the code. The plugin still reads the comment after it.
 - MDX comments in `mdx` blocks, such as `{/* */}`, are not in the built-in map. Add them with `notation.comments`.
 
 ## Related

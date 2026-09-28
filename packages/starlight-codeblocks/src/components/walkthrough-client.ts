@@ -1,3 +1,4 @@
+import { scrollTo } from '../client/shared/scroll.ts';
 import { swapInto } from '../client/shared/swap.ts';
 import { animate } from './animate.ts';
 import type { StepTokens } from './steps.ts';
@@ -5,20 +6,22 @@ import type { StepTokens } from './steps.ts';
 const S = 'scb-steps';
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 
-const roots: HTMLElement[][] = [];
+const roots = new Map<number, HTMLElement[]>();
+let ids = 0;
 
 function setup(root: HTMLElement) {
   if (root.dataset.scbStepsReady !== undefined) return;
   root.dataset.scbStepsReady = '';
   const steps = JSON.parse(root.querySelector(':scope > script')?.textContent ?? '[]') as StepTokens[];
   const groups = [...root.querySelectorAll<HTMLElement>(':scope > .expressive-code')];
-  for (const group of groups) group.dataset.scbStepsOf = String(roots.length);
-  roots.push(groups);
+  const id = ids++;
+  for (const group of groups) group.dataset.scbStepsOf = String(id);
+  roots.set(id, groups);
   const live = root.querySelector(':scope > [aria-live]');
   let current = 0;
   let stop = () => {};
 
-  const go = (k: number, control?: string) => {
+  const go = (k: number, control?: string, motion = true) => {
     if (k === current || k < 0 || k >= groups.length) return;
     stop();
     const from = current;
@@ -28,7 +31,7 @@ function setup(root: HTMLElement) {
     const dot = groups[k].querySelector<HTMLElement>(`[data-scb-steps-go="${k}"]`);
     if (live) live.textContent = dot?.getAttribute('aria-label') ?? '';
     if (control) focus(groups[k], control, k);
-    if (!reduce.matches && steps[from] && steps[k]) stop = animate(groups[k], steps[from], steps[k]);
+    if (motion && !reduce.matches && steps[from] && steps[k]) stop = animate(groups[k], steps[from], steps[k]);
   };
 
   root.addEventListener('click', (event) => {
@@ -39,6 +42,15 @@ function setup(root: HTMLElement) {
     const step = arrow(event);
     if (step) go(current + step, 'dot');
   });
+  const stepOf = (el: Element) => groups.findIndex((group) => group.contains(el));
+  // No animation: it hides the real code, so the permalinks script could not scroll to the line.
+  root.addEventListener('beforematch', (event) => go(stepOf(event.target as Element), undefined, false), true);
+  // A line permalink can target a step before this script is ready, and could not scroll to it then.
+  const target = root.querySelector('.scb-permalink-target');
+  if (target && stepOf(target) > 0) {
+    go(stepOf(target), undefined, false);
+    scrollTo(target, 'center');
+  }
 }
 
 function focus(group: Element, control: string, k: number) {
@@ -66,7 +78,7 @@ function arrow(event: KeyboardEvent) {
  */
 function goInCopy(copy: HTMLElement, to: (k: number) => number, control: string) {
   const k = to(Number(copy.querySelector('[aria-current="step"]')?.getAttribute('data-scb-steps-go')));
-  const next = roots[Number(copy.dataset.scbStepsOf)]?.[k];
+  const next = roots.get(Number(copy.dataset.scbStepsOf))?.[k];
   if (!next) return;
   swapInto(copy, next);
   focus(copy, control, k);
@@ -75,6 +87,8 @@ function goInCopy(copy: HTMLElement, to: (k: number) => number, control: string)
 let listening = false;
 
 const init = () => {
+  // A view transition removes the walkthroughs of the page before.
+  for (const [id, groups] of roots) if (!groups[0]?.isConnected) roots.delete(id);
   for (const root of document.querySelectorAll<HTMLElement>('[data-scb-steps]')) setup(root);
   if (listening) return;
   listening = true;

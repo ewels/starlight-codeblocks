@@ -3,7 +3,8 @@ import { type Element, h, select, selectAll, toText } from '@expressive-code/cor
 import { type CodeblocksPlugin, insertBefore, lineElement } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
-import { PREFIX } from './styles.ts';
+import { shellPrompt } from './shell-copy.ts';
+import { PREFIX, TAB_SIZE } from './styles.ts';
 
 export interface CalloutsStyleSettings {
   background: UnresolvedStyleValue;
@@ -31,20 +32,21 @@ const styleSettings = new PluginStyleSettings({
   },
 });
 
-// Browsers draw a tab to the next multiple of 8 columns unless the site sets `tab-size`.
-const TAB = 8;
-
 function column(text: string, index: number) {
   let col = 0;
-  for (const c of text.slice(0, index)) col = c === '\t' ? (Math.floor(col / TAB) + 1) * TAB : col + 1;
+  for (const c of text.slice(0, index)) col = c === '\t' ? (Math.floor(col / TAB_SIZE) + 1) * TAB_SIZE : col + 1;
   return col;
 }
 
-/** The column, in characters, of the middle of `match` on the line, or of its first character that is not whitespace. */
-export function calloutMiddle(text: string, match?: string) {
+/**
+ * The column, in characters, of the middle of `match` on the line, or of its first character that is not whitespace.
+ * `prompt` is drawn before the line's text but is not part of it.
+ */
+export function calloutMiddle(text: string, match?: string, prompt = '') {
+  const line = prompt + text;
   const at = match ? text.indexOf(match) : -1;
-  if (at >= 0) return column(text, at) + column(match as string, (match as string).length) / 2;
-  return column(text, Math.max(0, text.search(/\S/))) + 0.5;
+  if (at >= 0) return column(line, prompt.length + at) + column(match as string, (match as string).length) / 2;
+  return column(line, prompt.length + Math.max(0, text.search(/\S/))) + 0.5;
 }
 
 const cls = (suffix = '') => `${PREFIX}-callout${suffix}`;
@@ -75,7 +77,7 @@ export function pluginCallouts(): CodeblocksPlugin {
     baseStyles: ({ cssVar }) => {
       const x = `(var(--scb-gutter, 0px) + ${cssVar('codePaddingInline')} + var(--scb-callout-mid) * 1ch)`;
       return `
-pre:has(> code > .${cls()}) { container-type: inline-size; }
+pre:has(.${cls()}) { container-type: inline-size; }
 .${cls()} {
   /* Near the right edge, the bubble moves left so that it does not wrap. --scb-callout-len is its text length. */
   --scb-callout-start: max(8px, min(calc(${x} - 40px), calc(100cqi - 40px - var(--scb-callout-len) * 0.925ch)));
@@ -158,7 +160,7 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
             {
               class: [cls(), ...(hidden ? [cls('-hidden'), `${PREFIX}-no-print`] : []), ...lit].join(' '),
               role: 'note',
-              style: `--scb-callout-mid:${calloutMiddle(line.text, directive.match)};--scb-callout-len:${Math.min(60, length)}`,
+              style: `--scb-callout-mid:${calloutMiddle(line.text, directive.match, shellPrompt(context.codeBlock, line))};--scb-callout-len:${Math.min(60, length)}`,
             },
             [h('span', { class: cls('-bubble') }, [h('span', { class: cls('-text') }, text)])],
           );

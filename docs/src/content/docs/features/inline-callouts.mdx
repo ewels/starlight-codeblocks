@@ -83,7 +83,7 @@ const client = createClient({ retries: 3, backoffMs: 250 });
 
 ## Limitations
 
-- The plugin counts columns in characters. A tab counts to the next multiple of 8 columns, which is the browser default. If your site sets another `tab-size`, arrows on lines with tabs after other characters point at the wrong place.
+- The plugin counts columns in characters. A tab counts to the next multiple of 2 columns, which is the `tab-size` the plugin sets on code blocks. If your site sets another `tab-size`, arrows on lines with tabs after other characters point at the wrong place.
 - With Expressive Code's `wrap` attribute, a long line can wrap below its callout. The arrow then points at the first row of the line.
 - A callout explains one line. For a note about several lines, use [annotations](/starlight-codeblocks/features/annotations/) or [footnotes](/starlight-codeblocks/features/footnotes/).
 

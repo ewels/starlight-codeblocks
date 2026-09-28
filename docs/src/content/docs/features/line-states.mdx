@@ -42,6 +42,7 @@ Inline code, links and bold in a message render as HTML. Other Markdown stays as
 
 - Each state has a background tint and a 3 px bar on the left edge.
 - A message shows after the code, as a small label. The label starts with the name of the state in bold: **Error**, **Warning** or **Note**.
+- A line with no message shows a label with only the name of the state. In a group of lines with the same state, only the first line shows it. The colour then does not carry the meaning alone.
 - Screen readers hear the name of the state before the line, for example "Error:". A screen reader reads the message after the code.
 - The copy button leaves out the messages. The names of the states and the messages are also not part of a manual text selection.
 - A line can have more than one state. The line then shows the colour of the last state in the configuration.
@@ -105,7 +106,6 @@ export async function fetchWithRetry(url) {
 ## Limitations
 
 - A message is one line of text. A long message makes the line wider, and the block scrolls sideways.
-- `[!code <state>]` marks the line that it is on. On a line with only a comment, it marks an empty line.
 
 ## Related
 

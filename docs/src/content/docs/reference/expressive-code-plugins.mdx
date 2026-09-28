@@ -19,6 +19,12 @@ export default {
 
 On a Starlight site with `codeblocks()`, call `pluginCodeblocks()` with no argument. It then reads the options that you gave to `codeblocks()`.
 
+On a site without `codeblocks()`, give the preset Astro's `base` as the second argument, if the site has one. Links in code that start with `/` then get it in front:
+
+```js title="ec.config.mjs"
+plugins: [pluginCodeblocks({}, { base: '/docs' })],
+```
+
 ## Plugins
 
 Each plugin takes the settings of its option, as the [options reference](/starlight-codeblocks/reference/options/) lists them. The table gives the plugins in the order that the preset adds them.
@@ -34,7 +40,7 @@ Each plugin takes the settings of its option, as the [options reference](/starli
 | `pluginBrackets(settings)` | `brackets` | [Colourised brackets](/starlight-codeblocks/features/colourised-brackets/) |
 | `pluginShellCopy(settings)` | `shellCopy` | [Smart shell copy](/starlight-codeblocks/features/smart-shell-copy/) |
 | `pluginTokenLinks({ base })` | `tokenLinks` | [Token links](/starlight-codeblocks/features/token-links/) |
-| `pluginApiLinks({ adapters })` | `apiLinks` | [API auto-linking](/starlight-codeblocks/features/api-auto-linking/) |
+| `pluginApiLinks({ adapters, base })` | `apiLinks` | [API auto-linking](/starlight-codeblocks/features/api-auto-linking/) |
 | `pluginPlaceholders(settings)` | `placeholders` | [Fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/) |
 | `pluginMentions()` | `mentions` | [Code mentions](/starlight-codeblocks/features/code-mentions/) |
 | `pluginPermalinks()` | `permalinks` | [Line permalinks](/starlight-codeblocks/features/line-permalinks/) |
@@ -48,7 +54,7 @@ Each plugin takes the settings of its option, as the [options reference](/starli
 | `pluginAnnotations()` | `annotations` | [Annotations](/starlight-codeblocks/features/annotations/) and [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/) |
 | `pluginFootnotes(settings)` | `footnotes` | [Footnotes](/starlight-codeblocks/features/footnotes/) |
 
-`pluginTokenLinks()` takes the `base` of the Astro site, for links that start with `/`. `pluginApiLinks()` has no default adapters. Give it the adapters from `starlight-codeblocks/adapters/python` and `starlight-codeblocks/adapters/nextflow`, or your own.
+`pluginTokenLinks()` and `pluginApiLinks()` take the `base` of the Astro site, for links that start with `/`. With `codeblocks()`, they read it from Astro. `pluginApiLinks()` has no default adapters. Give it the adapters from `starlight-codeblocks/adapters/python` and `starlight-codeblocks/adapters/nextflow`, or your own.
 
 ## Rules for single plugins
 
@@ -66,6 +72,7 @@ Some features need more than an Expressive Code plugin. Without `codeblocks()`, 
 
 - The `:::code-switcher` directive and [inline code highlighting](/starlight-codeblocks/features/inline-code-highlighting/) need the Markdown plugin that `codeblocks()` adds.
 - The `<CodeWalkthrough>` and `<Scrollycoding>` components need Starlight.
-- `runnable.runtimes` values are URLs that the browser imports as they are, because `codeblocks()` is not there to bundle the runtime modules.
+- `runnable.runtimes` values are URLs that the browser imports as they are, because `codeblocks()` is not there to bundle the runtime modules. There is no built-in Python runtime. Map `python` to the URL of the Pyodide runtime module, such as `https://cdn.jsdelivr.net/npm/starlight-codeblocks/dist/runtimes/pyodide.mjs`.
+- Expressive Code turns each tab into spaces, because `codeblocks()` is not there to set `tabWidth: 0`. Set `tabWidth: 0` in `ec.config.mjs`, so that tabs reach the code blocks unchanged.
 
 The client scripts of interactive features load inline on each page that needs them, so the features work without a change to the build.

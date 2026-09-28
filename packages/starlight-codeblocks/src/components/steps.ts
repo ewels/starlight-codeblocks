@@ -1,4 +1,4 @@
-import { addClassName, type Element, h, select, selectAll, toHtml } from '@expressive-code/core/hast';
+import { addClassName, type Element, getClassNames, h, select, toHtml } from '@expressive-code/core/hast';
 import { syncTokenKeys, toKeyedTokens } from '@shikijs/magic-move/core';
 import type { KeyedTokensInfo } from '@shikijs/magic-move/types';
 import { fromHtml } from 'hast-util-from-html';
@@ -37,9 +37,10 @@ function controlsRow(current: number, total: number) {
 export function stepsData(blocks: Element[]): string {
   let previous: KeyedTokensInfo | undefined;
   const keys = new Map<string, number>();
-  const steps = blocks.map((block) => {
+  const steps = blocks.map((block, index) => {
     const { code, lines } = readTokens(block);
-    let info = toKeyedTokens(code, lines as never);
+    // The salt stops a step whose code repeats an earlier step's from reusing keys that tokens carried forward.
+    let info = toKeyedTokens(code, lines as never, String(index));
     if (previous) info = syncTokenKeys(previous, info).to;
     previous = info;
     return info.tokens.map((t): StepTokens[number] => {
@@ -64,7 +65,10 @@ export function plainSteps(html: string): string {
 export function codeWalkthrough(html: string): string {
   const root = fromHtml(html, { fragment: true });
   removeAutoExpandable(root);
-  const groups = selectAll('.expressive-code', root).filter((group) => select('figure', group));
+  const groups = root.children.filter(
+    (node): node is Element =>
+      node.type === 'element' && getClassNames(node).includes('expressive-code') && !!select('figure', node),
+  );
   if (groups.length === 0) return html;
   const labels = groups.map(
     (group) =>

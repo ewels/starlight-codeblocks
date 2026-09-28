@@ -27,7 +27,7 @@ The directive is on its own line, above the line it applies to. The plugin remov
 |---|---|---|
 | `[!link /<text>/ <url>]` | Comment, on its own line | `# [!link /linspace/ https://numpy.org/doc/stable/]` |
 
-`<text>` is literal text, not a regular expression. The plugin links its first match on the line below. `<url>` is any URL without spaces. A URL that starts with `/` is a link inside the site.
+`<text>` is literal text, not a regular expression. The plugin links its first match on the line below. `<url>` is a relative, `http` or `https` URL without spaces. A URL that starts with `/` is a link inside the site.
 
 Several `[!link]` lines can stack above one line of code, one for each text to link.
 
@@ -35,9 +35,9 @@ Several `[!link]` lines can stack above one line of code, one for each text to l
 
 - The linked text keeps its syntax colours, with an underline in the accent colour. Hover over the link to see a faint background.
 - The link is a normal link. Readers can focus it with the keyboard, and it opens in the same tab.
-- A URL that starts with `/` gets Astro's `base` in front of it, unless it already starts with the base. On this site, `/reference/directives/` becomes `/starlight-codeblocks/reference/directives/`.
+- A URL that starts with `/` gets Astro's `base` in front of it, unless it already starts with the base. On this site, `/reference/directives/` becomes `/starlight-codeblocks/reference/directives/`. A site without `codeblocks()` gives the base to `pluginCodeblocks()`, as the [Expressive Code plugins page](/starlight-codeblocks/reference/expressive-code-plugins/#the-preset) shows.
 - The copied text leaves out the directive line.
-- If the text has no match on the line below, the build logs a warning and the line renders without the link. A directive without a URL gets a warning too.
+- If the text has no match on the line below, the build logs a warning and the line renders without the link. A directive without a URL, or with another scheme such as `mailto:`, gets a warning too.
 - Token links work without JavaScript.
 
 ## Options

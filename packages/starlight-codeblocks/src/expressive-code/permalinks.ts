@@ -10,6 +10,7 @@ import {
 } from '@expressive-code/core';
 import { type Element, getClassNames, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
+import { getRegistry } from '../registry.ts';
 import { type CodeblocksPlugin, lineNumber, numberedLines } from './core.ts';
 import { litLine, onCode, PREFIX, solidCodeBackground, themeColour } from './styles.ts';
 
@@ -87,6 +88,7 @@ ${litLine(`.${LINK}-target`, cssVar('codeblocksPermalinks.targetBackground'), cs
       preprocessMetadata({ codeBlock, addGutterElement }) {
         const numbers = numbering(codeBlock);
         if (!numbers) return;
+        getRegistry()?.blockIds?.add(numbers.id);
         addGutterElement({
           renderPhase: 'earlier',
           renderLine({ line }) {

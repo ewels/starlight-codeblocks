@@ -14,23 +14,25 @@ A runtime is a module whose default export has two functions:
 
 ```ts
 interface Runtime {
-  load(): Promise<void>;
-  run(code: string, options: { signal: AbortSignal }): Promise<{ stdout: string; stderr: string }>;
+  load(code: string): Promise<void>;
+  run(code: string, options: { signal: AbortSignal; session?: boolean }): Promise<{ stdout: string; stderr: string }>;
 }
 ```
 
 | Function | Description |
 |---|---|
-| `load()` | Downloads and starts the runtime. The plugin calls it before each run, so it must return at once when the runtime is ready. |
+| `load()` | Downloads and starts the runtime, and gets the packages that `code` needs. The plugin calls it with the code before each run, so it must return at once when the runtime and the packages are ready. The timeout does not apply to it. |
 | `run()` | Runs the copied text of the block, and returns its standard output and standard error as text. |
 
 The browser imports the module when a reader selects **Run** for the first time, and calls `load()` at once. Import the `Runtime` type from `starlight-codeblocks` to check a module in TypeScript.
+
+When the block is a session with prompts, `code` is its commands and `session` is `true`. Run the commands as the language's REPL does, so that the output shows the value of each expression, as the block does.
 
 The `signal` of `run()` aborts when the run takes longer than `runnable.timeout`. The runtime must then stop the code and reject the promise. The plugin shows the timeout message, and calls `load()` again before the next run.
 
 ## Add the JavaScript runtime of this site
 
-This site runs JavaScript in a web worker. Each run gets a new worker, which the runtime ends when the code is done or the signal aborts:
+This site runs JavaScript in a web worker. Each run gets a new worker, which the runtime ends when the top-level code is done or the signal aborts. The output of a timer or a callback that the code does not `await` is lost, because the worker is gone when it runs:
 
 <Code code={runtimeSource} lang="ts" title="src/runtimes/javascript.ts" />
 
@@ -60,7 +62,7 @@ import { pyodide } from 'starlight-codeblocks/runtimes/pyodide';
 export default pyodide({ url: 'https://example.com/pyodide/v314.0.7/full/' });
 ```
 
-Then map `python` to it in `runnable.runtimes`, as for any other runtime. The URL is the folder that holds `pyodide.mjs`, with a trailing slash.
+Then map `python` to it in `runnable.runtimes`, as for any other runtime. The URL is the folder that holds `pyodide.mjs`, with a trailing slash. The runtime resolves a relative URL, such as `/pyodide/full/` for a copy in `public/`, against the page.
 
 ## Rules
 

@@ -1,6 +1,7 @@
 import { getColorContrast } from '@expressive-code/core';
+import { h, toHtml } from '@expressive-code/core/hast';
 import { afterEach, expect, test } from 'vitest';
-import { pluginCore } from '../src/expressive-code/core.ts';
+import { keepCopiedText, pluginCore } from '../src/expressive-code/core.ts';
 import { pluginRunnable, runtimeFileName, runtimeModules } from '../src/expressive-code/runnable.ts';
 import { runtimePlugins } from '../src/integration.ts';
 import { setRegistry } from '../src/registry.ts';
@@ -28,8 +29,27 @@ test('finds the runtime by the language name or its alias, and shows the display
     'data-scb-runnable="/py.js" data-scb-runnable-name="Python"',
   );
   const byAlias = { runnable: { runtimes: { py: '/alias.js' } } };
-  expect((await render(block('python runnable', 'print(1)'), byAlias)).html).not.toContain('data-scb-runnable=');
+  expect((await render(block('python runnable', 'print(1)'), byAlias)).html).toContain('data-scb-runnable="/alias.js"');
   expect((await render(block('py runnable', 'print(1)'), byAlias)).html).toContain('data-scb-runnable="/alias.js"');
+});
+
+test('a pycon session runs on the Python runtime', async () => {
+  const { html, warnings } = await render(block('pycon runnable', '>>> 1 + 1'), {
+    runnable: { runtimes: { python: '/py.js' } },
+  });
+  expect(html).toContain('data-scb-runnable="/py.js" data-scb-runnable-name="Python"');
+  expect(warnings.filter((w) => w.includes('runnable'))).toEqual([]);
+});
+
+test('with shell copy off, a session still runs its commands only', async () => {
+  const runtimes = { python: '/py.js' };
+  const off = await render(block('pycon runnable', '>>> x = (1 +', '... 1)', '>>> x', '2'), {
+    shellCopy: false,
+    runnable: { runtimes },
+  });
+  expect(off.html).toContain(`data-scb-runnable-session="x = (1 +\x7F1)\x7Fx"`);
+  const on = await render(block('pycon runnable', '>>> x', '2'), { runnable: { runtimes } });
+  expect(on.html).not.toContain('data-scb-runnable-session');
 });
 
 test('the timeout option reaches the block', async () => {
@@ -56,12 +76,12 @@ test('with codeblocks(), the block points at the bundled module in the assets fo
 });
 
 test('the built-in Python runtime comes only with codeblocks(), and site runtimes can replace it', () => {
-  expect(runtimeModules({ js: './a.ts' }, false)).toEqual({ js: './a.ts' });
+  expect(runtimeModules({ js: './a.ts' }, false)).toEqual({ javascript: './a.ts' });
   expect(runtimeModules({ js: './a.ts' }, true)).toEqual({
     python: 'starlight-codeblocks/runtimes/pyodide',
-    js: './a.ts',
+    javascript: './a.ts',
   });
-  expect(runtimeModules({ python: './py.ts' }, true)).toEqual({ python: './py.ts' });
+  expect(runtimeModules({ py: './py.ts' }, true)).toEqual({ python: './py.ts' });
   expect(runtimeFileName('c++')).toBe('scb-runtime-c__.js');
 });
 
@@ -111,4 +131,17 @@ test('output and error colours meet 4.5:1 in the dark and the light theme', asyn
 test('does not treat Object.prototype names as runtimes', async () => {
   const { warnings } = await render(block('constructor runnable', 'a'), js);
   expect(warnings.join('\n')).toContain('needs a runtime');
+});
+
+test('the code goes on the figure only when the block has no copy button', async () => {
+  expect((await render(block('js runnable', 'x'), js)).html).not.toContain('data-scb-code');
+  const withoutButton = h('div', [h('figure', [h('pre', 'a')])]);
+  keepCopiedText(withoutButton, 'a\nb');
+  expect(toHtml(withoutButton)).toContain('<figure data-scb-code="a\x7Fb">');
+});
+
+test('the output panel follows the footnote list, so that it stays under the code', async () => {
+  const { html } = await render(block('js runnable', '// [!ref] Logs.', 'console.log(1)'), js);
+  expect(html.indexOf('class="scb-footnotes"')).toBeGreaterThan(-1);
+  expect(html.indexOf('class="scb-footnotes"')).toBeLessThan(html.indexOf('scb-run-output'));
 });

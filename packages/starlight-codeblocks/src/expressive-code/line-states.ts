@@ -12,6 +12,7 @@ import {
 import { addClassName, type ElementContent, h, select } from '@expressive-code/core/hast';
 import type { LineStateDefinition } from '../options.ts';
 import { type CodeblocksPlugin, ensureTextContrast, resolveRange } from './core.ts';
+import { isHiddenLine } from './hidden-lines.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { type DirectiveSpecs, getDirectives } from './notation.ts';
 import { onCode, PREFIX, solidCodeBackground, themeColour } from './styles.ts';
@@ -132,7 +133,7 @@ ${Object.keys(all)
   .join('\n')}`;
     },
     hooks: {
-      preprocessMetadata(context) {
+      preprocessCode(context) {
         const lineStates = stateData.getOrCreateFor(context.codeBlock).states;
         const add = (line: ExpressiveCodeLine, name: string, message?: string) => {
           const list = lineStates.get(line) ?? [];
@@ -158,10 +159,15 @@ ${Object.keys(all)
         }
       },
       postprocessRenderedLine({ codeBlock, line, renderData }) {
-        const list = stateData.getOrCreateFor(codeBlock).states.get(line);
+        const { states } = stateData.getOrCreateFor(codeBlock);
+        const list = states.get(line);
         const code = list && select('.code', renderData.lineAst);
         if (!list || !code) return;
         addClassName(renderData.lineAst, cls(''));
+        const lines = codeBlock.getLines();
+        // A hidden line above does not count: readers would see the run without its name.
+        const above = lines.slice(0, lines.indexOf(line)).findLast((l) => !isHiddenLine(codeBlock, l));
+        const previous = (above && states.get(above)) || [];
         const labels = list.map(({ name }) => all[name]?.label ?? name);
         const labelNodes: ElementContent[] = [];
         list.forEach(({ name, messages }, i) => {
@@ -174,6 +180,10 @@ ${Object.keys(all)
                 ...inlineMarkdown(message),
               ]),
             );
+          }
+          // So that the colour does not carry the state alone: the first line of a run shows the name.
+          if (messages.length === 0 && !previous.some((state) => state.name === name)) {
+            labelNodes.push(h('span', { class: cls('-label') }, [h('strong', { ariaHidden: 'true' }, labels[i])]));
           }
         });
         code.children.unshift(h('span', { class: `${cls('-prefix')} ${PREFIX}-sr-only` }, `${labels.join(', ')}:`));

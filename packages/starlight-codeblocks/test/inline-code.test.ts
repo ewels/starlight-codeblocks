@@ -30,9 +30,19 @@ test.each([true, false])(
   },
 );
 
+test.each([true, false])('takes a suffix language with + or # (directives %s)', async (directive) => {
+  const { html, warnings } = await md('`int x`{:c++} and `var x`{:c#}.', {}, directive);
+  expect(html).toContain('data-lang="c++"');
+  expect(html).toContain('data-lang="c#"');
+  expect(html).toMatch(/<\/code> and <code/);
+  expect(html).toMatch(/<\/code>\.<\/p>$/);
+  expect(html).not.toContain('{');
+  expect(warnings).toEqual([]);
+});
+
 test('escapes the code', async () => {
   const { html } = await md('`a < b && c`{:js}');
-  expect(html).toContain('&#x3C;');
+  expect(html).toContain('&lt;');
   expect(html).not.toContain('< b');
 });
 
@@ -144,4 +154,23 @@ test('removes an inner suffix with an unknown language, with a warning', async (
   const { html, warnings } = await md('Run `x{:nope}`.');
   expect(html).toBe('<p>Run <code>x</code>.</p>');
   expect(warnings).toHaveLength(1);
+});
+
+test('keeps highlighted inline code in the text of a heading, for its id and the table of contents', async () => {
+  let text = '';
+  await markdownToHtml('## Call `fetch(url)`{:js} first', {
+    mdastPlugins: mdastPlugins(resolveOptions(), { warn: () => {} }),
+    hastPlugins: [
+      {
+        name: 'text',
+        element: {
+          filter: ['h2'],
+          visit(node, ctx) {
+            text = ctx.textContent(node);
+          },
+        },
+      },
+    ],
+  });
+  expect(text).toBe('Call fetch(url) first');
 });

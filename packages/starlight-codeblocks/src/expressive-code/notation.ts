@@ -35,7 +35,7 @@ export interface Directive {
 
 export interface ParsedLine {
   text: string;
-  /** The line holds only own-line directives. Its directives moved to the line below. */
+  /** The line holds only directives. Its directives moved to the line below. */
   removed: boolean;
   directives: Directive[];
 }
@@ -155,12 +155,28 @@ function inString(text: string, index: number, first: number, syntaxes: CommentS
 /** Finds the comment that holds the first directive, as [opener start, body start, body end, comment end]. */
 function findComment(text: string, first: number, syntaxes: CommentSyntax[]) {
   let best: [number, number, number, number] | undefined;
+  let bestClosed = false;
   for (const { open, close } of syntaxes) {
-    const start = first - open.length < 0 ? -1 : text.lastIndexOf(open, first - open.length);
-    if (start === -1 || (best && start <= best[0]) || inString(text, start, first, syntaxes)) continue;
+    let start = first - open.length < 0 ? -1 : text.lastIndexOf(open, first - open.length);
+    // A line that opens with a line comment is all comment, even when its text holds the opener (`# see #12`).
+    const lead = close
+      ? undefined
+      : [/^\s*/, /^[+-]\s*/]
+          .map((re) => text.match(re)?.[0].length ?? -1)
+          .find((i) => i >= 0 && i < start && text.startsWith(open, i));
+    if (lead !== undefined) start = lead;
+    if (start === -1 || inString(text, start, first, syntaxes)) continue;
     const bodyStart = start + open.length;
     const closeAt = close ? text.indexOf(close, bodyStart) : -1;
     if (close && closeAt !== -1 && closeAt < first) continue;
+    const closed = closeAt !== -1;
+    // `{/* */}` and `/* */` share a body: the longer one wins when its closer is on the line too.
+    if (
+      best &&
+      (bodyStart < best[1] || (bodyStart === best[1] && (closed === bestClosed ? start >= best[0] : !closed)))
+    )
+      continue;
+    bestClosed = closed;
     best =
       closeAt === -1 || !close
         ? [start, bodyStart, text.length, text.length]
@@ -176,15 +192,21 @@ export function parseLine(
   specs: DirectiveSpecs,
   report: Report,
   sourceLine = 1,
+  diff = false,
 ): ParsedLine {
   const unchanged = { text, removed: false, directives: [] };
-  const first = scanTokens(text)[0];
-  if (!first) return unchanged;
-  const comment = findComment(text, first.start, syntaxes);
+  // A `[!word]` in code or in a string, such as a Markdown alert, comes before the comment that holds the directives.
+  let comment: ReturnType<typeof findComment>;
+  for (const token of scanTokens(text)) {
+    comment = findComment(text, token.start, syntaxes);
+    if (comment) break;
+  }
   if (!comment) return unchanged;
   const [start, bodyStart, bodyEnd, end] = comment;
   const body = text.slice(bodyStart, bodyEnd);
-  const hasCode = text.slice(0, start).trim() !== '' || text.slice(end).trim() !== '';
+  // Expressive Code strips a diff prefix only later, so `+ // [!code …]` still holds only directives.
+  const prefix = diff ? (text.match(/^[+-](?![+-])/)?.[0].length ?? 0) : 0;
+  const hasCode = text.slice(prefix, start).trim() !== '' || text.slice(end).trim() !== '';
 
   const directives: Directive[] = [];
   let own = false;
@@ -224,10 +246,21 @@ export function parseLine(
   else keep(tail);
 
   remaining = unescapeDirectives(remaining);
-  if (own) return { text: '', removed: true, directives };
+  if (own && remaining.trim() !== '') {
+    report(`\`${remaining.trim()}\` is dropped, because the line holds a directive that removes it.`, sourceLine);
+  }
+  // A line that holds only directives goes, as in Shiki's notation transformers.
+  if (own || (!hasCode && directives.length > 0 && remaining.trim() === ''))
+    return { text: '', removed: true, directives };
+  const before = text.slice(0, start);
+  const after = text.slice(end);
   const newText =
     directives.length > 0 && remaining.trim() === ''
-      ? text.slice(0, start).trimEnd() + text.slice(end)
+      ? before.trim() === ''
+        ? after.trim() === ''
+          ? ''
+          : before + after.trimStart()
+        : before.trimEnd() + after
       : text.slice(0, bodyStart) +
         (directives.length > 0 ? remaining.trimEnd() + (body.match(/\s*$/)?.[0] ?? '') : remaining) +
         text.slice(bodyEnd);
@@ -240,8 +273,9 @@ export function parseNotation(
   syntaxes: CommentSyntax[],
   specs: DirectiveSpecs,
   report: Report,
+  diff = false,
 ): ParsedLine[] {
-  const parsed = lines.map((text, i) => parseLine(text, syntaxes, specs, report, i + 1));
+  const parsed = lines.map((text, i) => parseLine(text, syntaxes, specs, report, i + 1, diff));
   let pending: Directive[] = [];
   for (const line of parsed) {
     if (line.removed) {
@@ -275,7 +309,8 @@ const notationData = new AttachedPluginData<{
   directives: BlockDirective[];
   removed: ExpressiveCodeLine[];
   specs: DirectiveSpecs;
-}>(() => ({ directives: [], removed: [], specs: {} }));
+  diffIndent: Map<ExpressiveCodeLine, number>;
+}>(() => ({ directives: [], removed: [], specs: {}, diffIndent: new Map() }));
 
 /** The directives in a code block, optionally only those with one name, such as `code focus`. */
 export function getDirectives(codeBlock: ExpressiveCodeBlock, name?: string): BlockDirective[] {
@@ -353,12 +388,15 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
           syntaxes,
           specs,
           (message, line) => warn(context, message, line),
+          // The text markers plugin reads the `useDiffSyntax` meta option only in `preprocessMetadata`.
+          codeBlock.metaOptions.getBoolean('useDiffSyntax') ?? Boolean(codeBlock.props.useDiffSyntax),
         );
         const visible = lines.filter((_, i) => !parsed[i]?.removed);
         lineData.getOrCreateFor(codeBlock).lines = visible;
         const data = notationData.getOrCreateFor(codeBlock);
         data.specs = specs;
         data.removed = lines.filter((_, i) => parsed[i]?.removed);
+        if (data.removed.length > 0) remapCollapse(codeBlock, lines, visible);
         parsed.forEach(({ directives }, i) => {
           const target = visible.indexOf(lines[i] as ExpressiveCodeLine);
           for (const directive of directives) {
@@ -385,14 +423,20 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
             target?.addAnnotation(annotation);
           }
         }
+        if (codeBlock.props.useDiffSyntax) {
+          notationData.getOrCreateFor(codeBlock).diffIndent = diffIndentFix(lines, visible);
+        }
       },
       preprocessCode({ codeBlock }) {
         const syntaxes = commentSyntaxFor(codeBlock.language, comments);
-        const { removed, specs } = notationData.getOrCreateFor(codeBlock);
+        const { removed, specs, diffIndent } = notationData.getOrCreateFor(codeBlock);
         if (syntaxes.length === 0 || !/\[\\?!/.test(codeBlock.code)) return;
+        for (const [line, columns] of diffIndent) line.editText(0, columns, '');
         for (const line of codeBlock.getLines()) {
           // Other plugins can edit lines after the first parse, so parse the current text again.
-          const { text } = parseLine(line.text, syntaxes, specs, () => {});
+          const { text, removed: gone } = parseLine(line.text, syntaxes, specs, () => {});
+          // The first parse kept this line, and blanking it would leave an empty line behind.
+          if (gone && !removed.includes(line)) continue;
           if (text !== line.text) line.editText(0, line.text.length, text);
         }
         for (const line of removed) {
@@ -404,10 +448,61 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
   };
 }
 
+const diffLine = /^(([+-](?![+-]))?\s*)(.*)$/;
+
+/** The columns that Expressive Code's diff syntax removes from each line, as in its text markers plugin. */
+function diffColumns(lines: readonly ExpressiveCodeLine[]) {
+  if (lines.slice(0, 4).some((line) => /^([*+-]{3}\s|@@\s|[0-9,]+[acd][0-9,]+\s*$)/.test(line.text))) return undefined;
+  const parsed = lines.map((line) => line.text.match(diffLine) ?? []);
+  const indents = parsed.filter((m) => m[3]?.trim()).map((m) => m[1]?.length ?? 0);
+  const min = indents.length > 0 ? Math.min(...indents) : 0;
+  return new Map(lines.map((line, i) => [line, min || (parsed[i]?.[2] ? 1 : 0)]));
+}
+
+/**
+ * The diff syntax measures the indentation in `preprocessCode`, before this plugin can delete the removed lines,
+ * so a removed line with less indentation keeps the indentation of the others. The extra columns to remove.
+ */
+function diffIndentFix(lines: readonly ExpressiveCodeLine[], visible: readonly ExpressiveCodeLine[]) {
+  const fix = new Map<ExpressiveCodeLine, number>();
+  const all = diffColumns(lines);
+  const seen = diffColumns(visible);
+  if (!all || !seen) return fix;
+  for (const [line, columns] of seen) {
+    const extra = columns - (all.get(line) ?? 0);
+    if (extra > 0) fix.set(line, extra);
+  }
+  return fix;
+}
+
 function addMarkerLines(codeBlock: ExpressiveCodeBlock, marker: string, first: number, count: number) {
   const props = codeBlock.props as Record<string, unknown>;
   const existing = props[marker];
   const definitions = existing === undefined ? [] : Array.isArray(existing) ? existing : [existing];
   for (let n = first; n < first + count; n++) definitions.push(n);
   props[marker] = definitions;
+}
+
+/**
+ * Expressive Code's collapsible sections plugin keeps the source lines of `collapse={…}` in `preprocessMetadata`,
+ * while own-line directives are still there. Turns the lines that readers see into source lines before that.
+ */
+function remapCollapse(
+  codeBlock: ExpressiveCodeBlock,
+  lines: readonly ExpressiveCodeLine[],
+  visible: readonly ExpressiveCodeLine[],
+) {
+  const props = codeBlock.props as Record<string, unknown>;
+  const options = codeBlock.metaOptions.list('collapse', 'range');
+  if (props.collapse === undefined && options.length === 0) return;
+  const existing =
+    props.collapse === undefined ? [] : Array.isArray(props.collapse) ? props.collapse : [props.collapse];
+  const toSource = (n: number) => {
+    const line = visible[n - 1];
+    return line ? lines.indexOf(line) + 1 : n + lines.length - visible.length;
+  };
+  props.collapse = [...existing, ...options.map((option) => option.value)].map((range) =>
+    String(range).replace(/\d+/g, (n) => String(toSource(Number(n)))),
+  );
+  for (const option of options) codeBlock.meta = codeBlock.meta.replace(option.raw, '');
 }

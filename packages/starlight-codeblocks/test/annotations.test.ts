@@ -6,7 +6,7 @@ import { block, render } from './render.ts';
 test('turns [!annotate] into a numbered button with a popover after it', async () => {
   const { html, copyText, warnings } = await render(block('py', 'x = 1  # [!annotate] Sets `x`.', 'y = 2'));
   const button = html.match(
-    /<button type="button" class="scb-annotation scb-no-print" popovertarget="([\w-]+)" aria-label="Annotation 1" style="anchor-name:--\1">1<\/button>/,
+    /<button type="button" class="scb-annotation" popovertarget="([\w-]+)" aria-label="Annotation 1" style="anchor-name:--\1">1<\/button>/,
   );
   expect(button).toBeTruthy();
   const id = (button as RegExpMatchArray)[1];
@@ -54,12 +54,17 @@ test('annotations="side" puts the notes in a column beside the block, with numbe
     /^<div class="expressive-code"><div class="scb-side scb-side-600 not-content" data-scb-annotations=""><div class="scb-side-grid"><figure/,
   );
   expect(html).toContain('<div class="ec-line" data-scb-anno="1">');
-  expect(html).toContain('<span class="scb-annotation scb-annotation-num scb-no-print" aria-hidden="true">1</span>');
+  expect(html).toContain('<span class="scb-annotation scb-annotation-num" aria-hidden="true">1</span>');
   expect(html).toContain(
-    '</figure><ol class="scb-annotation-notes"><li tabindex="0" data-scb-anno="1"><span class="scb-annotation-note-num">1</span>Sets <code>x</code>.</li><li tabindex="0" data-scb-anno="2"><span class="scb-annotation-note-num">2</span>Sets y.</li></ol></div></div>',
+    '</figure><ol class="scb-annotation-notes"><li tabindex="0" data-scb-anno="1"><span class="scb-annotation-note-num" aria-hidden="true">1</span><span class="scb-sr-only">Note 1, for line 1: </span>Sets <code>x</code>.</li><li tabindex="0" data-scb-anno="2"><span class="scb-annotation-note-num" aria-hidden="true">2</span><span class="scb-sr-only">Note 2, for line 2: </span>Sets y.</li></ol></div></div>',
   );
   expect(html).not.toContain('popover');
   expect(copyText).toBe('x = 1\ny = 2');
+});
+
+test('annotations="side" lists every note of a line with several notes on the line', async () => {
+  const { html } = await render(block('js annotations="side"', 'a() // [!annotate] One [!annotate] Two'));
+  expect(html).toContain('<div class="ec-line" data-scb-anno="1 2">');
 });
 
 test('annotations="side" needs a wider container for the columns when the lines are longer', async () => {

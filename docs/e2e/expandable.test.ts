@@ -58,7 +58,7 @@ test('the bar sits inside the code frame, with one divider rule', async ({ page 
 test('cuts the code at the last visible line, under a fade of more than two lines', async ({ page }) => {
   const pre = example(page).locator('pre');
   const { gap, fade, line } = await pre.evaluate((el) => {
-    const lines = [...el.querySelectorAll('.ec-line')].filter((l) => (l as HTMLElement).offsetParent);
+    const lines = [...el.querySelectorAll<HTMLElement>('.ec-line')].filter((l) => !l.hidden);
     const last = lines[lines.length - 1].getBoundingClientRect();
     const box = el.getBoundingClientRect();
     return {
@@ -69,6 +69,17 @@ test('cuts the code at the last visible line, under a fade of more than two line
   });
   expect(gap).toBeLessThan(2);
   expect(fade / line).toBeGreaterThan(2);
+});
+
+// window.find() skips until-found content, so this checks what the browser's find bar relies on.
+test('find in page can reach a collapsed line, and a match opens the block', async ({ page }) => {
+  const pre = example(page).locator('pre');
+  const line = pre.locator('.ec-line', { hasText: 'csv.DictReader(fh)' });
+  await expect(line).toHaveAttribute('hidden', 'until-found');
+  expect(await css(line, 'display')).not.toBe('none');
+  await line.dispatchEvent('beforematch');
+  await expect(line).toBeVisible();
+  await expect(pre).not.toHaveClass(/scb-expandable-collapsed/);
 });
 
 test('works with the keyboard', async ({ page }) => {

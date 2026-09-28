@@ -42,7 +42,7 @@ const res = await fetch(url, { signal: controller.signal });
 - The bubble is at most 60 characters wide, or 90% of the block. Longer notes wrap.
 - Works without JavaScript. Screen readers read the bubble before its line.
 - Option: `callouts: false` turns the feature off. The directive line then stays in the code.
-- Limits: tabs after other characters on the line can move the arrow if the site sets a `tab-size` other than 8. With `wrap`, the arrow points at the first row of the line.
+- Limits: tabs after other characters on the line can move the arrow if the site sets a `tab-size` other than 2. With `wrap`, the arrow points at the first row of the line.
 
 ## Annotations
 
@@ -61,10 +61,10 @@ matrix:
 ```
 
 - Markers are numbered from 1 in each block. Hovering over a marker with a mouse shows its note until the pointer leaves the marker and the note. Selecting a marker keeps its note open, and several can be open. Escape, or a selection elsewhere, closes them.
-- The note opens out of the marker, to the right of the line, when it fits there without covering code. Otherwise it opens under the marker, 340 px wide at most. Short notes on short lines fit beside the line.
+- The note opens out of the marker, to the right of the line, when it fits there without covering code or another marker. Otherwise it opens under the marker, 340 px wide at most. Short notes on short lines fit beside the line.
 - The note can hold inline code, links and bold text.
 - Works without JavaScript, through the browser's `popover` attribute.
-- When the page prints, the notes print as a numbered list under the block.
+- When the page prints, each marker prints as its number, and the notes print as a numbered list under the block.
 - Option: `annotations: false` turns off annotations and side-by-side annotations.
 - Limits: an annotation applies to one line. For a range, put it on the first line. Long notes make long source lines.
 
@@ -147,12 +147,12 @@ app.listen(3000);
 ````
 
 - Put one code block first, then the steps. Leave an empty line after `<Scrollycoding>` and before `</Scrollycoding>`.
-- A step can contain any Markdown.
+- A step can contain any Markdown. Text or components between the steps, but outside a `<Step>`, fail the build.
 - A new version animates in as in a code walkthrough: code in both versions moves, new lines fade in. Under reduced motion, the code changes at once.
 - The two columns need space for the longest line beside a text column of 12rem. From its longest line, the block gets a width of 600, 800 or 1000 px, which hold about 41, 65 or 89 characters. On a page with `tableOfContents: false`, a block directly on the page that needs 800 or 1000 px spreads past the content column.
 - On a narrow screen, and without JavaScript, each step shows its own copy of the block, in the version of that step.
 - Option: `scrollycoding: false` shows the narrow layout at every width, with no script. `walkthrough: false` changes versions without the animation.
-- Limits: MDX only. A `focus` attribute on the fence line has no effect. Many steps with a long block make a long page on phones.
+- Limits: MDX only. A `focus` attribute on the fence line has no effect. A mark on the fence line shows in every step. Many steps with a long block make a long page on phones.
 
 ## Code walkthrough
 
@@ -219,6 +219,7 @@ def factorial(n):
 
 - A name is one word, such as `base` or `parse-args`. One line can have more than one tag.
 - A link pairs with the next block in the same section that has the name. A section ends at the next heading. If no block follows, the link pairs with the nearest block before it.
+- In a code switcher, only the variant that shows counts. Tag the same name in each variant, and the link follows the reader's choice.
 - A link with no matching block shows as plain text, with a build warning.
 - `starlight-links-validator` reports `#mention:` links as broken. Give it `exclude: linksValidatorExclude`.
 - Option: `mentions: false` turns the feature off.

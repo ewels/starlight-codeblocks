@@ -20,9 +20,18 @@ test('without /text/, points at the first character that is not whitespace', () 
   expect(calloutMiddle('run()')).toBe(0.5);
 });
 
-test('counts a tab to the next multiple of 8 columns', () => {
-  expect(calloutMiddle('\tab', 'ab')).toBe(9);
-  expect(calloutMiddle('x\tab', 'ab')).toBe(9);
+test('counts a tab to the next multiple of 2 columns', () => {
+  expect(calloutMiddle('\tab', 'ab')).toBe(3);
+  expect(calloutMiddle('x\tab', 'ab')).toBe(3);
+  expect(calloutMiddle('xx\tab', 'ab')).toBe(5);
+});
+
+test('counts the shell prompt that is drawn before the line', async () => {
+  expect(calloutMiddle('run()', undefined, '>>> ')).toBe(4.5);
+  const { html } = await render(
+    block('sh', '# [!callout /install/] Installs it.', '$ npm install foo', 'added 1 package'),
+  );
+  expect(html).toContain('--scb-callout-mid:9.5');
 });
 
 test('stacks two callouts above one line in source order', async () => {

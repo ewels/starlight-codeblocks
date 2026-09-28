@@ -40,12 +40,19 @@ describe('resolveOptions', () => {
       '`lineStates.states`',
     ],
     [
+      { lineStates: { states: { prefix: { label: 'P', colour: { dark: '#fff', light: '#000' } } } } },
+      '`lineStates.states`',
+    ],
+    [
       { lineStates: { states: { 'To do': { label: 'F', colour: { dark: '#fff', light: '#000' } } } } },
       '`lineStates.states`',
     ],
     [{ notation: { comments: { nextflow: '//' } } }, '`notation.comments` must be'],
     [{ playgrounds: { go: { label: 'Go' } } }, '`playgrounds.go` must be'],
     [{ runnable: { timeout: '10s' } }, '`runnable.timeout`'],
+    [{ runnable: { timeout: Infinity } }, '`runnable.timeout`'],
+    [{ runnable: { timeout: 2 ** 31 } }, '`runnable.timeout`'],
+    [{ apiLinks: { adapters: [{ name: 'x', languages: ['js'] }] } }, '`apiLinks.adapters`'],
   ])('rejects %j', (options, message) => {
     expect(() => resolveOptions(options as never)).toThrow(OptionsError);
     expect(() => resolveOptions(options as never)).toThrow(message);

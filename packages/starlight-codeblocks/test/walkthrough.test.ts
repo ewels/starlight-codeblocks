@@ -1,5 +1,7 @@
-import { getColorContrast, setAlpha } from '@expressive-code/core';
+import { type ExpressiveCodePlugin, getColorContrast, setAlpha } from '@expressive-code/core';
+import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 import { expect, test } from 'vitest';
+import { toMs } from '../src/components/animate.ts';
 import { codeWalkthrough, type StepTokens } from '../src/components/steps.ts';
 import { pluginWalkthrough } from '../src/expressive-code/walkthrough.ts';
 import { variants } from './contrast.ts';
@@ -16,8 +18,8 @@ const steps = [
   block('title="server.js"', 'app.listen(3000);'),
 ];
 
-async function renderSteps(blocks = steps) {
-  const rendered = await Promise.all(blocks.map((b) => render(b)));
+async function renderSteps(blocks = steps, plugins: ExpressiveCodePlugin[] = []) {
+  const rendered = await Promise.all(blocks.map((b) => render(b, {}, plugins)));
   const html = codeWalkthrough(rendered.map((r) => r.rawHtml).join('\n'))
     .replaceAll(' scb-deco', '')
     .replace(/ data-pagefind-ignore(="")?/g, '');
@@ -104,9 +106,37 @@ test('unchanged tokens keep their keys from step to step', async () => {
   expect(data[0].map(([k]) => k)).not.toContain(key(data[1], 'use')[0]);
 });
 
+test('a step that repeats an earlier step has no duplicate keys', async () => {
+  const x = '{\nbar()\nx = 1\n{\nfoo(x)\n{\nx = 1';
+  const { data } = await renderSteps([
+    block('', x),
+    block('', 'foo(x)\n  return x\n{\n}\nbar()\nfoo(x)'),
+    block('', x),
+  ]);
+  for (const step of data) {
+    const keys = step.map(([k]) => k);
+    expect(new Set(keys).size).toBe(keys.length);
+  }
+});
+
 test('leaves out decorations, such as line state labels', async () => {
   const { data } = await renderSteps([block('', 'a() // [!code error] Fails'), block('', 'b()')]);
   expect(data[0].map(([, c]) => c).join('')).toBe('a()\n');
+});
+
+test('leaves out hidden lines and the lines of a closed section, which the block does not show', async () => {
+  const { data } = await renderSteps(
+    [block('hidden={1}', 'a()\nb()'), block('collapse={2-3}', 'a()\nb()\nc()\nd()')],
+    [pluginCollapsibleSections()],
+  );
+  expect(data[0].map(([, c]) => c).join('')).toBe('b()\n');
+  expect(data[1].map(([, c]) => c).join('')).toBe('a()\nd()\n');
+});
+
+test('a block nested in other markup is not a step', async () => {
+  const rendered = await Promise.all(steps.slice(0, 2).map((b) => render(b)));
+  const html = codeWalkthrough(`${rendered[0].rawHtml}<div>${rendered[1].rawHtml}</div>`);
+  expect(html.match(/scb-steps-dot/g)).toHaveLength(1);
 });
 
 test('returns the HTML as it is when there is no code block', () => {
@@ -144,4 +174,11 @@ test('the label hides next to the stepper in a narrow container, not in a narrow
   expect(css).toMatch(
     /@container \(max-width: 480px\) \{\s*\.scb-steps-head:has\(> \.scb-steps-stepper\) > \.scb-steps-label \{ display: none; \}/,
   );
+});
+
+test('the animation reads the duration as a CSS time', () => {
+  expect(toMs('480ms', 1)).toBe(480);
+  expect(toMs(' 0.6s', 1)).toBe(600);
+  expect(toMs('0ms', 1)).toBe(0);
+  expect(toMs('', 480)).toBe(480);
 });

@@ -60,9 +60,9 @@ export const attributesReference: AttributeDoc[] = [
   },
   {
     name: 'brackets',
-    syntax: ['brackets'],
+    syntax: ['brackets', 'brackets=false'],
     description:
-      'Colours matching brackets by nesting depth. The `brackets.languages` option turns it on for whole languages.',
+      'Colours matching brackets by nesting depth. The `brackets.languages` option turns it on for whole languages, and `brackets=false` turns it off for one block.',
     page: 'features/colourised-brackets',
     example: { lang: 'js', meta: 'brackets', code: 'const total = items.map((item) => item.price * (1 + tax));' },
   },
@@ -218,7 +218,7 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       mutedForeground: {
         description: 'Secondary text, such as output and marker labels. Needs 4.5:1 contrast on the code background.',
         derived:
-          '`codeForeground` mixed 30% towards the code background, with 4.5:1 contrast on it and on `popoverBackground`.',
+          '`codeForeground` mixed 30% towards the code background, with 4.5:1 contrast on it, on `popoverBackground`, on a 10% tint of `codeForeground` and on the frame tab bar.',
       },
       focusRing: { description: 'The outline of a control that has keyboard focus.', derived: accent },
       popoverBackground: {
@@ -347,7 +347,7 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       },
       hoverBackground: {
         description: 'The background of a link on hover and focus.',
-        derived: '`codeblocks.accent` at 12% opacity.',
+        derived: '`codeblocks.accent` at 10% opacity in dark themes and 12% in light themes.',
       },
     },
   },
@@ -361,7 +361,7 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       hoverUnderline: { description: 'The solid underline of a link on hover and focus.', derived: accent },
       hoverBackground: {
         description: 'The background of a link on hover and focus.',
-        derived: '`codeblocks.accent` at 12% opacity.',
+        derived: '`codeblocks.accent` at 10% opacity in dark themes and 12% in light themes.',
       },
     },
   },
@@ -447,7 +447,7 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
         description: 'The line between two steps that are not done yet.',
         derived: 'The code background mixed 15% towards `codeForeground`.',
       },
-      duration: { description: 'The time that the animation between two steps takes.' },
+      duration: { description: 'The time that the animation between two steps takes, in `ms` or `s`.' },
       newLineBackground: {
         description: 'The tint that flashes on a line that is new in a step, then fades out.',
         derived: 'The `terminal.ansiGreen` colour of the theme at 30% opacity.',

@@ -49,6 +49,8 @@ Use when a full file is the clearest example, but a reader who scans the page do
 | `expandable=false` | Fence line: turns off the `expandable.auto` option for the block |
 
 - A block collapses only if the collapse hides three lines or more.
+- Lines that hidden lines remove do not count towards `N` or the total on the button.
+- A block with Expressive Code's `collapse` attribute does not collapse, even with `expandable`.
 - Find in the page still finds text in the collapsed lines, in browsers that support `hidden="until-found"`.
 - Without JavaScript, and when the page prints, the block shows in full.
 - Option: `expandable.lines` (default `12`) sets the count for the bare `expandable` attribute.
@@ -79,10 +81,11 @@ Use for lines with several levels of nested brackets. `()`, `[]` and `{}` cycle 
 | Syntax | Where |
 |---|---|
 | `brackets` | Fence line |
+| `brackets=false` | Fence line. Turns off the colours for a language in `brackets.languages`. |
 
 - Brackets in strings and comments, and brackets with no partner, keep their normal colour.
 - The colours need no JavaScript. The outline on hover needs JavaScript.
-- Option: `brackets.languages` (default `[]`) turns the colours on for every block in those languages, such as `['js', 'json']`.
+- Option: `brackets.languages` (default `[]`) turns the colours on for every block in those languages, such as `['js', 'json']`. A name also covers the other names of its language (`js` covers `javascript`).
 - Limits: the plugin finds strings and comments with the comment syntax of the language, not a full parser.
 
 ## Inline code highlighting

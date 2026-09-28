@@ -1,7 +1,7 @@
 import { getColorContrast, onBackground, setAlpha } from '@expressive-code/core';
 import { expect, test } from 'vitest';
 import { variants } from './contrast.ts';
-import { block, render, styleVariants } from './render.ts';
+import { block, lineClasses, render, styleVariants } from './render.ts';
 
 test('hides lines named by hidden={range}, replaced by a marker', async () => {
   const { html, copyText, warnings } = await render(block('js hidden={2-3}', 'a()', 'b()', 'c()', 'd()'));
@@ -48,14 +48,15 @@ test('forces a header for the toggle button even without a title', async () => {
 });
 
 test('markers and the toggle use aria-expanded and aria-controls', async () => {
-  const { html } = await render(block('js hidden={2}', 'a()', 'b()', 'c()'));
-  const marker = html.match(
-    /<button type="button" id="(scb-hidden-[\w-]+)" class="scb-hidden-marker scb-no-print" aria-expanded="false" aria-controls="([\w -]+)">/,
+  const { html } = await render(block('js hidden={1,3}', 'a()', 'b()', 'c()'));
+  const controls = [
+    ...html.matchAll(/class="scb-hidden-marker scb-no-print" aria-expanded="false" aria-controls="([\w -]+)"/g),
+  ].map((m) => m[1] as string);
+  expect(controls).toHaveLength(2);
+  for (const id of controls.join(' ').split(' ')) expect(html).toContain(`id="${id}"`);
+  expect(html).toMatch(
+    new RegExp(`scb-hidden-toggle[^"]*" aria-expanded="false" aria-controls="${controls.join(' ')}"`),
   );
-  expect(marker).toBeTruthy();
-  const [, markerId, lineIds] = marker as RegExpMatchArray;
-  for (const id of lineIds.split(' ')) expect(html).toContain(`id="${id}"`);
-  expect(html).toContain(`aria-controls="${markerId}"`);
 });
 
 test('renders a block without hidden={range} the same as without the feature', async () => {
@@ -111,4 +112,17 @@ test('the code of a hidden line that shows keeps at least 3:1 contrast', async (
       expect(getColorContrast(onBackground(setAlpha(c, opacity), bg), bg), `${v.name} ${c}`).toBeGreaterThanOrEqual(3);
     }
   }
+});
+
+test('ranges count the lines readers see, not the file name comment that the frames plugin removes', async () => {
+  const code = ['// src/app.js', 'import a from "a"', 'a()'];
+  const hidden = await render(block('js hidden={1}', ...code));
+  expect(lineClasses(hidden.html)).toEqual(['ec-line scb-hidden-line scb-no-print', 'ec-line']);
+  expect(hidden.html).toContain('Show 1 hidden line');
+  const focus = await render(block('js focus={1}', ...code));
+  expect(lineClasses(focus.html)?.[1]).toContain('scb-focus-out');
+  expect(lineClasses(focus.html)?.[0]).not.toContain('scb-focus-out');
+  const error = await render(block('js error={1}', ...code));
+  expect(lineClasses(error.html)).toEqual(['ec-line scb-state scb-state-error', 'ec-line']);
+  expect(hidden.warnings).toEqual([]);
 });

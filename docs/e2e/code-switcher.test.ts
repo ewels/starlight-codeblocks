@@ -41,6 +41,16 @@ test('blocks with the same sync key switch together', async ({ page }) => {
   await expect(visible(page, 1, 1).getByRole('combobox')).toHaveValue('1');
 });
 
+test('a line permalink into a hidden variant shows that variant, and keeps the saved choice', async ({ page }) => {
+  await groups(page, 1)
+    .nth(0)
+    .locator(':scope > .expressive-code[hidden] .ec-line')
+    .first()
+    .dispatchEvent('beforematch');
+  await expect(visible(page, 1, 0)).toContainText('readFile');
+  expect(await page.evaluate(() => localStorage.getItem('scb-code-switcher:lang'))).toBeNull();
+});
+
 test('the icon left of the menu shows the language of the variant, and is hidden from screen readers', async ({
   page,
 }) => {

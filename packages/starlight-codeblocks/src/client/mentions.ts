@@ -1,4 +1,4 @@
-import { reveal } from './shared/scroll.ts';
+import { reveal, unhide } from './shared/scroll.ts';
 
 const PREFIX = '#mention:';
 const ON = 'scb-mention-on';
@@ -13,11 +13,25 @@ a[href^="${PREFIX}"]:focus-visible { outline: 2px solid currentColor; outline-of
 const before = (a: Node, b: Node) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 
 let uid = 0;
+// One link's highlight shows at a time, so a hover on a second link cannot clear the lines of the focused one.
+let shown: { link: Element; block: Element; lines: Element[] } | undefined;
+const highlights = new WeakMap<Element, () => unknown>();
 
-/** The next block in the link's section with lines for `name`, or else the nearest block before the link. */
+function clear(link?: Element) {
+  if (!shown || (link && shown.link !== link)) return;
+  shown.block.classList.remove(ACTIVE);
+  for (const line of shown.lines) line.classList.remove(ON);
+  shown = undefined;
+}
+
+/**
+ * The next block in the link's section with lines for `name`, or else the nearest block before the link.
+ * Only blocks that show count: not a hidden code switcher variant, walkthrough step or scrollycoding copy.
+ */
 function pair(link: Element, name: string) {
-  const blocks = [...document.querySelectorAll('[data-scb-mentions]')].filter((b) =>
-    b.querySelector(`[data-scb-mention~="${CSS.escape(name)}"]`),
+  const blocks = [...document.querySelectorAll('[data-scb-mentions]')].filter(
+    (b) =>
+      b.checkVisibility({ visibilityProperty: true }) && b.querySelector(`[data-scb-mention~="${CSS.escape(name)}"]`),
   );
   const heading = [...document.querySelectorAll('h1, h2, h3, h4, h5, h6')].find((h) => before(link, h));
   return (
@@ -33,27 +47,42 @@ function setUp(link: HTMLAnchorElement) {
   } catch {
     return;
   }
-  const block = pair(link, name);
-  if (!block) return;
-  const lines = [...block.querySelectorAll<HTMLElement>(`[data-scb-mention~="${CSS.escape(name)}"]`)];
-  for (const line of lines) line.id ||= `scb-mention-${++uid}`;
-  link.setAttribute('aria-describedby', lines.map((l) => l.id).join(' '));
+  const selector = `[data-scb-mention~="${CSS.escape(name)}"]`;
+  const find = () => {
+    const block = pair(link, name);
+    if (!block) return undefined;
+    const lines = [...block.querySelectorAll<HTMLElement>(selector)];
+    for (const line of lines) line.id ||= `scb-mention-${++uid}`;
+    link.setAttribute('aria-describedby', lines.map((l) => l.id).join(' '));
+    return { block, lines };
+  };
   const on = () => {
-    block.classList.add(ACTIVE);
-    for (const line of lines) line.classList.add(ON);
+    clear();
+    const found = find();
+    if (!found) return undefined;
+    shown = { link, ...found };
+    found.block.classList.add(ACTIVE);
+    for (const line of found.lines) line.classList.add(ON);
+    return found;
   };
-  const off = () => {
-    block.classList.remove(ACTIVE);
-    for (const line of block.querySelectorAll(`.${ON}`)) line.classList.remove(ON);
-  };
+  highlights.set(link, on);
+  find();
   link.addEventListener('mouseenter', on);
   link.addEventListener('focus', on);
-  link.addEventListener('mouseleave', () => document.activeElement !== link && off());
-  link.addEventListener('blur', off);
+  link.addEventListener('mouseleave', () => {
+    if (document.activeElement === link) return;
+    clear(link);
+    if (document.activeElement) highlights.get(document.activeElement)?.();
+  });
+  link.addEventListener('blur', () => clear(link));
   link.addEventListener('click', (event) => {
     event.preventDefault();
-    on();
-    reveal(block, 'nearest');
+    // Safari does not focus a clicked link, and focus is what keeps the highlight after the pointer leaves.
+    link.focus({ preventScroll: true });
+    const found = on();
+    if (!found) return;
+    for (const line of found.lines) unhide(line);
+    reveal(found.lines[0] ?? found.block, 'nearest');
   });
 }
 

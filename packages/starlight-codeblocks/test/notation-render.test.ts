@@ -89,6 +89,27 @@ test('keeps diff syntax working', async () => {
   expect(html).toContain('ec-line highlight ins');
 });
 
+test('keeps diff syntax removing the indentation when an own-line directive has no prefix', async () => {
+  const { copyText } = await render(block('diff lang="js"', '// [!code highlight]', '+a()', '-b()', ' c()'));
+  expect(copyText).toBe('a()\nb()\nc()');
+});
+
+test('removes a diff-prefixed line that holds only directives, and applies them to the line below', async () => {
+  const highlight = await render(block('diff lang="js"', '+ // [!code highlight]', '+ foo()', '  bar()'));
+  expect(highlight.copyText).toBe('foo()\nbar()');
+  expect(highlight.html.match(/ec-line highlight mark ins/g)).toHaveLength(1);
+  const callout = await render(block('diff lang="js"', '+ // [!callout] Why', '+ foo()', '  bar()'));
+  expect(callout.warnings).toEqual([]);
+  expect(callout.copyText).toBe('foo()\nbar()');
+  expect(callout.html).toContain('Why');
+});
+
+test('removes a line that holds only an end-of-line directive, and applies it to the lines below', async () => {
+  const { copyText, html } = await render(block('js', '// [!code highlight:2]', 'a()', 'b()', 'c()'));
+  expect(copyText).toBe('a()\nb()\nc()');
+  expect(html.match(/ec-line highlight mark/g)).toHaveLength(2);
+});
+
 test('does not treat Object.prototype names as directives or comment syntaxes', async () => {
   const { html, warnings } = await render(block('js', 'a() // [!constructor]'));
   expect(html).toContain('[!constructor]');
@@ -106,4 +127,12 @@ test('leaves directives inside a string literal alone', async () => {
   expect(copyText).toBe(['const s = "// [!code focus]"', "const t = 'a'", "fn f(x: &'a str) {}"].join('\n'));
   expect(html).not.toContain('scb-focus');
   expect((await render(block('sh', 'echo "# [!code focus]"'))).copyText).toBe('echo "# [!code focus]"');
+});
+
+test('reads diff-prefixed directive lines with the useDiffSyntax meta option', async () => {
+  const { html, copyText } = await render(
+    block('js useDiffSyntax', '  const a = 1', '+ // [!code highlight]', '+ const b = 2', '  const c = 3'),
+  );
+  expect(copyText).toBe('const a = 1\nconst b = 2\nconst c = 3');
+  expect(html).not.toContain('[!code');
 });

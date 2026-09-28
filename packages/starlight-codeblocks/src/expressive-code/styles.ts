@@ -58,6 +58,15 @@ export const solidCodeForeground = ({ resolveSetting, theme }: Context) =>
 export const themeColour = ({ theme }: Context, ...keys: string[]) =>
   keys.map((key) => theme.colors[key]).find((colour) => colour && !colour.startsWith('var(')) ?? theme.fg;
 
+/** The frame tab bar as a colour, when Expressive Code's frames plugin is loaded and the colour is static. */
+const tabBarBackground = ({ resolveSetting }: Context) => {
+  try {
+    return getFirstStaticColor(resolveSetting('frames.editorTabBarBackground' as never));
+  } catch {
+    return undefined;
+  }
+};
+
 /** `colour`, lightened or darkened to at least `min` contrast on the code background. */
 export const onCode = (context: Context, colour: string, min: number) =>
   ensureColorContrastOnBackground(colour, solidCodeBackground(context), min);
@@ -76,11 +85,16 @@ export const styleSettings = new PluginStyleSettings({
       accentHover: (context) => hoverColour(context.resolveSetting('codeblocks.accent'), context),
       accentForeground: (context) =>
         ensureColorContrastOnBackground(solidCodeBackground(context), context.resolveSetting('codeblocks.accent'), 4.5),
+      // Muted text also sits on the hidden-lines badge and the sticky footnote list, which a 10% tint of the
+      // code foreground bounds, and on the tab bar.
       mutedForeground: (context) =>
-        ensureColorContrastOnBackground(
-          onCode(context, mix(solidCodeForeground(context), solidCodeBackground(context), 0.3), 4.5),
+        [
           context.resolveSetting('codeblocks.popoverBackground'),
-          4.5,
+          mix(solidCodeBackground(context), solidCodeForeground(context), 0.1),
+          tabBarBackground(context),
+        ].reduce<string>(
+          (colour, surface) => (surface ? ensureColorContrastOnBackground(colour, surface, 4.5) : colour),
+          onCode(context, mix(solidCodeForeground(context), solidCodeBackground(context), 0.3), 4.5),
         ),
       focusRing: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),
       popoverBackground: (context) =>
@@ -118,8 +132,12 @@ export const floatStyles = `.${PREFIX}-float {
   position-try-fallbacks: flip-block;
 }`;
 
+/** Two columns per tab, as astro-expressive-code gives when it expands tabs to spaces, which `codeblocks()` turns off. */
+export const TAB_SIZE = 2;
+
 export function baseStyles({ cssVar }: ResolverContext) {
   return `${floatStyles}
+pre { tab-size: ${TAB_SIZE}; }
 .${PREFIX}-float {
   box-sizing: border-box;
   width: min(var(--scb-float-width, ${cssVar('codeblocks.popoverMaxWidth')}), calc(100vw - 24px));
@@ -134,6 +152,8 @@ export function baseStyles({ cssVar }: ResolverContext) {
   line-height: 1.5;
   white-space: normal;
 }
+/* Callouts and hidden-line markers sit outside the lines, so they read the width of the line numbers plugin's gutter from here. */
+figure:has(.ec-line > .gutter > .ln) { --scb-gutter: calc(var(--lnWidth, 2ch) + 4ch); }
 /* .frame outweighs Expressive Code's square top corners for code in titled blocks. */
 .frame :is(.${PREFIX}-annotation-popover, .${PREFIX}-callout-bubble, .${PREFIX}-footnotes) code {
   padding: 0 4px;

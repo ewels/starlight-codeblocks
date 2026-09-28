@@ -24,6 +24,7 @@ import {
   visit,
 } from '@expressive-code/core/hast';
 import { bundledLanguagesInfo } from 'shiki/langs';
+import { decodeCode, encodeCode } from '../client/shared/copy.ts';
 import { getRegistry } from '../registry.ts';
 import type { DirectiveSpecs } from './notation.ts';
 import { parseRange, RangeSyntaxError } from './ranges.ts';
@@ -45,6 +46,9 @@ export function pluginCore(): CodeblocksPlugin {
       return baseStyles(context);
     },
     hooks: {
+      preprocessLanguage({ config }) {
+        checkPluginOrder(config.plugins);
+      },
       postprocessRenderedLine({ line, renderData }) {
         lineElements.set(line, renderData.lineAst);
       },
@@ -113,11 +117,16 @@ type Context = Pick<ExpressiveCodeHookContextBase, 'codeBlock' | 'config'>;
 export const lineData = new AttachedPluginData<{ lines?: readonly ExpressiveCodeLine[] }>(() => ({}));
 
 /**
- * The lines that line numbers count: the lines that readers see, before other plugins remove any.
- * Own-line directives do not count.
+ * The lines that line numbers count: the lines that readers see. Own-line directives do not count, even
+ * before the notation plugin deletes them.
  */
 export function numberedLines(codeBlock: ExpressiveCodeBlock): readonly ExpressiveCodeLine[] {
-  return lineData.getOrCreateFor(codeBlock).lines ?? codeBlock.getLines();
+  const lines = codeBlock.getLines();
+  const stored = lineData.getOrCreateFor(codeBlock).lines;
+  if (!stored) return lines;
+  // Other plugins delete lines after the notation parse, such as the frames plugin's file name comment.
+  const current = new Set(lines);
+  return stored.filter((line) => current.has(line));
 }
 
 /** The number that readers see next to `line`, counted from `startLineNumber`. */
@@ -157,17 +166,20 @@ function where(codeBlock: ExpressiveCodeBlock, line?: number) {
   ].join(', ');
 }
 
-/**
- * A relative, `http:` or `https:` URL, so that no link runs `javascript:`. `URL` strips spaces, tabs and
- * control characters as a browser does, so they cannot hide the scheme.
- */
 /** Shiki's entry for the language `lang`, by id or alias. */
 export const bundledLanguage = (lang: string) =>
   bundledLanguagesInfo.find((info) => info.id === lang || info.aliases?.includes(lang));
 
-export function isSafeUrl(href: string) {
+/** Shiki's id for the language `lang`, or `lang` itself when Shiki does not know it. */
+export const languageId = (lang: string) => bundledLanguage(lang)?.id ?? lang;
+
+/**
+ * A relative URL, or one with a scheme in `schemes`, so that no link runs `javascript:`. `URL` strips spaces,
+ * tabs and control characters as a browser does, so they cannot hide the scheme.
+ */
+export function isSafeUrl(href: string, schemes = ['http:', 'https:']) {
   try {
-    return ['http:', 'https:'].includes(new URL(href, 'https://x.invalid/').protocol);
+    return schemes.includes(new URL(href, 'https://x.invalid/').protocol);
   } catch {
     return false;
   }
@@ -186,6 +198,7 @@ function fail({ codeBlock }: Context, message: string): never {
 /**
  * Reads a range attribute, such as `focus={4-7}`, and returns its lines, or `undefined` if the
  * attribute is not there. Numbers outside the block give a warning. Anything that is not a range fails the build.
+ * Call it in `preprocessCode` or later: the frames plugin removes the file name comment in its `preprocessCode`.
  */
 export function resolveRange(context: Context, key: string): ExpressiveCodeLine[] | undefined {
   const option = context.codeBlock.metaOptions.list(key).at(-1);
@@ -223,6 +236,21 @@ export function addTitleBarControl(blockAst: Element, control: Element) {
   tools.children.push(control);
   const figure = select('figure', blockAst);
   if (figure) nameFigure(figure);
+}
+
+const copyButton = (blockAst: Element) =>
+  select(`.${PREFIX}-shell-copy[data-code]`, blockAst) ?? select('.copy button[data-code]', blockAst);
+
+/** The text that the copy button copies, which other features can have changed. A shell session gives its commands only. */
+export function copiedText(blockAst: Element, code: string) {
+  const button = copyButton(blockAst);
+  return button ? decodeCode(String(button.properties.dataCode)) : code;
+}
+
+/** Keeps the code on the figure for client modules, when a site turns the copy button off. */
+export function keepCopiedText(blockAst: Element, code: string) {
+  const figure = select('figure', blockAst);
+  if (figure && !copyButton(blockAst)) figure.properties.dataScbCode = encodeCode(code);
 }
 
 const controlTags = new Set(['a', 'button', 'input', 'select']);
@@ -278,4 +306,18 @@ export function ensureTextContrast(
       );
     }
   });
+}
+
+/**
+ * The features put decorations among the lines in `postprocessRenderedBlock`, and the collapsible sections
+ * plugin later picks its lines out of them by position.
+ */
+function checkPluginOrder(plugins: readonly { name: string }[]) {
+  const ours = plugins.findIndex((plugin) => plugin.name.startsWith('starlight-codeblocks:'));
+  const collapsible = plugins.findIndex((plugin) => plugin.name === 'Collapsible sections');
+  if (collapsible > ours) {
+    throw new Error(
+      'Put `pluginCollapsibleSections()` before `pluginCodeblocks()` in the Expressive Code `plugins` list. After it, collapsed sections hold the wrong lines.',
+    );
+  }
 }

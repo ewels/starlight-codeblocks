@@ -8,6 +8,13 @@ test('splitTokens splits words, whitespace and single punctuation characters', (
   expect(splitTokens('foo.bar(1, 2)')).toEqual(['foo', '.', 'bar', '(', '1', ',', ' ', '2', ')']);
 });
 
+test('splitTokens keeps an emoji whole, so a changed emoji is not split into lone surrogates', () => {
+  expect(splitTokens('ok 😀')).toEqual(['ok', ' ', '😀']);
+  const diff = wordDiff('Status: 😀 ok', 'Status: 😃 ok', 0.4);
+  expect(diff?.a).toEqual([[8, 10]]);
+  expect(diff?.b).toEqual([[8, 10]]);
+});
+
 test('wordDiff marks only the changed tokens, including whitespace between two changed tokens', () => {
   const diff = wordDiff('const timeout = 5000;', 'const timeout = options.timeout ?? 5000;', 0.4);
   expect(diff?.a).toEqual([]);
@@ -79,4 +86,20 @@ test('wordDiff returns null for a pair too long to compare', () => {
   const line = 'a '.repeat(600);
   expect(wordDiff(line, `${line}b`, 0.4)).toBeNull();
   expect(wordDiff('a '.repeat(200), `${'a '.repeat(200)}b`, 0.4)).not.toBeNull();
+});
+
+test('ignores inline ins and del markers', async () => {
+  const { html } = await render(
+    block(
+      'js del="old" ins="neu"',
+      'const old = fetch(url, { method: "GET" });',
+      'const neu = fetch(url, { method: "POST" });',
+    ),
+  );
+  expect(html).not.toContain('scb-worddiff');
+});
+
+test('wordDiff leaves a shared indent out of the similarity', () => {
+  const indent = ' '.repeat(12);
+  expect(wordDiff(`${indent}return a`, `${indent}throw new Error(msg)`, 0.4)).toBeNull();
 });

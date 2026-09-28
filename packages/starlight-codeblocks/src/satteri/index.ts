@@ -10,10 +10,11 @@ import type {
   PluginFactoryContext,
 } from 'satteri';
 import { encodeVariant, SWITCHER_META } from '../expressive-code/code-switcher.ts';
+import { commentSyntaxFor } from '../expressive-code/comments.ts';
 import { bundledLanguage } from '../expressive-code/core.ts';
+import { parseNotation } from '../expressive-code/notation.ts';
 import { withTrailingWhitespace } from '../expressive-code/whitespace.ts';
 import type { ResolvedOptions } from '../options.ts';
-import { getRegistry } from '../registry.ts';
 import { inlineCode } from './inline-code.ts';
 
 type ContainerDirective = Parameters<NonNullable<MdastPluginDefinition['containerDirective']>>[0];
@@ -35,7 +36,6 @@ function checkIds(codes: Code[], warn: Logger['warn']) {
   for (const code of codes) {
     const id = new MetaOptions(code.meta ?? '').getString('id');
     if (!id) continue;
-    getRegistry()?.blockIds?.add(id);
     if (seen.has(id)) {
       warn(`two code blocks have \`id="${id}"\`. Line permalinks need a different id for each block.`);
     }
@@ -44,7 +44,18 @@ function checkIds(codes: Code[], warn: Logger['warn']) {
 }
 
 const MENTION = '#mention:';
-const TAG = /(?<!\\)\[!mention\s+([^\]\s]+)\s*\]/g;
+
+/** The language Expressive Code renders a fence as: `diff lang="py"` renders as Python. */
+const fenceLanguage = (code: Code) =>
+  (code.lang === 'diff' && new MetaOptions(code.meta ?? '').getString('lang')) || code.lang;
+
+/** The names that the mentions plugin tags in `code`, read with the same parser. */
+function mentionNames(code: Code, notation: ResolvedOptions['notation']) {
+  if (!notation || !/\[\\?!/.test(code.value)) return new Set<string>();
+  const syntaxes = commentSyntaxFor(fenceLanguage(code) ?? '', notation.comments);
+  const parsed = parseNotation(code.value.split('\n'), syntaxes, { mention: { placement: 'end' } }, () => {});
+  return new Set(parsed.flatMap((line) => line.directives.flatMap((d) => d.args.slice(0, 1))));
+}
 
 type Event = { section: number } & ({ link: Link; name: string } | { names: Set<string> });
 
@@ -77,8 +88,14 @@ function codeSwitcher(node: ContainerDirective, file: string): MdastNode {
     throw new Error(`${file}: \`:::code-switcher\` can contain only fenced code blocks, and needs at least one.`);
   }
   const labels = (codes as Code[]).map(
-    (code) => new MetaOptions(code.meta ?? '').getString('label') ?? languageName(code.lang),
+    (code) => new MetaOptions(code.meta ?? '').getString('label') ?? languageName(fenceLanguage(code)),
   );
+  const repeated = labels.find((label, i) => labels.indexOf(label) !== i);
+  if (repeated !== undefined) {
+    throw new Error(
+      `${file}: two variants in a \`:::code-switcher\` have the label "${repeated}". Give each variant a different \`label="…"\`.`,
+    );
+  }
   return {
     type: 'paragraph',
     data: {
@@ -106,17 +123,20 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
           const events: Event[] = [];
           const malformed: Link[] = [];
           let section = 0;
+          // A render with no file, such as a starlight-pydocs docstring, is part of a page: the client pairs its links.
+          const checkLinks = options.mentions && fileURL;
           walk(root as Nodes, (node) => {
             if (node.type === 'heading') section++;
             if (node.type === 'code') {
               codes.push(node);
               const meta = withTrailingWhitespace(node.value, node.meta ?? '');
               if (options.whitespace && meta !== (node.meta ?? '')) ctx.setProperty(node, 'meta', meta);
-              events.push({ section, names: new Set([...node.value.matchAll(TAG)].map((m) => m[1] as string)) });
+              if (checkLinks) events.push({ section, names: mentionNames(node, options.notation) });
             }
             if (node.type === 'link' && node.url.startsWith(MENTION)) {
               try {
-                events.push({ section, link: node, name: decodeURIComponent(node.url.slice(MENTION.length)) });
+                const name = decodeURIComponent(node.url.slice(MENTION.length));
+                if (checkLinks) events.push({ section, link: node, name });
               } catch {
                 malformed.push(node);
               }
@@ -127,8 +147,7 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
             ctx.replaceNode(link, [...link.children]);
           }
           if (options.permalinks) checkIds(codes, warn);
-          // A render with no file, such as a starlight-pydocs docstring, is part of a page: the client pairs its links.
-          if (options.mentions && fileURL) checkMentions(events, ctx, warn);
+          if (checkLinks) checkMentions(events, ctx, warn);
         },
         containerDirective(node) {
           if (options.codeSwitcher && node.name === 'code-switcher') return codeSwitcher(node, file);

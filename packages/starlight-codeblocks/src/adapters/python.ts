@@ -168,7 +168,18 @@ function readImports(stmts: Token[][]): Imports {
   return { bindings, names, aliases };
 }
 
-const BINDING_KEYWORDS = new Set(['def', 'class', 'as', 'global', 'nonlocal', 'lambda']);
+const BINDING_KEYWORDS = new Set(['def', 'class', 'as', 'global', 'nonlocal']);
+const BARE_COLON_KEYWORDS = new Set(['else', 'try', 'finally', 'except']);
+
+/** The token range of the type in `target: type = value`, or an empty range if the statement has none. */
+function annotation(s: Token[]): [number, number] {
+  const { parts, next } = dotted(s, 0);
+  if (parts.length === 0 || BARE_COLON_KEYWORDS.has(parts[0]?.value ?? '')) return [0, 0];
+  if (s[next]?.value !== ':' || s[next + 1]?.value === '=') return [0, 0];
+  let i = next + 1;
+  while (i < s.length && s[i]?.value !== '=') i = '([{'.includes(s[i]?.value ?? '') ? skipBrackets(s, i) : i + 1;
+  return [next + 1, i];
+}
 
 /**
  * Names that the block binds outside its imports. Links for them would not be certain.
@@ -178,15 +189,28 @@ function reboundNames(stmts: Token[][]) {
   const rebound = new Set<string>();
   for (const s of stmts) {
     if (s[0]?.value === 'import' || s[0]?.value === 'from') continue;
+    const defAt = s[0]?.value === 'def' ? 0 : s[0]?.value === 'async' && s[1]?.value === 'def' ? 1 : -1;
+    const open = defAt >= 0 && s[defAt + 2]?.value === '(' ? defAt + 2 : -1;
+    const close = open >= 0 ? skipBrackets(s, open) : -1;
+    const [typeStart, typeEnd] = annotation(s);
+    if (typeEnd && s[1]?.value === ':') rebound.add(s[0]?.value as string);
     let inFor = false;
+    let depth = 0;
+    let lambdaDepth = -1;
     s.forEach((token, i) => {
+      if ('([{'.includes(token.value)) depth++;
+      if (')]}'.includes(token.value)) depth--;
+      if (token.value === 'lambda') lambdaDepth = depth;
+      if (token.value === ':' && depth === lambdaDepth) lambdaDepth = -1;
       if (token.value === 'for') inFor = true;
       if (token.value === 'in') inFor = false;
-      if (token.type !== 'name' || s[i - 1]?.value === '.') return;
+      if (token.type !== 'name' || s[i - 1]?.value === '.' || (i >= typeStart && i < typeEnd)) return;
       const before = s[i - 1]?.value ?? '';
-      const assigned = s[i + 1]?.value === '=' && s[i + 2]?.value !== '=';
+      // Inside brackets, `name=` is a keyword argument or a parameter default, not an assignment.
+      const assigned = depth === 0 && s[i + 1]?.value === '=' && s[i + 2]?.value !== '=';
       const walrus = s[i + 1]?.value === ':' && s[i + 2]?.value === '=';
-      const param = s[0]?.value === 'def' && ['(', ',', '*'].includes(before);
+      const param =
+        ((depth === 1 && i > open && i < close) || depth === lambdaDepth) && ['(', ',', '*', 'lambda'].includes(before);
       if (inFor || assigned || walrus || param || BINDING_KEYWORDS.has(before)) {
         rebound.add(token.value);
       }
@@ -215,19 +239,13 @@ export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
 
   return {
     name: 'python',
-    languages: ['python', 'py'],
+    languages: ['python', 'py', 'pycon'],
     async setup(context) {
       warn = context.warn;
       const all = [...(stdlib ? [STDLIB_INVENTORY] : []), ...inventories];
       for (const item of all) {
         const { url, base = new URL('.', url).href } = typeof item === 'string' ? { url: item } : item;
-        const data = await context.fetch(url);
-        if (!data) continue;
-        try {
-          readInventory(data, base, index);
-        } catch (error) {
-          context.warn(`${url} is ${error instanceof Error ? error.message : error}. Names from it stay plain text.`);
-        }
+        await context.fetch(url, (data) => readInventory(data, base, index));
       }
     },
     findSymbols(code, _language, attributes = {}) {
@@ -249,7 +267,9 @@ export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
         const token = tokens[i] as Token;
         if (token.type !== 'name' || inImport.has(token) || tokens[i - 1]?.value === '.') continue;
         const binding = bindings.get(token.value);
-        if (!binding || rebound.has(token.value)) continue;
+        const before = tokens[i - 1]?.value ?? '';
+        const keyword = ['(', ','].includes(before) && tokens[i + 1]?.value === '=' && tokens[i + 2]?.value !== '=';
+        if (!binding || rebound.has(token.value) || keyword) continue;
         const { parts, next } = dotted(tokens, i);
         const path = (n: number) => [binding, ...parts.slice(1, n).map((p) => p.value)].join('.');
         let j = parts.length;

@@ -35,7 +35,7 @@ Smart shell copy has no attribute or directive. It applies to every block with a
 
 A prompt is text at the start of a line. The default prompts are `$ ` and `> `, each with a space after it.
 
-A `python`, `py` or `pycon` block with a line that starts with `>>> ` is a Python session. It gets the same button, and keeps the editor frame. See [Python sessions](#python-sessions).
+A `pycon` block with a line that starts with `>>> ` is a Python session. A `python` or `py` block is a session when its first line starts with `>>> `. It gets the same button, and keeps the editor frame. See [Python sessions](#python-sessions).
 
 ## Behaviour
 
@@ -69,7 +69,7 @@ failed   1
 **Copy commands** copies the three commands without the prompts, and keeps the two continuation lines. The rules follow the Python REPL:
 
 - A line that starts with `>>> ` is a command.
-- A line that starts with `... `, or a bare `...`, continues the command while its statement is open. A statement is open after a line that ends with `:`, `\`, an open bracket or an open triple-quoted string. It stays open until a bare `...` line.
+- A line that starts with `... `, or a bare `...`, continues the command while its statement is open. A compound statement stays open until a bare `...` line. It starts with a keyword such as `def`, `class`, `if`, `for` or `with`, or with a `@` decorator. Any other statement stays open while it has an open bracket, a trailing `\` or an open triple-quoted string.
 - After a complete statement, a line that starts with `...` is output, for example the text that `print("...")` shows.
 - Every other line is output.
 

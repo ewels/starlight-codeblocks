@@ -16,7 +16,7 @@ test('a tab keeps its width to the next tab stop, with the arrow at its start', 
     const glyph = midline.firstElementChild as HTMLElement;
     const out = {
       width: midline.getBoundingClientRect().width / ch,
-      expected: size - 2,
+      expected: size - (2 % size),
       glyphLeft: glyph.getBoundingClientRect().left - midline.getBoundingClientRect().left,
       align: getComputedStyle(glyph, '::before').textAlign,
       text: midline.textContent,

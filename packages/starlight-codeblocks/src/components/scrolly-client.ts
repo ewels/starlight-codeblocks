@@ -26,8 +26,15 @@ function setup(root: HTMLElement) {
       stop();
       const from = version;
       version = v;
+      // The old version turns `visibility: hidden`, which would drop keyboard focus to the body.
+      const focused = focusables(versions[from]).indexOf(document.activeElement as HTMLElement);
       for (const g of versions) g.classList.toggle(`${S}-current`, g === group);
-      if (animation && tokens[from] && tokens[v] && !reduce.matches) {
+      const next = focused < 0 ? undefined : focusables(group);
+      const target = next?.[Math.min(focused, next.length - 1)];
+      target?.focus({ preventScroll: true });
+      // The animation hides the real code, and with it a focused line.
+      const hides = target && group.querySelector('pre > code')?.contains(target);
+      if (animation && tokens[from] && tokens[v] && !reduce.matches && !hides) {
         const { animate } = await animation;
         if (active !== step) return;
         stop = animate(group, tokens[from], tokens[v]);
@@ -35,9 +42,10 @@ function setup(root: HTMLElement) {
     }
     const focus = list(step.dataset.scbFocus);
     const mark = list(step.dataset.scbMark);
+    const marked = list(group.dataset.scbMarked);
     group.querySelectorAll('.ec-line:not(summary > *)').forEach((line, i) => {
       line.classList.toggle('scb-focus-out', focus.size > 0 && !focus.has(i));
-      line.classList.toggle('mark', mark.has(i));
+      line.classList.toggle('mark', mark.has(i) || marked.has(i));
     });
   };
   // The active step is the one at the middle of the sticky block (or of the window, in the narrow layout), or
@@ -84,7 +92,42 @@ function setup(root: HTMLElement) {
   addEventListener('resize', measure, { signal: listening.signal });
   addEventListener('scroll', schedule, { passive: true, signal: listening.signal });
   measure();
+
+  // Each copy of the block has its own line ids, and each layout hides some copies. A permalink to a hidden copy
+  // moves to the same lines in the copy on screen, and shows the step of those lines.
+  let moving = false;
+  const reveal = (el: Element) => {
+    const own = steps.findIndex((step) => step.contains(el));
+    const v = versions.findIndex((group) => group.contains(el));
+    const wide = (code?.offsetHeight ?? 0) > 0;
+    if (moving || (wide ? own < 0 && v === version : own >= 0)) return;
+    const step = steps[own >= 0 ? own : steps.findIndex((s) => Number(s.dataset.scbVersion ?? 0) === v)];
+    if (!step) return;
+    const visible = wide ? versions[Number(step.dataset.scbVersion ?? 0)] : step;
+    const from = el.closest('[data-scb-permalinks]')?.id;
+    const to = visible?.querySelector('[data-scb-permalinks]')?.id;
+    if (from && to && from !== to && location.hash.startsWith(`#${from}-L`)) {
+      history.replaceState(history.state, '', `#${to}${location.hash.slice(from.length + 1)}`);
+      moving = true;
+      dispatchEvent(new HashChangeEvent('hashchange'));
+      moving = false;
+    }
+    if (!wide) return;
+    void show(step);
+    // After the permalinks script scrolls to the line, which in the sticky column need not reach the step.
+    requestAnimationFrame(() =>
+      scrollBy({ top: step.getBoundingClientRect().top - line + 1, behavior: reduce.matches ? 'auto' : 'smooth' }),
+    );
+  };
+  root.addEventListener('beforematch', (event) => reveal(event.target as Element), true);
+  // A permalink can target a line before this script is ready.
+  const target = root.querySelector('.scb-permalink-target');
+  if (target) reveal(target);
 }
+
+const focusables = (group: Element) => [
+  ...group.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex="0"]'),
+];
 
 const init = () => {
   for (const root of document.querySelectorAll<HTMLElement>('[data-scb-scrolly]')) setup(root);

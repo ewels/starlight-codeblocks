@@ -5,11 +5,12 @@ import { SWITCHER_META } from './code-switcher.ts';
 import type { CodeblocksPlugin } from './core.ts';
 import { PREFIX } from './styles.ts';
 
-// A bar under a variant, a Run output panel or a collapsed section would compete with their own controls.
-const ownLayout = (codeBlock: ExpressiveCodeBlock) =>
-  codeBlock.metaOptions.getString(SWITCHER_META) !== undefined ||
-  codeBlock.metaOptions.getBoolean('runnable') === true ||
+const hasCollapse = (codeBlock: ExpressiveCodeBlock) =>
   ((codeBlock.props as { collapse?: unknown[] }).collapse?.length ?? 0) > 0;
+
+// A bar under a variant or a Run output panel would compete with their own controls.
+const ownLayout = (codeBlock: ExpressiveCodeBlock) =>
+  codeBlock.metaOptions.getString(SWITCHER_META) !== undefined || codeBlock.metaOptions.getBoolean('runnable') === true;
 
 /** Undoes the `auto` option in `<CodeWalkthrough>` and `<Scrollycoding>`, whose steps must show every line. */
 export function removeAutoExpandable(root: Parents) {
@@ -48,8 +49,11 @@ export function pluginExpandable({
   border-radius: 0 0 calc(${cssVar('borderRadius')} + ${cssVar('borderWidth')}) calc(${cssVar('borderRadius')} + ${cssVar('borderWidth')});
   background: ${cssVar('codeBackground')};
 }
-/* The own display rules of lines, markers and callouts otherwise beat the [hidden] user-agent style. */
-pre[data-scb-expandable] > code > [hidden] { display: none; }
+/* Expressive Code's all: revert drops the browser's until-found style. display: none would stop find in page. */
+@media not print {
+  pre[data-scb-expandable] > code > [hidden='until-found'] { content-visibility: hidden; padding-block: 0; margin-block: 0; }
+  pre[data-scb-expandable] > code > [hidden]:not([hidden='until-found']) { display: none; }
+}
 @media (scripting: none) {
   .${PREFIX}-expandable-bar { display: none; }
 }
@@ -71,22 +75,24 @@ pre[data-scb-expandable] > code > [hidden] { display: none; }
 }
 @media print {
   pre.${PREFIX}-expandable-collapsed::after { display: none; }
-  pre[data-scb-expandable] > code > .ec-line[hidden] { display: grid !important; }
-  pre[data-scb-expandable] > code > .${PREFIX}-callout[hidden] { display: flex !important; }
+  pre[data-scb-expandable] > code > .ec-line[hidden]:not(.${PREFIX}-no-print) { display: grid !important; }
+  pre[data-scb-expandable] > code > .${PREFIX}-callout[hidden]:not(.${PREFIX}-no-print) { display: flex !important; }
 }`,
     jsModules: clientJsModules,
     hooks: {
       postprocessRenderedBlock({ codeBlock, renderData }) {
         const flag = codeBlock.metaOptions.getBoolean('expandable');
         const n = codeBlock.metaOptions.getInteger('expandable');
-        const total = codeBlock.getLines().length;
+        // The client cuts at the Nth .ec-line, which cannot reach past a collapsible section's <details>.
+        if (hasCollapse(codeBlock)) return;
+        const figure = select('figure', renderData.blockAst);
+        const pre = figure && select('pre', figure);
+        if (!figure || !pre) return;
+        const total = codeBlock.getLines().length - selectAll(`.${PREFIX}-hidden-line`, pre).length;
         const automatic =
           n === undefined && flag === undefined && auto !== false && total > auto && !ownLayout(codeBlock);
         const lines = n ?? (flag || automatic ? siteDefault : undefined);
         if (!lines || total - lines < 3) return;
-        const figure = select('figure', renderData.blockAst);
-        const pre = figure && select('pre', figure);
-        if (!figure || !pre) return;
         pre.properties.dataScbExpandable = String(lines);
         if (automatic) pre.properties.dataScbExpandableAuto = '';
         const bar = h('div', { class: `${PREFIX}-expandable-bar ${PREFIX}-no-print` }, [

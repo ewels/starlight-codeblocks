@@ -39,7 +39,7 @@ const shellData = new AttachedPluginData<{
 }>(() => ({ prompts: new Map(), commands: new Set() }));
 
 const PYTHON = ['python', 'py', 'pycon'];
-const STRINGS = /("""|''')[\s\S]*?\1|(["'])(?:\\.|(?!\2).)*\2|#.*/g;
+const STRINGS = /("""|''')[\s\S]*?\1|(["'])(?:\\.|(?!\2)[^\\\n])*\2|#.*/g;
 const COMPOUND = /^(?:async\s+)?(?:def|class|if|for|while|try|with|match)\b|^@/;
 
 /**
@@ -55,6 +55,40 @@ function statementOpen(statement: string[]) {
   }
   if (depth > 0 || code.endsWith('\\') || /"""|'''/.test(code)) return true;
   return COMPOUND.test(statement[0] ?? '') && statement.at(-1)?.trim() !== '';
+}
+
+/** The prompt that smart shell copy removed from the line and draws before it. */
+export function shellPrompt(codeBlock: ExpressiveCodeBlock, line: ExpressiveCodeLine) {
+  return shellData.getOrCreateFor(codeBlock).prompts.get(line) ?? '';
+}
+
+/**
+ * The `>>>` and `...` prompt of each command line in a Python session block: a `pycon` block with a `>>>` line,
+ * or a `py` or `python` block whose first line that is not blank starts with `>>>`. Empty when the block is not a session.
+ */
+export function pythonSessionPrompts<T extends { text: string }>(
+  language: string,
+  lines: readonly T[],
+): Map<T, string> {
+  const prompts = new Map<T, string>();
+  const prompt = (line: T) => /^>>>(?: |$)/.test(line.text);
+  // A py or python block must start with a prompt, so that a doctest in a module docstring does not mute the script.
+  const first = lines.find((line) => line.text.trim() !== '');
+  const session = language === 'pycon' ? lines.some(prompt) : PYTHON.includes(language) && !!first && prompt(first);
+  if (!session) return prompts;
+  let statement: string[] = [];
+  for (const line of lines) {
+    const open = statement.length > 0 && statementOpen(statement);
+    const prompt = line.text.match(open ? /^(?:>>>|\.\.\.)(?: |$)/ : /^>>>(?: |$)/)?.[0];
+    if (prompt) {
+      prompts.set(line, prompt);
+      const text = line.text.slice(prompt.length);
+      statement = prompt.startsWith('>') ? [text] : [...statement, text];
+    } else {
+      statement = [];
+    }
+  }
+  return prompts;
 }
 
 /** True for an output line of a block that smart shell copy splits into commands and output. */
@@ -88,20 +122,13 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
     hooks: {
       preprocessCode({ codeBlock }) {
         const lines = codeBlock.getLines();
-        if (PYTHON.includes(codeBlock.language) && lines.some((line) => /^>>>(?: |$)/.test(line.text))) {
+        const session = pythonSessionPrompts(codeBlock.language, lines);
+        if (session.size > 0) {
           const data = shellData.getOrCreateFor(codeBlock);
-          let statement: string[] = [];
-          for (const line of lines) {
-            const open = statement.length > 0 && statementOpen(statement);
-            const prompt = line.text.match(open ? /^(?:>>>|\.\.\.)(?: |$)/ : /^>>>(?: |$)/)?.[0];
-            if (prompt) {
-              data.prompts.set(line, prompt);
-              data.commands.add(line);
-              line.editText(0, prompt.length, '');
-              statement = prompt.startsWith('>') ? [line.text] : [...statement, line.text];
-            } else {
-              statement = [];
-            }
+          for (const [line, prompt] of session) {
+            data.prompts.set(line, prompt);
+            data.commands.add(line);
+            line.editText(0, prompt.length, '');
           }
           return;
         }
@@ -147,11 +174,21 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
         const copy = select('.copy button[data-code]', renderData.blockAst);
         // The prompts are out of the code, so give Expressive Code's copy button the block as the reader sees it.
         if (copy) {
-          let whole = lines.map((line) => (linePrompts.get(line) ?? '') + line.text).join('\n');
+          let kept = lines;
+          // Expressive Code removed terminal comment lines from the prompt-free code, and the blank lines next to them.
+          // Match that on the prompt-free text, where a `# ` prompt is not mistaken for a comment.
           if (copy.properties.dataCode !== encodeCode(codeBlock.code)) {
-            whole = whole.replace(/(?<=^|\n)\s*#.*($|\n+)/g, '').trim();
+            const comment = (i: number) => /^\s*#/.test(lines[i].text);
+            const blank = (i: number) => !linePrompts.has(lines[i]) && lines[i].text.trim() === '';
+            const nextToComment = (i: number, step: number) => {
+              let j = i + step;
+              while (lines[j] && blank(j)) j += step;
+              return !!lines[j] && comment(j);
+            };
+            kept = lines.filter((_, i) => !comment(i) && !(blank(i) && (nextToComment(i, 1) || nextToComment(i, -1))));
           }
-          copy.properties.dataCode = encodeCode(whole);
+          const whole = kept.map((line) => (linePrompts.get(line) ?? '') + line.text).join('\n');
+          copy.properties.dataCode = encodeCode(whole.trim());
         }
         const figure = select('figure', renderData.blockAst);
         if (!figure) return;

@@ -75,3 +75,10 @@ test('the footnote label counts from startLineNumber', async () => {
   const { html } = await render(block('py startLineNumber=10', 'import os', '# [!ref] Creates `app`.', 'app = 1'));
   expect(html).toContain('aria-label="Footnote 1, for line 11"');
 });
+
+test('the list goes below the expandable bar, so that the bar stays under the code', async () => {
+  const { html } = await render(
+    block('py expandable={2}', '# [!ref] One', 'a = 1', 'b = 2', 'c = 3', 'd = 4', 'e = 5'),
+  );
+  expect(html).toMatch(/<\/pre><div class="scb-expandable-bar[^"]*">.*?<\/div><ol class="scb-footnotes">/);
+});

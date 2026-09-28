@@ -1,7 +1,7 @@
 import { type ExpressiveCodeLine, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { blockUid, type CodeblocksPlugin, lineElement, warn } from './core.ts';
+import { blockUid, type CodeblocksPlugin, lineElement, lineNumber, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
 import { hoverColour, litLine, PREFIX, tint } from './styles.ts';
@@ -157,6 +157,11 @@ export function pluginAnnotations(): CodeblocksPlugin {
 }
 /* Until the script has placed the note, so that the fade starts where the note stays. */
 .${cls('-popover')}.${cls('-wait')} { opacity: 0; }
+/* The note covers its marker, so the badge shows the marker's focus. */
+.${cls()}:focus-visible + .${cls('-popover')} .${cls('-badge')} {
+  outline: 2px solid ${cssVar('codeblocks.focusRing')};
+  outline-offset: 2px;
+}
 /* The badge covers the marker and acts as it, and a click in a hover note keeps it. */
 .${cls('-badge')}, .${cls('-popover')}[data-scb-peek] { cursor: pointer; }
 .${cls('-num')} { cursor: default; }
@@ -210,6 +215,8 @@ ${SIDE_SIZES.map(
     gap: 18px;
     align-items: start;
   }
+  /* A callout's size container would drop the code from the width of its grid column. */
+  .${PREFIX}-side-${w} > .${PREFIX}-side-grid pre { container-type: normal; }
   .${PREFIX}-side-${w} .${cls('-notes')} {
     position: sticky;
     top: calc(var(--sl-nav-height, 0px) + var(--sl-mobile-toc-height, 0px) + 1rem);
@@ -222,6 +229,8 @@ ${SIDE_SIZES.map(
 .${PREFIX}-side-static .${cls('-notes')} { position: static; }
 .${cls('-list')} { display: none; }
 @media print {
+  /* Browsers drop backgrounds in print, and the marker's number is what ties a printed note to its line. */
+  .${cls()} { background: none; border-color: currentColor; color: inherit; }
   .${cls('-list')} {
     display: block;
     margin: 0;
@@ -254,14 +263,18 @@ ${SIDE_SIZES.map(
         const items = annotations.map((directive, i) => {
           const n = String(i + 1);
           const text = inlineMarkdown(directive.text ?? '');
-          const lineEl = lineElement(directive.lines[0] as ExpressiveCodeLine);
+          const line = directive.lines[0] as ExpressiveCodeLine;
+          const lineEl = lineElement(line);
           const code = lineEl && select('.code', lineEl);
           if (side) {
-            if (lineEl) lineEl.properties.dataScbAnno = n;
-            code?.children.push(
-              h('span', { class: `${cls()} ${cls('-num')} ${PREFIX}-no-print`, ariaHidden: 'true' }, n),
-            );
-            return h('li', { tabindex: '0', dataScbAnno: n }, [h('span', { class: cls('-note-num') }, n), ...text]);
+            // A line with several notes lists them all, so that each note lights it.
+            if (lineEl) lineEl.properties.dataScbAnno = [lineEl.properties.dataScbAnno, n].filter(Boolean).join(' ');
+            code?.children.push(h('span', { class: `${cls()} ${cls('-num')}`, ariaHidden: 'true' }, n));
+            return h('li', { tabindex: '0', dataScbAnno: n }, [
+              h('span', { class: cls('-note-num'), ariaHidden: 'true' }, n),
+              h('span', { class: `${PREFIX}-sr-only` }, `Note ${n}, for line ${lineNumber(codeBlock, line)}: `),
+              ...text,
+            ]);
           }
           const id = `${PREFIX}-annotation-${uid}-${n}`;
           const anchor = `--${id}`;
@@ -270,7 +283,7 @@ ${SIDE_SIZES.map(
               'button',
               {
                 type: 'button',
-                class: `${cls()} ${PREFIX}-no-print`,
+                class: cls(),
                 popovertarget: id,
                 ariaLabel: `Annotation ${n}`,
                 style: `anchor-name:${anchor}`,

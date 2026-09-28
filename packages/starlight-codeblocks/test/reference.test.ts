@@ -14,7 +14,7 @@ const sources = (readdirSync(src, { recursive: true }) as string[])
   .map((file) => readFileSync(join(src, file), 'utf8'));
 
 // Expressive Code's own attributes, which its docs cover.
-const ecAttributes = new Set(['title', 'startLineNumber']);
+const ecAttributes = new Set(['title', 'startLineNumber', 'lang', 'useDiffSyntax']);
 
 test('every attribute that the source reads is in the attributes reference', () => {
   const read = new Set(

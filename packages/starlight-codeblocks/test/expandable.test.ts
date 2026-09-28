@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { scrollycoding } from '../src/components/scrolly.ts';
 import { codeWalkthrough, plainSteps } from '../src/components/steps.ts';
 import { encodeVariant, SWITCHER_META } from '../src/expressive-code/code-switcher.ts';
-import { block, render } from './render.ts';
+import { baseStyles, block, render } from './render.ts';
 
 const many = (n: number) => Array.from({ length: n }, (_, i) => `line(${i})`);
 
@@ -44,6 +44,20 @@ test('respects the expandable.lines site default', async () => {
 
 test('does nothing when the feature is off, even with the attribute', async () => {
   const { html } = await render(block('js expandable={5}', ...many(10)), { expandable: false });
+  expect(html).not.toContain('scb-expandable');
+});
+
+test('does not count hidden lines towards the cap or the total', async () => {
+  const { html } = await render(block('js hidden={1-8} expandable={5}', ...many(20)));
+  expect(html).toContain('data-scb-expandable="5"');
+  expect(html).toContain('Show all 12 lines');
+  expect((await render(block('js hidden={1-8} expandable={10}', ...many(20)))).html).not.toContain('scb-expandable');
+});
+
+test('does not cap a block with collapsed sections, even with expandable={N}', async () => {
+  const { html } = await render(block('js collapse={5-20} expandable={8}', ...many(40)), {}, [
+    pluginCollapsibleSections(),
+  ]);
   expect(html).not.toContain('scb-expandable');
 });
 
@@ -88,4 +102,10 @@ describe('the auto option', () => {
     expect(scrollycoding(automatic + steps)).not.toContain('scb-expandable');
     expect(scrollycoding(explicit + steps)).toContain('data-scb-expandable="6"');
   });
+});
+
+test('a collapsed tail prints, but not its no-print lines', async () => {
+  const css = await baseStyles();
+  expect(css).toContain('.ec-line[hidden]:not(.scb-no-print){display:grid !important}');
+  expect(css).toContain('.scb-callout[hidden]:not(.scb-no-print){display:flex !important}');
 });

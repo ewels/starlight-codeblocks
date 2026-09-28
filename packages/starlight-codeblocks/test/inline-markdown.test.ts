@@ -11,6 +11,8 @@ test.each([
   ['See [**bold** link](https://example.com)', 'See <a href="https://example.com"><strong>bold</strong> link</a>'],
   ['<b>not HTML</b> and _not_ *emphasis*', '&#x3C;b>not HTML&#x3C;/b> and _not_ *emphasis*'],
   ['[bad](javascript:alert(1))', '[bad](javascript:alert(1))'],
+  ['[mail](mailto:a@b.c)', '<a href="mailto:a@b.c">mail</a>'],
+  ['[bad](data:text/html,x)', '[bad](data:text/html,x)'],
 ])('renders %j', (text, expected) => {
   expect(html(text)).toBe(expected);
 });

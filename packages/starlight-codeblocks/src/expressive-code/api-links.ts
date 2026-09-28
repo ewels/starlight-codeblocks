@@ -13,9 +13,9 @@ import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import type { AdapterContext, ApiLinkAdapter, SymbolRef } from '../options.ts';
 import { getRegistry } from '../registry.ts';
-import { type CodeblocksPlugin, isSafeUrl } from './core.ts';
+import { type CodeblocksPlugin, isSafeUrl, languageId } from './core.ts';
 import { getDirectives } from './notation.ts';
-import { isShellOutput } from './shell-copy.ts';
+import { isShellOutput, pythonSessionPrompts } from './shell-copy.ts';
 import { onCode, PREFIX, solidCodeBackground, solidCodeForeground, tint } from './styles.ts';
 import { withBase } from './token-links.ts';
 
@@ -62,28 +62,45 @@ export const fetchCacheDir = (root: string) => join(root, 'node_modules', '.cach
 
 /**
  * Gets a URL once and keeps the body in `dir`. Later calls, in this build or a later one, read the file.
+ * A body that fails `check` is never kept, and a kept one that fails it is fetched again.
  * ponytail: no expiry; delete the folder to fetch again.
  */
-export async function cachedFetch(url: string, dir: string, warn: (message: string) => void) {
+export async function cachedFetch(
+  url: string,
+  dir: string,
+  warn: (message: string) => void,
+  check: (body: Uint8Array) => void = () => {},
+) {
   const file = join(dir, createHash('sha256').update(url).digest('hex').slice(0, 24));
   try {
-    return new Uint8Array(await readFile(file));
+    const body = new Uint8Array(await readFile(file));
+    check(body);
+    return body;
   } catch {}
+  let body: Uint8Array;
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(20_000) });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const body = new Uint8Array(await response.arrayBuffer());
-    await mkdir(dir, { recursive: true });
-    const partial = `${file}.${process.pid}.part`;
-    await writeFile(partial, body);
-    await rename(partial, file);
-    return body;
+    body = new Uint8Array(await response.arrayBuffer());
   } catch (error) {
     warn(
       `could not fetch ${url} (${error instanceof Error ? error.message : error}). Names from it stay plain text in this build.`,
     );
     return null;
   }
+  try {
+    check(body);
+  } catch (error) {
+    warn(`${url} is ${error instanceof Error ? error.message : error}. Names from it stay plain text.`);
+    return null;
+  }
+  try {
+    await mkdir(dir, { recursive: true });
+    const partial = `${file}.${process.pid}.part`;
+    await writeFile(partial, body);
+    await rename(partial, file);
+  } catch {}
+  return body;
 }
 
 const setups = new WeakMap<ApiLinkAdapter, Promise<boolean>>();
@@ -97,16 +114,18 @@ function ready(adapter: ApiLinkAdapter, { config }: Pick<ExpressiveCodeHookConte
     const context: AdapterContext = {
       root,
       cacheDir: registry?.cacheDir ?? join(root, 'node_modules', '.astro'),
-      fetch: (url) => cachedFetch(url, fetchCacheDir(root), warn),
+      fetch: (url, check) => cachedFetch(url, fetchCacheDir(root), warn, check),
       warn,
     };
-    setup = adapter.setup(context).then(
-      () => true,
-      (error) => {
-        warn(`setup failed, so it links nothing: ${error instanceof Error ? error.message : error}`);
-        return false;
-      },
-    );
+    setup = Promise.resolve()
+      .then(() => adapter.setup(context))
+      .then(
+        () => true,
+        (error) => {
+          warn(`setup failed, so it links nothing: ${error instanceof Error ? error.message : error}`);
+          return false;
+        },
+      );
     setups.set(adapter, setup);
   }
   return setup;
@@ -122,7 +141,7 @@ const sentences = (...parts: (string | undefined)[]) =>
     .join(' ');
 
 /** Links names in code to their reference pages through language adapters, with a hover card. */
-export function pluginApiLinks({ adapters }: { adapters: ApiLinkAdapter[] }): CodeblocksPlugin {
+export function pluginApiLinks({ adapters, base }: { adapters: ApiLinkAdapter[]; base?: string }): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:api-links',
     jsModules: clientJsModules,
@@ -159,13 +178,22 @@ export function pluginApiLinks({ adapters }: { adapters: ApiLinkAdapter[] }): Co
       async annotateCode(context) {
         const { codeBlock } = context;
         if (codeBlock.metaOptions.getBoolean('apiLinks') === false) return;
-        const active = adapters.filter((adapter) => adapter.languages.includes(codeBlock.language));
+        const lang = languageId(codeBlock.language);
+        const active = adapters.filter((adapter) => adapter.languages.some((l) => languageId(l) === lang));
         if (active.length === 0) return;
-        const base = getRegistry()?.base;
+        const root = base ?? getRegistry()?.base;
         const lines = codeBlock.getLines();
         const tokenLinked = new Set(getDirectives(codeBlock, 'link').flatMap((d) => d.lines));
-        // Output lines of a shell or Python session are not code.
-        const texts = lines.map((line) => (isShellOutput(codeBlock, line) ? '' : line.text));
+        // Output lines of a shell or Python session are not code. Without shell copy, the session
+        // prompts are still in the text: blank them with spaces so that columns stay valid.
+        const shellCopied = lines.some((line) => isShellOutput(codeBlock, line));
+        const session = shellCopied ? new Map() : pythonSessionPrompts(codeBlock.language, lines);
+        const texts = lines.map((line) => {
+          if (shellCopied && isShellOutput(codeBlock, line)) return '';
+          if (session.size === 0) return line.text;
+          const prompt = session.get(line);
+          return prompt ? ' '.repeat(prompt.length) + line.text.slice(prompt.length) : '';
+        });
         const starts: number[] = [];
         let offset = 0;
         for (const text of texts) {
@@ -190,7 +218,7 @@ export function pluginApiLinks({ adapters }: { adapters: ApiLinkAdapter[] }): Co
             const head = cardHead(symbol);
             const properties: Record<string, string> = {
               class: cls(),
-              href: withBase(symbol.href, base),
+              href: withBase(symbol.href, root),
               'aria-description': sentences(head, symbol.summary, symbol.source),
               dataScbApiHead: head,
               dataScbApiSource: symbol.source,

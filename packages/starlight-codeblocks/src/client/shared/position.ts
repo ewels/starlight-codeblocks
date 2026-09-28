@@ -3,15 +3,18 @@ export const EDGE = 12;
 
 export const anchored = () => CSS.supports('position-area', 'block-end');
 
-/** Runs `update` now and on every scroll and resize. Returns a function that stops it. */
-export function follow(update: () => void): () => void {
-  update();
-  addEventListener('scroll', update, { capture: true, passive: true });
-  addEventListener('resize', update, { passive: true });
-  return () => {
-    removeEventListener('scroll', update, { capture: true });
-    removeEventListener('resize', update);
+/** Runs `update` now and on every scroll and resize, until it stops or `el` leaves the page. Returns a function that stops it. */
+export function follow(el: Element, update: () => void): () => void {
+  // A page swap removes an open popover without a `toggle` event, so nothing else would stop it.
+  const run = () => (el.isConnected ? update() : stop());
+  const stop = () => {
+    removeEventListener('scroll', run, { capture: true });
+    removeEventListener('resize', run);
   };
+  update();
+  addEventListener('scroll', run, { capture: true, passive: true });
+  addEventListener('resize', run, { passive: true });
+  return stop;
 }
 
 /** The script version of the `scb-float` styles: centred below `anchor`, or above it when there is no room below. */
@@ -40,5 +43,5 @@ export function place(floating: HTMLElement, anchor: HTMLElement): () => void {
     floating.style.setProperty('position-anchor', name);
     return () => {};
   }
-  return follow(() => below(floating, anchor));
+  return follow(floating, () => below(floating, anchor));
 }

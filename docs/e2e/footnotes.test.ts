@@ -259,3 +259,39 @@ test('a badge fades with its line, and at once under reduced motion', async ({ p
   const duration = await css(badge, 'transitionDuration');
   expect(duration).toBe(reduced() ? '0s' : '0.16s, 0.16s, 0.16s');
 });
+
+test('a line with two footnotes stays lit while either is on, and Enter on a badge always reaches its note', async ({
+  page,
+}) => {
+  const { html } = await render(['```py', '# [!ref] A', '# [!ref] B', 'app = 1', '```'].join('\n'));
+  await page.evaluate((html) => {
+    const box = document.createElement('div');
+    box.id = 'two';
+    box.innerHTML = html;
+    document.querySelector('.sl-markdown-content')?.prepend(box);
+    document.dispatchEvent(new Event('astro:page-load'));
+  }, html);
+  const block = page.locator('#two');
+  const line = block.locator('.ec-line', { has: page.locator('[data-scb-fn="1"]') });
+  const one = block.getByRole('link', { name: 'Footnote 1', exact: true });
+  const two = block.getByRole('link', { name: 'Footnote 2', exact: true });
+  const [noteOne, noteTwo] = [block.locator('.scb-footnotes li').first(), block.locator('.scb-footnotes li').nth(1)];
+  await one.click();
+  await two.click();
+  await one.click();
+  await expect(noteOne).not.toHaveClass(/scb-footnote-on/);
+  await expect(noteTwo).toHaveClass(/scb-footnote-on/);
+  await expect(line).toHaveClass(/scb-footnote-on/);
+  await two.click();
+  await expect(line).not.toHaveClass(/scb-footnote-on/);
+
+  await one.focus();
+  await page.keyboard.press('Enter');
+  await expect(noteOne).toBeFocused();
+  await noteOne.locator('.scb-footnote-num').focus();
+  await page.keyboard.press('Enter');
+  await expect(one).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(noteOne).toBeFocused();
+  await expect(noteOne).toHaveClass(/scb-footnote-on/);
+});

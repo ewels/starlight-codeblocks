@@ -79,7 +79,7 @@ Import both components at the top of the MDX file:
 import { Scrollycoding, Step } from 'starlight-codeblocks/components';
 ```
 
-Put one code block first, then the steps. Leave an empty line after `<Scrollycoding>` and before `</Scrollycoding>`. `focus` and `mark` take a [range](/starlight-codeblocks/features/comment-notation/#line-numbers) without braces, such as `4` or `1, 6-8`. A step can contain any Markdown, such as links, inline code or several paragraphs.
+Put one code block first, then the steps. Leave an empty line after `<Scrollycoding>` and before `</Scrollycoding>`. `focus` and `mark` take a [range](/starlight-codeblocks/features/comment-notation/#line-numbers) without braces, such as `4` or `1, 6-8`. A step can contain any Markdown, such as links, inline code or several paragraphs. Text outside the steps fails the build: put it in a step, or before or after `<Scrollycoding>`.
 
 To change the code during the walkthrough, put a new version of the code block between two steps. The steps after it show the new version, and their `focus` and `mark` ranges count its lines. See [Change the code between steps](#change-the-code-between-steps).
 
@@ -250,7 +250,7 @@ To use this, turn off the table of contents of the page with `tableOfContents: f
 - During the animation to a new version, the block shows the syntax colours only. The focus shows again when the animation ends.
 - The widths are estimates for Starlight's default code font. A larger code font can make a line scroll in the code column.
 - The narrow layout repeats the block for each step, so a long block with many steps makes a long page.
-- The component replaces the focus of the block. A `focus` attribute on the fence line has no effect.
+- The component replaces the focus of the block. A `focus` attribute on the fence line has no effect. A mark on the fence line, such as `{2}`, shows in every step. The steps focus their lines with `focus: false` too.
 
 ## Related
 

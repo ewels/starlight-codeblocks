@@ -29,7 +29,7 @@ Full docs: https://ewels.github.io/starlight-codeblocks/. Each page has a Markdo
 4. Put `codeblocks()` before any plugin or theme that sets the Starlight `expressiveCode` option.
 5. If the site uses `starlight-links-validator`, give it `exclude: linksValidatorExclude`, imported from `starlight-codeblocks`.
 
-Requirements: Astro 7 or later, Starlight 0.42 or later, Node.js 22 or later. The plugin works with Astro's default Markdown processor (Sätteri) and with `unified()`. [references/configuration.md](references/configuration.md) has every option and the set-up for other plugins, Markdoc and sites without Starlight.
+Requirements: Astro 7 or later, Starlight 0.42 or later, Node.js 22.12 or later. The plugin works with Astro's default Markdown processor (Sätteri) and with `unified()`. [references/configuration.md](references/configuration.md) has every option and the set-up for other plugins, Markdoc and sites without Starlight.
 
 ## Choose a feature
 
@@ -86,7 +86,7 @@ Hidden lines remove chosen lines. Expandable blocks cut a block at a line count.
 | Goal | Use | Why |
 |---|---|---|
 | One piece of text in the code links to a URL that you choose | Token links: `[!link /text/ url]` on the line above | For one-off links and names that no adapter knows. |
-| Every library name in Python or Nextflow code links to its reference | API auto-linking | Starts on its own for `py`, `python`, `nextflow` and `nf` blocks. |
+| Every library name in Python or Nextflow code links to its reference | API auto-linking | Starts on its own for `py`, `python`, `pycon`, `nextflow` and `nf` blocks. |
 | Readers must link to one line or a range of lines | Line permalinks: `id="name"` | Line numbers that are links, as `#name-L2` or `#name-L2-L4`. |
 
 ### Adapt to the reader
@@ -134,10 +134,10 @@ Directives go in a comment, in the comment syntax of the language of the block. 
 
 Rules that apply to every directive:
 
-- End-of-line directives apply to their own line: `[!code ...]`, `[!annotate]`, `[!mention]`.
+- End-of-line directives apply to their own line: `[!code ...]`, `[!annotate]`, `[!mention]`. On a line with no code, they apply to the line below, and that line goes.
 - Own-line directives take a whole line and apply to the line below it: `[!callout]`, `[!ref]`, `[!link]`. Put them directly above the target line.
 - The plugin removes directives from the rendered code and from the copied text. A comment that holds only directives goes completely.
-- Ranges on the fence line count the lines that readers see. Own-line directives do not count.
+- Ranges on the fence line count the lines that readers see. Lines that hold only directives do not count.
 - `/text/` is literal text, not a regular expression.
 - Inline code, links and bold in the text of a directive render as HTML. Other Markdown stays as text.
 - One comment on each line can hold directives.
@@ -148,8 +148,8 @@ Rules that apply to every directive:
 These features need no attribute. Know them, because they can change a block that you did not mean to change:
 
 - Word-level diff applies to every removed line that has an added line below it. Turn it off for a block with `wordDiff=false`.
-- API auto-linking links names in every `py`, `python`, `nextflow` and `nf` block. Turn it off for a block with `apiLinks=false`.
-- Smart shell copy applies to every block with a terminal frame and a line that starts with a prompt (`$ ` or `> ` by default). It also applies to every Python block with a line that starts with `>>> `.
+- API auto-linking links names in every `py`, `python`, `pycon`, `nextflow` and `nf` block. Turn it off for a block with `apiLinks=false`.
+- Smart shell copy applies to every block with a terminal frame and a line that starts with a prompt (`$ ` or `> ` by default). It also applies to every `pycon` block with a line that starts with `>>> `. It applies to a `python` or `py` block if the first line starts with `>>> `.
 - Colourised brackets apply to every block in the languages in `brackets.languages`, if the site sets that option.
 - Expandable blocks apply to every block longer than `expandable.auto` lines, if the site sets that option. Turn it off for a block with `expandable=false`.
 - Inline code highlighting applies to all inline code, if the site sets `inlineHighlighting.defaultLanguage`. Keep one piece plain with `{:txt}`.

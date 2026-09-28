@@ -33,12 +33,12 @@ pnpm add starlight-codeblocks
 ````
 
 - The directive can contain only code blocks. A paragraph inside it fails the build.
-- A variant with no `label` shows the name of its language, such as "Python" for `py`.
+- A variant with no `label` shows the name of its language, such as "Python" for `py`. Two variants with the same label fail the build: `sh` and `bash` both show "Shell", so give each one a `label`.
 - Each variant keeps its own attributes. The title bar shows the `title` of the variant that shows.
 - Blocks with the same `sync` key switch together, matched by exact label text. The browser keeps the choice in `localStorage`, so it applies across the site. Give every package manager block the same key, such as `pm`.
 - The copy button copies the variant that shows. Without JavaScript, the first variant shows.
 - `sync` and the `syncKey` of `<Tabs>` are separate, and do not switch together.
-- Option: `codeSwitcher: false` shows the directive as text.
+- Option: with `codeSwitcher: false`, each block in the directive renders on its own, and the directive lines do not show.
 - Limits: works in `.md` and `.mdx` files, not in Markdoc and not around a `<Code>` component. Needs Starlight.
 
 ## Fill-in placeholders

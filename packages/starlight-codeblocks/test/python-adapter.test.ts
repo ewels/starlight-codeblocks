@@ -3,7 +3,7 @@ import { deflateSync } from 'node:zlib';
 import { afterEach, expect, test, vi } from 'vitest';
 import { type PydocsRegistry, type PydocsSymbol, type PythonAdapterOptions, python } from '../src/adapters/python.ts';
 import { readInventory } from '../src/adapters/python-index.ts';
-import { resolveOptions } from '../src/options.ts';
+import { type CodeblocksOptions, resolveOptions } from '../src/options.ts';
 import { setRegistry } from '../src/registry.ts';
 import { block, apiLinks as links, render } from './render.ts';
 
@@ -48,6 +48,14 @@ test('follows aliases and dotted imports', async () => {
   expect(await texts('from os import (', '    path,', ')', 'path.join(a)')).toEqual(['os', 'path', 'path.join']);
 });
 
+test.each<CodeblocksOptions>([{}, { shellCopy: false }])(
+  'links a pycon session and skips its output, with %o',
+  async (options) => {
+    const { html } = await render(block('pycon', '>>> import json', '>>> json.dumps(1)', 'json.loads(s)'), options);
+    expect(links(html).map((l) => l.text)).toEqual(['json', 'json.dumps']);
+  },
+);
+
 test('links the longest part of a chain that it knows', async () => {
   expect(await texts('import json', 'json.missing.loads(s)')).toEqual(['json', 'json']);
 });
@@ -79,10 +87,43 @@ test('leaves names that are not imported, or that the block binds again, as plai
   ]);
   expect(await texts('import json', 'for json in items:', '    json.loads(s)')).toEqual(['json']);
   expect(await texts('import json', 'with open(p) as json:', '    json.loads(s)')).toEqual(['json']);
+  expect(await texts('import json', 'async def f(json):', '    json.dumps(1)')).toEqual(['json']);
+  expect(await texts('import json', 'f = lambda k, json: json.dumps(k)')).toEqual(['json']);
+  expect(await texts('import json', 'f = lambda *json: json.dumps(1)')).toEqual(['json']);
+  expect(await texts('import json', 'json: dict = {}', 'json.loads(s)')).toEqual(['json']);
+  expect(await texts('import json', 'if ok: json = {}', 'json.loads(s)')).toEqual(['json']);
 });
 
 test('keeps a comparison or a keyword argument from counting as a new binding only where it must', async () => {
   expect(await texts('import json', 'json == other', 'json.loads(s)')).toEqual(['json', 'json', 'json.loads']);
+  expect(await texts('import json', 'post(url, json=json.dumps(x))')).toEqual(['json', 'json.dumps']);
+  expect(await texts('from pathlib import Path', 'p: Path = Path("x")')).toEqual(['pathlib', 'Path', 'Path', 'Path']);
+  expect(await texts('from pathlib import Path', 'def f(p: Path = Path("x")):', '    pass')).toEqual([
+    'pathlib',
+    'Path',
+    'Path',
+    'Path',
+  ]);
+  expect(
+    await texts('from pathlib import Path', 'def read(p: dict[str, Path]) -> Path:', '    return Path(p)'),
+  ).toEqual(['pathlib', 'Path', 'Path', 'Path', 'Path']);
+  expect(await texts('import json', 'def f(a, b=g(1, json)):', '    json.loads(a)')).toEqual([
+    'json',
+    'json',
+    'json.loads',
+  ]);
+  expect(await texts('import json', 'f = lambda k: json.dumps(k)')).toEqual(['json', 'json.dumps']);
+  expect(await texts('from pathlib import Path', 'def read() -> dict[str, Path]:', '    return Path("a")')).toEqual([
+    'pathlib',
+    'Path',
+    'Path',
+    'Path',
+  ]);
+  expect(await texts('import json', 'def main(): print(json, 1)', 'json.loads(s)')).toEqual([
+    'json',
+    'json',
+    'json.loads',
+  ]);
 });
 
 test('guesses a type only after a call to a class', async () => {
