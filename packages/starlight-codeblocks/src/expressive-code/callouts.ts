@@ -109,10 +109,12 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
   font-size: ${cssVar('codeblocksCallouts.fontSize')};
   line-height: 1.5;
 }
-.${cls('-bubble')} code {
+/* .frame outweighs Expressive Code's square top corners for code in titled blocks. */
+.frame .${cls('-bubble')} code {
   padding: 0 4px;
   border-radius: 3px;
   background: color-mix(in srgb, currentColor 12%, transparent);
+  font-family: ${cssVar('codeFontFamily')};
   font-size: 0.95em;
 }
 .${cls('-bubble')} a { color: inherit; text-underline-offset: 3px; }

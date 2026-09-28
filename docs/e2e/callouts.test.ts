@@ -113,3 +113,18 @@ test('the bubble starts 40px left of the arrow when it fits', async ({ page, isM
   });
   expect(arrow - left).toBeCloseTo(40, 0);
 });
+
+test('code in a bubble uses the code font, with rounded corners', async ({ page }) => {
+  const block = example(page);
+  const chip = block.locator('.scb-callout-bubble code').first();
+  const [font, codeFont, radius] = await Promise.all([
+    chip.evaluate((el) => getComputedStyle(el).fontFamily),
+    block
+      .locator('.ec-line')
+      .first()
+      .evaluate((el) => getComputedStyle(el).fontFamily),
+    chip.evaluate((el) => getComputedStyle(el).borderTopLeftRadius),
+  ]);
+  expect(font).toBe(codeFont);
+  expect(radius).toBe('3px');
+});

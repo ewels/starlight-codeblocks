@@ -88,7 +88,6 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
   user-select: none;
   -webkit-user-select: none;
   scroll-margin-block: 5rem;
-  transition: background-color 150ms ease, color 150ms ease;
 }
 .${cls('-badge')}:hover { background: color-mix(in srgb, ${v('accent')} 18%, transparent); }
 .ec-line.${cls('-on')} { background: ${v('lineBackground')}; }

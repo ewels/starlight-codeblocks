@@ -194,3 +194,8 @@ test.describe('without JavaScript', () => {
     expect(page.url()).toContain(`#${id}`);
   });
 });
+
+test('a badge changes colour at once, with no fade', async ({ page }) => {
+  const badge = page.locator('.example .pane.output .scb-footnote-badge').first();
+  expect(await badge.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
+});
