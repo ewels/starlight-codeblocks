@@ -29,6 +29,15 @@ test('clicking the dashed line, away from the badge, toggles the run', async ({ 
   await expect(marker).toHaveAttribute('aria-expanded', 'true');
 });
 
+test('a marker on the first line runs its rule to the end at rest', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the copy button always shows on touch screens');
+  await page.mouse.move(0, 0);
+  const markers = example(page).locator('.scb-hidden-marker');
+  const end = (el: Element) => getComputedStyle(el, '::before').right;
+  await expect(markers.first()).toHaveJSProperty('previousElementSibling', null);
+  expect(await markers.first().evaluate(end)).toBe(await markers.nth(1).evaluate(end));
+});
+
 test('works with the keyboard', async ({ page }) => {
   const marker = example(page).locator('.scb-hidden-marker').first();
   await marker.focus();
@@ -85,7 +94,8 @@ test.describe('without JavaScript', () => {
     await expect(hidden.first()).toBeHidden();
     await block.locator('.scb-hidden-marker').first().click();
     await expect(hidden.first()).toBeHidden();
-    await block.locator('.scb-hidden-toggle').click();
-    await expect(hidden.first()).toBeHidden();
+  });
+  test('the title bar button is hidden', async ({ page }) => {
+    await expect(example(page).locator('.scb-hidden-toggle')).toBeHidden();
   });
 });

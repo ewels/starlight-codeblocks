@@ -34,6 +34,45 @@ test('collapses a second block on the page independently, at the site default', 
   await expect(block.locator('.scb-expandable-toggle')).toHaveText('Show all 20 lines');
 });
 
+test('the bar sits inside the code frame, with one divider rule', async ({ page }) => {
+  const block = example(page);
+  const style = (sel: string) =>
+    block.locator(sel).evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        bg: s.backgroundColor,
+        top: s.borderTopWidth,
+        bottom: s.borderBottomWidth,
+        left: s.borderLeftWidth,
+        radius: s.borderBottomLeftRadius,
+      };
+    });
+  const pre = await style('pre');
+  const bar = await style('.scb-expandable-bar');
+  expect(bar.bg).toBe(pre.bg);
+  expect(bar.top).toBe('0px');
+  expect(bar.left).toBe(pre.left);
+  expect(bar.bottom).toBe(pre.left);
+  expect(pre.radius).toBe('0px');
+  expect(bar.radius).not.toBe('0px');
+});
+
+test('cuts the code at the last visible line, under a fade of more than two lines', async ({ page }) => {
+  const pre = example(page).locator('pre');
+  const { gap, fade, line } = await pre.evaluate((el) => {
+    const lines = [...el.querySelectorAll('.ec-line')].filter((l) => (l as HTMLElement).offsetParent);
+    const last = lines[lines.length - 1].getBoundingClientRect();
+    const box = el.getBoundingClientRect();
+    return {
+      gap: box.bottom - last.bottom,
+      fade: Number.parseFloat(getComputedStyle(el, '::after').height),
+      line: last.height,
+    };
+  });
+  expect(gap).toBeLessThan(2);
+  expect(fade / line).toBeGreaterThan(2);
+});
+
 test('works with the keyboard', async ({ page }) => {
   const button = example(page).locator('.scb-expandable-toggle');
   await button.focus();

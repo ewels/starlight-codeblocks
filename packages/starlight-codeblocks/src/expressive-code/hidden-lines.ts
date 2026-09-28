@@ -92,8 +92,10 @@ export function pluginHiddenLines(): CodeblocksPlugin {
   border-top: 1px dashed color-mix(in srgb, ${cssVar('codeblocks.mutedForeground')} 35%, transparent);
   transform: translateY(-50%);
 }
-/* The copy button sits over the end of the first line. */
-.${PREFIX}-hidden-marker:first-child::before { inset-inline-end: calc(${cssVar('codePaddingInline')} + 2.5rem); }
+/* Where the copy button always shows, it sits over the end of the first line. */
+@media (hover: none) {
+  .${PREFIX}-hidden-marker:first-child::before { inset-inline-end: calc(${cssVar('codePaddingInline')} + 2.5rem); }
+}
 .${PREFIX}-hidden-marker span {
   position: relative;
   z-index: 1;
@@ -109,6 +111,9 @@ export function pluginHiddenLines(): CodeblocksPlugin {
 }
 .${PREFIX}-hidden-marker:hover, .${PREFIX}-hidden-marker:focus-visible {
   color: ${cssVar('codeForeground')};
+}
+@media (scripting: none) {
+  .${PREFIX}-hidden-toggle { display: none; }
 }
 @media print {
   .${PREFIX}-hidden-line { display: none !important; }

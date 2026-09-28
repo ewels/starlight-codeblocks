@@ -17,12 +17,19 @@ export function pluginExpandable({ lines: siteDefault = 12 }: { lines?: number }
   display: flex;
   justify-content: center;
   padding: 0.45rem;
-  border-top: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
+  border: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
+  border-top: 0;
+  border-radius: 0 0 calc(${cssVar('borderRadius')} + ${cssVar('borderWidth')}) calc(${cssVar('borderRadius')} + ${cssVar('borderWidth')});
+  background: ${cssVar('codeBackground')};
 }
 /* The own display rules of lines, markers and callouts otherwise beat the [hidden] user-agent style. */
 pre[data-scb-expandable] > code > [hidden] { display: none; }
 @media (scripting: none) {
   .${PREFIX}-expandable-bar { display: none; }
+}
+@media screen and (scripting: enabled) {
+  .frame:has(> .${PREFIX}-expandable-bar) > pre { border-end-start-radius: 0; border-end-end-radius: 0; }
+  pre.${PREFIX}-expandable-collapsed > code { padding-bottom: 0; }
 }
 @media (scripting: enabled) {
   pre.${PREFIX}-expandable-collapsed { position: relative; }
