@@ -62,6 +62,16 @@ test('keyboard focus highlights the lines, and blur removes the highlight', asyn
   await expect(lines(page).nth(3)).not.toHaveClass(/scb-mention-on/);
 });
 
+test('a link with keyboard focus has a 2px ring in its own colour', async ({ page }) => {
+  const link = pane(page).getByRole('link', { name: 'recursive step' });
+  await link.focus();
+  const ring = await link.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return [s.outlineStyle, s.outlineWidth, s.outlineOffset, s.outlineColor === s.color];
+  });
+  expect(ring).toEqual(['solid', '2px', '2px', true]);
+});
+
 test('screen readers get the tagged lines as the description of the link', async ({ page }) => {
   await expect(pane(page).getByRole('link', { name: 'recursive step' })).toHaveAccessibleDescription(
     /return n \* factorial\(n - 1\)/,
