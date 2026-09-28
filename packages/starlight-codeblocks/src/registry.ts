@@ -22,7 +22,7 @@ export interface Registry {
 
 // A global, because Astro loads the config and renders pages through different module instances.
 // Public: other plugins, such as starlight-pydocs, read it by `astro:config:done`, and
-// `options.inlineHighlighting` is truthy when inline highlighting is on. Keep both stable.
+// `options.inlineHighlighting` and `options.apiLinks` are truthy when those features are on. Keep all three stable.
 const KEY = Symbol.for('starlight-codeblocks');
 const store = globalThis as { [KEY]?: Registry };
 

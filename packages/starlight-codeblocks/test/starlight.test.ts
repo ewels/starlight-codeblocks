@@ -130,12 +130,14 @@ test('validates options when the plugin is created', () => {
   expect(() => codeblocks({ fokus: {} } as never)).toThrow('unknown option `fokus`');
 });
 
-// A public contract: starlight-pydocs reads this to decide whether to add `{:py}` to inline code in docstrings.
+// A public contract: starlight-pydocs reads this to decide whether to add `{:py}` to inline code in docstrings,
+// and whether its links get the API card instead of a `title` tooltip.
+const read = () =>
+  (globalThis as Record<symbol, { options: { inlineHighlighting: unknown; apiLinks: unknown } } | undefined>)[
+    Symbol.for('starlight-codeblocks')
+  ];
+
 test('publishes its registry at Symbol.for("starlight-codeblocks"), with inlineHighlighting truthy only when on', async () => {
-  const read = () =>
-    (globalThis as Record<symbol, { options: { inlineHighlighting: unknown } } | undefined>)[
-      Symbol.for('starlight-codeblocks')
-    ];
   await setup();
   expect(read()?.options.inlineHighlighting).toBeTruthy();
   await setup(undefined, {}, { inlineHighlighting: { defaultLanguage: 'py' } });
@@ -143,4 +145,11 @@ test('publishes its registry at Symbol.for("starlight-codeblocks"), with inlineH
   await setup(undefined, {}, { inlineHighlighting: false });
   expect(read()).toBeDefined();
   expect(read()?.options.inlineHighlighting).toBe(false);
+});
+
+test('publishes apiLinks in its registry, truthy only when on', async () => {
+  await setup();
+  expect(read()?.options.apiLinks).toBeTruthy();
+  await setup(undefined, {}, { apiLinks: false });
+  expect(read()?.options.apiLinks).toBe(false);
 });

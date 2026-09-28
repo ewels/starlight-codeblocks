@@ -1301,7 +1301,7 @@ Use this format:
 
 - Date: 2026-09-28
 - Step: after the plan (starlight-pydocs integration)
-- Decision: The registry at `globalThis[Symbol.for('starlight-codeblocks')]` is public. It exists after `codeblocks()` runs its `config:setup`, so other plugins read it at `astro:config:done` or later (Starlight plugins can run their `config:setup` in either order). `registry.options.inlineHighlighting` is `false` when inline highlighting is off and a truthy object when it is on. Nothing else on the registry is public. `test/starlight.test.ts` fails if this changes, and a comment in `src/registry.ts` says so.
+- Decision: The registry at `globalThis[Symbol.for('starlight-codeblocks')]` is public. It exists after `codeblocks()` runs its `config:setup`, so other plugins read it at `astro:config:done` or later (Starlight plugins can run their `config:setup` in either order). `registry.options.inlineHighlighting` is `false` when inline highlighting is off and a truthy object when it is on. `registry.options.apiLinks` follows the same rule, so that starlight-pydocs knows when its links get the API card (see "API card on links outside code blocks"). Nothing else on the registry is public. `test/starlight.test.ts` fails if this changes, and a comment in `src/registry.ts` says so.
 - Reason: It is the smallest surface that answers both questions that starlight-pydocs has: is the plugin installed, and does `{:py}` in inline code do anything. The plugin name prefix answers only the first.
 - Alternatives: The `starlight-codeblocks:` plugin name prefix in the Expressive Code config (does not say if inline highlighting is on). A new exported function (pydocs would need to import the package, which it does not depend on).
 
