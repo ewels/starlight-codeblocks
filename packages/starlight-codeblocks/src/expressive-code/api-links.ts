@@ -144,7 +144,7 @@ export function pluginApiLinks({ adapters }: { adapters: ApiLinkAdapter[] }): Co
   background: ${cssVar('codeblocksApiLinks.hoverBackground')};
 }
 .${PREFIX}-api-card {
-  width: max-content;
+  --scb-float-width: calc(${cssVar('codeblocks.popoverMaxWidth')} + 20px);
 }
 .${PREFIX}-api-card > span { display: block; }
 .${PREFIX}-api-card-head {

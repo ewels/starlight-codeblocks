@@ -130,18 +130,25 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
   text-decoration: none;
 }
 .${cls('-num')}:hover { text-decoration: underline; text-underline-offset: 3px; }
-.${cls('s')} code {
+/* .frame outweighs Expressive Code's square top corners for code in titled blocks. */
+.frame .${cls('s')} code {
   padding: 0 4px;
   color: ${cssVar('codeForeground')};
   border-radius: 3px;
   background: color-mix(in srgb, currentColor 12%, transparent);
+  font-family: ${cssVar('codeFontFamily')};
   font-size: 0.95em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 .${cls('s')} a:not(.${cls('-num')}) { color: inherit; text-underline-offset: 3px; }
 .${cls('s-sticky')} .${cls('s')} {
   position: sticky;
   bottom: 0;
   z-index: 2;
+  /* The top border overlaps the bottom border of the code, and shows when the list floats over the code. */
+  margin-top: calc(-1 * ${cssVar('borderWidth')});
+  border-top: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
   background: color-mix(in srgb, ${cssVar('codeForeground')} 5%, ${cssVar('codeBackground')});
   box-shadow: ${v('stickyShadow')};
 }`;

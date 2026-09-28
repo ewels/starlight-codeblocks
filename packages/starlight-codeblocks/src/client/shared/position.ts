@@ -1,6 +1,6 @@
 /**
- * Places a popover or hover card below its anchor, or above it when there is no room below,
- * and keeps it inside the viewport. It uses CSS anchor positioning where the browser supports it,
+ * Places a popover or hover card centred below its anchor, or above it when there is no room below,
+ * and keeps it 12px inside the viewport. It uses CSS anchor positioning where the browser supports it,
  * and a script fallback elsewhere. The element needs the `scb-float` class, and must be inside
  * the block's `.expressive-code` element, which holds the theme colours.
  *
@@ -13,14 +13,14 @@ export function place(floating: HTMLElement, anchor: HTMLElement): () => void {
     floating.style.setProperty('position-anchor', name);
     return () => {};
   }
-  const gap = 6;
-  const edge = 8;
+  const gap = 8;
+  const edge = 12;
   const update = () => {
     const a = anchor.getBoundingClientRect();
     const { width, height } = floating.getBoundingClientRect();
     const fitsBelow = a.bottom + gap + height <= innerHeight - edge;
     const top = fitsBelow || a.top - gap - height < edge ? a.bottom + gap : a.top - gap - height;
-    const left = Math.max(edge, Math.min(a.left, innerWidth - width - edge));
+    const left = Math.max(edge, Math.min(a.left + a.width / 2 - width / 2, innerWidth - width - edge));
     Object.assign(floating.style, { margin: '0', top: `${top}px`, left: `${left}px` });
   };
   update();

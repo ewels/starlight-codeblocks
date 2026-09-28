@@ -75,9 +75,14 @@ test('the hidden-lines marker and the callout arrow line up with the code after 
     return range.getClientRects()[0]?.left ?? 0;
   });
   expect(Math.abs((marker?.x ?? 0) - code)).toBeLessThan(1.5);
-  const arrow = await block.locator('.scb-callout').evaluate((el) => {
+  const arrow = await block.locator('.scb-callout-bubble').evaluate((el) => {
     const after = getComputedStyle(el, '::after');
-    return el.getBoundingClientRect().left + Number.parseFloat(after.left) + Number.parseFloat(after.width) / 2;
+    return (
+      el.getBoundingClientRect().left +
+      el.clientLeft +
+      Number.parseFloat(after.left) +
+      Number.parseFloat(after.width) / 2
+    );
   });
   const token = await block.locator('#server-L5 .code span', { hasText: 'listen' }).boundingBox();
   if (!token) throw new Error('No listen token');

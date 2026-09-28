@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { render } from '../../packages/starlight-codeblocks/test/render.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/inline-callouts/');
@@ -18,10 +19,10 @@ test('shows the note in a bubble above its line, with the note role', async ({ p
 test('the arrow points at the middle of the matched text', async ({ page, isMobile }) => {
   test.skip(isMobile, 'On a phone the token is past the right edge, so the arrow stays inside the block.');
   const block = example(page);
-  const arrow = await block.locator('.scb-callout').evaluate((el) => {
+  const arrow = await block.locator('.scb-callout-bubble').evaluate((el) => {
     const box = el.getBoundingClientRect();
     const after = getComputedStyle(el, '::after');
-    return box.left + Number.parseFloat(after.left) + Number.parseFloat(after.width) / 2;
+    return box.left + el.clientLeft + Number.parseFloat(after.left) + Number.parseFloat(after.width) / 2;
   });
   const token = await block
     .locator('.ec-line')
@@ -68,19 +69,18 @@ test('a manual selection leaves the callout out', async ({ page }) => {
   expect(style).toBe('none');
 });
 
-test('on a phone, where the matched text is past the right edge, the arrow stays inside the block', async ({
-  page,
-  isMobile,
-}) => {
-  test.skip(!isMobile, 'The token is inside the visible block on a desktop.');
-  const block = example(page);
-  const arrowRight = await block.locator('.scb-callout').evaluate((el) => {
-    const box = el.getBoundingClientRect();
-    const after = getComputedStyle(el, '::after');
-    return box.left + Number.parseFloat(after.left) + Number.parseFloat(after.width);
-  });
-  const pre = await block.locator('pre').boundingBox();
-  expect(arrowRight).toBeLessThanOrEqual((pre?.x ?? 0) + (pre?.width ?? 0));
+test('the arrow always sits on its bubble, also when the matched text is past the right edge', async ({ page }) => {
+  for (const bubble of await page.locator('.scb-callout-bubble').all()) {
+    const { arrow, left, right } = await bubble.evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      const after = getComputedStyle(el, '::after');
+      const arrow = box.left + el.clientLeft + Number.parseFloat(after.left) + Number.parseFloat(after.width) / 2;
+      return { arrow, left: box.left, right: box.right };
+    });
+    const text = (await bubble.textContent()) ?? '';
+    expect(arrow - left, text).toBeGreaterThanOrEqual(10);
+    expect(right - arrow, text).toBeGreaterThanOrEqual(10);
+  }
 });
 
 test('a short bubble near the right edge moves left instead of wrapping on a desktop', async ({ page, isMobile }) => {
@@ -90,4 +90,26 @@ test('a short bubble near the right edge moves left instead of wrapping on a des
     const box = await bubble.boundingBox();
     expect(box?.height, (await bubble.textContent()) ?? '').toBeLessThan(40);
   }
+});
+
+test('the bubble starts 40px left of the arrow when it fits', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'A phone block is too narrow for the line.');
+  const { html } = await render(
+    ['```js', '// [!callout /options/] Short note.', 'const value = compute(input, options);', '```'].join('\n'),
+  );
+  await page.evaluate((html) => {
+    const box = document.createElement('div');
+    box.id = 'fit';
+    box.innerHTML = html;
+    document.querySelector('.sl-markdown-content')?.prepend(box);
+  }, html);
+  const { arrow, left } = await page.locator('#fit .scb-callout-bubble').evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const after = getComputedStyle(el, '::after');
+    return {
+      arrow: box.left + el.clientLeft + Number.parseFloat(after.left) + Number.parseFloat(after.width) / 2,
+      left: box.left,
+    };
+  });
+  expect(arrow - left).toBeCloseTo(40, 0);
 });

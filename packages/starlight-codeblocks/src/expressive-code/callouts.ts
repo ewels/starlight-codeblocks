@@ -1,5 +1,5 @@
 import { type ExpressiveCodeLine, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
-import { type ElementContent, h, select } from '@expressive-code/core/hast';
+import { type ElementContent, h, select, toText } from '@expressive-code/core/hast';
 import { type CodeblocksPlugin, insertBefore, lineElement } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
@@ -71,21 +71,31 @@ export function pluginCallouts(): CodeblocksPlugin {
       return `
 pre:has(> code > .${cls()}) { container-type: inline-size; }
 .${cls()} {
-  position: relative;
+  /* Near the right edge, the bubble moves left so that it does not wrap. --scb-callout-len is its text length. */
+  --scb-callout-start: max(8px, min(calc(${x} - 40px), calc(100cqi - 40px - var(--scb-callout-len) * 0.925ch)));
   box-sizing: border-box;
   display: flex;
   max-width: 100cqi;
-  /* Near the right edge, the bubble moves left so that it does not wrap. --scb-callout-len is its text length. */
-  padding: 8px 8px 10px max(8px, min(calc(${x} - 40px), calc(100cqi - 30px - var(--scb-callout-len) * 0.925ch)));
+  padding: 8px 18px 10px var(--scb-callout-start);
   white-space: normal;
   user-select: none;
   -webkit-user-select: none;
 }
-.${cls()}::after {
+.${cls('-bubble')} {
+  position: relative;
+  display: flex;
+  padding: 4px 10px;
+  background: ${cssVar('codeblocksCallouts.background')};
+  color: ${cssVar('codeblocksCallouts.foreground')};
+  border: 1px solid ${cssVar('codeblocksCallouts.border')};
+  border-radius: ${cssVar('codeblocksCallouts.radius')};
+}
+/* On the bubble, so it cannot point past the bubble's end. The bubble keeps the code font size, so 1ch here is the code's. */
+.${cls('-bubble')}::after {
   content: '';
   position: absolute;
-  left: calc(min(${x}, 100cqi - 24px) - 4.5px);
-  bottom: 5.5px;
+  left: calc(clamp(10px, ${x} - var(--scb-callout-start) - 1px, 100% - 10px) - 4.5px);
+  bottom: -5.5px;
   width: 9px;
   height: 9px;
   box-sizing: border-box;
@@ -94,14 +104,8 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
   border-bottom: 1px solid ${cssVar('codeblocksCallouts.border')};
   transform: rotate(45deg);
 }
-.${cls('-bubble')} {
-  display: block;
+.${cls('-text')} {
   max-width: min(60ch, 90cqi);
-  padding: 4px 10px;
-  background: ${cssVar('codeblocksCallouts.background')};
-  color: ${cssVar('codeblocksCallouts.foreground')};
-  border: 1px solid ${cssVar('codeblocksCallouts.border')};
-  border-radius: ${cssVar('codeblocksCallouts.radius')};
   font-size: ${cssVar('codeblocksCallouts.fontSize')};
   line-height: 1.5;
 }
@@ -127,15 +131,20 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
           const line = directive.lines[0] as ExpressiveCodeLine;
           const lineEl = lineElement(line);
           if (!lineEl) continue;
+          const text = inlineMarkdown(directive.text ?? '');
+          // Each inline code chip adds about one character of padding.
+          const length =
+            toText(h('span', text)).length +
+            text.filter((node) => node.type === 'element' && node.tagName === 'code').length;
           const hidden = (lineEl.properties.className as string[] | undefined)?.includes(`${PREFIX}-hidden-line`);
           const bubble: ElementContent = h(
             'div',
             {
               class: hidden ? `${cls()} ${cls('-hidden')}` : cls(),
               role: 'note',
-              style: `--scb-callout-mid:${calloutMiddle(line.text, directive.match)};--scb-callout-len:${Math.min(60, (directive.text ?? '').length)}`,
+              style: `--scb-callout-mid:${calloutMiddle(line.text, directive.match)};--scb-callout-len:${Math.min(60, length)}`,
             },
-            [h('span', { class: cls('-bubble') }, inlineMarkdown(directive.text ?? ''))],
+            [h('span', { class: cls('-bubble') }, [h('span', { class: cls('-text') }, text)])],
           );
           // Callouts for one line keep their source order, directly above it.
           insertBefore(code, lineEl, bubble);

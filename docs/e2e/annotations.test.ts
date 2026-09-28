@@ -39,13 +39,40 @@ test('opening one note closes the other, and Escape closes it, with the keyboard
   await expect(notes.nth(1)).toBeHidden();
 });
 
-test('the note stays inside the viewport on a phone', async ({ page }) => {
+test('the note is 340px wide, centred under its marker, and 12px inside the viewport', async ({ page }) => {
   const block = example(page);
-  await block.getByRole('button', { name: 'Annotation 1' }).click();
-  const n = await block.locator('.scb-annotation-popover').first().boundingBox();
   const width = page.viewportSize()?.width ?? 0;
-  expect(n?.x).toBeGreaterThanOrEqual(0);
-  expect((n?.x ?? 0) + (n?.width ?? 0)).toBeLessThanOrEqual(width);
+  for (const n of [1, 2]) {
+    const marker = block.getByRole('button', { name: `Annotation ${n}` });
+    await marker.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await marker.click();
+    const m = await marker.boundingBox();
+    const box = await block
+      .locator('.scb-annotation-popover')
+      .nth(n - 1)
+      .boundingBox();
+    if (!m || !box) throw new Error('No marker or note');
+    expect(box.width).toBeCloseTo(Math.min(340, width - 24), 0);
+    const centred = m.x + m.width / 2 - box.width / 2;
+    expect(box.x).toBeCloseTo(Math.min(Math.max(12, centred), width - 12 - box.width), 0);
+    expect(box.y - (m.y + m.height)).toBeCloseTo(8, 0);
+    await page.keyboard.press('Escape');
+  }
+});
+
+test('inline code in a note uses the code font, with round corners in a titled block', async ({ page }) => {
+  const block = example(page);
+  await block.getByRole('button', { name: 'Annotation 2' }).click();
+  const style = await block
+    .locator('.scb-annotation-popover code')
+    .first()
+    .evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { font: s.fontFamily, top: s.borderTopLeftRadius, bottom: s.borderBottomRightRadius };
+    });
+  expect(style.font).not.toBe('monospace');
+  expect(style.font).toContain('ui-monospace');
+  expect([style.top, style.bottom]).toEqual(['3px', '3px']);
 });
 
 test('copying leaves the markers and notes out', async ({ page, context }) => {

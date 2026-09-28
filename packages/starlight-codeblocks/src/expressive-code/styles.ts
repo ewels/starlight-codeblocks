@@ -62,17 +62,17 @@ export const styleSettings = new PluginStyleSettings({
 export const floatStyles = `.${PREFIX}-float {
   position: fixed;
   inset: auto;
-  margin-block: 6px;
-  margin-inline: 0;
-  position-area: block-end span-inline-end;
-  position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+  margin: 8px 12px;
+  position-area: block-end;
+  justify-self: anchor-center;
+  position-try-fallbacks: flip-block;
 }`;
 
 export function baseStyles({ cssVar }: ResolverContext) {
   return `${floatStyles}
 .${PREFIX}-float {
   box-sizing: border-box;
-  max-width: min(${cssVar('codeblocks.popoverMaxWidth')}, calc(100vw - 16px));
+  width: min(var(--scb-float-width, ${cssVar('codeblocks.popoverMaxWidth')}), calc(100vw - 24px));
   padding: 0.5rem 0.75rem;
   background: ${cssVar('codeblocks.popoverBackground')};
   color: ${cssVar('codeblocks.popoverForeground')};

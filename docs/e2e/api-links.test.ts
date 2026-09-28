@@ -57,6 +57,23 @@ test('hovering shows the card after a short delay, and moving away hides it', as
   await expect(card(page)).toBeHidden();
 });
 
+test('the card is 360px wide, centred under its link, and 12px inside the viewport', async ({ page }) => {
+  const width = page.viewportSize()?.width ?? 0;
+  for (const name of ['FASTQC', 'channel.fromFilePairs']) {
+    const link = example(page, 1).getByRole('link', { name }).first();
+    await link.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await link.focus();
+    await expect(card(page, 1)).toBeVisible();
+    const l = await link.boundingBox();
+    const c = await card(page, 1).boundingBox();
+    if (!l || !c) throw new Error('No link or card');
+    expect(c.width).toBeCloseTo(Math.min(360, width - 24), 0);
+    const centred = l.x + l.width / 2 - c.width / 2;
+    expect(c.x).toBeCloseTo(Math.min(Math.max(12, centred), width - 12 - c.width), 0);
+    expect(c.y - (l.y + l.height)).toBeCloseTo(8, 0);
+  }
+});
+
 test('readers can move the pointer onto the card', async ({ page }) => {
   await example(page).locator('a.scb-api-link').nth(3).hover();
   await expect(card(page)).toBeVisible();
@@ -100,8 +117,8 @@ test('the card is inside the block, so it gets the theme colours, and fits a pho
   await example(page).locator('a.scb-api-link').nth(3).focus();
   const box = await card(page).boundingBox();
   const width = page.viewportSize()?.width ?? 0;
-  expect(box?.x).toBeGreaterThanOrEqual(0);
-  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
+  expect(box?.x).toBeGreaterThanOrEqual(12);
+  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width - 12);
   const colours = await card(page).evaluate((el) => ({
     background: getComputedStyle(el).backgroundColor,
     source: getComputedStyle(el.querySelector('.scb-api-card-source') as Element).color,

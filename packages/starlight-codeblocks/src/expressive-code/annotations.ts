@@ -83,10 +83,12 @@ export function pluginAnnotations(): CodeblocksPlugin {
 }
 .${cls('-popover')} { padding: 0.6rem 0.8rem; font-size: 0.875rem; }
 .${cls('-popover')} p { margin: 0; }
-.${cls('-popover')} code {
+/* .frame outweighs Expressive Code's square top corners for code in titled blocks. */
+.frame .${cls('-popover')} code {
   padding: 0 4px;
   border-radius: 3px;
   background: color-mix(in srgb, currentColor 12%, transparent);
+  font-family: ${cssVar('codeFontFamily')};
   font-size: 0.95em;
 }
 .${cls('-popover')} a { color: inherit; text-underline-offset: 3px; }

@@ -69,10 +69,28 @@ test('the sticky list stays at the bottom of the window while the block is on sc
   const box = await list.boundingBox();
   const height = page.viewportSize()?.height ?? 0;
   expect(Math.abs((box?.y ?? 0) + (box?.height ?? 0) - height)).toBeLessThan(2);
+  // Floating over the code, the list needs its own top border.
+  expect(await list.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('1px');
   const first = await example(page, 0)
     .locator('.scb-footnotes')
     .evaluate((el) => getComputedStyle(el).position);
   expect(first).toBe('static');
+});
+
+test('inline code in the list uses the code font, with round corners in a titled block', async ({ page }) => {
+  const code = example(page).locator('.scb-footnotes code').first();
+  const style = await code.evaluate((el) => {
+    const s = getComputedStyle(el);
+    const pre = getComputedStyle(el.closest('.expressive-code')?.querySelector('pre code') as Element);
+    return {
+      font: s.fontFamily,
+      codeFont: pre.fontFamily,
+      top: s.borderTopLeftRadius,
+      bottom: s.borderBottomLeftRadius,
+      clone: s.boxDecorationBreak,
+    };
+  });
+  expect(style).toEqual({ font: style.codeFont, codeFont: style.codeFont, top: '3px', bottom: '3px', clone: 'clone' });
 });
 
 test('a badge describes itself with its note, and moves focus to the note and back', async ({ page }) => {

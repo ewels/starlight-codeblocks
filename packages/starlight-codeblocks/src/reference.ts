@@ -197,7 +197,9 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       popoverBorder: { description: 'The border of annotation notes and hover cards.' },
       popoverShadow: { description: 'The shadow of annotation notes and hover cards.' },
       popoverRadius: { description: 'The corner radius of annotation notes and hover cards.' },
-      popoverMaxWidth: { description: 'The largest width of annotation notes and hover cards.' },
+      popoverMaxWidth: {
+        description: 'The width of annotation notes. Hover cards are 20px wider. Both stay 12px inside the window.',
+      },
       popoverFontSize: { description: 'The text size of annotation notes and hover cards.' },
     },
   },
