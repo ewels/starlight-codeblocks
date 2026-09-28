@@ -2,13 +2,12 @@ import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { getColorContrast } from '@expressive-code/core';
-import { ExpressiveCode } from 'expressive-code';
 import { afterEach, expect, test, vi } from 'vitest';
 import { cachedFetch } from '../src/expressive-code/api-links.ts';
-import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import type { ApiLinkAdapter, Resolution, SymbolRef } from '../src/options.ts';
 import { resolveOptions } from '../src/options.ts';
 import { setRegistry } from '../src/registry.ts';
+import { variants } from './contrast.ts';
 import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
@@ -140,17 +139,13 @@ test('renders a block the same without the feature when nothing links', async ()
 });
 
 test('the underline meets 3:1 contrast, and the card source 4.5:1, in both themes', async () => {
-  const ec = new ExpressiveCode({ plugins: [pluginCodeblocks()] });
-  await ec.getBaseStyles();
-  const backgrounds = { dark: ['#23262f', '#24292e'], light: ['#f6f7f9', '#ffffff'] };
-  for (const variant of ec.styleVariants) {
-    const get = (key: string) => variant.resolvedStyleSettings.get(key as never) as string;
-    for (const bg of backgrounds[variant.theme.type]) {
-      expect(getColorContrast(get('codeblocksApiLinks.underline'), bg)).toBeGreaterThanOrEqual(3);
-      expect(getColorContrast(get('codeblocksApiLinks.hoverUnderline'), bg)).toBeGreaterThanOrEqual(3);
-    }
+  for (const { get, name } of await variants()) {
+    const bg = get('codeBackground');
+    expect(getColorContrast(get('codeblocksApiLinks.underline'), bg), name).toBeGreaterThanOrEqual(3);
+    expect(getColorContrast(get('codeblocksApiLinks.hoverUnderline'), bg), name).toBeGreaterThanOrEqual(3);
     expect(
       getColorContrast(get('codeblocks.mutedForeground'), get('codeblocks.popoverBackground')),
+      name,
     ).toBeGreaterThanOrEqual(4.5);
   }
 });

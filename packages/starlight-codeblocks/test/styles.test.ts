@@ -2,9 +2,7 @@ import { getColorContrast } from '@expressive-code/core';
 import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { pluginCore } from '../src/expressive-code/core.ts';
-
-// Code backgrounds of Starlight's default themes and of Expressive Code's defaults, by theme type.
-const backgrounds = { dark: ['#23262f', '#24292e'], light: ['#f6f7f9', '#ffffff'] };
+import { variants } from './contrast.ts';
 
 async function settings(overrides = {}) {
   const ec = new ExpressiveCode({ plugins: [pluginCore()], styleOverrides: overrides });
@@ -15,22 +13,31 @@ async function settings(overrides = {}) {
   }));
 }
 
-test('every shared colour meets its contrast target in the dark and the light theme', async () => {
-  const variants = await settings();
-  expect(variants.map((v) => v.type).sort()).toEqual(['dark', 'light']);
-  for (const v of variants) {
-    for (const bg of backgrounds[v.type]) {
-      expect(getColorContrast(v.get('mutedForeground'), bg)).toBeGreaterThanOrEqual(4.5);
-      expect(getColorContrast(v.get('accent'), bg)).toBeGreaterThanOrEqual(3);
-      expect(getColorContrast(v.get('focusRing'), bg)).toBeGreaterThanOrEqual(3);
-      expect(getColorContrast(v.get('accentHover'), bg)).toBeGreaterThanOrEqual(3);
-    }
-    expect(getColorContrast(v.get('accentForeground'), v.get('accent'))).toBeGreaterThanOrEqual(4.5);
-    expect(getColorContrast(v.get('accentForeground'), v.get('accentHover'))).toBeGreaterThanOrEqual(4.5);
-    expect(v.get('accentHover')).not.toBe(v.get('accent'));
-    expect(getColorContrast(v.get('popoverForeground'), v.get('popoverBackground'))).toBeGreaterThanOrEqual(4.5);
-    expect(getColorContrast(v.get('focusRing'), v.get('popoverBackground'))).toBeGreaterThanOrEqual(3);
+test('every shared colour meets its contrast target in each theme', async () => {
+  const all = await variants([pluginCore()]);
+  expect(new Set(all.map((v) => v.type))).toEqual(new Set(['dark', 'light']));
+  for (const { get: full, name } of all) {
+    const get = (key: string) => full(`codeblocks.${key}`);
+    const bg = full('codeBackground');
+    expect(getColorContrast(get('mutedForeground'), bg), name).toBeGreaterThanOrEqual(4.5);
+    expect(getColorContrast(get('accent'), bg), name).toBeGreaterThanOrEqual(3);
+    expect(getColorContrast(get('focusRing'), bg), name).toBeGreaterThanOrEqual(3);
+    expect(getColorContrast(get('accentHover'), bg), name).toBeGreaterThanOrEqual(3);
+    expect(getColorContrast(get('accentForeground'), get('accent')), name).toBeGreaterThanOrEqual(4.5);
+    expect(getColorContrast(get('accentForeground'), get('accentHover')), name).toBeGreaterThanOrEqual(4.5);
+    expect(get('accentHover'), name).not.toBe(get('accent'));
+    expect(getColorContrast(get('popoverForeground'), get('popoverBackground')), name).toBeGreaterThanOrEqual(4.5);
+    expect(getColorContrast(get('mutedForeground'), get('popoverBackground')), name).toBeGreaterThanOrEqual(4.5);
+    expect(getColorContrast(get('focusRing'), get('popoverBackground')), name).toBeGreaterThanOrEqual(3);
   }
+});
+
+test('the shared colours come from the theme, and keep the Night Owl look of the docs site', async () => {
+  const all = await variants([pluginCore()]);
+  const nightOwl = all.find((v) => v.type === 'dark' && v.name.startsWith('Night Owl'));
+  // Night Owl's terminal blue already has the contrast, so it stays as it is.
+  expect(nightOwl?.get('codeblocks.accent')).toBe('#82aaff');
+  expect(new Set(all.map((v) => v.get('codeblocks.accent'))).size).toBe(all.length);
 });
 
 test('sites can override shared settings with styleOverrides', async () => {
@@ -46,6 +53,7 @@ test('base styles use the shared settings and scope to Expressive Code', async (
   expect(css).toContain('var(--ec-codeblocks-popoverBg)');
   expect(css).toContain('prefers-reduced-motion: reduce');
   const themes = await ec.getThemeStyles();
-  expect(themes).toContain('--ec-codeblocks-accent:#82aaff');
-  expect(themes).toContain('--ec-codeblocks-accent:#3b61b0');
+  for (const v of ec.styleVariants) {
+    expect(themes).toContain(`--ec-codeblocks-accent:${v.resolvedStyleSettings.get('codeblocks.accent')}`);
+  }
 });

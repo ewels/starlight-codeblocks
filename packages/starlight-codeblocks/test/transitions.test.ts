@@ -4,6 +4,7 @@ import { expect, test } from 'vitest';
 import { codeSteps, type StepTokens } from '../src/components/steps.ts';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import { pluginTransitions } from '../src/expressive-code/transitions.ts';
+import { variants } from './contrast.ts';
 import { render } from './render.ts';
 
 const block = (meta: string, code: string) => [`\`\`\`js ${meta}`, code, '```'].join('\n');
@@ -115,16 +116,13 @@ test('returns the HTML as it is when there is no code block', () => {
 });
 
 test('the step colours meet their contrast targets', async () => {
+  for (const { get, name } of await variants()) {
+    const bg = get('codeBackground');
+    expect(getColorContrast(get('codeblocksTransitions.stepBorder'), bg), name).toBeGreaterThanOrEqual(3);
+    expect(getColorContrast(get('codeblocksTransitions.doneForeground'), bg), name).toBeGreaterThanOrEqual(4.5);
+  }
   const ec = new ExpressiveCode({ plugins: pluginCodeblocks() });
   await ec.getBaseStyles();
-  const backgrounds = { dark: ['#23262f', '#24292e'], light: ['#f6f7f9', '#ffffff'] };
-  for (const v of ec.styleVariants) {
-    const get = (key: string) => v.resolvedStyleSettings.get(key as never) as string;
-    for (const bg of backgrounds[v.theme.type]) {
-      expect(getColorContrast(get('codeblocksTransitions.stepBorder'), bg)).toBeGreaterThanOrEqual(3);
-      expect(getColorContrast(get('codeblocksTransitions.doneForeground'), bg)).toBeGreaterThanOrEqual(4.5);
-    }
-  }
   expect(ec.styleVariants.map((v) => v.resolvedStyleSettings.get('codeblocksTransitions.themeIndex' as never))).toEqual(
     ['0', '1'],
   );

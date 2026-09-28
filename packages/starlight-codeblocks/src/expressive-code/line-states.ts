@@ -15,7 +15,7 @@ import { type CodeblocksPlugin, ensureTextContrast, resolveRange } from './core.
 import { inlineMarkdown } from './inline-markdown.ts';
 import type { DirectiveSpecs } from './notation.ts';
 import { getDirectives } from './notation.ts';
-import { PREFIX, solidCodeBackground } from './styles.ts';
+import { onCode, PREFIX, solidCodeBackground, themeColour } from './styles.ts';
 
 /**
  * Settings of the `codeblocksLineStates` group. Each state also has `<state>` (the bar colour),
@@ -34,10 +34,11 @@ declare module '@expressive-code/core' {
   }
 }
 
-export const builtInStates: Record<string, LineStateDefinition> = {
-  error: { label: 'Error', colour: { dark: '#ff6b6b', light: '#d03535' } },
-  warning: { label: 'Warning', colour: { dark: '#f5b942', light: '#a3690a' } },
-  info: { label: 'Note', colour: { dark: '#6cb8ff', light: '#2369c0' } },
+/** The built-in states take their colour from the theme's colour of the same name. */
+export const builtInStates: Record<string, { label: string; themeColour: string }> = {
+  error: { label: 'Error', themeColour: 'editorError.foreground' },
+  warning: { label: 'Warning', themeColour: 'editorWarning.foreground' },
+  info: { label: 'Note', themeColour: 'editorInfo.foreground' },
 };
 
 type Context = Parameters<StyleResolverFn>[0];
@@ -46,9 +47,12 @@ const get = (resolve: Resolve, key: string) => resolve(`codeblocksLineStates.${k
 const lineBackground = (context: Context, name: string) =>
   onBackground(get(context.resolveSetting, `${name}Background`), solidCodeBackground(context));
 
-function stateSettings(name: string, { colour }: LineStateDefinition) {
+function stateSettings(name: string, state: LineStateDefinition | (typeof builtInStates)[string]) {
   return {
-    [name]: [colour.dark, colour.light],
+    [name]:
+      'themeColour' in state
+        ? (context: Context) => onCode(context, themeColour(context, state.themeColour), 3)
+        : [state.colour.dark, state.colour.light],
     [`${name}Background`]: ({ resolveSetting }: Context) => setAlpha(get(resolveSetting, name), 0.15),
     [`${name}LabelBackground`]: ({ resolveSetting }: Context) => setAlpha(get(resolveSetting, name), 0.2),
     [`${name}LabelForeground`]: (context: Context) =>

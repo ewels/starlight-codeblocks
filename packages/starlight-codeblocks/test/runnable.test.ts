@@ -1,10 +1,10 @@
 import { getColorContrast } from '@expressive-code/core';
-import { ExpressiveCode } from 'expressive-code';
 import { afterEach, expect, test } from 'vitest';
 import { pluginCore } from '../src/expressive-code/core.ts';
 import { pluginRunnable, runtimeFileName, runtimeModules } from '../src/expressive-code/runnable.ts';
 import { runtimePlugins } from '../src/integration.ts';
 import { setRegistry } from '../src/registry.ts';
+import { variants } from './contrast.ts';
 import { render } from './render.ts';
 
 afterEach(() => setRegistry(undefined));
@@ -101,14 +101,10 @@ test('copied text is unchanged, and blocks without runnable render the same with
 });
 
 test('output and error colours meet 4.5:1 in the dark and the light theme', async () => {
-  const backgrounds = { dark: ['#23262f', '#24292e'], light: ['#f6f7f9', '#ffffff'] };
-  const ec = new ExpressiveCode({ plugins: [pluginCore(), pluginRunnable()] });
-  await ec.getBaseStyles();
-  for (const variant of ec.styleVariants) {
+  for (const v of await variants([pluginCore(), pluginRunnable()])) {
     for (const key of ['outputForeground', 'errorForeground']) {
-      const colour = variant.resolvedStyleSettings.get(`codeblocksRunnable.${key}` as never) as string;
-      for (const bg of backgrounds[variant.theme.type])
-        expect(getColorContrast(colour, bg)).toBeGreaterThanOrEqual(4.5);
+      const colour = v.get(`codeblocksRunnable.${key}`);
+      expect(getColorContrast(colour, v.get('codeBackground')), `${key}, ${v.name}`).toBeGreaterThanOrEqual(4.5);
     }
   }
 });

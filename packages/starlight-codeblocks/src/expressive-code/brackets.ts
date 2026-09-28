@@ -3,13 +3,14 @@ import {
   AttachedPluginData,
   ExpressiveCodeAnnotation,
   PluginStyleSettings,
+  type StyleResolverFn,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { type CommentSyntax, commentSyntaxFor } from './comments.ts';
 import type { CodeblocksPlugin } from './core.ts';
-import { PREFIX } from './styles.ts';
+import { onCode, PREFIX } from './styles.ts';
 
 export interface BracketsStyleSettings {
   colour1: UnresolvedStyleValue;
@@ -23,13 +24,24 @@ declare module '@expressive-code/core' {
   }
 }
 
+// VS Code's own defaults for themes without bracket colours. Terminal colours would match syntax colours in
+// themes such as Night Owl, so brackets would look like keywords.
+const vsCodeDefaults = { dark: ['#ffd700', '#da70d6', '#179fff'], light: ['#0431fa', '#319331', '#7b3814'] };
+
+const bracketColour =
+  (depth: number): StyleResolverFn =>
+  (context) =>
+    onCode(
+      context,
+      context.theme.colors[`editorBracketHighlight.foreground${depth}`] ??
+        vsCodeDefaults[context.theme.type][depth - 1] ??
+        context.theme.fg,
+      4.5,
+    );
+
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
-    codeblocksBrackets: {
-      colour1: ['#ffd700', '#8a6d00'],
-      colour2: ['#da70d6', '#9c2aa0'],
-      colour3: ['#3fb0ff', '#0969da'],
-    },
+    codeblocksBrackets: { colour1: bracketColour(1), colour2: bracketColour(2), colour3: bracketColour(3) },
   },
 });
 

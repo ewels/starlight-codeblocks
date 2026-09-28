@@ -1,5 +1,6 @@
 import { getColorContrast, onBackground } from '@expressive-code/core';
-import { ExpressiveCode, type ExpressiveCodePlugin, type ExpressiveCodeTheme } from 'expressive-code';
+import { ExpressiveCode, type ExpressiveCodePlugin, ExpressiveCodeTheme } from 'expressive-code';
+import { bundledThemes } from 'shiki';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 
 const starlight = new URL(
@@ -7,10 +8,16 @@ const starlight = new URL(
   import.meta.url,
 );
 
-/** Starlight's default themes as a site gets them, then Expressive Code's own default themes. */
+/** Other popular themes, dark and light, so that colours from the theme work beyond the defaults. */
+const others = ['dracula', 'solarized-light', 'one-dark-pro', 'catppuccin-latte', 'nord', 'min-light'] as const;
+
+/** Starlight's default themes as a site gets them, Expressive Code's own default themes, then `others`. */
 export async function themeSets(): Promise<(ExpressiveCodeTheme[] | undefined)[]> {
   const { preprocessThemes, applyStarlightUiThemeColors } = await import(starlight.href);
-  return [preprocessThemes(undefined).map(applyStarlightUiThemeColors), undefined];
+  const more = await Promise.all(
+    others.map(async (name) => new ExpressiveCodeTheme((await bundledThemes[name]()).default)),
+  );
+  return [preprocessThemes(undefined).map(applyStarlightUiThemeColors), undefined, more];
 }
 
 export interface Variant {

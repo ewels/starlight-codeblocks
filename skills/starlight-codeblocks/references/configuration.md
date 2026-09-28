@@ -54,7 +54,7 @@ codeblocks({
 
 ## Colours and sizes
 
-Every colour and size is an Expressive Code style setting, with a value for dark themes and one for light themes. Change them in `styleOverrides` of the Expressive Code options. A string applies to both themes. A pair gives the dark value, then the light value.
+Every colour and size is an Expressive Code style setting. The default colours come from the site's Expressive Code theme (for example `terminal.ansiBlue` for `codeblocks.accent`), with contrast correction, so they follow any theme. Change them in `styleOverrides` of the Expressive Code options. A string applies to both themes. A pair gives the dark value, then the light value.
 
 The shared settings are in the `codeblocks` group. Each feature has its own group, such as `codeblocksFocus`. The list: https://ewels.github.io/starlight-codeblocks/reference/style-settings/
 

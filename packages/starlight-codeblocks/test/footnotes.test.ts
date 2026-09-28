@@ -1,8 +1,8 @@
 import { getColorContrast } from '@expressive-code/core';
-import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { pluginCore } from '../src/expressive-code/core.ts';
 import { pluginFootnotes } from '../src/expressive-code/footnotes.ts';
+import { variants } from './contrast.ts';
 import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
@@ -63,17 +63,13 @@ test('renders a block without footnotes the same as without the feature', async 
 });
 
 test('footnote colours meet their contrast targets in both themes', async () => {
-  const ec = new ExpressiveCode({ plugins: [pluginCore(), pluginFootnotes()] });
-  await ec.getBaseStyles();
-  const backgrounds = { dark: ['#23262f', '#24292e'], light: ['#f6f7f9', '#ffffff'] };
-  for (const variant of ec.styleVariants) {
-    const get = (key: string) => variant.resolvedStyleSettings.get(`codeblocksFootnotes.${key}` as never) as string;
-    for (const bg of backgrounds[variant.theme.type]) {
-      expect(getColorContrast(get('numberForeground'), bg)).toBeGreaterThanOrEqual(4.5);
-      expect(getColorContrast(get('accent'), bg)).toBeGreaterThanOrEqual(3);
-    }
-    expect(getColorContrast(get('activeForeground'), get('accent'))).toBeGreaterThanOrEqual(4.5);
-    expect(getColorContrast(get('numberForeground'), get('lineBackground'))).toBeGreaterThanOrEqual(4.5);
+  for (const v of await variants([pluginCore(), pluginFootnotes()])) {
+    const get = (key: string) => v.get(`codeblocksFootnotes.${key}`);
+    const bg = v.get('codeBackground');
+    expect(getColorContrast(get('numberForeground'), bg), v.name).toBeGreaterThanOrEqual(4.5);
+    expect(getColorContrast(get('accent'), bg), v.name).toBeGreaterThanOrEqual(3);
+    expect(getColorContrast(get('activeForeground'), get('accent')), v.name).toBeGreaterThanOrEqual(4.5);
+    expect(getColorContrast(get('numberForeground'), get('lineBackground')), v.name).toBeGreaterThanOrEqual(4.5);
   }
 });
 

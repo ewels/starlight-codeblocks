@@ -162,7 +162,7 @@ test('inline code in the footnote list meets 4.5:1 contrast, also in the sticky 
   for (const v of await variants()) {
     const fg = v.get('codeForeground');
     for (const list of [v.get('codeBackground'), tinted(v, [setAlpha(fg, 0.05)])]) {
-      expect(getColorContrast(fg, onBackground(setAlpha(fg, 0.12), list)), v.name).toBeGreaterThanOrEqual(4.5);
+      expect(getColorContrast(fg, onBackground(setAlpha(fg, 0.1), list)), v.name).toBeGreaterThanOrEqual(4.5);
     }
   }
 });

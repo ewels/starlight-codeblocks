@@ -1,5 +1,7 @@
 import {
+  ensureColorContrastOnBackground,
   getFirstStaticColor,
+  lighten,
   mix,
   PluginStyleSettings,
   type ResolverContext,
@@ -46,22 +48,50 @@ export const solidCodeBackground = ({ resolveSetting, theme }: Parameters<StyleR
 export const solidCodeForeground = ({ resolveSetting, theme }: Parameters<StyleResolverFn>[0]) =>
   getFirstStaticColor(resolveSetting('codeForeground'), theme.fg) ?? (theme.type === 'dark' ? '#d6deeb' : '#403f53');
 
+type Context = Parameters<StyleResolverFn>[0];
+
+/**
+ * The first of `keys` in the theme's colours, such as `terminal.ansiBlue`. Expressive Code fills in the VS Code
+ * default for most colours a theme leaves out; the code foreground stands in for the rest.
+ */
+export const themeColour = ({ theme }: Context, ...keys: string[]) =>
+  keys.map((key) => theme.colors[key]).find((colour) => colour && !colour.startsWith('var(')) ?? theme.fg;
+
+/** `colour`, lightened or darkened to at least `min` contrast on the code background. */
+export const onCode = (context: Context, colour: string, min: number) =>
+  ensureColorContrastOnBackground(colour, solidCodeBackground(context), min);
+
 /** A hover colour for `colour`: lighter in dark themes and darker in light themes, as it moves towards the text. */
 export const hoverColour = (colour: string, context: Parameters<StyleResolverFn>[0]) =>
   mix(colour, solidCodeForeground(context), 0.45);
 
-// The dark values are the mockup colours. The light values give the same contrast on light themes.
+// Every colour comes from the theme, so that any Expressive Code theme, dark or light, keeps its look and contrast.
 export const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocks: {
-      accent: ['#82aaff', '#3b61b0'],
+      accent: (context) => onCode(context, themeColour(context, 'terminal.ansiBlue'), 4.5),
       accentHover: (context) => hoverColour(context.resolveSetting('codeblocks.accent'), context),
-      accentForeground: ['#0e1628', '#ffffff'],
-      mutedForeground: ['#95a2b5', '#5b6474'],
+      accentForeground: (context) =>
+        ensureColorContrastOnBackground(solidCodeBackground(context), context.resolveSetting('codeblocks.accent'), 4.5),
+      mutedForeground: (context) =>
+        ensureColorContrastOnBackground(
+          onCode(context, mix(solidCodeForeground(context), solidCodeBackground(context), 0.3), 4.5),
+          context.resolveSetting('codeblocks.popoverBackground'),
+          4.5,
+        ),
       focusRing: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),
-      popoverBackground: ['#2c3450', '#ffffff'],
-      popoverForeground: ['#d6deeb', '#1f2c3c'],
-      popoverBorder: ['#4b5783', '#b4bfd3'],
+      popoverBackground: (context) =>
+        context.theme.type === 'dark'
+          ? mix(solidCodeBackground(context), context.resolveSetting('codeblocks.accent'), 0.12)
+          : lighten(solidCodeBackground(context), 0.5),
+      popoverForeground: (context) =>
+        ensureColorContrastOnBackground(
+          solidCodeForeground(context),
+          context.resolveSetting('codeblocks.popoverBackground'),
+          4.5,
+        ),
+      popoverBorder: ({ resolveSetting }) =>
+        mix(resolveSetting('codeblocks.popoverBackground'), resolveSetting('codeblocks.accent'), 0.3),
       popoverShadow: ['0 8px 28px rgb(10 14 24 / 0.45)', '0 8px 28px rgb(12 20 36 / 0.18)'],
       popoverRadius: '6px',
       popoverMaxWidth: '340px',

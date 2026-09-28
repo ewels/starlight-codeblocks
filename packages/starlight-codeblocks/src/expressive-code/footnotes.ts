@@ -1,5 +1,7 @@
 import {
   type ExpressiveCodeLine,
+  ensureColorContrastOnBackground,
+  mix,
   onBackground,
   PluginStyleSettings,
   type StyleResolverFn,
@@ -11,7 +13,7 @@ import { clientJsModules } from '../client-modules.ts';
 import { blockUid, type CodeblocksPlugin, lineElement, numberedLines, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
-import { PREFIX, solidCodeBackground } from './styles.ts';
+import { onCode, PREFIX, solidCodeBackground, solidCodeForeground, themeColour } from './styles.ts';
 
 export interface FootnotesStyleSettings {
   /** The badge border, the bar of a selected line and the badge background when selected. */
@@ -33,15 +35,28 @@ declare module '@expressive-code/core' {
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksFootnotes: {
-      accent: ['#c792ea', '#8a3fc7'],
-      numberForeground: ['#d8b3f3', '#7a2fb5'],
-      activeForeground: ['#1b1f2c', '#ffffff'],
+      accent: (context: Parameters<StyleResolverFn>[0]) =>
+        onCode(context, themeColour(context, 'terminal.ansiMagenta'), 4.5),
+      // Readable on the code and on the tint of an active line.
+      numberForeground: (context: Parameters<StyleResolverFn>[0]) =>
+        ensureColorContrastOnBackground(
+          onCode(
+            context,
+            mix(context.resolveSetting('codeblocksFootnotes.accent'), solidCodeForeground(context), 0.3),
+            4.5,
+          ),
+          context.resolveSetting('codeblocksFootnotes.lineBackground'),
+          4.5,
+        ),
+      activeForeground: (context: Parameters<StyleResolverFn>[0]) =>
+        ensureColorContrastOnBackground(
+          solidCodeBackground(context),
+          context.resolveSetting('codeblocksFootnotes.accent'),
+          4.5,
+        ),
       // Light enough for every syntax colour as it is, so that a line keeps its colours when it lights up.
       lineBackground: (context: Parameters<StyleResolverFn>[0]) =>
-        onBackground(
-          setAlpha(context.resolveSetting('codeblocksFootnotes.accent'), context.theme.type === 'dark' ? 0.1 : 0.12),
-          solidCodeBackground(context),
-        ),
+        onBackground(setAlpha(context.resolveSetting('codeblocksFootnotes.accent'), 0.1), solidCodeBackground(context)),
       stickyShadow: ['0 -8px 16px rgb(10 14 24 / 0.35)', '0 -6px 14px rgb(12 20 36 / 0.1)'],
     },
   },
@@ -135,7 +150,8 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
   padding: 0 4px;
   color: ${cssVar('codeForeground')};
   border-radius: 3px;
-  background: color-mix(in srgb, currentColor 12%, transparent);
+  /* 10%, not the 12% of notes, keeps 4.5:1 on the sticky list for themes whose code colour is near 4.5:1. */
+  background: color-mix(in srgb, currentColor 10%, transparent);
   font-family: ${cssVar('codeFontFamily')};
   font-size: 0.95em;
   -webkit-box-decoration-break: clone;

@@ -4,7 +4,7 @@ import { bundledLanguagesInfo } from 'shiki/langs';
 import { clientJsModules } from '../client-modules.ts';
 import { getRegistry } from '../registry.ts';
 import { addTitleBarControl, type CodeblocksPlugin, warn } from './core.ts';
-import { PREFIX } from './styles.ts';
+import { onCode, PREFIX, themeColour } from './styles.ts';
 
 export interface RunnableStyleSettings {
   /** Standard output. Needs 4.5:1 on the code background. */
@@ -22,8 +22,8 @@ declare module '@expressive-code/core' {
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksRunnable: {
-      outputForeground: ['#c3e88d', '#2f6b12'],
-      errorForeground: ['#ff8080', '#c42b2b'],
+      outputForeground: (context) => onCode(context, themeColour(context, 'terminal.ansiGreen'), 4.5),
+      errorForeground: (context) => onCode(context, themeColour(context, 'terminal.ansiRed'), 4.5),
     },
   },
 });

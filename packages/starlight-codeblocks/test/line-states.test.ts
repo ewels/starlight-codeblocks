@@ -1,7 +1,7 @@
 import { getColorContrast, onBackground } from '@expressive-code/core';
-import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
+import { variants } from './contrast.ts';
 import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
@@ -93,24 +93,17 @@ test('leaves state directives in the code when the feature is off', async () => 
 });
 
 test('every state colour meets its contrast target in the dark and the light theme', async () => {
-  const ec = new ExpressiveCode({ plugins: [pluginCodeblocks({ lineStates: { states: todo } })] });
-  await ec.getBaseStyles();
-  const backgrounds = { dark: ['#23262f', '#24292e'], light: ['#f6f7f9', '#ffffff'] };
-  for (const variant of ec.styleVariants) {
-    const get = (key: string) => variant.resolvedStyleSettings.get(`codeblocksLineStates.${key}` as never) as string;
+  for (const v of await variants(pluginCodeblocks({ lineStates: { states: todo } }))) {
+    const get = (key: string) => v.get(`codeblocksLineStates.${key}`);
+    const codeBg = v.get('codeBackground');
     for (const state of ['error', 'warning', 'info']) {
-      for (const bg of backgrounds[variant.theme.type]) {
-        expect(getColorContrast(get(state), bg), `${state} bar on ${bg}`).toBeGreaterThanOrEqual(3);
-      }
+      expect(getColorContrast(get(state), codeBg), `${state} bar, ${v.name}`).toBeGreaterThanOrEqual(3);
     }
-    const codeBg = variant.resolvedStyleSettings.get('codeBackground') as string;
     for (const state of ['error', 'warning', 'info', 'todo']) {
       const lineBg = onBackground(get(`${state}Background`), codeBg);
       const labelBg = onBackground(get(`${state}LabelBackground`), lineBg);
+      // The code on the line is checked as rendered, in test/tints.test.ts.
       expect(getColorContrast(get(`${state}LabelForeground`), labelBg), `${state} label`).toBeGreaterThanOrEqual(4.5);
-      expect(
-        getColorContrast(variant.resolvedStyleSettings.get('codeForeground') as string, lineBg),
-      ).toBeGreaterThanOrEqual(4.5);
     }
   }
 });

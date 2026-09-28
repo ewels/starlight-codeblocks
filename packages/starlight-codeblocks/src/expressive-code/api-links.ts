@@ -6,6 +6,7 @@ import {
   AttachedPluginData,
   ExpressiveCodeAnnotation,
   type ExpressiveCodeHookContextBase,
+  mix,
   PluginStyleSettings,
   setAlpha,
   type UnresolvedStyleValue,
@@ -16,7 +17,7 @@ import type { AdapterContext, ApiLinkAdapter, Resolution } from '../options.ts';
 import { getRegistry } from '../registry.ts';
 import { type CodeblocksPlugin, isSafeUrl } from './core.ts';
 import { getDirectives } from './notation.ts';
-import { PREFIX } from './styles.ts';
+import { onCode, PREFIX, solidCodeBackground, solidCodeForeground } from './styles.ts';
 import { withBase } from './token-links.ts';
 
 export interface ApiLinksStyleSettings {
@@ -35,7 +36,7 @@ declare module '@expressive-code/core' {
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksApiLinks: {
-      underline: ['#7f8aa0', '#7d8696'],
+      underline: (context) => onCode(context, mix(solidCodeForeground(context), solidCodeBackground(context), 0.45), 3),
       hoverUnderline: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),
       hoverBackground: ({ resolveSetting, theme }) =>
         setAlpha(resolveSetting('codeblocks.accent'), theme.type === 'dark' ? 0.1 : 0.12),

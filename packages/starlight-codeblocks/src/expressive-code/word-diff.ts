@@ -8,7 +8,7 @@ import {
 } from '@expressive-code/core';
 import { h } from '@expressive-code/core/hast';
 import { type CodeblocksPlugin, ensureTextContrast } from './core.ts';
-import { PREFIX } from './styles.ts';
+import { PREFIX, themeColour } from './styles.ts';
 
 export interface WordDiffStyleSettings {
   ins: UnresolvedStyleValue;
@@ -26,8 +26,8 @@ declare module '@expressive-code/core' {
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksWordDiff: {
-      ins: ['#5fcd78', '#1f7a3d'],
-      del: ['#ff6464', '#c62828'],
+      ins: (context) => themeColour(context, 'terminal.ansiGreen'),
+      del: (context) => themeColour(context, 'terminal.ansiRed'),
       insBackground: ({ resolveSetting, theme }) =>
         setAlpha(resolveSetting('codeblocksWordDiff.ins'), theme.type === 'dark' ? 0.15 : 0.3),
       delBackground: ({ resolveSetting, theme }) =>

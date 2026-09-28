@@ -9,7 +9,7 @@ import { addClassName, h, select } from '@expressive-code/core/hast';
 import { LanguageGroups } from '@expressive-code/plugin-frames';
 import { clientJsModules } from '../client-modules.ts';
 import { addTitleBarControl, type CodeblocksPlugin } from './core.ts';
-import { PREFIX } from './styles.ts';
+import { onCode, PREFIX, themeColour } from './styles.ts';
 
 export interface ShellCopyStyleSettings {
   promptForeground: UnresolvedStyleValue;
@@ -25,7 +25,7 @@ declare module '@expressive-code/core' {
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksShellCopy: {
-      promptForeground: ['#7fdbca', '#0f766e'],
+      promptForeground: (context) => onCode(context, themeColour(context, 'terminal.ansiCyan'), 4.5),
       outputForeground: ({ resolveSetting }) => resolveSetting('codeblocks.mutedForeground'),
     },
   },

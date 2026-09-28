@@ -180,25 +180,45 @@ export interface StyleGroupDoc {
 }
 
 const accent = 'The value of `codeblocks.accent`.';
+/** A theme colour, such as `terminal.ansiGreen`, lightened or darkened to `contrast` on the code background. */
+const fromTheme = (colour: string, contrast: string) =>
+  `The \`${colour}\` colour of the theme, with ${contrast} contrast on the code background.`;
+const bracket = (depth: string, fallback: string) =>
+  `The \`editorBracketHighlight.foreground${depth}\` colour of the theme, or VS Code's default (\`${fallback}\`) if the theme has none, with 4.5:1 contrast on the code background.`;
 
 export const styleSettingsReference: Record<string, StyleGroupDoc> = {
   codeblocks: {
     settings: {
       accent: {
         description: 'Markers, numbered buttons and active states. Needs 3:1 contrast on the code background.',
+        derived: fromTheme('terminal.ansiBlue', '4.5:1'),
       },
       accentHover: {
         description: 'Step borders under the pointer.',
         derived: '`accent` mixed 45% towards `codeForeground`: lighter in dark themes, darker in light themes.',
       },
-      accentForeground: { description: 'Text on an `accent` background.' },
+      accentForeground: {
+        description: 'Text on an `accent` background.',
+        derived: 'The code background, with 4.5:1 contrast on `accent`.',
+      },
       mutedForeground: {
         description: 'Secondary text, such as output and marker labels. Needs 4.5:1 contrast on the code background.',
+        derived:
+          '`codeForeground` mixed 30% towards the code background, with 4.5:1 contrast on it and on `popoverBackground`.',
       },
       focusRing: { description: 'The outline of a control that has keyboard focus.', derived: accent },
-      popoverBackground: { description: 'The background of annotation notes and hover cards.' },
-      popoverForeground: { description: 'The text of annotation notes and hover cards.' },
-      popoverBorder: { description: 'The border of annotation notes and hover cards.' },
+      popoverBackground: {
+        description: 'The background of annotation notes and hover cards.',
+        derived: 'The code background mixed 12% towards `accent` in dark themes, and lightened in light themes.',
+      },
+      popoverForeground: {
+        description: 'The text of annotation notes and hover cards.',
+        derived: '`codeForeground`, with 4.5:1 contrast on `popoverBackground`.',
+      },
+      popoverBorder: {
+        description: 'The border of annotation notes and hover cards.',
+        derived: '`popoverBackground` mixed 30% towards `accent`.',
+      },
       popoverShadow: { description: 'The shadow of annotation notes and hover cards.' },
       popoverRadius: { description: 'The corner radius of annotation notes and hover cards.' },
       popoverMaxWidth: {
@@ -221,9 +241,18 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       barWidth: { description: 'The width of the bar on the left edge of a line.' },
       labelFontSize: { description: 'The text size of messages.' },
       labelRadius: { description: 'The corner radius of messages.' },
-      error: { description: 'The colour of the error state. The other error settings come from it.' },
-      warning: { description: 'The colour of the warning state. The other warning settings come from it.' },
-      info: { description: 'The colour of the info state. The other info settings come from it.' },
+      error: {
+        description: 'The colour of the error state. The other error settings come from it.',
+        derived: fromTheme('editorError.foreground', '3:1'),
+      },
+      warning: {
+        description: 'The colour of the warning state. The other warning settings come from it.',
+        derived: fromTheme('editorWarning.foreground', '3:1'),
+      },
+      info: {
+        description: 'The colour of the info state. The other info settings come from it.',
+        derived: fromTheme('editorInfo.foreground', '3:1'),
+      },
       '<state>Background': {
         description: 'The tint of a line with the state. There is one for each state, such as `errorBackground`.',
         derived: 'The state colour at 15% opacity.',
@@ -241,8 +270,14 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
   codeblocksWordDiff: {
     page: 'features/word-level-diff',
     settings: {
-      ins: { description: 'The colour that the tint of added words comes from.' },
-      del: { description: 'The colour that the tint of removed words comes from.' },
+      ins: {
+        description: 'The colour that the tint of added words comes from.',
+        derived: 'The `terminal.ansiGreen` colour of the theme.',
+      },
+      del: {
+        description: 'The colour that the tint of removed words comes from.',
+        derived: 'The `terminal.ansiRed` colour of the theme.',
+      },
       insBackground: {
         description: 'The tint of added words.',
         derived: '`ins` at 15% opacity on dark themes, 30% on light themes.',
@@ -256,9 +291,18 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
   codeblocksBrackets: {
     page: 'features/colourised-brackets',
     settings: {
-      colour1: { description: 'Brackets at the first depth, and at every third depth after it.' },
-      colour2: { description: 'Brackets at the second depth, and at every third depth after it.' },
-      colour3: { description: 'Brackets at the third depth, and at every third depth after it.' },
+      colour1: {
+        description: 'Brackets at the first depth, and at every third depth after it.',
+        derived: bracket('1', '#ffd700` dark, `#0431fa` light'),
+      },
+      colour2: {
+        description: 'Brackets at the second depth, and at every third depth after it.',
+        derived: bracket('2', '#da70d6` dark, `#319331` light'),
+      },
+      colour3: {
+        description: 'Brackets at the third depth, and at every third depth after it.',
+        derived: bracket('3', '#179fff` dark, `#7b3814` light'),
+      },
     },
   },
   codeblocksWhitespace: {
@@ -273,7 +317,7 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
   codeblocksShellCopy: {
     page: 'features/smart-shell-copy',
     settings: {
-      promptForeground: { description: 'The colour of prompts.' },
+      promptForeground: { description: 'The colour of prompts.', derived: fromTheme('terminal.ansiCyan', '4.5:1') },
       outputForeground: {
         description: 'The colour of output lines.',
         derived: 'The value of `codeblocks.mutedForeground`.',
@@ -296,7 +340,10 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
   codeblocksApiLinks: {
     page: 'features/api-auto-linking',
     settings: {
-      underline: { description: 'The dotted underline of a link. Needs 3:1 contrast on the code background.' },
+      underline: {
+        description: 'The dotted underline of a link. Needs 3:1 contrast on the code background.',
+        derived: '`codeForeground` mixed 45% towards the code background, with 3:1 contrast on it.',
+      },
       hoverUnderline: { description: 'The solid underline of a link on hover and focus.', derived: accent },
       hoverBackground: {
         description: 'The background of a link on hover and focus.',
@@ -322,8 +369,14 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
         description: 'The colour of the line numbers.',
         derived: 'The gutter colour of the theme, with 4.5:1 contrast on the code background.',
       },
-      target: { description: 'The bar on the left edge of a highlighted line.' },
-      targetBackground: { description: 'The tint of a highlighted line.', derived: '`target` at 16% opacity.' },
+      target: {
+        description: 'The bar on the left edge of a highlighted line.',
+        derived: fromTheme('terminal.ansiYellow', '3:1'),
+      },
+      targetBackground: {
+        description: 'The tint of a highlighted line.',
+        derived: '`target` at 6% opacity in dark themes and 12% in light themes.',
+      },
     },
   },
   codeblocksHiddenLines: {
@@ -355,16 +408,31 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
   codeblocksRunnable: {
     page: 'features/run-in-the-browser',
     settings: {
-      outputForeground: { description: 'Standard output. Needs 4.5:1 contrast on the code background.' },
-      errorForeground: { description: 'Standard error and run errors. Needs 4.5:1 contrast on the code background.' },
+      outputForeground: {
+        description: 'Standard output. Needs 4.5:1 contrast on the code background.',
+        derived: fromTheme('terminal.ansiGreen', '4.5:1'),
+      },
+      errorForeground: {
+        description: 'Standard error and run errors. Needs 4.5:1 contrast on the code background.',
+        derived: fromTheme('terminal.ansiRed', '4.5:1'),
+      },
     },
   },
   codeblocksTransitions: {
     page: 'features/token-transitions',
     settings: {
-      stepBorder: { description: 'The border of a step that is not done yet.' },
-      doneForeground: { description: 'The number of a step that is done.' },
-      line: { description: 'The line between two steps that are not done yet.' },
+      stepBorder: {
+        description: 'The border of a step that is not done yet.',
+        derived: '`codeForeground` mixed 50% towards the code background, with 3:1 contrast on it.',
+      },
+      doneForeground: {
+        description: 'The number of a step that is done.',
+        derived: '`codeblocks.accent` mixed 50% towards `codeForeground`, with 4.5:1 contrast on the code background.',
+      },
+      line: {
+        description: 'The line between two steps that are not done yet.',
+        derived: 'The code background mixed 15% towards `codeForeground`.',
+      },
       duration: { description: 'The time that the animation between two steps takes.' },
       newLineBackground: {
         description: 'The tint that flashes on a line that is new in a step, then fades out.',
@@ -417,12 +485,20 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
     settings: {
       accent: {
         description: 'The border of a badge, the bar of a selected line and the background of a selected badge.',
+        derived: fromTheme('terminal.ansiMagenta', '4.5:1'),
       },
-      numberForeground: { description: 'Badge numbers and list numbers. Needs 4.5:1 contrast on the code background.' },
-      activeForeground: { description: 'The number of a selected badge, on an `accent` background.' },
+      numberForeground: {
+        description: 'Badge numbers and list numbers. Needs 4.5:1 contrast on the code background.',
+        derived:
+          '`accent` mixed 30% towards `codeForeground`, with 4.5:1 contrast on the code background and on `lineBackground`.',
+      },
+      activeForeground: {
+        description: 'The number of a selected badge, on an `accent` background.',
+        derived: 'The code background, with 4.5:1 contrast on `accent`.',
+      },
       lineBackground: {
         description: 'The tint of a selected line. Needs 4.5:1 contrast for every syntax colour.',
-        derived: '`accent` at 10% opacity in dark themes and 12% in light themes, on the code background.',
+        derived: '`accent` at 10% opacity, on the code background.',
       },
       stickyShadow: { description: 'The shadow above a sticky list of footnotes.' },
     },

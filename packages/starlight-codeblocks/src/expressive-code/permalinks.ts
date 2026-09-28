@@ -9,7 +9,7 @@ import {
 import { type Element, getClassNames, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { type CodeblocksPlugin, numberedLines } from './core.ts';
-import { PREFIX, solidCodeBackground } from './styles.ts';
+import { onCode, PREFIX, solidCodeBackground, themeColour } from './styles.ts';
 
 export interface PermalinksStyleSettings {
   foreground: UnresolvedStyleValue;
@@ -36,10 +36,10 @@ const styleSettings = new PluginStyleSettings({
           4.5,
           5,
         ),
-      target: ['#ffcb8b', '#a15c00'],
+      target: (context: Context) => onCode(context, themeColour(context, 'terminal.ansiYellow'), 3),
       // Any line can be the target, so the tint must stay light enough for every syntax colour as it is.
       targetBackground: ({ resolveSetting, theme }: Context) =>
-        setAlpha(resolveSetting('codeblocksPermalinks.target'), theme.type === 'dark' ? 0.08 : 0.12),
+        setAlpha(resolveSetting('codeblocksPermalinks.target'), theme.type === 'dark' ? 0.06 : 0.12),
     },
   },
 });

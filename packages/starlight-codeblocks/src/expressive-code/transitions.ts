@@ -1,7 +1,7 @@
-import { PluginStyleSettings, setAlpha, type UnresolvedStyleValue } from '@expressive-code/core';
+import { mix, PluginStyleSettings, setAlpha, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import type { CodeblocksPlugin } from './core.ts';
-import { PREFIX } from './styles.ts';
+import { onCode, PREFIX, solidCodeBackground, solidCodeForeground } from './styles.ts';
 
 export interface TransitionsStyleSettings {
   stepBorder: UnresolvedStyleValue;
@@ -23,9 +23,10 @@ declare module '@expressive-code/core' {
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksTransitions: {
-      stepBorder: ['#6b7894', '#7b8599'],
-      doneForeground: ['#cfdcff', '#2c4a8c'],
-      line: ['#3f4860', '#c9ced8'],
+      stepBorder: (context) => onCode(context, mix(solidCodeForeground(context), solidCodeBackground(context), 0.5), 3),
+      doneForeground: (context) =>
+        onCode(context, mix(context.resolveSetting('codeblocks.accent'), solidCodeForeground(context), 0.5), 4.5),
+      line: (context) => mix(solidCodeBackground(context), solidCodeForeground(context), 0.15),
       duration: '480ms',
       // The theme's own green, from its terminal colours, which every theme defines.
       newLineBackground: ({ theme }) => setAlpha(theme.colors['terminal.ansiGreen'] ?? theme.fg, 0.3),

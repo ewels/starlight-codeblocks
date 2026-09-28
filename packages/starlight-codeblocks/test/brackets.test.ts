@@ -1,9 +1,8 @@
 import { getColorContrast } from '@expressive-code/core';
-import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { findBrackets } from '../src/expressive-code/brackets.ts';
 import { commentSyntaxFor } from '../src/expressive-code/comments.ts';
-import { pluginCodeblocks } from '../src/expressive-code/index.ts';
+import { variants } from './contrast.ts';
 import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
@@ -59,15 +58,10 @@ test('does nothing when the feature is off, even with the attribute', async () =
 });
 
 test('every bracket colour meets 4.5:1 contrast on the code background', async () => {
-  const ec = new ExpressiveCode({ plugins: [pluginCodeblocks()] });
-  await ec.getBaseStyles();
-  const backgrounds = { dark: ['#23262f', '#24292e'], light: ['#f6f7f9', '#ffffff'] };
-  for (const variant of ec.styleVariants) {
-    const get = (key: string) => variant.resolvedStyleSettings.get(`codeblocksBrackets.${key}` as never) as string;
+  for (const v of await variants()) {
     for (const key of ['colour1', 'colour2', 'colour3']) {
-      for (const bg of backgrounds[variant.theme.type]) {
-        expect(getColorContrast(get(key), bg), `${key} on ${bg}`).toBeGreaterThanOrEqual(4.5);
-      }
+      const colour = v.get(`codeblocksBrackets.${key}`);
+      expect(getColorContrast(colour, v.get('codeBackground')), `${key}, ${v.name}`).toBeGreaterThanOrEqual(4.5);
     }
   }
 });

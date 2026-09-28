@@ -1,7 +1,6 @@
 import { getColorContrast } from '@expressive-code/core';
-import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
-import { pluginCodeblocks } from '../src/expressive-code/index.ts';
+import { variants } from './contrast.ts';
 import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
@@ -90,11 +89,8 @@ test('includes hidden commands in the copied text', async () => {
 });
 
 test('the prompt colour meets 4.5:1 contrast in both themes', async () => {
-  const ec = new ExpressiveCode({ plugins: [pluginCodeblocks()] });
-  await ec.getBaseStyles();
-  const backgrounds = { dark: ['#23262f', '#24292e'], light: ['#f6f7f9', '#ffffff'] };
-  for (const variant of ec.styleVariants) {
-    const prompt = variant.resolvedStyleSettings.get('codeblocksShellCopy.promptForeground' as never) as string;
-    for (const bg of backgrounds[variant.theme.type]) expect(getColorContrast(prompt, bg)).toBeGreaterThanOrEqual(4.5);
+  for (const { get, name } of await variants()) {
+    const prompt = get('codeblocksShellCopy.promptForeground');
+    expect(getColorContrast(prompt, get('codeBackground')), name).toBeGreaterThanOrEqual(4.5);
   }
 });

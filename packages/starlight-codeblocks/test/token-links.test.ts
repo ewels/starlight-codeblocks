@@ -1,11 +1,10 @@
 import { getColorContrast } from '@expressive-code/core';
-import { ExpressiveCode } from 'expressive-code';
 import { afterEach, expect, test } from 'vitest';
 import { isSafeUrl } from '../src/expressive-code/core.ts';
-import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import { withBase } from '../src/expressive-code/token-links.ts';
 import { resolveOptions } from '../src/options.ts';
 import { setRegistry } from '../src/registry.ts';
+import { variants } from './contrast.ts';
 import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
@@ -86,12 +85,9 @@ test('renders a block without links the same as without the feature', async () =
 });
 
 test('the underline meets 3:1 contrast in both themes', async () => {
-  const ec = new ExpressiveCode({ plugins: [pluginCodeblocks()] });
-  await ec.getBaseStyles();
-  const backgrounds = { dark: ['#23262f', '#24292e'], light: ['#f6f7f9', '#ffffff'] };
-  for (const variant of ec.styleVariants) {
-    const colour = variant.resolvedStyleSettings.get('codeblocksTokenLinks.underline' as never) as string;
-    for (const bg of backgrounds[variant.theme.type]) expect(getColorContrast(colour, bg)).toBeGreaterThanOrEqual(3);
+  for (const { get, name } of await variants()) {
+    const colour = get('codeblocksTokenLinks.underline');
+    expect(getColorContrast(colour, get('codeBackground')), name).toBeGreaterThanOrEqual(3);
   }
 });
 
