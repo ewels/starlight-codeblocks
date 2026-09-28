@@ -1,9 +1,8 @@
 import { expect, type Page, test } from '@playwright/test';
+import { clipboard, css, phone, reduced } from './helpers.ts';
 
 const steps = (page: Page, n = 0) => page.locator('.example').nth(n).locator('[data-scb-steps]');
 const current = (page: Page, n = 0) => steps(page, n).locator(':scope > .expressive-code:visible');
-const reduced = () => test.info().project.name === 'reduced-motion';
-const phone = () => test.info().project.name.startsWith('phone');
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/code-walkthrough/');
@@ -88,9 +87,7 @@ test('the keyboard reaches the steps with Tab', async ({ page }) => {
 });
 
 test('animates the tokens in the colours of the theme, or changes at once under reduced motion', async ({ page }) => {
-  const final = await current(page)
-    .locator('.ec-line span', { hasText: /^listen$/ })
-    .evaluate((e) => getComputedStyle(e).color);
+  const final = await css(current(page).locator('.ec-line span', { hasText: /^listen$/ }), 'color');
   await current(page).getByRole('button', { name: 'Next' }).click();
   const anim = current(page).locator('.scb-steps-anim');
   if (reduced()) {
@@ -166,7 +163,7 @@ test('every step, done or not, changes its border under the pointer', async ({ p
   });
   for (const name of ['Step 1: Create the app', 'Step 2: Parse JSON bodies', 'Step 3: Add a health route']) {
     const dot = current(page).getByRole('button', { name });
-    const rest = await dot.evaluate((el) => getComputedStyle(el).borderTopColor);
+    const rest = await css(dot, 'borderTopColor');
     await dot.hover();
     await expect(dot).toHaveCSS('border-top-color', hoverColour);
     expect(rest, name).not.toBe(hoverColour);
@@ -174,14 +171,11 @@ test('every step, done or not, changes its border under the pointer', async ({ p
   }
 });
 
-test('the copy button copies the current step', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('the copy button copies the current step', async ({ page }) => {
   await current(page).getByRole('button', { name: 'Next' }).click();
   await expect(current(page).locator('.scb-steps-anim')).toHaveCount(0);
   await current(page).locator('.copy button').click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-    'const app = express();\napp.use(express.json());\n\napp.listen(3000);',
-  );
+  expect(await clipboard(page)).toBe('const app = express();\napp.use(express.json());\n\napp.listen(3000);');
 });
 
 test('the title bar fits the block, and the page does not scroll sideways', async ({ page }) => {
@@ -208,6 +202,6 @@ test('without JavaScript, every step shows as its own block, with its label', as
 test('the current step differs from the others in forced colours', async ({ page }) => {
   await page.emulateMedia({ forcedColors: 'active' });
   const dots = current(page).locator('.scb-steps-dot');
-  const background = (i: number) => dots.nth(i).evaluate((el) => getComputedStyle(el).backgroundColor);
+  const background = (i: number) => css(dots.nth(i), 'backgroundColor');
   expect(await background(0)).not.toBe(await background(1));
 });

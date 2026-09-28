@@ -1,6 +1,7 @@
 ---
 import { Icon } from '@astrojs/starlight/components';
 import { getEntry } from 'astro:content';
+import { pageHref } from './feature-link.ts';
 
 interface Props {
   /** The id of the feature page, such as `features/focus`. */
@@ -14,7 +15,6 @@ const entry = await getEntry('docs', page);
 if (!entry) throw new Error(`<Feature> names a missing page: ${page}`);
 const { title, description = '' } = entry.data;
 const summary = description.match(/^.*?\.(?=\s|$)/)?.[0] ?? description;
-const href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${page}/`;
 ---
 
 <section class:list={['slide', { tall }]} data-feature={page} aria-roledescription="slide" aria-label={title}>
@@ -23,7 +23,7 @@ const href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${page}/`;
       <h3>{title}</h3>
       <p class="summary">{summary}</p>
     </div>
-    <a class="docs-link" href={href}>
+    <a class="docs-link" href={pageHref(page)}>
       Read docs<span class="sr-only">: {title}</span>
       <Icon name="right-arrow" />
     </a>

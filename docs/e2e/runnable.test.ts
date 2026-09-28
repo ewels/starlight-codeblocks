@@ -1,7 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
-
-const example = (page: Page, n: number) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
+import { expect, test } from '@playwright/test';
+import { css, example } from './helpers.ts';
 
 const PYTHON = 0;
 const JS = 1;
@@ -54,10 +52,10 @@ test('the output colours meet the contrast target and differ for errors', async 
   const stdout = block.locator('.scb-run-stdout');
   const stderr = block.locator('.scb-run-stderr');
   await expect(stdout).toBeVisible();
-  const colour = (l: typeof stdout) => l.evaluate((el) => getComputedStyle(el).color);
+  const colour = (l: typeof stdout) => css(l, 'color');
   expect(await colour(stdout)).not.toBe(await colour(stderr));
   // Errors carry a bar as well as a colour.
-  expect(await stderr.evaluate((el) => getComputedStyle(el).borderInlineStartWidth)).toBe('2px');
+  expect(await css(stderr, 'borderInlineStartWidth')).toBe('2px');
 });
 
 test('a run stops after the timeout, with a message', async ({ page }, info) => {

@@ -4,16 +4,15 @@ import {
   mix,
   onBackground,
   PluginStyleSettings,
-  type StyleResolverFn,
   setAlpha,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { addClassName, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { blockUid, type CodeblocksPlugin, lineElement, numberedLines, warn } from './core.ts';
+import { blockUid, type CodeblocksPlugin, lineElement, lineNumber, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
-import { onCode, PREFIX, solidCodeBackground, solidCodeForeground, themeColour } from './styles.ts';
+import { litLine, onCode, PREFIX, solidCodeBackground, solidCodeForeground, themeColour } from './styles.ts';
 
 export interface FootnotesStyleSettings {
   /** The badge border, the bar of a selected line and the badge background when selected. */
@@ -35,10 +34,9 @@ declare module '@expressive-code/core' {
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksFootnotes: {
-      accent: (context: Parameters<StyleResolverFn>[0]) =>
-        onCode(context, themeColour(context, 'terminal.ansiMagenta'), 4.5),
+      accent: (context) => onCode(context, themeColour(context, 'terminal.ansiMagenta'), 4.5),
       // Readable on the code and on the tint of an active line.
-      numberForeground: (context: Parameters<StyleResolverFn>[0]) =>
+      numberForeground: (context) =>
         ensureColorContrastOnBackground(
           onCode(
             context,
@@ -48,14 +46,14 @@ const styleSettings = new PluginStyleSettings({
           context.resolveSetting('codeblocksFootnotes.lineBackground'),
           4.5,
         ),
-      activeForeground: (context: Parameters<StyleResolverFn>[0]) =>
+      activeForeground: (context) =>
         ensureColorContrastOnBackground(
           solidCodeBackground(context),
           context.resolveSetting('codeblocksFootnotes.accent'),
           4.5,
         ),
       // Light enough for every syntax colour as it is, so that a line keeps its colours when it lights up.
-      lineBackground: (context: Parameters<StyleResolverFn>[0]) =>
+      lineBackground: (context) =>
         onBackground(setAlpha(context.resolveSetting('codeblocksFootnotes.accent'), 0.1), solidCodeBackground(context)),
       stickyShadow: ['0 -8px 16px rgb(10 14 24 / 0.35)', '0 -6px 14px rgb(12 20 36 / 0.1)'],
     },
@@ -105,8 +103,7 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
   scroll-margin-block: 5rem;
 }
 .${cls('-badge')}:hover { background: color-mix(in srgb, ${v('accent')} 18%, transparent); }
-.ec-line:is(.${cls('-on')}, .${cls('-peek')}) { background: ${v('lineBackground')}; }
-.ec-line:is(.${cls('-on')}, .${cls('-peek')}) .code { --ecLineBrdCol: ${v('accent')}; --ecGtrBrdWd: 3px; }
+${litLine(`.${cls('-on')}, .${cls('-peek')}`, v('lineBackground'), v('accent'))}
 .ec-line:is(.${cls('-on')}, .${cls('-peek')}) .${cls('-badge')} { background: ${v('accent')}; color: ${v('activeForeground')}; }
 .${cls('s')} {
   margin: 0;
@@ -122,21 +119,18 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
   font-size: 0.8125rem;
   line-height: 1.55;
 }
+/* The same tint and bar as its line. The padding reaches past the text by as much as the margin pulls back. */
 .${cls('s')} li {
   display: flex;
   align-items: baseline;
   gap: 1ch;
-  margin: 0;
-  padding: 1px 0;
-  cursor: pointer;
-  scroll-margin-block: 5rem;
-}
-/* The same tint and bar as its line. The padding reaches past the text by as much as the margin pulls back. */
-.${cls('s')} li {
-  margin-inline: -0.5rem;
+  margin: 0 -0.5rem;
+  padding-block: 1px;
   padding-inline: calc(0.5rem - 3px) 0.5rem;
   border-inline-start: 3px solid transparent;
   border-radius: 0 3px 3px 0;
+  cursor: pointer;
+  scroll-margin-block: 5rem;
 }
 .${cls('s')} li:is(.${cls('-on')}, .${cls('-peek')}) {
   border-inline-start-color: ${v('accent')};
@@ -166,19 +160,11 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
   text-decoration: none;
 }
 .${cls('-num')}:hover { text-decoration: underline; text-underline-offset: 3px; }
-/* .frame outweighs Expressive Code's square top corners for code in titled blocks. */
-.frame .${cls('s')} code {
-  padding: 0 4px;
+/* 10%, not 12%, keeps 4.5:1 on the sticky list for themes whose code colour is near 4.5:1. */
+.frame .${cls('s')} li code {
   color: ${cssVar('codeForeground')};
-  border-radius: 3px;
-  /* 10%, not the 12% of notes, keeps 4.5:1 on the sticky list for themes whose code colour is near 4.5:1. */
   background: color-mix(in srgb, currentColor 10%, transparent);
-  font-family: ${cssVar('codeFontFamily')};
-  font-size: 0.95em;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
 }
-.${cls('s')} a:not(.${cls('-num')}) { color: inherit; text-underline-offset: 3px; }
 .${cls('s-sticky')} .${cls('s')} {
   position: sticky;
   bottom: 0;
@@ -203,17 +189,13 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
           warn(context, `\`footnotes="${attribute}"\` must be \`"sticky"\` or \`"static"\`. The plugin ignores it.`);
         }
         const sticky = attribute === 'sticky' || (attribute !== 'static' && siteSticky);
-        const lines = codeBlock.getLines();
-        const ordered = refs
-          .map((directive) => ({ directive, index: lines.indexOf(directive.lines[0] as never) }))
-          .sort((a, b) => a.index - b.index);
-        const start = codeBlock.metaOptions.getInteger('startLineNumber') ?? 1;
         const uid = blockUid(context);
-        const items = ordered.map(({ directive, index }, i) => {
+        const items = refs.map((directive, i) => {
           const n = String(i + 1);
           const note = `${PREFIX}-fn-${uid}-${n}`;
           const badge = `${PREFIX}-fnref-${uid}-${n}`;
-          const lineEl = lineElement(directive.lines[0] as ExpressiveCodeLine);
+          const line = directive.lines[0] as ExpressiveCodeLine;
+          const lineEl = lineElement(line);
           const code = lineEl && select('.code', lineEl);
           code?.children.push(
             h(
@@ -235,7 +217,7 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
               {
                 class: cls('-num'),
                 href: `#${badge}`,
-                ariaLabel: `Footnote ${n}, for line ${numberedLines(codeBlock).indexOf(lines[index] as never) + start}`,
+                ariaLabel: `Footnote ${n}, for line ${lineNumber(codeBlock, line)}`,
               },
               `${n}.`,
             ),

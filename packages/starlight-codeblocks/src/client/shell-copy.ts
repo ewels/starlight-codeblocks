@@ -1,10 +1,12 @@
+import { decodeCode } from './shared/copy.ts';
+
 const timers = new WeakMap<HTMLElement, number>();
 
 async function click(event: MouseEvent) {
   const button = (event.target as Element).closest?.<HTMLButtonElement>('.scb-shell-copy');
   if (!button) return;
   try {
-    await navigator.clipboard.writeText((button.dataset.code ?? '').replaceAll('\x7F', '\n'));
+    await navigator.clipboard.writeText(decodeCode(button.dataset.code));
   } catch {
     return;
   }

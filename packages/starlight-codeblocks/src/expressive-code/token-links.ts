@@ -2,14 +2,13 @@ import {
   type AnnotationRenderOptions,
   ExpressiveCodeAnnotation,
   PluginStyleSettings,
-  setAlpha,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { h } from '@expressive-code/core/hast';
 import { getRegistry } from '../registry.ts';
 import { type CodeblocksPlugin, isSafeUrl, warn } from './core.ts';
 import { getDirectives } from './notation.ts';
-import { PREFIX } from './styles.ts';
+import { PREFIX, tint } from './styles.ts';
 
 export interface TokenLinksStyleSettings {
   /** The underline that marks the link. Needs 3:1 contrast on the code background. */
@@ -27,8 +26,7 @@ const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksTokenLinks: {
       underline: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),
-      hoverBackground: ({ resolveSetting, theme }) =>
-        setAlpha(resolveSetting('codeblocks.accent'), theme.type === 'dark' ? 0.1 : 0.12),
+      hoverBackground: (context) => tint(context.resolveSetting('codeblocks.accent'), context),
     },
   },
 });

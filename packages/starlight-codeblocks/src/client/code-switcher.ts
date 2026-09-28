@@ -26,14 +26,18 @@ function show(group: Element, index: number) {
   for (const menu of group.querySelectorAll('select')) menu.selectedIndex = index;
 }
 
-/** Shows the variant with `label` in every group with this sync key, or the first variant if a group has no such label. */
-function showLabel(sync: string, label: string | null) {
-  for (const group of document.querySelectorAll(`[data-scb-code-switcher="${CSS.escape(sync)}"]`)) {
-    show(group, Math.max(0, labels(group).indexOf(label ?? '')));
+/** Shows variant `index` of the group, and the variant with its label in every group with the same sync key. */
+function pick(group: HTMLElement, index: number) {
+  const sync = group.dataset.scbCodeSwitcher;
+  if (!sync) return show(group, index);
+  const label = labels(group)[index] ?? '';
+  save(sync, label);
+  for (const other of document.querySelectorAll(`[data-scb-code-switcher="${CSS.escape(sync)}"]`)) {
+    show(other, Math.max(0, labels(other).indexOf(label)));
   }
 }
 
-const groups: Element[] = [];
+const groups: HTMLElement[] = [];
 let listening = false;
 
 /** A copy of one variant, as full screen plugins show, becomes a copy of the variant that its menu picks. */
@@ -44,11 +48,7 @@ function changeInCopy(event: Event) {
   const group = groups[Number(copy.dataset.scbSwitcherOf)];
   const variant = group && variants(group)[menu.selectedIndex];
   if (!variant) return;
-  const sync = group.getAttribute('data-scb-code-switcher');
-  if (sync) {
-    save(sync, labels(group)[menu.selectedIndex] ?? '');
-    showLabel(sync, labels(group)[menu.selectedIndex] ?? '');
-  } else show(group, menu.selectedIndex);
+  pick(group, menu.selectedIndex);
   swapInto(copy, variant);
   copy.querySelector('select')?.focus();
 }
@@ -63,21 +63,13 @@ export default function initCodeSwitcher() {
     group.dataset.scbReady = '';
     for (const variant of variants(group)) variant.dataset.scbSwitcherOf = String(groups.length);
     groups.push(group);
-    const sync = group.dataset.scbCodeSwitcher ?? '';
-    if (sync) {
-      const saved = read(sync);
-      if (saved !== null) show(group, Math.max(0, labels(group).indexOf(saved)));
-    }
+    const saved = group.dataset.scbCodeSwitcher && read(group.dataset.scbCodeSwitcher);
+    if (saved) show(group, Math.max(0, labels(group).indexOf(saved)));
     group.addEventListener('change', (event) => {
       const menu = event.target as HTMLSelectElement;
       if (menu.tagName !== 'SELECT') return;
-      const index = menu.selectedIndex;
-      const label = labels(group)[index] ?? '';
-      if (sync) {
-        save(sync, label);
-        showLabel(sync, label);
-      } else show(group, index);
-      variants(group)[index]?.querySelector('select')?.focus();
+      pick(group, menu.selectedIndex);
+      variants(group)[menu.selectedIndex]?.querySelector('select')?.focus();
     });
   }
 }

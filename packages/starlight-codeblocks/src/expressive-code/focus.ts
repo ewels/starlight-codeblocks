@@ -5,8 +5,8 @@ import {
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { addClassName, select } from '@expressive-code/core/hast';
-import { type CodeblocksPlugin, resolveRange } from './core.ts';
-import { getDirectives } from './notation.ts';
+import type { CodeblocksPlugin } from './core.ts';
+import { markedLines } from './notation.ts';
 import { PREFIX } from './styles.ts';
 
 export interface FocusStyleSettings {
@@ -67,11 +67,7 @@ pre > code[tabindex]:focus-visible {
 }`,
     hooks: {
       preprocessMetadata(context) {
-        const { lines } = focusData.getOrCreateFor(context.codeBlock);
-        for (const line of resolveRange(context, 'focus') ?? []) lines.add(line);
-        for (const directive of getDirectives(context.codeBlock, 'code focus')) {
-          for (const line of directive.lines) lines.add(line);
-        }
+        focusData.getOrCreateFor(context.codeBlock).lines = markedLines(context, 'focus', 'code focus');
       },
       postprocessRenderedLine({ codeBlock, line, renderData }) {
         const { lines } = focusData.getOrCreateFor(codeBlock);

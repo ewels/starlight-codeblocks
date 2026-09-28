@@ -10,7 +10,7 @@ import adapterSource from '../../../adapters/codeblocks-api.mjs?raw';
 
 ## The interface
 
-An adapter is an object with a name, a list of languages and three functions:
+An adapter is an object with a name, a list of languages and two functions:
 
 ```ts
 interface ApiLinkAdapter {
@@ -18,19 +18,13 @@ interface ApiLinkAdapter {
   languages: string[];
   setup(context: AdapterContext): Promise<void>;
   findSymbols(code: string, language: string, attributes: Record<string, string>): SymbolRef[];
-  resolve(symbol: SymbolRef): Resolution | null;
 }
 
 interface SymbolRef {
   start: number;
   end: number;
-  name: string;
-  context?: unknown;
-}
-
-interface Resolution {
   href: string;
-  name?: string;
+  name: string;
   kind?: string;
   signature?: string;
   summary?: string;
@@ -43,17 +37,16 @@ interface Resolution {
 | `name` | The name of the adapter. Build warnings start with it. |
 | `languages` | The languages of the code blocks that the adapter reads, as written on the fence line, such as `py`. |
 | `setup` | Loads the indexes. The plugin calls it once, before the first code block in one of the languages. |
-| `findSymbols` | Returns the names in the code that can be links. `attributes` has the attributes of the fence line that have a text value, such as `title`. |
-| `resolve` | Returns the link and the card text for one name, or `null`. |
+| `findSymbols` | Returns the names in the code that are links, with the link and the text of the card. `attributes` has the attributes of the fence line that have a text value, such as `title`. |
 
-A `SymbolRef` gives the position of a name in `code`. `start` is the index of its first character, and `end` is the index after its last character. `name` is the name that `resolve` looks up. `context` is free for the adapter, for example for data that `findSymbols` already found.
-
-A `Resolution` is the link and the text of the card:
+A `SymbolRef` is one name in `code`, its link and the text of its card:
 
 | Property | Description |
 |---|---|
+| `start` | The index of the first character of the name in `code`. |
+| `end` | The index after the last character of the name. |
 | `href` | The URL of the reference page. A URL that starts with `/` gets Astro's `base` in front of it. |
-| `name` | The qualified name, such as `pathlib.Path`. The default is the `name` of the symbol. |
+| `name` | The qualified name, such as `pathlib.Path`. |
 | `kind` | The kind of object, such as `function`, `class` or `process`. |
 | `signature` | The first line of the card. Without a signature, the card shows the kind and the name. |
 | `summary` | One sentence under the signature. |
@@ -102,10 +95,10 @@ The code block above shows the result: `codeblocks`, `nextflow` and `python` are
 
 ## Rules
 
-- Return `null` from `resolve` when you are not certain. A wrong link is worse than no link.
+- Leave out a name when you are not certain about its link. A wrong link is worse than no link.
 - Never return names inside strings or comments from `findSymbols`.
 - Give positions in the `code` that `findSymbols` gets. The plugin ignores a name that spans two lines.
-- Keep `findSymbols` and `resolve` synchronous. Do all slow work, such as a fetch, in `setup`.
+- Keep `findSymbols` synchronous. Do all slow work, such as a fetch, in `setup`.
 - Return the same result for the same code. The functions run at build time, so they cannot read anything from the browser.
 - Do not throw in `setup` for a missing index. Log a warning with `context.warn` and continue. If `setup` throws, the build logs a warning, and the adapter links nothing.
 - Use `http` or `https` URLs, or URLs inside the site. The plugin drops a link with any other scheme, such as `javascript:`.

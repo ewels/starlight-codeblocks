@@ -4,6 +4,7 @@ import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import { minTextContrast, themeSets, tinted, toVariants, type Variant, variants } from './contrast.ts';
+import { baseStyles } from './render.ts';
 
 // The custom state of the docs site, so that its colours are checked too.
 const todo = { todo: { label: 'To do', colour: { dark: '#c792ea', light: '#7c3aed' } } };
@@ -144,7 +145,7 @@ test('a line with a tint that shows only when active keeps the syntax colours of
 });
 
 test('the text of a placeholder field meets 4.5:1 contrast on its own tint', async () => {
-  const css = await new ExpressiveCode({ plugins: [pluginCodeblocks()] }).getBaseStyles();
+  const css = await baseStyles();
   const placeholderOpacity = Number(css.match(/\.scb-placeholder::placeholder\{[^}]*opacity:([\d.]+)/)?.[1] ?? 1);
   for (const v of await variants()) {
     for (const c of v.text) {
@@ -157,8 +158,8 @@ test('the text of a placeholder field meets 4.5:1 contrast on its own tint', asy
 });
 
 test('inline code in the footnote list meets 4.5:1 contrast, also in the sticky list', async () => {
-  const css = await new ExpressiveCode({ plugins: [pluginCodeblocks()] }).getBaseStyles();
-  expect(css).toMatch(/\.scb-footnotes code\{[^}]*color:var\(--ec-codeFg\)/);
+  const css = await baseStyles();
+  expect(css).toMatch(/\.scb-footnotes li code\{[^}]*color:var\(--ec-codeFg\)/);
   for (const v of await variants()) {
     const fg = v.get('codeForeground');
     for (const list of [v.get('codeBackground'), tinted(v, [setAlpha(fg, 0.05)])]) {

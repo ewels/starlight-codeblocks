@@ -9,7 +9,7 @@ import {
   toHtml,
 } from '@expressive-code/core/hast';
 import { fromHtml } from 'hast-util-from-html';
-import { SIDE_SIZES, sideSize } from '../expressive-code/annotations.ts';
+import { breakoutMargin, breakoutStyles, SIDE_SIZES, sideSize } from '../expressive-code/annotations.ts';
 import { removeAutoExpandable } from '../expressive-code/expandable.ts';
 import { parseRange, RangeSyntaxError } from '../expressive-code/ranges.ts';
 import { stepsData } from './steps.ts';
@@ -70,7 +70,7 @@ function renameIds(copy: Element, suffix: string) {
 }
 
 /** Sets the focus and the marks of one step on a copy of the block. */
-function apply(group: Element, { focus, mark }: StepState, suffix: string) {
+function apply(group: Element, { focus, mark }: StepState, suffix: string, focusable = focus.length > 0) {
   const copy = structuredClone(group);
   renameIds(copy, suffix);
   codeLines(copy).forEach((line, i) => {
@@ -79,7 +79,7 @@ function apply(group: Element, { focus, mark }: StepState, suffix: string) {
     if (mark.includes(i)) addClassName(line, 'mark');
   });
   const code = select('pre > code', copy);
-  if (code && focus.length > 0) {
+  if (code && focusable) {
     code.properties.tabindex = '0';
     code.properties.ariaLabel ??= 'Code block';
   }
@@ -160,21 +160,13 @@ export function scrollycoding(html: string, { interactive = true, animate = true
     const focusable = states.some((state) => state.focus.length > 0);
     const sticky = versions.map((group, v) => {
       const k = steps.findIndex((step) => step.version === v);
-      const copy = apply(group, states[k], versions.length > 1 ? `sticky${v + 1}` : 'sticky');
+      const copy = apply(group, states[k], versions.length > 1 ? `sticky${v + 1}` : 'sticky', focusable);
       const figure = select('figure', copy);
       if (figure) addClassName(figure, `${S}-frame`);
       if (v === 0) addClassName(copy, `${S}-current`);
-      const code = select('pre > code', copy);
-      if (code && focusable) {
-        code.properties.tabindex = '0';
-        code.properties.ariaLabel ??= 'Code block';
-      }
       return copy;
     });
-    const data =
-      animate && versions.length > 1
-        ? [h('script', { type: 'application/json' }, stepsData(versions.map((v) => select('figure', v) as Element)))]
-        : [];
+    const data = animate && versions.length > 1 ? [h('script', { type: 'application/json' }, stepsData(versions))] : [];
     grid.children.push(h('div', { class: `${S}-code` }, [...sticky, ...data]));
   }
   const className = [
@@ -200,25 +192,13 @@ export function firstOnPage(request: Request) {
 
 /** The styles of the two-column layout, for each width that a block can need. */
 export const scrollyStyles = `
-.${S}-grid { margin-inline: var(--${S}-outset, 0px); }
-@media (min-width: 72rem) {
-  :root:not([data-has-toc]) .sl-markdown-content > :is(${WIDE}) {
-    --${S}-outset: max(0px, (100vw - 2 * var(--sl-content-pad-x) - var(--sl-content-width)) / 2);
-    margin-inline: calc(-1 * var(--${S}-outset));
-  }
-  :root[data-has-sidebar]:not([data-has-toc]) .sl-markdown-content > :is(${WIDE}) {
-    --${S}-outset: max(
-      0px,
-      (100vw - var(--sl-sidebar-width) - 2 * var(--sl-content-pad-x) - var(--sl-content-width)) / 2
-    );
-  }
-}
+${breakoutStyles(`.${S}-grid`, `:is(${WIDE})`, `--${S}-outset`)}
 @media screen and (scripting: enabled) {
 ${SIDE_SIZES.map((w) => {
   const on = `.${S}-${w}[data-scb-scrolly]`;
   return `@container (min-width: ${w}px) {
   ${on} .${S}-grid {
-    margin-inline: max(0px, min(var(--${S}-outset, 0px), (100% - ${w}px) / 2));
+    ${breakoutMargin(`--${S}-outset`, w)}
     display: grid;
     grid-template-columns: ${TEXT} ${CODE};
     gap: 22px;

@@ -1,10 +1,11 @@
 import type { Runtime } from '../options.ts';
+import { copiedCode, decodeCode } from './shared/copy.ts';
 
 const runtimes = new Map<string, Promise<Runtime>>();
 const loaded = new Set<string>();
 
-function line(className: string, text: string, prefix?: string) {
-  const el = document.createElement(className === 'scb-run-status' ? 'p' : 'pre');
+function line(tag: 'p' | 'pre', className: string, text: string, prefix?: string) {
+  const el = document.createElement(tag);
   el.className = className;
   if (prefix) {
     const sr = document.createElement('span');
@@ -23,8 +24,8 @@ function show(panel: HTMLElement, ...children: HTMLElement[]) {
   panel.replaceChildren(label, ...children);
 }
 
-const status = (text: string) => line('scb-run-status', text);
-const error = (text: string) => line('scb-run-stderr', text, 'Error: ');
+const status = (text: string) => line('p', 'scb-run-status', text);
+const error = (text: string) => line('pre', 'scb-run-stderr', text, 'Error: ');
 
 function seconds(ms: number) {
   const s = ms / 1000;
@@ -35,10 +36,7 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
   const url = new URL(figure.dataset.scbRunnable as string, document.baseURI).href;
   const name = figure.dataset.scbRunnableName;
   const timeout = Number(figure.dataset.scbRunnableTimeout) || 10000;
-  const code = (figure.querySelector<HTMLElement>('.copy button[data-code]')?.dataset.code ?? '').replaceAll(
-    '\x7F',
-    '\n',
-  );
+  const code = decodeCode(copiedCode(figure));
   let runtime: Runtime;
   try {
     if (!loaded.has(url)) show(panel, status(`Loading the ${name} runtime…`));
@@ -65,7 +63,7 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
   try {
     const { stdout, stderr } = await Promise.race([runtime.run(code, { signal: controller.signal }), stopped]);
     const parts = [];
-    if (stdout) parts.push(line('scb-run-stdout', stdout));
+    if (stdout) parts.push(line('pre', 'scb-run-stdout', stdout));
     if (stderr) parts.push(error(stderr));
     show(panel, ...(parts.length ? parts : [status('The code ran with no output.')]));
   } catch (e) {

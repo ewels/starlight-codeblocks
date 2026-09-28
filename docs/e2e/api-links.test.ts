@@ -1,11 +1,10 @@
 import { expect, type Page, test } from '@playwright/test';
+import { copyFromKeyboard, css, example } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/api-auto-linking/');
 });
 
-const example = (page: Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 const card = (page: Page, n = 0) => example(page, n).locator('.scb-api-card');
 
 test('links the names that the imports bind, and nothing else', async ({ page }) => {
@@ -89,7 +88,7 @@ test('keyboard focus shows the card at once, and Escape hides it', async ({ page
   await page.keyboard.press('Tab');
   await expect(links.nth(5)).toBeFocused();
   await expect(card(page).locator('.scb-api-card-head')).toHaveText('method pathlib.Path.read_text');
-  expect(await links.nth(5).evaluate((a) => getComputedStyle(a).outlineStyle)).toBe('solid');
+  expect(await css(links.nth(5), 'outlineStyle')).toBe('solid');
   await page.keyboard.press('Escape');
   await expect(card(page)).toBeHidden();
   await expect(links.nth(5)).toBeFocused();
@@ -136,11 +135,8 @@ test('screen readers get the card text as the description of the link', async ({
   await expect(card(page, 1)).toHaveAttribute('aria-hidden', 'true');
 });
 
-test('the copied text is the code', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await example(page).locator('.copy button').focus();
-  await page.keyboard.press('Enter');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+test('the copied text is the code', async ({ page }) => {
+  expect(await copyFromKeyboard(example(page))).toBe(
     'import json\nfrom pathlib import Path\n\nrun = json.loads(Path("run.json").read_text())\nprint(run["status"])',
   );
 });

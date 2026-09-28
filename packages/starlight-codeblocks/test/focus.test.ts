@@ -1,8 +1,5 @@
 import { expect, test } from 'vitest';
-import { render } from './render.ts';
-
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
-const lineClasses = (html: string) => html.match(/<div class="ec-line[^"]*"/g)?.map((m) => m.slice(12, -1));
+import { baseStyles, block, lineClasses, render } from './render.ts';
 
 test('blurs the lines outside focus={range}', async () => {
   const { html, copyText, warnings } = await render(block('js focus={2-3}', 'a()', 'b()', 'c()', 'd()'));
@@ -60,15 +57,10 @@ test('leaves [!code focus] in the code when focus is off', async () => {
 });
 
 test('blurs by default and only fades with style: dim', async () => {
-  const css = async (options = {}) => {
-    const { ExpressiveCode } = await import('expressive-code');
-    const { pluginCodeblocks } = await import('../src/expressive-code/index.ts');
-    return new ExpressiveCode({ plugins: [pluginCodeblocks(options)] }).getBaseStyles();
-  };
-  const blur = await css();
+  const blur = await baseStyles();
   expect(blur).toMatch(/\.scb-focus-out\{[^}]*filter:blur\(var\(--ec-codeblocksFocus-blur\)\)/);
   expect(blur).toMatch(/\.frame:not\(\.scb-scrolly-frame\):hover \.scb-focus-out/);
   expect(blur).toMatch(/\.frame:focus-within \.scb-focus-out/);
-  const dim = await css({ focus: { style: 'dim' } });
+  const dim = await baseStyles({ focus: { style: 'dim' } });
   expect(dim).toMatch(/\.scb-focus-out\{opacity:var\(--ec-codeblocksFocus-opa\);transition/);
 });

@@ -1,17 +1,13 @@
 import { getColorContrast, onBackground, setAlpha } from '@expressive-code/core';
-import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
-import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import { variants } from './contrast.ts';
-import { render } from './render.ts';
-
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
+import { block, render, styleVariants } from './render.ts';
 
 test('hides lines named by hidden={range}, replaced by a marker', async () => {
   const { html, copyText, warnings } = await render(block('js hidden={2-3}', 'a()', 'b()', 'c()', 'd()'));
   expect(html).toContain('class="scb-hidden-marker scb-no-print"');
   expect(html).toContain('<span>2 hidden lines</span>');
-  expect(html.match(/class="ec-line scb-hidden-line"/g)).toHaveLength(2);
+  expect(html.match(/class="ec-line scb-hidden-line scb-no-print"/g)).toHaveLength(2);
   expect(copyText).toBe('a()\nb()\nc()\nd()');
   expect(warnings).toEqual([]);
 });
@@ -20,7 +16,7 @@ test('hides lines with [!code hide] and [!code hide:N]', async () => {
   const { html, copyText } = await render(
     block('js', 'a()', 'b() // [!code hide]', 'c() // [!code hide:2]', 'd()', 'e()'),
   );
-  expect(html.match(/class="ec-line scb-hidden-line"/g)).toHaveLength(3);
+  expect(html.match(/class="ec-line scb-hidden-line scb-no-print"/g)).toHaveLength(3);
   expect(copyText).toBe('a()\nb()\nc()\nd()\ne()');
 });
 
@@ -86,10 +82,9 @@ test('does nothing when the feature is off, even with the attribute', async () =
 });
 
 test('the marker text meets 4.5:1 contrast on its badge background, in both themes', async () => {
-  const ec = new ExpressiveCode({ plugins: [pluginCodeblocks()] });
-  await ec.getBaseStyles();
-  expect(ec.styleVariants.map((v) => v.theme.type).sort()).toEqual(['dark', 'light']);
-  for (const variant of ec.styleVariants) {
+  const all = await styleVariants();
+  expect(all.map((v) => v.theme.type).sort()).toEqual(['dark', 'light']);
+  for (const variant of all) {
     const get = (key: string) => variant.resolvedStyleSettings.get(key as never) as string;
     expect(
       getColorContrast(get('codeblocks.mutedForeground'), get('codeblocksHiddenLines.badgeBackground')),

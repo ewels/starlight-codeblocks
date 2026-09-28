@@ -70,12 +70,9 @@ function diffMask(a: string[], b: string[]): [keepA: boolean[], keepB: boolean[]
 
 /** Merges the changed tokens into character ranges. Whitespace between two changed tokens is part of the range. */
 function changedRanges(tokens: string[], keep: boolean[]): Array<[start: number, end: number]> {
-  const changed = tokens.map((token, i) => {
-    if (/\S/.test(token)) return !keep[i];
-    const before = tokens[i - 1];
-    const after = tokens[i + 1];
-    return i > 0 && i < tokens.length - 1 && !keep[i - 1] && !keep[i + 1] && !!before && !!after;
-  });
+  const changed = tokens.map((token, i) =>
+    /\S/.test(token) ? !keep[i] : i > 0 && i < tokens.length - 1 && !keep[i - 1] && !keep[i + 1],
+  );
   const ranges: Array<[number, number]> = [];
   let pos = 0;
   let start = -1;
@@ -94,7 +91,7 @@ function changedRanges(tokens: string[], keep: boolean[]): Array<[start: number,
 
 const MAX_CELLS = 1_000_000;
 
-export interface WordDiffResult {
+interface WordDiffResult {
   a: Array<[start: number, end: number]>;
   b: Array<[start: number, end: number]>;
 }
@@ -172,22 +169,20 @@ export function pluginWordDiff({ minSimilarity = 0.4 }: { minSimilarity?: number
           line.addAnnotation(new ChangedTokenAnnotation(type, { columnStart, columnEnd }));
         if (codeBlock.metaOptions.getBoolean('wordDiff') === false) return;
         const lines = codeBlock.getLines();
-        let i = 0;
-        while (i < lines.length) {
-          if (markerType(lines[i] as ExpressiveCodeLine) !== 'del') {
+        const types = lines.map(markerType);
+        const run = (start: number, type: 'ins' | 'del') => {
+          let end = start;
+          while (types[end] === type) end++;
+          return lines.slice(start, end);
+        };
+        for (let i = 0; i < lines.length; ) {
+          if (types[i] !== 'del') {
             i++;
             continue;
           }
-          const dels: ExpressiveCodeLine[] = [];
-          while (i < lines.length && markerType(lines[i] as ExpressiveCodeLine) === 'del') {
-            dels.push(lines[i] as ExpressiveCodeLine);
-            i++;
-          }
-          const ins: ExpressiveCodeLine[] = [];
-          while (i < lines.length && markerType(lines[i] as ExpressiveCodeLine) === 'ins') {
-            ins.push(lines[i] as ExpressiveCodeLine);
-            i++;
-          }
+          const dels = run(i, 'del');
+          const ins = run(i + dels.length, 'ins');
+          i += dels.length + ins.length;
           for (let pair = 0; pair < Math.min(dels.length, ins.length); pair++) {
             const del = dels[pair] as ExpressiveCodeLine;
             const add = ins[pair] as ExpressiveCodeLine;

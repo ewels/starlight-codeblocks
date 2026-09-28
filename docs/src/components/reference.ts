@@ -1,3 +1,5 @@
+export { commentSyntaxGroups } from '../../../packages/starlight-codeblocks/src/expressive-code/comments.ts';
+
 import type { CodeblocksPlugin } from '../../../packages/starlight-codeblocks/src/expressive-code/core.ts';
 import { createPlugins } from '../../../packages/starlight-codeblocks/src/expressive-code/index.ts';
 import { optionsReference, resolveOptions } from '../../../packages/starlight-codeblocks/src/options.ts';
@@ -14,17 +16,19 @@ export const directives = plugins.flatMap((plugin) =>
           {
             id: name.replace(/\S+/g, (word) => words[word] ?? word).replace(/ /g, '-'),
             label: `[!${name}]`,
-            placement,
+            placement: placement === 'own' ? 'Own line' : 'End of line',
             docs,
+            example: `\`\`\`${docs.example.lang}\n${docs.example.code}\n\`\`\``,
           },
         ]
       : [],
   ),
 );
 
-export const attributes = attributesReference.map((attribute) => ({
+export const attributes = attributesReference.map(({ example, ...attribute }) => ({
   ...attribute,
   id: attribute.name === '<state>' ? 'custom-state' : attribute.name.toLowerCase(),
+  example: example && `\`\`\`${example.lang} ${example.meta}\n${example.code}\n\`\`\``,
 }));
 
 /** Each style settings group with its default values, in the order of the plugins. */

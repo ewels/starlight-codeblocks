@@ -1,7 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
+import { example, reduced } from './helpers.ts';
 
-const example = (page: Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 const line = (page: Page, n: number) => page.locator(`#cfg-L${n}`);
 
 test.beforeEach(async ({ page }) => {
@@ -47,8 +46,8 @@ test('highlights the lines in the address on load and scrolls to them', async ({
   await expect(line(page, 6)).toBeInViewport();
 });
 
-test('scrolls instantly instead of smoothly under reduced motion', async ({ page }, info) => {
-  test.skip(info.project.name !== 'reduced-motion', 'Only for the reduced-motion project.');
+test('scrolls instantly instead of smoothly under reduced motion', async ({ page }) => {
+  test.skip(!reduced(), 'Only for the reduced-motion project.');
   await page.goto('./features/line-permalinks/#cfg-L6-L8');
   await expect(line(page, 6)).toBeInViewport({ timeout: 50 });
 });

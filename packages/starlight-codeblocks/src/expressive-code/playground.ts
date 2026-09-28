@@ -1,11 +1,12 @@
 import { type Element, h, select } from '@expressive-code/core/hast';
+import { decodeCode } from '../client/shared/copy.ts';
 import { typescriptPlaygroundUrl } from '../client/shared/typescript-playground.ts';
 import { clientJsModules } from '../client-modules.ts';
 import type { PlaygroundDefinition } from '../options.ts';
 import { addTitleBarControl, type CodeblocksPlugin, warn } from './core.ts';
 import { PREFIX } from './styles.ts';
 
-export const builtInPlaygrounds: Record<string, PlaygroundDefinition> = {
+const builtInPlaygrounds: Record<string, PlaygroundDefinition> = {
   typescript: {
     label: 'Open in TS Playground',
     url: ({ code }) => typescriptPlaygroundUrl(code),
@@ -19,10 +20,10 @@ export const builtInPlaygrounds: Record<string, PlaygroundDefinition> = {
 
 const MAX_URL = 8000;
 
-/** The text that the copy button copies, which other features can have changed. */
-export function copiedText(blockAst: Element, code: string) {
-  const button = select('button[data-code]', blockAst);
-  return button ? String(button.properties.dataCode).replaceAll('\x7F', '\n') : code;
+/** The text that the copy button copies, which other features can have changed. A shell session sends its commands only. */
+function copiedText(blockAst: Element, code: string) {
+  const button = select(`.${PREFIX}-shell-copy[data-code]`, blockAst) ?? select('.copy button[data-code]', blockAst);
+  return button ? decodeCode(String(button.properties.dataCode)) : code;
 }
 
 /** Adds a title bar link or form that opens the copied code in the playground that `playground="<name>"` names. */

@@ -39,13 +39,12 @@ class WhitespaceAnnotation extends ExpressiveCodeAnnotation {
   }
   render({ nodesToTransform }: AnnotationRenderOptions) {
     const className = this.tab ? `${PREFIX}-ws-tab` : `${PREFIX}-ws`;
-    // The glyph lives in its own aria-hidden element, positioned over the real character, which stays
-    // selectable and copyable as written (SPEC 5 and 6.10).
+    // The glyph is a separate element over the real character, so the character copies as written.
     return nodesToTransform.map((node) => h('span', { class: className }, [h('span', { ariaHidden: 'true' }), node]));
   }
 }
 
-export const TRAILING_META = 'scbTrailing';
+const TRAILING_META = 'scbTrailing';
 
 /**
  * Expressive Code trims the end of every line before any plugin runs. For a `whitespace="all"` block, returns

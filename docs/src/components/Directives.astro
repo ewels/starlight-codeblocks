@@ -6,19 +6,17 @@ import ReferenceEntry from './ReferenceEntry.astro';
 ---
 
 {
-  await Promise.all(
-    directives.map(async ({ id, label, placement, docs }) => (
-      <ReferenceEntry
-        id={id}
-        labels={[label]}
-        description={docs.description}
-        facts={[
-          ['Placement', placement === 'own' ? 'Own line' : 'End of line'],
-          ['Arguments', docs.args ? inlineCode(docs.args) : 'None'],
-          ['Feature', await featureLink(docs.page)],
-        ]}
-        example={`\`\`\`${docs.example.lang}\n${docs.example.code}\n\`\`\``}
-      />
-    )),
-  )
+  directives.map(({ id, label, placement, docs, example }) => (
+    <ReferenceEntry
+      id={id}
+      labels={[label]}
+      description={docs.description}
+      facts={[
+        ['Placement', placement],
+        ['Arguments', docs.args ? inlineCode(docs.args) : 'None'],
+        ['Feature', featureLink(docs.page)],
+      ]}
+      example={example}
+    />
+  ))
 }

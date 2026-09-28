@@ -1,10 +1,7 @@
-import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
-import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import { splitTokens, wordDiff } from '../src/expressive-code/word-diff.ts';
-import { render } from './render.ts';
+import { baseStyles, block, render } from './render.ts';
 
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
 const worddiff = (html: string) => html.match(/scb-worddiff-(ins|del)/g);
 
 test('splitTokens splits words, whitespace and single punctuation characters', () => {
@@ -73,7 +70,7 @@ test('does not add spans when the feature is off', async () => {
 });
 
 test('marks changed words with an underline or a line-through, so that the tint does not carry the meaning alone', async () => {
-  const css = await new ExpressiveCode({ plugins: [pluginCodeblocks()] }).getBaseStyles();
+  const css = await baseStyles();
   expect(css).toMatch(/\.scb-worddiff-ins\{[^}]*text-decoration:underline/);
   expect(css).toMatch(/\.scb-worddiff-del\{[^}]*text-decoration:line-through/);
 });

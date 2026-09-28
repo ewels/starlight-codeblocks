@@ -13,8 +13,7 @@ import { addClassName, type ElementContent, h, select } from '@expressive-code/c
 import type { LineStateDefinition } from '../options.ts';
 import { type CodeblocksPlugin, ensureTextContrast, resolveRange } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
-import type { DirectiveSpecs } from './notation.ts';
-import { getDirectives } from './notation.ts';
+import { type DirectiveSpecs, getDirectives } from './notation.ts';
 import { onCode, PREFIX, solidCodeBackground, themeColour } from './styles.ts';
 
 /**

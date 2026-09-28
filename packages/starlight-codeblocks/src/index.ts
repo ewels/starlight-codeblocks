@@ -31,7 +31,6 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
         setRegistry({
           options,
           plugins,
-          clientAssets: true,
           base: astroConfig.base,
           assets: astroConfig.build?.assets,
           root: fileURLToPath(astroConfig.root),
@@ -40,11 +39,9 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
           blockIds: new Set(),
         });
         const css = options.inlineHighlighting ? { customCss: [...(config.customCss ?? []), INLINE_CSS_ID] } : {};
-        // astro-expressive-code expands every tab to two spaces before any plugin hook runs, in
-        // fenced code and in <Code>, which corrupts tab-sensitive examples such as Makefiles and
-        // defeats visible whitespace's tab glyph. Leave tabs as written unless the site already
-        // chose its own tabWidth. A `tabWidth` in `ec.config.mjs` still wins over this one.
-        const tabWidthDefault = ec.tabWidth === undefined && ecConfig?.tabWidth === undefined ? { tabWidth: 0 } : {};
+        // astro-expressive-code expands tabs to two spaces before any plugin hook runs, which breaks
+        // tab-sensitive code such as Makefiles, so keep tabs unless the site chose a `tabWidth`.
+        const keepTabs = ec.tabWidth === undefined && ecConfig?.tabWidth === undefined;
         if (Array.isArray(ecConfig?.plugins)) {
           if (!ecConfig.plugins.flat(Infinity).some(isOurs)) {
             throw new AstroError(
@@ -52,10 +49,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
               "Add `pluginCodeblocks()` to `plugins` in `ec.config.mjs`. Import it from 'starlight-codeblocks/expressive-code'.",
             );
           }
-          updateConfig({
-            ...css,
-            ...(tabWidthDefault.tabWidth === 0 ? { expressiveCode: { ...ec, ...tabWidthDefault } } : {}),
-          });
+          updateConfig({ ...css, ...(keepTabs && { expressiveCode: { ...ec, tabWidth: 0 } }) });
           addIntegration(codeblocksIntegration({ options }));
           return;
         }
@@ -64,7 +58,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
           ...css,
           expressiveCode: {
             ...ec,
-            ...tabWidthDefault,
+            ...(keepTabs && { tabWidth: 0 }),
             plugins: [...(ec.plugins ?? []), ...plugins.map(hideFunctions)],
           },
         });

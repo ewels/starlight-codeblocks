@@ -1,12 +1,19 @@
 const ON = 'scb-brackets-on';
 
+let lit: Element[] = [];
+
 /** Outlines the pair of `el`, if it is a bracket, in its own block, which can be a copy of a block. */
 function outline(el: Element | null | undefined) {
-  for (const on of document.querySelectorAll(`.${ON}`)) on.classList.remove(ON);
   const bracket = el?.closest<HTMLElement>('[data-scb-pair]');
+  if (bracket ? lit.includes(bracket) : !lit.length) return;
   const block = bracket?.closest('[data-scb-brackets]');
-  if (!block || !bracket?.dataset.scbPair) return;
-  for (const pair of block.querySelectorAll(`[data-scb-pair="${bracket.dataset.scbPair}"]`)) pair.classList.add(ON);
+  const pair =
+    block && bracket?.dataset.scbPair
+      ? [...block.querySelectorAll(`[data-scb-pair="${bracket.dataset.scbPair}"]`)]
+      : [];
+  for (const on of lit) on.classList.remove(ON);
+  for (const on of pair) on.classList.add(ON);
+  lit = pair;
 }
 
 function outlineAtCaret() {

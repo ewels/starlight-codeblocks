@@ -8,11 +8,9 @@ import type { ApiLinkAdapter, Resolution, SymbolRef } from '../src/options.ts';
 import { resolveOptions } from '../src/options.ts';
 import { setRegistry } from '../src/registry.ts';
 import { variants } from './contrast.ts';
-import { render } from './render.ts';
+import { block, render } from './render.ts';
 
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
-
-const known: Record<string, Resolution> = {
+const resolutions: Record<string, Resolution> = {
   'lib.parse': {
     href: 'https://example.com/lib#parse',
     kind: 'function',
@@ -33,11 +31,11 @@ function fakeAdapter(overrides: Partial<ApiLinkAdapter> = {}): ApiLinkAdapter {
     findSymbols(code) {
       const symbols: SymbolRef[] = [];
       for (const match of code.matchAll(/"[^"]*"|\b(lib\.parse|lib|evil)\b/g)) {
-        if (match[1]) symbols.push({ start: match.index, end: match.index + match[1].length, name: match[1] });
+        const known = match[1] && resolutions[match[1]];
+        if (known) symbols.push({ name: match[0], ...known, start: match.index, end: match.index + match[0].length });
       }
       return symbols;
     },
-    resolve: (symbol) => known[symbol.name] ?? null,
     ...overrides,
   };
 }
@@ -67,7 +65,7 @@ test('keeps the syntax colours of the linked name', async () => {
 });
 
 test('shows the kind and name when there is no signature, and adds Astro base', async () => {
-  setRegistry({ options: resolveOptions(), plugins: [], clientAssets: true, base: '/docs' });
+  setRegistry({ options: resolveOptions(), plugins: [], base: '/docs' });
   const { html } = await render(block('js', 'lib'), withAdapters(fakeAdapter()));
   expect(html).toContain('href="/docs/reference/lib/"');
   expect(html).toContain('data-scb-api-head="module lib"');
@@ -75,7 +73,9 @@ test('shows the kind and name when there is no signature, and adds Astro base', 
 });
 
 test('uses the qualified name from the resolution', async () => {
-  const adapter = fakeAdapter({ resolve: () => ({ href: '/x/', kind: 'class', name: 'pkg.lib', source: 'S' }) });
+  const adapter = fakeAdapter({
+    findSymbols: () => [{ start: 0, end: 3, href: '/x/', kind: 'class', name: 'pkg.lib', source: 'S' }],
+  });
   const { html } = await render(block('js', 'lib'), withAdapters(adapter));
   expect(html).toContain('data-scb-api-head="class pkg.lib"');
 });
@@ -89,10 +89,10 @@ test('leaves names that do not resolve, names in strings and unsafe links as pla
 test('skips names that cross a line, and names that overlap a linked name', async () => {
   const overlap = fakeAdapter({
     findSymbols: () => [
-      { start: 0, end: 9, name: 'lib.parse' },
-      { start: 4, end: 9, name: 'lib.parse' },
-      { start: 0, end: 3, name: 'lib' },
-      { start: 12, end: 17, name: 'lib' },
+      { start: 0, end: 9, name: 'lib.parse', href: '/x/', source: 'S' },
+      { start: 4, end: 9, name: 'lib.parse', href: '/x/', source: 'S' },
+      { start: 0, end: 3, name: 'lib', href: '/x/', source: 'S' },
+      { start: 12, end: 17, name: 'lib', href: '/x/', source: 'S' },
     ],
   });
   const { html } = await render(block('js', 'lib.parse()', 'lib', 'x'), withAdapters(overlap));
@@ -108,7 +108,7 @@ test('only runs adapters for their languages, and not with apiLinks=false', asyn
 
 test('runs setup once for every block, and gives it the context', async () => {
   const adapter = fakeAdapter();
-  setRegistry({ options: resolveOptions(), plugins: [], clientAssets: true, root: '/site', cacheDir: '/site/.cache' });
+  setRegistry({ options: resolveOptions(), plugins: [], root: '/site', cacheDir: '/site/.cache' });
   await render(block('js', 'lib'), withAdapters(adapter));
   await render(block('js', 'lib.parse()'), withAdapters(adapter));
   expect(adapter.setup).toHaveBeenCalledTimes(1);

@@ -1,15 +1,13 @@
 ---
 import Default from '@astrojs/starlight/components/Head.astro';
-import { getCollection } from 'astro:content';
-import { pageUrl, siteUrl } from '../markdown.ts';
+import { pageUrl, siteUrl, titles } from '../markdown.ts';
 
-const ids = new Set((await getCollection('docs')).map((entry) => entry.id));
 const id = Astro.locals.starlightRoute.entry.id || 'index';
-const image = new URL(`og/${ids.has(id) ? id : 'index'}.png`, siteUrl).href;
+const image = new URL(`og/${titles.has(id) ? id : 'index'}.png`, siteUrl).href;
 ---
 
 <Default><slot /></Default>
-{ids.has(id) && <link rel="alternate" type="text/markdown" href={pageUrl(id, true)} />}
+{titles.has(id) && <link rel="alternate" type="text/markdown" href={pageUrl(id, true)} />}
 <meta property="og:image" content={image} />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />

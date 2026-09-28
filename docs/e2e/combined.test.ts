@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import type { CodeblocksOptions } from '../../packages/starlight-codeblocks/src/options.ts';
 import { render } from '../../packages/starlight-codeblocks/test/render.ts';
+import { clipboard } from './helpers.ts';
 
 // Feature combinations that no docs example shows: the test renders the block and adds it to a built page,
 // whose stylesheet has the styles of every feature, then starts the client modules the way a navigation does.
@@ -115,12 +116,11 @@ test("a Run button runs the code with the reader's placeholder values", async ({
   await expect(block.locator('.scb-run-stdout')).toHaveText('abc123');
 });
 
-test('Copy commands copies the reader value of a placeholder', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('Copy commands copies the reader value of a placeholder', async ({ page }) => {
   const block = await inject(page, ['```sh placeholder="MY_APP"', '$ cd MY_APP', 'ok', '```']);
   await block.getByRole('textbox', { name: 'MY_APP' }).fill('shop');
   await block.getByRole('button', { name: 'Copy commands' }).click();
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('cd shop');
+  await expect.poll(() => clipboard(page)).toBe('cd shop');
   await block.locator('.copy button').click();
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('$ cd shop\nok');
+  await expect.poll(() => clipboard(page)).toBe('$ cd shop\nok');
 });

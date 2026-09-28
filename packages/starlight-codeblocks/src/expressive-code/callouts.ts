@@ -1,5 +1,5 @@
 import { type ExpressiveCodeLine, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
-import { type Element, type ElementContent, h, select, selectAll, toText } from '@expressive-code/core/hast';
+import { type Element, h, select, selectAll, toText } from '@expressive-code/core/hast';
 import { type CodeblocksPlugin, insertBefore, lineElement } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
@@ -115,15 +115,6 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
   font-size: ${cssVar('codeblocksCallouts.fontSize')};
   line-height: 1.5;
 }
-/* .frame outweighs Expressive Code's square top corners for code in titled blocks. */
-.frame .${cls('-bubble')} code {
-  padding: 0 4px;
-  border-radius: 3px;
-  background: color-mix(in srgb, currentColor 12%, transparent);
-  font-family: ${cssVar('codeFontFamily')};
-  font-size: 0.95em;
-}
-.${cls('-bubble')} a { color: inherit; text-underline-offset: 3px; }
 /* A callout on a hidden line shows with the line. */
 .${cls('-hidden')}:not(.${PREFIX}-hidden-open) { display: none; }
 /* Between two lines with the same highlight, the callout has it too, with the line's bar after the gutter. */
@@ -141,9 +132,6 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
   --scb-callout-bg: var(--scbStateBg);
   --scb-callout-bar: var(--scbStateBar);
   --scb-callout-bar-wd: ${cssVar('codeblocksLineStates.barWidth')};
-}
-@media print {
-  .${cls('-hidden')} { display: none !important; }
 }`;
     },
     hooks: {
@@ -165,10 +153,10 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
           const below = highlight(lineEl);
           const above = highlight(lines[lines.indexOf(lineEl) - 1]);
           const lit = below.length > 0 && below.join(' ') === above.join(' ') ? [cls('-on'), ...below] : [];
-          const bubble: ElementContent = h(
+          const bubble = h(
             'div',
             {
-              class: [cls(), ...(hidden ? [cls('-hidden')] : []), ...lit].join(' '),
+              class: [cls(), ...(hidden ? [cls('-hidden'), `${PREFIX}-no-print`] : []), ...lit].join(' '),
               role: 'note',
               style: `--scb-callout-mid:${calloutMiddle(line.text, directive.match)};--scb-callout-len:${Math.min(60, length)}`,
             },

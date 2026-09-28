@@ -1,8 +1,8 @@
-import { existsSync, readdirSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import { defineConfig, type UserConfig } from 'tsdown';
 
 // One build per feature module, so that each file stands alone for the loader and the 3 kB budget.
-const clientModules = existsSync('src/client') ? readdirSync('src/client').filter((f) => f.endsWith('.ts')) : [];
+const clientModules = readdirSync('src/client').filter((f) => f.endsWith('.ts'));
 
 export default defineConfig([
   {

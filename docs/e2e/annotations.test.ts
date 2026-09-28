@@ -1,11 +1,9 @@
 import { expect, type Locator, test } from '@playwright/test';
+import { copyFromKeyboard, css, example, reduced } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/annotations/');
 });
-
-const example = (page: import('@playwright/test').Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 /** Opens note `n` with a click, and waits until the script has placed it and it has finished opening. */
 async function open(block: Locator, n: number) {
@@ -66,7 +64,7 @@ test.describe('hover', () => {
     await expect(note).toBeHidden();
   });
 
-  test('the note fades in as one element, and the pointer stays a hand over the marker', async ({ page }, info) => {
+  test('the note fades in as one element, and the pointer stays a hand over the marker', async ({ page }) => {
     const block = example(page);
     const marker = block.getByRole('button', { name: 'Annotation 1' });
     const note = block.locator('.scb-annotation-popover').first();
@@ -78,8 +76,8 @@ test.describe('hover', () => {
       clip: getComputedStyle(el).clipPath,
     }));
     expect(style.clip).toBe('none');
-    if (info.project.name !== 'reduced-motion') expect(style.transition).toContain('opacity');
-    await expect.poll(() => note.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+    if (!reduced()) expect(style.transition).toContain('opacity');
+    await expect.poll(() => css(note, 'opacity')).toBe('1');
     // Whatever is on top of the marker, the note's badge or the marker itself, shows a hand.
     const box = await marker.boundingBox();
     const cursor = await page.evaluate(
@@ -214,10 +212,10 @@ test('the note moves under its marker when the window gets narrow', async ({ pag
   await expect(r.note).not.toHaveClass(/scb-annotation-end/);
 });
 
-test('the note opens at once under reduced motion', async ({ page }, info) => {
-  test.skip(info.project.name !== 'reduced-motion', 'Only for the reduced-motion project.');
+test('the note opens at once under reduced motion', async ({ page }) => {
+  test.skip(!reduced(), 'Only for the reduced-motion project.');
   const { note } = await open(example(page), 1);
-  expect(await note.evaluate((el) => getComputedStyle(el).animationName)).toBe('none');
+  expect(await css(note, 'animationName')).toBe('none');
 });
 
 test('several notes can stay open, and Escape closes them, with the keyboard', async ({ page }) => {
@@ -258,27 +256,24 @@ test('inline code in a note uses the code font, with round corners in a titled b
   expect([style.top, style.bottom]).toEqual(['3px', '3px']);
 });
 
-test('copying leaves the markers and notes out', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await example(page).locator('.copy button').focus();
-  await page.keyboard.press('Enter');
-  const copied = await page.evaluate(() => navigator.clipboard.readText());
+test('copying leaves the markers and notes out', async ({ page }) => {
+  const copied = await copyFromKeyboard(example(page));
   expect(copied).toContain('python: ["3.12", "3.13"]\n');
   expect(copied).not.toContain('annotate');
   expect(copied).not.toContain('One job');
 });
 
-test('the marker fades to the hover colour on the timing of the hover note', async ({ page, isMobile }, info) => {
+test('the marker fades to the hover colour on the timing of the hover note', async ({ page, isMobile }) => {
   const marker = example(page).locator('.scb-annotation').first();
   const timing = () =>
     marker.evaluate((el) => [getComputedStyle(el).transitionDuration, getComputedStyle(el).transitionDelay]);
-  if (info.project.name === 'reduced-motion') {
+  if (reduced()) {
     expect((await timing())[0]).toBe('0s');
     return;
   }
   expect(await timing()).toEqual(['0.16s', '0s']);
   test.skip(isMobile, 'Phones have no hover.');
-  const rest = await marker.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const rest = await css(marker, 'backgroundColor');
   await marker.hover();
   expect(await timing()).toEqual(['0.16s', '0.08s']);
   const expected = await marker.evaluate((el) => {
@@ -289,7 +284,7 @@ test('the marker fades to the hover colour on the timing of the hover note', asy
     probe.remove();
     return colour;
   });
-  await expect.poll(() => marker.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(expected);
+  await expect.poll(() => css(marker, 'backgroundColor')).toBe(expected);
   expect(expected).not.toBe(rest);
 });
 
@@ -316,6 +311,6 @@ test('prints the notes as a numbered list under the block', async ({ page }) => 
 test('a marker keeps its circle in forced colours', async ({ page }) => {
   await page.emulateMedia({ forcedColors: 'active' });
   const marker = example(page).getByRole('button', { name: 'Annotation 1' });
-  expect(await marker.evaluate((el) => getComputedStyle(el).borderTopStyle)).toBe('solid');
-  expect(await marker.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('1px');
+  expect(await css(marker, 'borderTopStyle')).toBe('solid');
+  expect(await css(marker, 'borderTopWidth')).toBe('1px');
 });

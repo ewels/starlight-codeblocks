@@ -8,6 +8,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, h, select } from '@expressive-code/core/hast';
 import { LanguageGroups } from '@expressive-code/plugin-frames';
+import { encodeCode } from '../client/shared/copy.ts';
 import { clientJsModules } from '../client-modules.ts';
 import { addTitleBarControl, type CodeblocksPlugin } from './core.ts';
 import { onCode, PREFIX, themeColour } from './styles.ts';
@@ -92,7 +93,7 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
           let statement: string[] = [];
           for (const line of lines) {
             const open = statement.length > 0 && statementOpen(statement);
-            const prompt: string | undefined = line.text.match(open ? /^(?:>>>|\.\.\.)(?: |$)/ : /^>>>(?: |$)/)?.[0];
+            const prompt = line.text.match(open ? /^(?:>>>|\.\.\.)(?: |$)/ : /^>>>(?: |$)/)?.[0];
             if (prompt) {
               data.prompts.set(line, prompt);
               data.commands.add(line);
@@ -143,15 +144,14 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
         const { prompts: linePrompts, commands } = shellData.getOrCreateFor(codeBlock);
         if (commands.size === 0) return;
         const lines = codeBlock.getLines();
-        const encode = (text: string) => text.replaceAll('\n', '\x7F');
         const copy = select('.copy button[data-code]', renderData.blockAst);
         // The prompts are out of the code, so give Expressive Code's copy button the block as the reader sees it.
         if (copy) {
           let whole = lines.map((line) => (linePrompts.get(line) ?? '') + line.text).join('\n');
-          if (copy.properties.dataCode !== encode(codeBlock.code)) {
+          if (copy.properties.dataCode !== encodeCode(codeBlock.code)) {
             whole = whole.replace(/(?<=^|\n)\s*#.*($|\n+)/g, '').trim();
           }
-          copy.properties.dataCode = encode(whole);
+          copy.properties.dataCode = encodeCode(whole);
         }
         const figure = select('figure', renderData.blockAst);
         if (!figure) return;
@@ -164,7 +164,11 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
           figure,
           h(
             'button',
-            { type: 'button', class: `${PREFIX}-btn ${PREFIX}-shell-copy ${PREFIX}-no-print`, dataCode: encode(text) },
+            {
+              type: 'button',
+              class: `${PREFIX}-btn ${PREFIX}-shell-copy ${PREFIX}-no-print`,
+              dataCode: encodeCode(text),
+            },
             'Copy commands',
           ),
         );

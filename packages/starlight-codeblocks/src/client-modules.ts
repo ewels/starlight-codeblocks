@@ -72,4 +72,4 @@ export function loaderSource(modules: ClientModule[], inline: boolean): string {
 }
 
 /** The `jsModules` of every feature with a client module. Expressive Code removes the duplicates. */
-export const clientJsModules = () => [loaderSource(readClientModules(), !getRegistry()?.clientAssets)];
+export const clientJsModules = () => [loaderSource(readClientModules(), !getRegistry())];

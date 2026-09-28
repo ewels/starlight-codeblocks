@@ -1,11 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { copyFromKeyboard, css, example } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/hidden-lines/');
 });
-
-const example = (page: import('@playwright/test').Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 test('hides lines behind a marker, until it is selected', async ({ page }) => {
   const block = example(page);
@@ -43,7 +41,7 @@ test('a hidden line that shows is dimmed, on a faint tint', async ({ page }) => 
   await block.locator('.scb-hidden-marker').first().click();
   const code = block.locator('.scb-hidden-line').first().locator('.code');
   await expect(code).toHaveCSS('opacity', '0.75');
-  const tint = await code.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const tint = await css(code, 'backgroundColor');
   expect(Number(tint.match(/[\d.]+(?=\)$)/)?.[0])).toBeCloseTo(0.04, 2);
 });
 
@@ -86,11 +84,8 @@ test('the title bar button shows every run at once', async ({ page }) => {
   for (const line of await hidden.all()) await expect(line).toBeHidden();
 });
 
-test('copies hidden lines too', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await example(page).locator('.copy button').focus();
-  await page.keyboard.press('Enter');
-  const copied = await page.evaluate(() => navigator.clipboard.readText());
+test('copies hidden lines too', async ({ page }) => {
+  const copied = await copyFromKeyboard(example(page));
   expect(copied).toContain('import json');
   expect(copied).toContain('if key.startswith("_"):');
 });
@@ -98,7 +93,7 @@ test('copies hidden lines too', async ({ page, context }) => {
 test('the marker changes state instantly, with or without reduced motion', async ({ page }) => {
   const marker = example(page).locator('.scb-hidden-marker').first();
   await marker.click();
-  expect(await marker.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
+  expect(await css(marker, 'transitionDuration')).toBe('0s');
 });
 
 test('a manual selection leaves out the marker text', async ({ page }) => {

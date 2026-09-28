@@ -38,15 +38,19 @@ export function codeblocksApi() {
         for (const item of name ? [name] : list.split(',')) imported.add(item.trim());
       }
       const symbols = [];
-      for (const match of code.matchAll(TOKENS)) {
-        if (imported.has(match[0]))
-          symbols.push({ start: match.index, end: match.index + match[0].length, name: match[0] });
+      for (const { 0: name, index } of code.matchAll(TOKENS)) {
+        const page = imported.has(name) && pages[name];
+        if (page) {
+          symbols.push({
+            start: index,
+            end: index + name.length,
+            name,
+            ...page,
+            source: 'starlight-codeblocks reference',
+          });
+        }
       }
       return symbols;
-    },
-    resolve(symbol) {
-      const page = pages[symbol.name];
-      return page ? { ...page, source: 'starlight-codeblocks reference' } : null;
     },
   };
 }

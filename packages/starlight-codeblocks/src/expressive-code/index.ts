@@ -86,7 +86,7 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.codeSwitcher ? [pluginCodeSwitcher()] : []),
     // Also with the walkthrough off: the step label is how a block names its step without the stepper.
     pluginWalkthrough(),
-    // After hidden lines, which rebuilds the children of the code element.
+    // After hidden lines, so that a callout sits between a hidden lines marker and its line.
     ...(options.callouts ? [pluginCallouts()] : []),
     ...(options.annotations ? [pluginAnnotations()] : []),
     ...(options.footnotes ? [pluginFootnotes(options.footnotes)] : []),

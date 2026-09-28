@@ -1,3 +1,5 @@
+import { scrollTo } from './shared/scroll.ts';
+
 const TARGET = 'scb-permalink-target';
 const HASH = /^#(.+?)-L(\d+)(?:-L(\d+))?$/;
 
@@ -20,10 +22,7 @@ function highlight(block: Element, from: number, to: number) {
     line.classList.add(TARGET);
     line.querySelector('.scb-permalink')?.setAttribute('aria-current', 'true');
     // The expandable and hidden-lines scripts open the line themselves if they start later.
-    if (line.hidden) line.dispatchEvent(new Event('beforematch'));
-    if (line.classList.contains('scb-hidden-line') && !line.classList.contains('scb-hidden-open')) {
-      block.querySelector<HTMLElement>(`.scb-hidden-marker[aria-controls~="${CSS.escape(line.id)}"]`)?.click();
-    }
+    if (line.hidden || line.classList.contains('scb-hidden-line')) line.dispatchEvent(new Event('beforematch'));
     lines.push(line);
   }
   return lines;
@@ -42,8 +41,7 @@ function fromHash() {
   const block = document.getElementById(id);
   if (!block?.hasAttribute('data-scb-permalinks')) return;
   const [first] = highlight(block, Number(a), Number(b ?? a));
-  const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
-  first?.scrollIntoView({ block: 'center', behavior: smooth ? 'smooth' : 'auto' });
+  if (first) scrollTo(first, 'center');
 }
 
 function select(event: MouseEvent) {

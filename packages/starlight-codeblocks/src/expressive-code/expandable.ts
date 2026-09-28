@@ -25,10 +25,9 @@ export function removeAutoExpandable(root: Parents) {
 }
 
 /**
- * Caps a long block at `lines`, with a button under the code that shows the rest. Collapsing needs
- * JavaScript (SPEC 6.14 "without JavaScript: the block shows in full"), so the plugin only marks
- * the block; the client module hides the extra lines with `hidden="until-found"` so that find in
- * page can still reach them, and the `scripting` media feature keeps the fade CSS-only until then.
+ * Caps a long block at `lines`, with a button under the code that shows the rest. Without JavaScript the
+ * block shows in full, so the plugin only marks it; the client module hides the extra lines with
+ * `hidden="until-found"`, which find in page can still reach.
  */
 export function pluginExpandable({
   lines: siteDefault = 12,
@@ -84,8 +83,7 @@ pre[data-scb-expandable] > code > [hidden] { display: none; }
         const automatic =
           n === undefined && flag === undefined && auto !== false && total > auto && !ownLayout(codeBlock);
         const lines = n ?? (flag || automatic ? siteDefault : undefined);
-        if (!lines) return;
-        if (total - lines < 3) return;
+        if (!lines || total - lines < 3) return;
         const figure = select('figure', renderData.blockAst);
         const pre = figure && select('pre', figure);
         if (!figure || !pre) return;

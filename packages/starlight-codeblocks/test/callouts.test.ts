@@ -1,8 +1,6 @@
 import { expect, test } from 'vitest';
 import { calloutMiddle } from '../src/expressive-code/callouts.ts';
-import { render } from './render.ts';
-
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
+import { block, render } from './render.ts';
 
 test('renders a callout above its line, pointing at the middle of the match', async () => {
   const { html, copyText, warnings } = await render(

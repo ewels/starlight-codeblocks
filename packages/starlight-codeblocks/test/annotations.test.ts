@@ -1,19 +1,17 @@
 import { getColorContrast, getLuminance } from '@expressive-code/core';
 import { expect, test } from 'vitest';
 import { variants } from './contrast.ts';
-import { render } from './render.ts';
-
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
+import { block, render } from './render.ts';
 
 test('turns [!annotate] into a numbered button with a popover after it', async () => {
   const { html, copyText, warnings } = await render(block('py', 'x = 1  # [!annotate] Sets `x`.', 'y = 2'));
   const button = html.match(
-    /<button type="button" class="scb-annotation" popovertarget="([\w-]+)" aria-label="Annotation 1" style="anchor-name:--\1">1<\/button>/,
+    /<button type="button" class="scb-annotation scb-no-print" popovertarget="([\w-]+)" aria-label="Annotation 1" style="anchor-name:--\1">1<\/button>/,
   );
   expect(button).toBeTruthy();
   const id = (button as RegExpMatchArray)[1];
   expect(html).toContain(
-    `</button><div id="${id}" popover="manual" class="scb-float scb-annotation-popover" style="position-anchor:--${id}"><span class="scb-annotation-badge" aria-hidden="true">1</span><p>Sets <code>x</code>.</p></div>`,
+    `</button><div id="${id}" popover="manual" class="scb-float scb-annotation-popover scb-no-print" style="position-anchor:--${id}"><span class="scb-annotation-badge" aria-hidden="true">1</span><p>Sets <code>x</code>.</p></div>`,
   );
   expect(html).not.toContain('[!annotate]');
   expect(copyText).toBe('x = 1\ny = 2');
@@ -56,7 +54,7 @@ test('annotations="side" puts the notes in a column beside the block, with numbe
     /^<div class="expressive-code"><div class="scb-side scb-side-600 not-content" data-scb-annotations=""><div class="scb-side-grid"><figure/,
   );
   expect(html).toContain('<div class="ec-line" data-scb-anno="1">');
-  expect(html).toContain('<span class="scb-annotation scb-annotation-num" aria-hidden="true">1</span>');
+  expect(html).toContain('<span class="scb-annotation scb-annotation-num scb-no-print" aria-hidden="true">1</span>');
   expect(html).toContain(
     '</figure><ol class="scb-annotation-notes"><li tabindex="0" data-scb-anno="1"><span class="scb-annotation-note-num">1</span>Sets <code>x</code>.</li><li tabindex="0" data-scb-anno="2"><span class="scb-annotation-note-num">2</span>Sets y.</li></ol></div></div>',
   );

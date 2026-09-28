@@ -1,4 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { css, example } from './helpers.ts';
 
 test.beforeEach(async ({ page, context }) => {
   await context.route(/^https:\/\/(www\.typescriptlang\.org|stackblitz\.com)\//, (route) =>
@@ -6,9 +7,6 @@ test.beforeEach(async ({ page, context }) => {
   );
   await page.goto('./features/open-in-playground/');
 });
-
-const example = (page: Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 test('the link opens the TS Playground in a new tab, with the pointer', async ({ page }) => {
   const link = example(page).locator('a.scb-playground');
@@ -24,7 +22,7 @@ test('the link opens with the keyboard, and shows a focus ring', async ({ page }
   await page.keyboard.press('Shift+Tab');
   await page.keyboard.press('Tab');
   await expect(link).toBeFocused();
-  expect(await link.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
+  expect(await css(link, 'outlineStyle')).toBe('solid');
   const [popup] = await Promise.all([page.waitForEvent('popup'), page.keyboard.press('Enter')]);
   expect(popup.url()).toContain('typescriptlang.org/play#code/');
 });
@@ -66,12 +64,12 @@ test('the bar of an untitled block is as tall as a titled bar', async ({ page })
 
 test('a focused button shows the focus ring, not the hover fill', async ({ page }) => {
   const button = example(page).locator('a.scb-playground');
-  const background = () => button.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const background = () => css(button, 'backgroundColor');
   const rest = await background();
   await button.focus();
   await page.keyboard.press('Shift+Tab');
   await page.keyboard.press('Tab');
   await expect(button).toBeFocused();
-  expect(await button.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
+  expect(await css(button, 'outlineStyle')).toBe('solid');
   expect(await background()).toBe(rest);
 });

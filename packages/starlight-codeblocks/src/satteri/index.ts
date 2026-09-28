@@ -9,8 +9,8 @@ import type {
   MdastVisitorContext,
   PluginFactoryContext,
 } from 'satteri';
-import { bundledLanguagesInfo } from 'shiki/langs';
 import { encodeVariant, SWITCHER_META } from '../expressive-code/code-switcher.ts';
+import { bundledLanguage } from '../expressive-code/core.ts';
 import { withTrailingWhitespace } from '../expressive-code/whitespace.ts';
 import type { ResolvedOptions } from '../options.ts';
 import { getRegistry } from '../registry.ts';
@@ -30,14 +30,14 @@ function walk(node: Nodes, visit: (node: Nodes) => void) {
 
 const fileName = (url: URL | undefined) => (url ? relative(process.cwd(), fileURLToPath(url)) : 'unknown file');
 
-function checkIds(codes: Code[], file: string, logger: Logger) {
+function checkIds(codes: Code[], warn: Logger['warn']) {
   const seen = new Set<string>();
   for (const code of codes) {
     const id = new MetaOptions(code.meta ?? '').getString('id');
     if (!id) continue;
     getRegistry()?.blockIds?.add(id);
     if (seen.has(id)) {
-      logger.warn(`${file}: two code blocks have \`id="${id}"\`. Line permalinks need a different id for each block.`);
+      warn(`two code blocks have \`id="${id}"\`. Line permalinks need a different id for each block.`);
     }
     seen.add(id);
   }
@@ -52,14 +52,14 @@ type Event = { section: number } & ({ link: Link; name: string } | { names: Set<
  * A mention link pairs with the next block in its section that tags the name, or else with any block before it.
  * A link with neither becomes plain text.
  */
-function checkMentions(events: Event[], ctx: MdastVisitorContext, file: string, logger: Logger) {
+function checkMentions(events: Event[], ctx: MdastVisitorContext, warn: Logger['warn']) {
   events.forEach((event, i) => {
     if (!('link' in event)) return;
     const tags = (e: Event) => 'names' in e && e.names.has(event.name);
     const later = events.slice(i + 1).some((e) => e.section === event.section && tags(e));
     if (later || events.slice(0, i).some(tags)) return;
-    logger.warn(
-      `${file}: the link to \`${MENTION}${event.name}\` has no code block with \`[!mention ${event.name}]\` in its section or before it. It shows as plain text.`,
+    warn(
+      `the link to \`${MENTION}${event.name}\` has no code block with \`[!mention ${event.name}]\` in its section or before it. It shows as plain text.`,
     );
     ctx.replaceNode(event.link, [...event.link.children]);
   });
@@ -67,7 +67,7 @@ function checkMentions(events: Event[], ctx: MdastVisitorContext, file: string, 
 
 function languageName(lang: string | null | undefined) {
   if (!lang) return 'Plain text';
-  return bundledLanguagesInfo.find((info) => info.id === lang || info.aliases?.includes(lang))?.name ?? lang;
+  return bundledLanguage(lang)?.name ?? lang;
 }
 
 /** Turns `:::code-switcher{sync="…"}` into a wrapper whose code blocks each carry the variant menu. */
@@ -96,46 +96,47 @@ function codeSwitcher(node: ContainerDirective, file: string): MdastNode {
 export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPluginEntry[] {
   const defaultLanguage = options.inlineHighlighting ? options.inlineHighlighting.defaultLanguage : false;
   return [
-    ({ fileURL }: PluginFactoryContext): MdastPluginDefinition => ({
-      name: 'starlight-codeblocks',
-      before(root, ctx) {
-        const codes: Code[] = [];
-        const events: Event[] = [];
-        const malformed: Link[] = [];
-        let section = 0;
-        walk(root as Nodes, (node) => {
-          if (node.type === 'heading') section++;
-          if (node.type === 'code') {
-            codes.push(node);
-            const meta = withTrailingWhitespace(node.value, node.meta ?? '');
-            if (options.whitespace && meta !== (node.meta ?? '')) ctx.setProperty(node, 'meta', meta);
-            events.push({ section, names: new Set([...node.value.matchAll(TAG)].map((m) => m[1] as string)) });
-          }
-          if (node.type === 'link' && node.url.startsWith(MENTION)) {
-            try {
-              events.push({ section, link: node, name: decodeURIComponent(node.url.slice(MENTION.length)) });
-            } catch {
-              malformed.push(node);
+    ({ fileURL }: PluginFactoryContext): MdastPluginDefinition => {
+      const file = fileName(fileURL);
+      const warn = (message: string) => logger.warn(`${file}: ${message}`);
+      return {
+        name: 'starlight-codeblocks',
+        before(root, ctx) {
+          const codes: Code[] = [];
+          const events: Event[] = [];
+          const malformed: Link[] = [];
+          let section = 0;
+          walk(root as Nodes, (node) => {
+            if (node.type === 'heading') section++;
+            if (node.type === 'code') {
+              codes.push(node);
+              const meta = withTrailingWhitespace(node.value, node.meta ?? '');
+              if (options.whitespace && meta !== (node.meta ?? '')) ctx.setProperty(node, 'meta', meta);
+              events.push({ section, names: new Set([...node.value.matchAll(TAG)].map((m) => m[1] as string)) });
             }
+            if (node.type === 'link' && node.url.startsWith(MENTION)) {
+              try {
+                events.push({ section, link: node, name: decodeURIComponent(node.url.slice(MENTION.length)) });
+              } catch {
+                malformed.push(node);
+              }
+            }
+          });
+          for (const link of malformed) {
+            warn(`the link to \`${link.url}\` has a malformed % escape. It shows as plain text.`);
+            ctx.replaceNode(link, [...link.children]);
           }
-        });
-        for (const link of malformed) {
-          logger.warn(
-            `${fileName(fileURL)}: the link to \`${link.url}\` has a malformed % escape. It shows as plain text.`,
-          );
-          ctx.replaceNode(link, [...link.children]);
-        }
-        if (options.permalinks) checkIds(codes, fileName(fileURL), logger);
-        // A render with no file, such as a starlight-pydocs docstring, is part of a page: the client pairs its links.
-        if (options.mentions && fileURL) checkMentions(events, ctx, fileName(fileURL), logger);
-      },
-      containerDirective(node) {
-        if (options.codeSwitcher && node.name === 'code-switcher') return codeSwitcher(node, fileName(fileURL));
-      },
-      ...(options.inlineHighlighting && {
-        inlineCode: (node, ctx) =>
-          inlineCode(node, ctx, (message) => logger.warn(`${fileName(fileURL)}: ${message}`), defaultLanguage) as never,
-      }),
-    }),
+          if (options.permalinks) checkIds(codes, warn);
+          // A render with no file, such as a starlight-pydocs docstring, is part of a page: the client pairs its links.
+          if (options.mentions && fileURL) checkMentions(events, ctx, warn);
+        },
+        containerDirective(node) {
+          if (options.codeSwitcher && node.name === 'code-switcher') return codeSwitcher(node, file);
+        },
+        ...(options.inlineHighlighting && {
+          inlineCode: (node, ctx) => inlineCode(node, ctx, warn, defaultLanguage) as never,
+        }),
+      };
+    },
   ];
 }

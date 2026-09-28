@@ -87,7 +87,10 @@ export function clientModulePlugins(assetsDir: string): VitePlugin[] {
   return [
     {
       name: 'starlight-codeblocks:client',
-      resolveId: (id) => (files.has(id.split('?')[0] as string) ? prefix + id.split('?')[0] : undefined),
+      resolveId(id) {
+        const path = id.split('?')[0] as string;
+        return files.has(path) ? prefix + path : undefined;
+      },
       load: (id) => (id.startsWith(prefix) ? files.get(id.slice(prefix.length)) : undefined),
     },
     {

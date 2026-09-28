@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
+import { clipboard, css, output } from './helpers.ts';
 
-const groups = (page: Page, n: number) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.scb-switcher');
+const groups = (page: Page, n: number) => output(page, n).locator('.scb-switcher');
 const visible = (page: Page, n: number, g = 0) => groups(page, n).nth(g).locator(':scope > .expressive-code:visible');
 
 test.beforeEach(async ({ page }) => {
@@ -54,11 +54,7 @@ test('the icon left of the menu shows the language of the variant, and is hidden
     visible(page, 1, 0).getByRole('combobox').boundingBox(),
   ]);
   expect(iconBox && menuBox && iconBox.x - menuBox.x).toBeGreaterThanOrEqual(6);
-  expect(await icon().evaluate((el) => getComputedStyle(el).color)).toBe(
-    await visible(page, 1, 0)
-      .getByRole('combobox')
-      .evaluate((el) => getComputedStyle(el).color),
-  );
+  expect(await css(icon(), 'color')).toBe(await css(visible(page, 1, 0).getByRole('combobox'), 'color'));
 });
 
 test('the chevron keeps a gap from the right edge of the menu', async ({ page }) => {
@@ -85,7 +81,7 @@ test('the menu sits 8px from the end of the frame, with or without a title', asy
 test('the menu keeps its background under the pointer', async ({ page, isMobile }) => {
   test.skip(isMobile, 'Phones have no hover.');
   const menu = visible(page, 0).getByRole('combobox');
-  const background = () => menu.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const background = () => css(menu, 'backgroundColor');
   await page.mouse.move(0, 0);
   const rest = await background();
   await menu.hover();
@@ -98,11 +94,10 @@ test('a block without the saved label shows its first variant', async ({ page })
   await expect(visible(page, 1, 0)).toContainText('json.load');
 });
 
-test('the copy button copies the variant that shows', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('the copy button copies the variant that shows', async ({ page }) => {
   await visible(page, 0).getByRole('combobox').selectOption({ label: 'Yarn' });
   await visible(page, 0).locator('.copy button').click();
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('yarn add starlight-codeblocks');
+  await expect.poll(() => clipboard(page)).toBe('yarn add starlight-codeblocks');
 });
 
 test('a variant with a title shows it in the title bar', async ({ page }) => {

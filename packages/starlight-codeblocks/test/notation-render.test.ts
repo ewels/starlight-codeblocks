@@ -1,9 +1,7 @@
 import { expect, test } from 'vitest';
 import type { CodeblocksPlugin } from '../src/expressive-code/core.ts';
 import { getDirectives } from '../src/expressive-code/notation.ts';
-import { render } from './render.ts';
-
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
+import { block, render } from './render.ts';
 
 test('renders a block without directives exactly as without the plugin', async () => {
   const md = block('js title="app.js" {2}', 'const a = 1', 'console.log(a) // log it');

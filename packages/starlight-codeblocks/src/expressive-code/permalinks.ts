@@ -1,4 +1,6 @@
 import {
+  type ExpressiveCodeBlock,
+  type ExpressiveCodeLine,
   ensureColorContrastOnBackground,
   getCssVarName,
   PluginStyleSettings,
@@ -8,7 +10,7 @@ import {
 } from '@expressive-code/core';
 import { type Element, getClassNames, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { type CodeblocksPlugin, numberedLines } from './core.ts';
+import { type CodeblocksPlugin, lineNumber, numberedLines } from './core.ts';
 import { onCode, PREFIX, solidCodeBackground, themeColour } from './styles.ts';
 
 export interface PermalinksStyleSettings {
@@ -48,6 +50,14 @@ const LINK = `${PREFIX}-permalink`;
 
 const hasClass = (el: Element, name: string) => getClassNames(el).includes(name);
 
+/** The block's `id` and its line numbers, from `startLineNumber`, or `undefined` for a block with no `id`. */
+function numbering(codeBlock: ExpressiveCodeBlock) {
+  const id = codeBlock.metaOptions.getString('id');
+  if (!id) return undefined;
+  const of = (line: ExpressiveCodeLine) => lineNumber(codeBlock, line);
+  return { id, last: of(numberedLines(codeBlock).at(-1) as ExpressiveCodeLine), of };
+}
+
 /** Turns the line numbers of a block with `id="…"` into links to `#<id>-L<n>`. */
 export function pluginPermalinks(): CodeblocksPlugin {
   return {
@@ -75,6 +85,7 @@ export function pluginPermalinks(): CodeblocksPlugin {
   color: ${cssVar('codeForeground')};
   text-decoration: underline;
 }
+/* The bar goes before the line numbers: after them, as \`litLine()\` draws it, it touches the digits. */
 .${LINK}-target {
   background: ${cssVar('codeblocksPermalinks.targetBackground')};
   box-shadow: inset 3px 0 ${cssVar('codeblocksPermalinks.target')};
@@ -82,35 +93,31 @@ export function pluginPermalinks(): CodeblocksPlugin {
     jsModules: clientJsModules,
     hooks: {
       preprocessMetadata({ codeBlock, addGutterElement }) {
-        const id = codeBlock.metaOptions.getString('id');
-        if (!id) return;
-        const start = codeBlock.metaOptions.getInteger('startLineNumber') ?? 1;
-        const lines = numberedLines(codeBlock);
+        const numbers = numbering(codeBlock);
+        if (!numbers) return;
         addGutterElement({
           renderPhase: 'earlier',
           renderLine({ line }) {
-            const n = lines.indexOf(line) + start;
-            return h('a', { class: LINK, href: `#${id}-L${n}`, ariaLabel: `Link to line ${n}` }, String(n));
+            const n = numbers.of(line);
+            return h('a', { class: LINK, href: `#${numbers.id}-L${n}`, ariaLabel: `Link to line ${n}` }, String(n));
           },
           renderPlaceholder: () => h('span', { class: LINK }),
         });
       },
       postprocessRenderedLine({ codeBlock, line, renderData }) {
-        const id = codeBlock.metaOptions.getString('id');
-        if (!id) return;
-        const start = codeBlock.metaOptions.getInteger('startLineNumber') ?? 1;
-        renderData.lineAst.properties.id = `${id}-L${numberedLines(codeBlock).indexOf(line) + start}`;
+        const numbers = numbering(codeBlock);
+        if (!numbers) return;
+        renderData.lineAst.properties.id = `${numbers.id}-L${numbers.of(line)}`;
         // The line numbers plugin would show a second number next to the link.
         const gutter = select('.gutter', renderData.lineAst);
         if (gutter) gutter.children = gutter.children.filter((c) => !(c.type === 'element' && hasClass(c, 'ln')));
       },
       postprocessRenderedBlock({ codeBlock, renderData }) {
-        const id = codeBlock.metaOptions.getString('id');
-        if (!id) return;
-        const start = codeBlock.metaOptions.getInteger('startLineNumber') ?? 1;
-        const digits = String(start + numberedLines(codeBlock).length - 1).length;
+        const numbers = numbering(codeBlock);
+        if (!numbers) return;
+        const digits = String(numbers.last).length;
         const figure = select('figure', renderData.blockAst) ?? renderData.blockAst;
-        figure.properties.id = id;
+        figure.properties.id = numbers.id;
         figure.properties.dataScbPermalinks = '';
         // Hidden-line markers and callouts read this width to line up with the code.
         const style = String(figure.properties.style ?? '');

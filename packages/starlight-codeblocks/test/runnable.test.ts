@@ -5,11 +5,10 @@ import { pluginRunnable, runtimeFileName, runtimeModules } from '../src/expressi
 import { runtimePlugins } from '../src/integration.ts';
 import { setRegistry } from '../src/registry.ts';
 import { variants } from './contrast.ts';
-import { render } from './render.ts';
+import { block, render } from './render.ts';
 
 afterEach(() => setRegistry(undefined));
 
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
 const js = { runnable: { runtimes: { javascript: '/runtimes/js.js' } } };
 
 test('runnable adds a Run button to the title bar and an empty live output panel', async () => {
@@ -47,10 +46,10 @@ test('a language without a runtime warns and gets no button', async () => {
 });
 
 test('with codeblocks(), the block points at the bundled module in the assets folder', async () => {
-  setRegistry({ options: {} as never, plugins: [], clientAssets: true, base: '/docs', assets: '_astro' });
+  setRegistry({ options: {} as never, plugins: [], base: '/docs', assets: '_astro' });
   const { html } = await render(block('py runnable', 'print(1)'), js);
   expect(html).toContain('data-scb-runnable="/docs/_astro/scb-runtime-python.js"');
-  setRegistry({ options: {} as never, plugins: [], clientAssets: true, base: '/', assets: '_assets' });
+  setRegistry({ options: {} as never, plugins: [], base: '/', assets: '_assets' });
   expect((await render(block('js runnable', 'x'), js)).html).toContain(
     'data-scb-runnable="/_assets/scb-runtime-javascript.js"',
   );

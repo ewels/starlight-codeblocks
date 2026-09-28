@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page, test } from '@playwright/test';
+import { css, phone, reduced } from './helpers.ts';
 
 const current = (page: Page) => page.locator('.carousel .slide[data-current]');
 const tile = (page: Page, name: string) =>
@@ -35,8 +36,8 @@ const cardEdge = (page: Page, edge: 'top' | 'bottom') =>
   );
 
 test.describe('rotation', () => {
-  test.beforeEach(async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name === 'reduced-motion', 'Rotation is off under reduced motion.');
+  test.beforeEach(async ({ page }) => {
+    test.skip(reduced(), 'Rotation is off under reduced motion.');
     await page.clock.install();
     await page.goto('./');
     await expect(page.locator('.carousel[data-ready]')).toBeAttached();
@@ -163,7 +164,7 @@ test('the docs link sits in the same top-right spot on every slide, with a 24px+
   // Checked before any mouse click switches slides: a prior pointer interaction puts Chromium into
   // mouse input modality, where a later programmatic .focus() no longer matches :focus-visible.
   await docsLink('Annotations').focus();
-  expect(await docsLink('Annotations').evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none');
+  expect(await css(docsLink('Annotations'), 'outlineStyle')).not.toBe('none');
 
   await tile(page, 'Word-level diff').click();
   const secondOffset = await offsetFromCard('Word-level diff');
@@ -174,7 +175,7 @@ test('the docs link sits in the same top-right spot on every slide, with a 24px+
 test('the current button differs by more than colour', async ({ page }) => {
   await page.goto('./');
   await tile(page, 'Focus').click();
-  const weight = (name: string) => tile(page, name).evaluate((el) => getComputedStyle(el).fontWeight);
+  const weight = (name: string) => css(tile(page, name), 'fontWeight');
   expect(await weight('Focus')).toBe('600');
   expect(await weight('Footnotes')).toBe('400');
 });
@@ -197,7 +198,7 @@ test('the buttons are a flat list in sidebar order, with no group headings', asy
 
 test('the buttons fill each column from top to bottom, in columns of even length with aligned rows', async ({
   page,
-}, testInfo) => {
+}) => {
   await page.goto('./');
   const boxes = await page
     .locator('.carousel .tile')
@@ -211,7 +212,7 @@ test('the buttons fill each column from top to bottom, in columns of even length
     expect(column).toEqual((columns[0] ?? []).slice(0, column.length));
   }
   // The phone viewport (360px) is too narrow for the auto column width, so it's forced to two.
-  if (testInfo.project.name.startsWith('phone')) {
+  if (phone()) {
     expect(lengths).toEqual([12, 11]);
   }
 });
@@ -240,7 +241,7 @@ test('works with the keyboard', async ({ page }) => {
   await button.focus();
   await page.keyboard.press('Enter');
   await expect(current(page)).toHaveAttribute('data-feature', 'features/hidden-lines');
-  expect(await button.evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none');
+  expect(await css(button, 'outlineStyle')).not.toBe('none');
   await tile(page, 'Focus').focus();
   await page.keyboard.press('Space');
   await expect(current(page)).toHaveAttribute('data-feature', 'features/focus');
@@ -260,7 +261,7 @@ test('the dots use a roving tabindex and arrow keys', async ({ page }) => {
   await expect(dot(page, 'Footnotes')).toBeFocused();
   await expect(dot(page, 'Footnotes')).toHaveAttribute('tabindex', '0');
   await expect(dot(page, 'Annotations')).toHaveAttribute('tabindex', '-1');
-  expect(await dot(page, 'Footnotes').evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none');
+  expect(await css(dot(page, 'Footnotes'), 'outlineStyle')).not.toBe('none');
   await page.keyboard.press('ArrowLeft');
   await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
   await page.keyboard.press('End');
@@ -270,8 +271,8 @@ test('the dots use a roving tabindex and arrow keys', async ({ page }) => {
   await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
 });
 
-test('does not rotate or animate under reduced motion', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'reduced-motion', 'Only for the reduced-motion project.');
+test('does not rotate or animate under reduced motion', async ({ page }) => {
+  test.skip(!reduced(), 'Only for the reduced-motion project.');
   await page.clock.install();
   await page.goto('./');
   await expect(page.locator('.carousel .rotation')).toHaveAccessibleName('Play');
@@ -279,11 +280,11 @@ test('does not rotate or animate under reduced motion', async ({ page }, testInf
   await expect(current(page)).toHaveAttribute('data-feature', 'features/annotations');
   await expect(page.locator('.carousel .dot[aria-current="true"] .fill')).toHaveCSS('width', '0px');
   await tile(page, 'Focus').click();
-  expect(await current(page).evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
+  expect(await css(current(page), 'transitionDuration')).toBe('0s');
 });
 
-test('fits a phone screen', async ({ page }, testInfo) => {
-  test.skip(!testInfo.project.name.startsWith('phone'), 'Only for phones.');
+test('fits a phone screen', async ({ page }) => {
+  test.skip(!phone(), 'Only for phones.');
   await page.goto('./');
   await expect(page.locator('.carousel .dots')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
@@ -338,8 +339,8 @@ test.describe('scrolling the chosen example into view', () => {
     await expect.poll(() => cardEdge(page, 'top')).toBe(Math.round(header));
   });
 
-  test('aligns a tall example under the header on a phone screen', async ({ page }, testInfo) => {
-    test.skip(!testInfo.project.name.startsWith('phone'), 'Only phones make this example taller than the screen.');
+  test('aligns a tall example under the header on a phone screen', async ({ page }) => {
+    test.skip(!phone(), 'Only phones make this example taller than the screen.');
     await page.goto('./');
     await expect(page.locator('.carousel[data-ready]')).toBeAttached();
     const header = await headerHeight(page);
@@ -347,8 +348,8 @@ test.describe('scrolling the chosen example into view', () => {
     await expect.poll(() => cardEdge(page, 'top')).toBe(Math.round(header));
   });
 
-  test('scrolls instantly under reduced motion', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'reduced-motion', 'Only meaningful where scrolling would otherwise animate.');
+  test('scrolls instantly under reduced motion', async ({ page }) => {
+    test.skip(!reduced(), 'Only meaningful where scrolling would otherwise animate.');
     await page.goto('./');
     await expect(page.locator('.carousel[data-ready]')).toBeAttached();
     await scrollToFraction(page, 0.2, 'bottom');
@@ -360,8 +361,8 @@ test.describe('scrolling the chosen example into view', () => {
     expect(Math.round(bottom)).toBe(Math.round(viewportHeight));
   });
 
-  test('never scrolls on auto-rotation', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name === 'reduced-motion', 'Rotation is off under reduced motion.');
+  test('never scrolls on auto-rotation', async ({ page }) => {
+    test.skip(reduced(), 'Rotation is off under reduced motion.');
     await page.clock.install();
     await page.goto('./');
     await expect(page.locator('.carousel[data-ready]')).toBeAttached();

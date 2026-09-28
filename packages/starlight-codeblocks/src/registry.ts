@@ -5,8 +5,6 @@ export interface Registry {
   options: ResolvedOptions;
   /** The real plugin objects, for `<Code>` through the `ec-config` override. */
   plugins: ExpressiveCodePlugin[];
-  /** True when `codeblocks()` emits the client modules as assets. The loader imports them inline otherwise. */
-  clientAssets: boolean;
   /** Astro's `base`, which site-relative links in code need. */
   base?: string;
   /** Astro's `build.assets` folder, where the runtime modules go. */
@@ -28,6 +26,7 @@ export interface Registry {
 const KEY = Symbol.for('starlight-codeblocks');
 const store = globalThis as { [KEY]?: Registry };
 
+/** Set by `codeblocks()`, whose integration also emits the client modules as assets. Unset for the bare preset. */
 export const getRegistry = () => store[KEY];
 
 export function setRegistry(registry: Registry | undefined) {

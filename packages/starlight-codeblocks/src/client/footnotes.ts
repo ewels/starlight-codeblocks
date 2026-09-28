@@ -1,28 +1,30 @@
+import { reveal } from './shared/scroll.ts';
+
 const ON = 'scb-footnote-on';
 const PEEK = 'scb-footnote-peek';
 
-function reveal(el: Element) {
-  const { top, bottom } = el.getBoundingClientRect();
-  if (top >= 0 && bottom <= innerHeight) return;
-  const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
-  el.scrollIntoView({ block: 'center', behavior: smooth ? 'smooth' : 'auto' });
-}
+const FOOTNOTE = '.scb-footnote-badge, .scb-footnotes li';
+
+/** The badge and the list item of footnote `n` in `block`. */
+const ends = (block: Element, n?: string) =>
+  [
+    block.querySelector<HTMLElement>(`.scb-footnote-badge[data-scb-fn="${n}"]`),
+    block.querySelector<HTMLElement>(`.scb-footnotes li[data-scb-fn="${n}"]`),
+  ] as const;
 
 /** A click on a badge or a note toggles its highlight, and several can stay on. A click elsewhere clears them. */
 function select(event: MouseEvent) {
   const target = event.target as Element;
-  const badge = target.closest<HTMLElement>('.scb-footnote-badge');
-  const item = target.closest<HTMLElement>('.scb-footnotes li');
-  const block = (badge ?? item)?.closest('[data-scb-footnotes]');
-  if (!block) {
-    for (const el of document.querySelectorAll(`.${ON}`)) el.classList.remove(ON);
+  const el = target.closest<HTMLElement>(FOOTNOTE);
+  const block = el?.closest('[data-scb-footnotes]');
+  if (!el || !block) {
+    for (const on of document.querySelectorAll(`.${ON}`)) on.classList.remove(ON);
     return;
   }
   const link = target.closest('a.scb-footnote-badge, a.scb-footnote-num');
   if (link) event.preventDefault();
-  const n = (badge ?? item)?.dataset.scbFn;
-  const line = block.querySelector(`.scb-footnote-badge[data-scb-fn="${n}"]`)?.closest('.ec-line');
-  const entry = block.querySelector<HTMLElement>(`.scb-footnotes li[data-scb-fn="${n}"]`);
+  const [badge, entry] = ends(block, el.dataset.scbFn);
+  const line = badge?.closest('.ec-line');
   // The number in the list is the way back to the line, so it keeps the highlight.
   if (entry?.classList.contains(ON) && !target.closest('a.scb-footnote-num')) {
     line?.classList.remove(ON);
@@ -31,32 +33,22 @@ function select(event: MouseEvent) {
   }
   line?.classList.add(ON);
   entry?.classList.add(ON);
-  const other = badge ? entry : line;
-  if (other) reveal(other);
+  const fromBadge = el.tagName === 'A';
+  const other = fromBadge ? entry : line;
+  if (other) reveal(other, 'center');
   // The links do not change the hash, so focus must follow them for keyboard and screen reader users.
-  if (link) {
-    const next = badge ? entry : line?.querySelector<HTMLElement>(`.scb-footnote-badge[data-scb-fn="${n}"]`);
-    next?.focus({ preventScroll: true });
-  }
+  if (link) (fromBadge ? entry : badge)?.focus({ preventScroll: true });
 }
 
-/** The line and the list item of the footnote under a mouse pointer. */
-function pair(event: PointerEvent) {
-  if (event.pointerType !== 'mouse') return [];
-  const target = event.target as Element;
-  const el = target.closest?.<HTMLElement>('.scb-footnote-badge, .scb-footnotes li');
-  const block = el?.closest('[data-scb-footnotes]');
-  const n = el?.dataset.scbFn;
-  if (!block || !n) return [];
-  return [
-    block.querySelector(`.scb-footnote-badge[data-scb-fn="${n}"]`)?.closest('.ec-line'),
-    block.querySelector(`.scb-footnotes li[data-scb-fn="${n}"]`),
-  ];
-}
-
-/** Hovering over a badge or a note highlights both until the pointer leaves. A click keeps the highlight. */
+/** Hovering over a badge or a note highlights its line and list item until the pointer leaves. A click keeps the highlight. */
 const peek = (on: boolean) => (event: PointerEvent) => {
-  for (const el of pair(event)) el?.classList.toggle(PEEK, on);
+  if (event.pointerType !== 'mouse') return;
+  const el = (event.target as Element).closest?.<HTMLElement>(FOOTNOTE);
+  const block = el?.closest('[data-scb-footnotes]');
+  if (!el?.dataset.scbFn || !block) return;
+  const [badge, entry] = ends(block, el.dataset.scbFn);
+  badge?.closest('.ec-line')?.classList.toggle(PEEK, on);
+  entry?.classList.toggle(PEEK, on);
 };
 
 /** Scrolls a focused control in a line out from under the sticky footnote list. */

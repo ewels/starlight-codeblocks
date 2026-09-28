@@ -1,14 +1,11 @@
-import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-
-const sitemap = readFileSync(new URL('../dist/sitemap-0.xml', import.meta.url), 'utf8');
-const pages = [...sitemap.matchAll(/<loc>[^<]*?\/starlight-codeblocks\/([^<]*)<\/loc>/g)].map(([, path]) => path);
+import { sitePages } from './helpers.ts';
 
 test('the sitemap lists the pages', () => {
-  expect(pages.length).toBeGreaterThan(30);
+  expect(sitePages.length).toBeGreaterThan(30);
 });
 
-for (const path of pages) {
+for (const path of sitePages) {
   test(`/${path} has no horizontal overflow, and no table is wider than its container`, async ({ page }) => {
     await page.goto(`./${path}`);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);

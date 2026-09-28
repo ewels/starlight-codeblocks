@@ -30,7 +30,7 @@ test('the inline loader carries the sources, safe for a script element', () => {
 
 test('features use the inline loader unless codeblocks() emits the modules', () => {
   expect(clientJsModules()[0]).toContain('createObjectURL');
-  setRegistry({ options: {} as never, plugins: [], clientAssets: true });
+  setRegistry({ options: {} as never, plugins: [] });
   expect(clientJsModules()[0]).not.toContain('createObjectURL');
 });
 

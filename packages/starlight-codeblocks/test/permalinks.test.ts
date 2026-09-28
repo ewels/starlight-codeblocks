@@ -8,9 +8,7 @@ import { linksValidatorExclude } from '../src/index.ts';
 import { resolveOptions } from '../src/options.ts';
 import { setRegistry } from '../src/registry.ts';
 import { mdastPlugins } from '../src/satteri/index.ts';
-import { render } from './render.ts';
-
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
+import { block, render, styleVariants } from './render.ts';
 
 test('turns line numbers into links to each line, and gives the block and each line an id', async () => {
   const { html, copyText, warnings } = await render(block('yaml id="cfg"', 'server:', '  port: 8080'));
@@ -64,9 +62,7 @@ test('leaves blocks without an id unchanged, and renders the same with the featu
 });
 
 test('line numbers meet text contrast, and the target bar 3:1', async () => {
-  const ec = new ExpressiveCode({ plugins: pluginCodeblocks() });
-  await ec.getBaseStyles();
-  for (const v of ec.styleVariants) {
+  for (const v of await styleVariants()) {
     const get = (key: string) => v.resolvedStyleSettings.get(key as never) as string;
     const bg = get('codeBackground');
     expect(getColorContrast(get('codeblocksPermalinks.foreground'), bg)).toBeGreaterThanOrEqual(4.5);
@@ -85,7 +81,7 @@ test('warns when two blocks on one page have the same id', async () => {
 });
 
 test('linksValidatorExclude skips mention links and links to blocks with an id', async () => {
-  setRegistry({ options: resolveOptions(), plugins: [], clientAssets: true, blockIds: new Set() });
+  setRegistry({ options: resolveOptions(), plugins: [], blockIds: new Set() });
   const plugins = mdastPlugins(resolveOptions(), { warn() {} });
   await markdownToHtml(block('js id="cfg"', 'x'), { mdastPlugins: plugins, fileURL: new URL('file:///site/page.md') });
   const excluded = (link: string) => linksValidatorExclude({ link });

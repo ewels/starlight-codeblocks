@@ -1,6 +1,6 @@
 import { AttachedPluginData, type ExpressiveCodeBlock, type ExpressiveCodeLine } from '@expressive-code/core';
 import { type CommentSyntax, commentSyntaxFor } from './comments.ts';
-import { type CodeblocksPlugin, lineData, lineElement, warn } from './core.ts';
+import { type CodeblocksPlugin, lineData, lineElement, numberedLines, resolveRange, warn } from './core.ts';
 
 export interface DirectiveSpec {
   /** `own`: the directive takes a whole line, and applies to the line below it. */
@@ -283,6 +283,14 @@ export function getDirectives(codeBlock: ExpressiveCodeBlock, name?: string): Bl
   return name === undefined ? directives : directives.filter((directive) => directive.name === name);
 }
 
+/** The lines of the range attribute `key`, such as `focus={2}`, and the lines of the `name` directives. */
+export function markedLines(context: Parameters<typeof resolveRange>[0], key: string, name: string) {
+  return new Set([
+    ...(resolveRange(context, key) ?? []),
+    ...getDirectives(context.codeBlock, name).flatMap((d) => d.lines),
+  ]);
+}
+
 /**
  * The directives named `name` whose line is rendered, for `postprocessRenderedBlock`. Warns about the others:
  * another plugin, such as Twoslash, removed their line after the notation plugin read them.
@@ -296,22 +304,25 @@ export function getRenderedDirectives(context: Parameters<typeof warn>[0], name:
   });
 }
 
-const markers = { 'code highlight': 'mark', 'code ++': 'ins', 'code --': 'del' } as const;
-
-const markerSpec = (name: string, marker: string, change: string): DirectiveSpec => ({
-  placement: 'end',
-  docs: {
-    description: `Marks the line as ${change}, like the \`${marker}\` attribute of Expressive Code.`,
-    example: { lang: 'js', code: `const host = 'localhost'\nconst port = 8080 // [!code ${name}]` },
-    page: 'features/comment-notation',
-  },
-});
-
-const builtInDirectives: DirectiveSpecs = {
-  'code highlight': markerSpec('highlight', 'mark', 'highlighted'),
-  'code ++': markerSpec('++', 'ins', 'inserted'),
-  'code --': markerSpec('--', 'del', 'deleted'),
+const markers: Record<string, [marker: string, change: string]> = {
+  'code highlight': ['mark', 'highlighted'],
+  'code ++': ['ins', 'inserted'],
+  'code --': ['del', 'deleted'],
 };
+
+const builtInDirectives: DirectiveSpecs = Object.fromEntries(
+  Object.entries(markers).map(([name, [marker, change]]) => [
+    name,
+    {
+      placement: 'end',
+      docs: {
+        description: `Marks the line as ${change}, like the \`${marker}\` attribute of Expressive Code.`,
+        example: { lang: 'js', code: `const host = 'localhost'\nconst port = 8080 // [!${name}]` },
+        page: 'features/comment-notation',
+      },
+    },
+  ]),
+);
 
 export interface NotationOptions {
   comments?: Record<string, string[]>;
@@ -355,7 +366,7 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
             if (target + directive.count > visible.length) {
               warn(context, `\`:${directive.count}\` runs past the last line of the block.`, directive.sourceLine);
             }
-            const marker = markers[directive.name as keyof typeof markers];
+            const marker = markers[directive.name]?.[0];
             if (marker) addMarkerLines(codeBlock, marker, target + 1, directive.count);
           }
         });
@@ -365,7 +376,7 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
         if (removed.length === 0) return;
         // Plugins before this one attached their line annotations by source line.
         const lines = codeBlock.getLines();
-        const visible = lines.filter((line) => !removed.includes(line));
+        const visible = numberedLines(codeBlock);
         const moves = lines.map((line, i) => [line, visible[i], line.getAnnotations()] as const);
         for (const [line, target, annotations] of moves) {
           if (target === line) continue;

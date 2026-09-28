@@ -16,17 +16,15 @@ function defaultHtml(value: unknown, derived: string | undefined) {
   return code(value);
 }
 
-const groups = await Promise.all(
-  styleGroups.map(async ({ name, defaults, page, settings = {} }) => ({
-    name,
-    feature: page ? `Settings of ${await featureLink(page)}.` : 'Shared settings, which every feature uses.',
-    rows: Object.entries(settings).map(([key, { description, derived }]) => ({
-      key,
-      description,
-      value: defaultHtml(defaults[key], derived),
-    })),
+const groups = styleGroups.map(({ name, defaults, page, settings = {} }) => ({
+  name,
+  feature: page ? `Settings of ${featureLink(page)}.` : 'Shared settings, which every feature uses.',
+  rows: Object.entries(settings).map(([key, { description, derived }]) => ({
+    key,
+    description,
+    value: defaultHtml(defaults[key], derived),
   })),
-);
+}));
 ---
 
 {
@@ -53,11 +51,6 @@ const groups = await Promise.all(
 }
 
 <style>
-  :global(.reference-name) code {
-    font-size: 0.75em;
-    background: none;
-    padding: 0;
-  }
   .default :global(.swatch + code) {
     white-space: nowrap;
   }

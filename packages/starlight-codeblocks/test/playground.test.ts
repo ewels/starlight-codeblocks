@@ -1,8 +1,7 @@
 import LZString from 'lz-string';
 import { expect, test } from 'vitest';
-import { render } from './render.ts';
+import { block, render } from './render.ts';
 
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
 const href = (html: string) =>
   (html.match(/<a class="scb-btn scb-playground scb-no-print" href="([^"]+)"/)?.[1] ?? '').replaceAll('&#x26;', '&');
 

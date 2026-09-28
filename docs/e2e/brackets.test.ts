@@ -1,11 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { css, example } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/colourised-brackets/');
 });
-
-const example = (page: import('@playwright/test').Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 test('colours brackets by nesting depth', async ({ page }) => {
   const block = example(page);
@@ -53,7 +51,7 @@ test('outlines a bracket and its partner on hover, with the pointer', async ({ p
 test('the outline appears instantly, with or without reduced motion', async ({ page }) => {
   const open = example(page).locator('.scb-brackets-1').first();
   await open.hover();
-  expect(await open.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
+  expect(await css(open, 'transitionDuration')).toBe('0s');
 });
 
 test('outlines a bracket and its partner when the caret is on it, for caret browsing', async ({ page }) => {

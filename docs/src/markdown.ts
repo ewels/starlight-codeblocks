@@ -1,10 +1,10 @@
 import { type CollectionEntry, getCollection } from 'astro:content';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { defaultCommentSyntax } from '../../packages/starlight-codeblocks/src/expressive-code/comments.ts';
 import {
   adapterOptions,
   attributes,
+  commentSyntaxGroups,
   directives,
   type OptionEntry,
   options,
@@ -13,7 +13,7 @@ import {
 } from './components/reference.ts';
 import { sidebar, unlisted } from './sidebar.mjs';
 
-const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+export const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 export const siteUrl = new URL(`${base}/`, import.meta.env.SITE).href;
 
 /** Absolute URL of a docs page, or of its Markdown version with `md`. */
@@ -22,9 +22,12 @@ export const pageUrl = (id: string, md = false) =>
 
 type Entry = CollectionEntry<'docs'>;
 
+const docs = await getCollection('docs');
+export const titles = new Map(docs.map((entry) => [entry.id, entry.data.title]));
+
 /** Docs entries in sidebar order. */
-export async function entriesInOrder() {
-  const entries = new Map((await getCollection('docs')).map((entry) => [entry.id, entry]));
+export function entriesInOrder() {
+  const entries = new Map(docs.map((entry) => [entry.id, entry]));
   const groups: { label: string; entries: Entry[] }[] = [];
   for (const group of sidebar) {
     const ids = group.items.map((item) => (typeof item === 'string' ? item : item.link.replace(/^\/$/, 'index')));
@@ -45,12 +48,11 @@ function fenced(code: string, info: string) {
 
 const absoluteLinks = (text: string) => text.replaceAll(`](${base}/`, `](${siteUrl}`);
 const cell = (text: string) => text.replaceAll('|', '\\|').replaceAll('\n', ' ');
-const docs = await getCollection('docs');
-const titles = new Map(docs.map((entry) => [entry.id, entry.data.title]));
 const descriptions = new Map(docs.map((entry) => [entry.id, entry.data.description ?? '']));
 const featureLink = (page: string) => `[${titles.get(page) ?? page}](${pageUrl(page)})`;
 const facts = (list: [string, string][]) => list.map(([term, value]) => `- ${term}: ${value}`).join('\n');
-const heading = (level: number, labels: string[]) => `${'#'.repeat(level)} ${labels.map((l) => `\`${l}\``).join(', ')}`;
+const code = (text: string) => `\`${text}\``;
+const heading = (level: number, labels: string[]) => `${'#'.repeat(level)} ${labels.map(code).join(', ')}`;
 
 function optionsMarkdown(entries: OptionEntry[], all: boolean) {
   return entries
@@ -82,22 +84,22 @@ const component: Record<string, (props: Record<string, string>, id: string) => s
           heading(2, syntax),
           description,
           facts([['Feature', featureLink(page)]]),
-          ...(example ? [fenced(`\`\`\`${example.lang} ${example.meta}\n${example.code}\n\`\`\``, 'md')] : []),
+          ...(example ? [fenced(example, 'md')] : []),
         ].join('\n\n'),
       )
       .join('\n\n'),
   Directives: () =>
     directives
-      .map(({ label, placement, docs }) =>
+      .map(({ label, placement, docs, example }) =>
         [
           heading(2, [label]),
           docs.description,
           facts([
-            ['Placement', placement === 'own' ? 'Own line' : 'End of line'],
+            ['Placement', placement],
             ['Arguments', docs.args ?? 'None'],
             ['Feature', featureLink(docs.page)],
           ]),
-          fenced(`\`\`\`${docs.example.lang}\n${docs.example.code}\n\`\`\``, 'md'),
+          fenced(example, 'md'),
         ].join('\n\n'),
       )
       .join('\n\n'),
@@ -107,10 +109,10 @@ const component: Record<string, (props: Record<string, string>, id: string) => s
         const value = (key: string, derived?: string) => {
           if (derived) return derived;
           const v = defaults[key];
-          return Array.isArray(v) ? `\`${v[0]}\` dark, \`${v[1]}\` light` : `\`${v}\``;
+          return Array.isArray(v) ? `${code(v[0])} dark, ${code(v[1])} light` : code(String(v));
         };
         const rows = Object.entries(settings).map(
-          ([key, { description, derived }]) => `| \`${key}\` | ${cell(value(key, derived))} | ${cell(description)} |`,
+          ([key, { description, derived }]) => `| ${code(key)} | ${cell(value(key, derived))} | ${cell(description)} |`,
         );
         return [
           heading(2, [name]),
@@ -120,12 +122,9 @@ const component: Record<string, (props: Record<string, string>, id: string) => s
       })
       .join('\n\n'),
   CommentSyntaxTable: () => {
-    const bySyntax = new Map<string, string[]>();
-    for (const [language, syntax] of Object.entries(defaultCommentSyntax)) {
-      const key = syntax.map((s) => `\`${s}\``).join(', ');
-      bySyntax.set(key, [...(bySyntax.get(key) ?? []), `\`${language}\``]);
-    }
-    const rows = [...bySyntax].map(([syntax, languages]) => `| ${cell(syntax)} | ${languages.join(', ')} |`);
+    const rows = commentSyntaxGroups.map(
+      ({ syntax, languages }) => `| ${cell(syntax.map(code).join(', '))} | ${languages.map(code).join(', ')} |`,
+    );
     return ['| Comment syntax | Languages |', '|---|---|', ...rows].join('\n');
   },
 };

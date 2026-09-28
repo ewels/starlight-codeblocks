@@ -2,10 +2,8 @@ import { getColorContrast, onBackground } from '@expressive-code/core';
 import { expect, test } from 'vitest';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import { variants } from './contrast.ts';
-import { render } from './render.ts';
+import { block, lineClasses, render } from './render.ts';
 
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
-const lineClasses = (html: string) => html.match(/<div class="ec-line[^"]*"/g)?.map((m) => m.slice(12, -1));
 const todo = { todo: { label: 'To do', colour: { dark: '#c792ea', light: '#7c3aed' } } };
 
 test('tints lines from error, warning and info ranges, with a hidden prefix', async () => {

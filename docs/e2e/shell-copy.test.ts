@@ -1,21 +1,17 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { clipboard, css, example } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/smart-shell-copy/');
 });
 
-const example = (page: Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
-
 const commands = 'uv tool install ruff\nruff check src/ \\\n    --fix';
-const clipboard = (page: Page) => page.evaluate(() => navigator.clipboard.readText());
 
-test('Copy commands copies the commands only, with the keyboard', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('Copy commands copies the commands only, with the keyboard', async ({ page }) => {
   const button = example(page).locator('.scb-shell-copy');
   await expect(button).toHaveAccessibleName('Copy commands');
   await button.focus();
-  expect(await button.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
+  expect(await css(button, 'outlineStyle')).toBe('solid');
   await page.keyboard.press('Enter');
   await expect.poll(() => clipboard(page)).toBe(commands);
   await expect(button).toHaveText('Copied');
@@ -23,14 +19,12 @@ test('Copy commands copies the commands only, with the keyboard', async ({ page,
   await expect(button).toHaveText('Copy commands', { timeout: 3000 });
 });
 
-test('Copy commands copies the commands with the pointer', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('Copy commands copies the commands with the pointer', async ({ page }) => {
   await example(page, 2).getByRole('button', { name: 'Copy commands' }).click();
   await expect.poll(() => clipboard(page)).toBe('Get-ChildItem -Name\nGet-Content summary.txt');
 });
 
-test('Copy commands keeps its width while it shows Copied', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('Copy commands keeps its width while it shows Copied', async ({ page }) => {
   const button = example(page).locator('.scb-shell-copy');
   await expect(button).toHaveAccessibleName('Copy commands');
   const before = (await button.boundingBox())?.width;
@@ -39,8 +33,7 @@ test('Copy commands keeps its width while it shows Copied', async ({ page, conte
   expect((await button.boundingBox())?.width).toBe(before);
 });
 
-test('the copy button copies the whole block, prompts and output included', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('the copy button copies the whole block, prompts and output included', async ({ page }) => {
   const block = example(page);
   const button = block.locator('.copy button');
   await expect(button).toHaveAttribute('title', 'Copy to clipboard');
@@ -53,8 +46,7 @@ test('the copy button copies the whole block, prompts and output included', asyn
     );
 });
 
-test('Copy commands works in a copy of the block', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('Copy commands works in a copy of the block', async ({ page }) => {
   await example(page).evaluate((el) => {
     const copy = el.cloneNode(true) as HTMLElement;
     copy.id = 'scb-clone';
@@ -73,12 +65,7 @@ test('prompts cannot be selected, and have their own colour', async ({ page }) =
     return { userSelect: s.userSelect, color: s.color };
   });
   expect(style.userSelect).toBe('none');
-  const command = await example(page)
-    .locator('.ec-line')
-    .first()
-    .locator('.code > span')
-    .nth(1)
-    .evaluate((el) => getComputedStyle(el).color);
+  const command = await css(example(page).locator('.ec-line').first().locator('.code > span').nth(1), 'color');
   expect(style.color).not.toBe(command);
 });
 
@@ -125,8 +112,7 @@ test.describe('without JavaScript', () => {
   });
 });
 
-test('a Python session keeps the editor frame, and Copy commands copies its commands', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('a Python session keeps the editor frame, and Copy commands copies its commands', async ({ page }) => {
   const block = example(page, 1);
   await expect(block.locator('figure')).not.toHaveClass(/is-terminal/);
   await expect(block.locator('.scb-shell-prompt').first()).toHaveText('>>> ');

@@ -1,3 +1,6 @@
+/** The gap, in px, that floating elements keep from the viewport edges. */
+export const EDGE = 12;
+
 export const anchored = () => CSS.supports('position-area', 'block-end');
 
 /** Runs `update` now and on every scroll and resize. Returns a function that stops it. */
@@ -14,12 +17,11 @@ export function follow(update: () => void): () => void {
 /** The script version of the `scb-float` styles: centred below `anchor`, or above it when there is no room below. */
 export function below(floating: HTMLElement, anchor: HTMLElement) {
   const gap = 8;
-  const edge = 12;
   const a = anchor.getBoundingClientRect();
   const { width, height } = floating.getBoundingClientRect();
-  const fitsBelow = a.bottom + gap + height <= innerHeight - edge;
-  const top = fitsBelow || a.top - gap - height < edge ? a.bottom + gap : a.top - gap - height;
-  const left = Math.max(edge, Math.min(a.left + a.width / 2 - width / 2, innerWidth - width - edge));
+  const fitsBelow = a.bottom + gap + height <= innerHeight - EDGE;
+  const top = fitsBelow || a.top - gap - height < EDGE ? a.bottom + gap : a.top - gap - height;
+  const left = Math.max(EDGE, Math.min(a.left + a.width / 2 - width / 2, innerWidth - width - EDGE));
   Object.assign(floating.style, { margin: '0', top: `${top}px`, left: `${left}px` });
 }
 

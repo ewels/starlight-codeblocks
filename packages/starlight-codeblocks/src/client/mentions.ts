@@ -1,3 +1,5 @@
+import { reveal } from './shared/scroll.ts';
+
 const PREFIX = '#mention:';
 const ON = 'scb-mention-on';
 const ACTIVE = 'scb-mentioning';
@@ -51,10 +53,7 @@ function setUp(link: HTMLAnchorElement) {
   link.addEventListener('click', (event) => {
     event.preventDefault();
     on();
-    const { top, bottom } = block.getBoundingClientRect();
-    if (top >= 0 && bottom <= innerHeight) return;
-    const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
-    block.scrollIntoView({ block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
+    reveal(block, 'nearest');
   });
 }
 

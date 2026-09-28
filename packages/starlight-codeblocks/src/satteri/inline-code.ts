@@ -37,9 +37,9 @@ function styleVariants() {
 function themeSelector({ themeCssSelector, useStarlightDarkModeSwitch }: EcOptions, variants: StyleVariant[]) {
   if (themeCssSelector === false) return () => false;
   if (themeCssSelector) return (theme: ExpressiveCodeTheme) => themeCssSelector(theme, { styleVariants: variants });
+  const base = variants[0]?.theme;
+  const alt = variants.find((v) => v.theme.type !== base?.type)?.theme;
   return (theme: ExpressiveCodeTheme) => {
-    const base = variants[0]?.theme;
-    const alt = variants.find((v) => v.theme.type !== base?.type)?.theme;
     const starlight = useStarlightDarkModeSwitch !== false && variants.length >= 2 && (theme === base || theme === alt);
     return `[data-theme='${starlight ? theme.type : theme.name}']`;
   };

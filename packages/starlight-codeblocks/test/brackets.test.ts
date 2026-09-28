@@ -3,9 +3,8 @@ import { expect, test } from 'vitest';
 import { findBrackets } from '../src/expressive-code/brackets.ts';
 import { commentSyntaxFor } from '../src/expressive-code/comments.ts';
 import { variants } from './contrast.ts';
-import { render } from './render.ts';
+import { block, render } from './render.ts';
 
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
 const js = commentSyntaxFor('js');
 
 test('findBrackets pairs brackets by nesting depth, deepest first', () => {

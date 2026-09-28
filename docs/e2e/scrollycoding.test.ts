@@ -1,9 +1,9 @@
 import { expect, type Page, test } from '@playwright/test';
+import { phone, reduced } from './helpers.ts';
 
 const scrolly = (page: Page, n = 0) => page.locator('.scb-scrolly').nth(n);
 const sticky = (page: Page, n = 0) => scrolly(page, n).locator('.scb-scrolly-code');
 const steps = (page: Page, n = 0) => scrolly(page, n).locator('.scb-scrolly-step');
-const phone = () => test.info().project.name.startsWith('phone');
 const clear = (page: Page, n = 0) =>
   sticky(page, n)
     .locator('.ec-line')
@@ -128,7 +128,7 @@ test.describe('wide layout', () => {
   });
 
   test('under reduced motion, the steps fade with no transition', async ({ page }) => {
-    test.skip(test.info().project.name !== 'reduced-motion');
+    test.skip(!reduced());
     await expect(steps(page).first()).toHaveCSS('transition-duration', '0s');
     await expect(sticky(page).locator('.ec-line').nth(1)).toHaveCSS('transition-duration', '0s');
   });
@@ -170,7 +170,7 @@ test.describe('versions of the code', () => {
     await centre(page, 2, 2);
     await expect(steps(page, 2).nth(2)).toHaveClass(/scb-scrolly-on/);
     await expect(lines(page)).toHaveCount(4);
-    if (test.info().project.name !== 'reduced-motion') {
+    if (!reduced()) {
       await expect(sticky(page, 2).locator('.scb-steps-anim')).toBeAttached();
     }
     await expect(sticky(page, 2).locator('.scb-steps-anim')).toHaveCount(0);

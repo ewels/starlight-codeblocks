@@ -1,11 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { css, example } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/expandable-blocks/');
 });
-
-const example = (page: import('@playwright/test').Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 test('collapses a long block behind a button', async ({ page }) => {
   const block = example(page);
@@ -92,7 +90,7 @@ test('the fade and the button do not print', async ({ page }) => {
 test('has no transition, with or without reduced motion', async ({ page }) => {
   const pre = example(page).locator('pre');
   await example(page).locator('.scb-expandable-toggle').click();
-  expect(await pre.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
+  expect(await css(pre, 'transitionDuration')).toBe('0s');
 });
 
 test.describe('without JavaScript', () => {

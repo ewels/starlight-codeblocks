@@ -3,9 +3,8 @@ import { describe, expect, test } from 'vitest';
 import { scrollycoding } from '../src/components/scrolly.ts';
 import { codeWalkthrough, plainSteps } from '../src/components/steps.ts';
 import { encodeVariant, SWITCHER_META } from '../src/expressive-code/code-switcher.ts';
-import { render } from './render.ts';
+import { block, render } from './render.ts';
 
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
 const many = (n: number) => Array.from({ length: n }, (_, i) => `line(${i})`);
 
 test('caps a block at the site default of 12 lines with expandable', async () => {

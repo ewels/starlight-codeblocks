@@ -1,4 +1,5 @@
 import { expect, type Locator, test } from '@playwright/test';
+import { css } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/inline-code-highlighting/');
@@ -38,7 +39,7 @@ test('uses the background of the code blocks, and removes the suffix', async ({ 
   const pane = page.locator('.example .pane.output').first();
   const code = pane.locator('code.scb-inline').first();
   const block = page.locator('.example .expressive-code pre').first();
-  const background = (l: Locator) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const background = (l: Locator) => css(l, 'backgroundColor');
   expect(await background(code)).toBe(await background(block));
   await expect(pane.locator('p:not(.label)').first()).toHaveText(
     'codeblocks() in astro.config.mjs adds a set of Expressive Code plugins to the site. ' +
@@ -52,7 +53,7 @@ test('leaves inline code without a suffix unchanged', async ({ page }) => {
   await expect(plain).toHaveCount(1);
   await expect(plain.locator('span')).toHaveCount(0);
   const highlighted = page.locator('code.scb-inline').first();
-  const background = (l: Locator) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const background = (l: Locator) => css(l, 'backgroundColor');
   expect(await background(plain)).not.toBe(await background(highlighted));
 });
 
@@ -60,7 +61,7 @@ test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
   test('uses the same theme as the code blocks', async ({ page }) => {
-    const background = (l: Locator) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
+    const background = (l: Locator) => css(l, 'backgroundColor');
     const code = page.locator('code.scb-inline').first();
     expect(await background(code)).toBe(await background(page.locator('.expressive-code pre').first()));
     const colours = await token(code.locator('span').first());

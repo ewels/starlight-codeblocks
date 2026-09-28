@@ -72,9 +72,7 @@ export function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
     code.style.display = '';
     if (!ended) return;
     // The real lines take over the tint where the animation left it.
-    const real = [...code.querySelectorAll<HTMLElement>('.ec-line')].filter(
-      (l) => !l.parentElement?.matches('summary'),
-    );
+    const real = code.querySelectorAll<HTMLElement>('.ec-line:not(summary > *)');
     for (const n of added) {
       const line = real[n];
       if (!line) continue;

@@ -1,9 +1,7 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
+import { example, output } from './helpers.ts';
 
 // These tests copy the markup that other Starlight plugins add, so that the docs site needs no such plugin.
-
-const example = (page: Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 /** Copies a block into an overlay, as full screen plugins such as starlight-codeblock-fullscreen do. */
 async function copyToOverlay(page: Page, block: Locator) {
@@ -109,7 +107,7 @@ test('the step buttons move between steps in a copy of the block', async ({ page
 
 test('the menu of a code switcher picks a variant in a copy of the block', async ({ page }) => {
   await page.goto('./features/code-switcher/');
-  const group = page.locator('.example').first().locator('.pane.output').locator('.scb-switcher');
+  const group = output(page).locator('.scb-switcher');
   const copy = await copyToOverlay(page, group.locator('> .expressive-code:visible'));
   await copy.getByRole('combobox').selectOption({ label: 'pnpm' });
   await expect(copy.locator('pre')).toContainText('pnpm');

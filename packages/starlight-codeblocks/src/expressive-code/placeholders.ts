@@ -1,5 +1,5 @@
-import { type AnnotationRenderOptions, AttachedPluginData, ExpressiveCodeAnnotation } from '@expressive-code/core';
-import { type Element, type ElementContent, h, select } from '@expressive-code/core/hast';
+import { type AnnotationRenderOptions, ExpressiveCodeAnnotation } from '@expressive-code/core';
+import { type ElementContent, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { type CodeblocksPlugin, warn } from './core.ts';
 import { PREFIX } from './styles.ts';
@@ -56,8 +56,6 @@ export function findPlaceholders(line: string, texts: string[]) {
   }
   return matches;
 }
-
-const placeholderData = new AttachedPluginData<{ active: boolean }>(() => ({ active: false }));
 
 /** Turns each text that `placeholder="A,B"` names into an input field. */
 export function pluginPlaceholders({ storage = 'local' }: { storage?: string } = {}): CodeblocksPlugin {
@@ -116,12 +114,10 @@ export function pluginPlaceholders({ storage = 'local' }: { storage?: string } =
             `\`placeholder\` names ${missing.map((t) => `\`${t}\``).join(', ')}, but the code does not contain ${missing.length > 1 ? 'them' : 'it'}.`,
           );
         }
-        placeholderData.getOrCreateFor(context.codeBlock).active = found.size > 0;
       },
-      postprocessRenderedBlock({ codeBlock, renderData }) {
-        if (!placeholderData.getOrCreateFor(codeBlock).active) return;
-        const figure = select('figure', renderData.blockAst) as Element | undefined;
-        if (figure) figure.properties.dataScbPlaceholders = storage;
+      postprocessRenderedBlock({ renderData }) {
+        const figure = select('figure', renderData.blockAst);
+        if (figure && select(`.${PREFIX}-placeholder`, figure)) figure.properties.dataScbPlaceholders = storage;
       },
     },
   };

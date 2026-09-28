@@ -15,6 +15,13 @@ const unescapeMdx = (s) => s.replaceAll('`\\{:', '`{:');
 // The rendered blocks get the hidden attributes on each opening fence line.
 const withAttributes = (s, attrs) => (attrs ? s.replace(/^(`{3,}|~{3,})(\S.*)$/gm, `$1$2 ${attrs}`) : s);
 
+/** The Markdown that `<Example code={name} hiddenAttributes={hidden}>` renders. */
+function rendered(text, file, name, hidden) {
+  const source = text.match(new RegExp(`export const ${name} = \`([\\s\\S]*?)\`;\\n`))?.[1];
+  assert.ok(source !== undefined, `${file}: no export const ${name}`);
+  return withAttributes(unescapeTemplate(source).trim(), hidden);
+}
+
 test('each <Example> with live Markdown shows the same Markdown as its source pane', () => {
   let checked = 0;
   for (const page of pages) {
@@ -22,11 +29,9 @@ test('each <Example> with live Markdown shows the same Markdown as its source pa
     for (const [, name, , hidden, live] of text.matchAll(
       /<Example code=\{(\w+)\}( hiddenAttributes="([^"]*)")?>\n([\s\S]*?)\n<\/Example>/g,
     )) {
-      const source = text.match(new RegExp(`export const ${name} = \`([\\s\\S]*?)\`;\\n`))?.[1];
-      assert.ok(source !== undefined, `${page}: no export const ${name}`);
       assert.equal(
         unescapeMdx(live.trim()),
-        withAttributes(unescapeTemplate(source).trim(), hidden),
+        rendered(text, page, name, hidden),
         `${page}: <Example code={${name}}> differs from its source`,
       );
       checked++;
@@ -43,11 +48,9 @@ test("the home page carousel shows the same example as each feature page's first
     const example = pageText.match(/<Example code=\{(\w+)\}(?:\s+hiddenAttributes="([^"]*)")?\s*\/?>/);
     assert.ok(example, `index.mdx: "${pageId}" slide, but that page has no <Example> to compare it against`);
     const [, name, hidden] = example;
-    const source = pageText.match(new RegExp(`export const ${name} = \`([\\s\\S]*?)\`;\\n`))?.[1];
-    assert.ok(source !== undefined, `${pageId}.mdx: no export const ${name}`);
     assert.equal(
       unescapeMdx(slide.trim()),
-      withAttributes(unescapeTemplate(source).trim(), hidden),
+      rendered(pageText, `${pageId}.mdx`, name, hidden),
       `index.mdx: the "${pageId}" slide differs from that page's first <Example> — a page example changed without its carousel slide`,
     );
     checked++;
@@ -56,11 +59,10 @@ test("the home page carousel shows the same example as each feature page's first
 });
 
 test('the source pane of an <Example> shows no attribute that only turns another feature off', () => {
-  for (const page of pages) {
+  // The API auto-linking page shows `apiLinks=false` as its own syntax.
+  for (const page of pages.filter((p) => !p.endsWith('api-auto-linking.mdx'))) {
     const text = readFileSync(join(root, page), 'utf8');
     for (const [, name, source] of text.matchAll(/export const (\w+) = `([\s\S]*?)`;\n/g)) {
-      // The API auto-linking page shows `apiLinks=false` as its own syntax.
-      if (page.endsWith('api-auto-linking.mdx')) continue;
       assert.doesNotMatch(
         source,
         /^(\\`){3}\S.* (apiLinks|wordDiff)=false/m,

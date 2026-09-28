@@ -1,12 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { render } from '../../packages/starlight-codeblocks/test/render.ts';
+import { copyFromKeyboard, css, example } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/inline-callouts/');
 });
-
-const example = (page: import('@playwright/test').Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 test('shows the note in a bubble above its line, with the note role', async ({ page }) => {
   const note = example(page).getByRole('note');
@@ -52,20 +50,15 @@ test('the bubble stays inside the block and the page does not scroll sideways', 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test('copying leaves the callout out, with the keyboard', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await example(page).locator('.copy button').focus();
-  await page.keyboard.press('Enter');
-  const copied = await page.evaluate(() => navigator.clipboard.readText());
+test('copying leaves the callout out, with the keyboard', async ({ page }) => {
+  const copied = await copyFromKeyboard(example(page));
   expect(copied).not.toContain('cancel the request');
   expect(copied).not.toContain('[!callout');
   expect(copied).toContain('const res = await fetch(url, { signal: controller.signal });');
 });
 
 test('a manual selection leaves the callout out', async ({ page }) => {
-  const style = await example(page)
-    .locator('.scb-callout')
-    .evaluate((el) => getComputedStyle(el).userSelect);
+  const style = await css(example(page).locator('.scb-callout'), 'userSelect');
   expect(style).toBe('none');
 });
 
@@ -118,12 +111,9 @@ test('code in a bubble uses the code font, with rounded corners', async ({ page 
   const block = example(page);
   const chip = block.locator('.scb-callout-bubble code').first();
   const [font, codeFont, radius] = await Promise.all([
-    chip.evaluate((el) => getComputedStyle(el).fontFamily),
-    block
-      .locator('.ec-line')
-      .first()
-      .evaluate((el) => getComputedStyle(el).fontFamily),
-    chip.evaluate((el) => getComputedStyle(el).borderTopLeftRadius),
+    css(chip, 'fontFamily'),
+    css(block.locator('.ec-line').first(), 'fontFamily'),
+    css(chip, 'borderTopLeftRadius'),
   ]);
   expect(font).toBe(codeFont);
   expect(radius).toBe('3px');
@@ -146,7 +136,7 @@ test('between two marked lines, the callout has the same background and bar as t
     expect(await callout.evaluate(colour), meta).toBe(await line.evaluate(colour));
     expect(await callout.evaluate(colour), meta).not.toBe('rgba(0, 0, 0, 0)');
     // The bar is the first pixels of the callout's background image, in the line's border colour.
-    const bar = await line.locator('.code').evaluate((el) => getComputedStyle(el).borderInlineStartColor);
-    expect(await callout.evaluate((el) => getComputedStyle(el).backgroundImage), meta).toContain(bar);
+    const bar = await css(line.locator('.code'), 'borderInlineStartColor');
+    expect(await css(callout, 'backgroundImage'), meta).toContain(bar);
   }
 });

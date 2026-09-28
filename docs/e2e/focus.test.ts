@@ -1,15 +1,12 @@
 import { expect, type Locator, test } from '@playwright/test';
-import { contrast } from './contrast.ts';
+import { contrast, copyFromKeyboard, css, example, reduced } from './helpers.ts';
 
-const filter = (line: Locator) => line.evaluate((el) => getComputedStyle(el).filter);
-const opacity = (line: Locator) => line.evaluate((el) => getComputedStyle(el).opacity);
+const filter = (line: Locator) => css(line, 'filter');
+const opacity = (line: Locator) => css(line, 'opacity');
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/focus/');
 });
-
-const example = (page: import('@playwright/test').Page) =>
-  page.locator('.example').first().locator('.pane.output').locator('.expressive-code');
 
 test('blurs the lines outside the focus', async ({ page }) => {
   const block = example(page);
@@ -48,7 +45,7 @@ test('shows every line when keyboard focus is in the block', async ({ page }) =>
   await page.locator('#before-example').focus();
   await page.keyboard.press('Tab');
   await expect(code).toBeFocused();
-  expect(await code.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
+  expect(await css(code, 'outlineStyle')).toBe('solid');
   const [ring, background] = await code.evaluate((el) => [
     getComputedStyle(el).outlineColor,
     getComputedStyle(el.parentElement as Element).backgroundColor,
@@ -57,18 +54,15 @@ test('shows every line when keyboard focus is in the block', async ({ page }) =>
   await expect.poll(() => filter(block.locator('.ec-line.scb-focus-out').first())).toBe('none');
 });
 
-test('uses a transition only when the reader allows motion', async ({ page }, testInfo) => {
+test('uses a transition only when the reader allows motion', async ({ page }) => {
   const out = example(page).locator('.ec-line.scb-focus-out').first();
-  const duration = await out.evaluate((el) => getComputedStyle(el).transitionDuration);
-  expect(duration).toBe(testInfo.project.name === 'reduced-motion' ? '0s' : '0.25s, 0.25s');
+  const duration = await css(out, 'transitionDuration');
+  expect(duration).toBe(reduced() ? '0s' : '0.25s, 0.25s');
 });
 
-test('copies the whole block', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('copies the whole block', async ({ page }) => {
   const block = example(page);
-  await block.locator('.copy button').focus();
-  await page.keyboard.press('Enter');
-  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  const copied = await copyFromKeyboard(block);
   expect(copied.split('\n')).toHaveLength(10);
   expect(copied).toContain("import { defineConfig } from './lib.js';");
 });

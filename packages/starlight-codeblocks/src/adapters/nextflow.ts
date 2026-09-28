@@ -1,5 +1,6 @@
 import type { ApiLinkAdapter, Resolution, SymbolRef } from '../options.ts';
 import { factories, factoryHref, operatorHref, operators, SOURCE } from './nextflow-reference.ts';
+import { skipBrackets, stringEnd } from './tokens.ts';
 
 export interface ModuleInput {
   /** The process or workflow name, as in the module (`FASTQC` for `include { FASTQC as QC } …`). */
@@ -26,17 +27,8 @@ interface Token {
 // Slashy strings are left out: `/` is division far more often in examples.
 const TOKEN = /(\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$))|('''|"""|'|")|([A-Za-z_$][\w$]*)|(\d[\w.]*|\s+)|(.)/y;
 
-function stringEnd(code: string, i: number, quote: string) {
-  while (i < code.length && !code.startsWith(quote, i)) {
-    if (code[i] === '\\') i++;
-    else if (quote.length === 1 && code[i] === '\n') return i;
-    i++;
-  }
-  return Math.min(i + quote.length, code.length);
-}
-
 /** Splits Nextflow code into names, operators and strings. Comments are left out. */
-export function tokenize(code: string): Token[] {
+function tokenize(code: string): Token[] {
   const tokens: Token[] = [];
   let i = 0;
   while (i < code.length) {
@@ -54,18 +46,6 @@ export function tokenize(code: string): Token[] {
     }
   }
   return tokens;
-}
-
-/** The index after the brackets that open at `tokens[i]`. */
-function skipBrackets(tokens: Token[], i: number) {
-  let depth = 0;
-  for (; i < tokens.length; i++) {
-    const value = tokens[i]?.value;
-    if (value === '(' || value === '[' || value === '{') depth++;
-    if (value === ')' || value === ']' || value === '}') depth--;
-    if (depth === 0) return i + 1;
-  }
-  return i;
 }
 
 /** The index after the arguments and closure of a call whose name ends before `tokens[i]`. */
@@ -108,7 +88,8 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
       const tokens = tokenize(code);
       const symbols: SymbolRef[] = [];
       const add = (start: Token, end: Token, name: string, resolution?: Resolution) => {
-        if (resolution) symbols.push({ start: start.start, end: end.end, name, context: resolution });
+        if (resolution)
+          symbols.push({ ...resolution, name: resolution.name ?? name, start: start.start, end: end.end });
       };
       const at = (i: number) => tokens[i] as Token;
 
@@ -181,7 +162,6 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
       }
       return symbols;
     },
-    resolve: (symbol) => (symbol.context as Resolution | undefined) ?? null,
   };
 }
 

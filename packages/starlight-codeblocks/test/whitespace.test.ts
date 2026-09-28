@@ -5,9 +5,7 @@ import { withTrailingWhitespace } from '../src/expressive-code/whitespace.ts';
 import { resolveOptions } from '../src/options.ts';
 import { mdastPlugins } from '../src/satteri/index.ts';
 import { variants } from './contrast.ts';
-import { render } from './render.ts';
-
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
+import { block, render } from './render.ts';
 
 test('shows leading whitespace only by default', async () => {
   const { html, copyText, warnings } = await render(

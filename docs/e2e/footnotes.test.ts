@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { render } from '../../packages/starlight-codeblocks/test/render.ts';
+import { copyFromKeyboard, css, example, reduced } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/footnotes/');
@@ -26,9 +27,6 @@ async function longBlock(page: Page) {
   return page.locator('#long');
 }
 
-const example = (page: import('@playwright/test').Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
-
 test('a badge highlights its line and its note, and a click elsewhere clears it', async ({ page }) => {
   const block = example(page);
   const badge = block.getByRole('link', { name: 'Footnote 1', exact: true });
@@ -39,11 +37,11 @@ test('a badge highlights its line and its note, and a click elsewhere clears it'
   await expect(note).toHaveClass(/scb-footnote-on/);
   // After the fade.
   await page.waitForTimeout(300);
-  const bar = await line.locator('.code').evaluate((el) => getComputedStyle(el).borderInlineStartColor);
+  const bar = await css(line.locator('.code'), 'borderInlineStartColor');
   expect(bar).not.toBe('rgba(0, 0, 0, 0)');
   // The note has the same tint and bar as its line, and its text stays where it was.
   const style = (el: Element) => [getComputedStyle(el).backgroundColor, getComputedStyle(el).borderInlineStartColor];
-  const lineTint = await line.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const lineTint = await css(line, 'backgroundColor');
   await expect.poll(() => note.evaluate(style)).toEqual([lineTint, bar]);
   const other = block.locator('.scb-footnotes li').nth(1);
   const x = (el: Element) => (el.querySelector('.scb-footnote-num') as Element).getBoundingClientRect().x;
@@ -80,11 +78,11 @@ test('hovering over a badge or a note highlights both until the pointer leaves, 
   await expect(note).not.toHaveClass(/scb-footnote-peek/);
 });
 
-test('a hover highlight fades in after a short delay, and a click highlight at once', async ({ page }, info) => {
+test('a hover highlight fades in after a short delay, and a click highlight at once', async ({ page }) => {
   const note = example(page).locator('.scb-footnotes li').first();
   const timing = () =>
     note.evaluate((el) => [getComputedStyle(el).transitionDuration, getComputedStyle(el).transitionDelay]);
-  if (info.project.name === 'reduced-motion') {
+  if (reduced()) {
     expect((await timing())[0]).toBe('0s');
     return;
   }
@@ -137,10 +135,8 @@ test('the sticky list stays at the bottom of the window while the block is on sc
   const height = page.viewportSize()?.height ?? 0;
   expect(Math.abs((box?.y ?? 0) + (box?.height ?? 0) - height)).toBeLessThan(2);
   // Floating over the code, the list needs its own top border.
-  expect(await list.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('1px');
-  const first = await example(page, 0)
-    .locator('.scb-footnotes')
-    .evaluate((el) => getComputedStyle(el).position);
+  expect(await css(list, 'borderTopWidth')).toBe('1px');
+  const first = await css(example(page, 0).locator('.scb-footnotes'), 'position');
   expect(first).toBe('static');
 });
 
@@ -221,11 +217,8 @@ test('a focused badge does not stay under the sticky list', async ({ page }) => 
   }
 });
 
-test('copying leaves the badges and notes out', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await example(page).locator('.copy button').focus();
-  await page.keyboard.press('Enter');
-  const copied = await page.evaluate(() => navigator.clipboard.readText());
+test('copying leaves the badges and notes out', async ({ page }) => {
+  const copied = await copyFromKeyboard(example(page));
   expect(copied).toBe(
     'from flask import Flask\n\napp = Flask(__name__)\n\n@app.get("/health")\ndef health():\n    return {"ok": True}',
   );
@@ -243,8 +236,7 @@ test('selecting a badge scrolls its note into view when the list is off screen',
 });
 
 test('the page jumps instead of scrolling smoothly under reduced motion', async ({ page }) => {
-  const reduced = await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
-  test.skip(!reduced, 'Only for the reduced-motion project.');
+  test.skip(!reduced(), 'Only for the reduced-motion project.');
   const block = example(page, 1);
   await block.locator('.scb-footnotes').scrollIntoViewIfNeeded();
   await page.evaluate(() => scrollBy(0, 400));
@@ -262,8 +254,8 @@ test.describe('without JavaScript', () => {
   });
 });
 
-test('a badge fades with its line, and at once under reduced motion', async ({ page }, info) => {
+test('a badge fades with its line, and at once under reduced motion', async ({ page }) => {
   const badge = page.locator('.example .pane.output .scb-footnote-badge').first();
-  const duration = await badge.evaluate((el) => getComputedStyle(el).transitionDuration);
-  expect(duration).toBe(info.project.name === 'reduced-motion' ? '0s' : '0.16s, 0.16s, 0.16s');
+  const duration = await css(badge, 'transitionDuration');
+  expect(duration).toBe(reduced() ? '0s' : '0.16s, 0.16s, 0.16s');
 });

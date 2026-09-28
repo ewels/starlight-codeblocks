@@ -1,5 +1,6 @@
 import type { ApiLinkAdapter, Resolution, SymbolRef } from '../options.ts';
 import { type PythonIndex, readInventory } from './python-index.ts';
+import { skipBrackets, stringEnd } from './tokens.ts';
 
 export interface PythonInventory {
   /** The URL of a Sphinx `objects.inv`. */
@@ -51,7 +52,7 @@ function pydocsEntry(path: string, base?: string): (Resolution & { name: string 
   return undefined;
 }
 
-export const STDLIB_INVENTORY = { url: 'https://docs.python.org/3/objects.inv', base: 'https://docs.python.org/3/' };
+const STDLIB_INVENTORY = { url: 'https://docs.python.org/3/objects.inv', base: 'https://docs.python.org/3/' };
 
 interface Token {
   type: 'name' | 'op' | 'end';
@@ -63,18 +64,8 @@ interface Token {
 const TOKEN =
   /(#[^\n]*)|[rRbBuUfFtT]{0,2}('''|"""|'|")|([\p{L}_][\p{L}\p{N}_]*)|(\d[\w.]*|\\\n|[^\S\n]+)|([\n;])|(.)/uy;
 
-/** The index after the string whose opening `quote` ends before `i`. An unclosed one-line string ends at the line. */
-function stringEnd(code: string, i: number, quote: string) {
-  while (i < code.length && !code.startsWith(quote, i)) {
-    if (code[i] === '\\') i++;
-    else if (quote.length === 1 && code[i] === '\n') return i;
-    i++;
-  }
-  return Math.min(i + quote.length, code.length);
-}
-
 /** Splits Python code into names, operators and statement ends. Strings and comments are left out. */
-export function tokenize(code: string): Token[] {
+function tokenize(code: string): Token[] {
   const tokens: Token[] = [];
   let depth = 0;
   let i = 0;
@@ -204,18 +195,6 @@ function reboundNames(stmts: Token[][]) {
   return rebound;
 }
 
-/** Skips the brackets that start at `tokens[i]`, and returns the index after them. */
-function skipBrackets(tokens: Token[], i: number) {
-  let depth = 0;
-  for (; i < tokens.length; i++) {
-    const value = tokens[i]?.value;
-    if (value === '(' || value === '[' || value === '{') depth++;
-    if (value === ')' || value === ']' || value === '}') depth--;
-    if (depth === 0) return i + 1;
-  }
-  return i;
-}
-
 /**
  * Links Python names through the imports in each block: modules, attribute chains such as `json.loads`,
  * and methods called on a new instance, such as `Path(…).read_text`.
@@ -231,7 +210,7 @@ export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
     const entry = lookup(path);
     const first = parts[0];
     const last = parts.at(-1);
-    return entry && first && last ? { start: first.start, end: last.end, name: path, context: entry } : undefined;
+    return entry && first && last ? { ...entry, start: first.start, end: last.end } : undefined;
   };
 
   return {
@@ -272,16 +251,15 @@ export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
         const binding = bindings.get(token.value);
         if (!binding || rebound.has(token.value)) continue;
         const { parts, next } = dotted(tokens, i);
-        let j = parts.length;
         const path = (n: number) => [binding, ...parts.slice(1, n).map((p) => p.value)].join('.');
-        while (j > 0 && !lookup(path(j))) j--;
-        if (j === 0) continue;
-        const found = ref(parts.slice(0, j), path(j));
-        if (found) symbols.push(found);
+        let j = parts.length;
+        let entry = lookup(path(j));
+        while (!entry && --j > 0) entry = lookup(path(j));
+        if (!entry) continue;
+        symbols.push({ ...entry, start: token.start, end: (parts[j - 1] as Token).end });
         i = next - 1;
         // A call to a class gives an instance of it, so the attribute after the call is certain.
-        const entry = lookup(path(j));
-        if (j === parts.length && entry?.kind === 'class' && tokens[next]?.value === '(') {
+        if (j === parts.length && entry.kind === 'class' && tokens[next]?.value === '(') {
           const after = skipBrackets(tokens, next);
           const attribute = tokens[after + 1];
           if (tokens[after]?.value === '.' && attribute?.type === 'name') {
@@ -292,7 +270,6 @@ export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
       }
       return symbols;
     },
-    resolve: (symbol) => (symbol.context as ReturnType<PythonIndex['get']>) ?? null,
   };
 }
 

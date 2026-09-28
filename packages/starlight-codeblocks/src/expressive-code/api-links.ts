@@ -3,22 +3,20 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   type AnnotationRenderOptions,
-  AttachedPluginData,
   ExpressiveCodeAnnotation,
   type ExpressiveCodeHookContextBase,
   mix,
   PluginStyleSettings,
-  setAlpha,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import type { AdapterContext, ApiLinkAdapter, Resolution } from '../options.ts';
+import type { AdapterContext, ApiLinkAdapter, SymbolRef } from '../options.ts';
 import { getRegistry } from '../registry.ts';
 import { type CodeblocksPlugin, isSafeUrl } from './core.ts';
 import { getDirectives } from './notation.ts';
 import { isShellOutput } from './shell-copy.ts';
-import { onCode, PREFIX, solidCodeBackground, solidCodeForeground } from './styles.ts';
+import { onCode, PREFIX, solidCodeBackground, solidCodeForeground, tint } from './styles.ts';
 import { withBase } from './token-links.ts';
 
 export interface ApiLinksStyleSettings {
@@ -39,15 +37,12 @@ const styleSettings = new PluginStyleSettings({
     codeblocksApiLinks: {
       underline: (context) => onCode(context, mix(solidCodeForeground(context), solidCodeBackground(context), 0.45), 3),
       hoverUnderline: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),
-      hoverBackground: ({ resolveSetting, theme }) =>
-        setAlpha(resolveSetting('codeblocks.accent'), theme.type === 'dark' ? 0.1 : 0.12),
+      hoverBackground: (context) => tint(context.resolveSetting('codeblocks.accent'), context),
     },
   },
 });
 
 const cls = (suffix = '') => `${PREFIX}-api-link${suffix}`;
-
-const blockData = new AttachedPluginData<{ linked: boolean }>(() => ({ linked: false }));
 
 class ApiLinkAnnotation extends ExpressiveCodeAnnotation {
   constructor(
@@ -118,8 +113,7 @@ function ready(adapter: ApiLinkAdapter, { config }: Pick<ExpressiveCodeHookConte
 }
 
 /** The line at the top of the card: the signature, or the kind and qualified name. */
-export const cardHead = (resolution: Resolution, name: string) =>
-  resolution.signature ?? [resolution.kind, resolution.name ?? name].filter(Boolean).join(' ');
+const cardHead = ({ signature, kind, name }: SymbolRef) => signature ?? [kind, name].filter(Boolean).join(' ');
 
 const sentences = (...parts: (string | undefined)[]) =>
   parts
@@ -167,7 +161,7 @@ export function pluginApiLinks({ adapters }: { adapters: ApiLinkAdapter[] }): Co
         if (codeBlock.metaOptions.getBoolean('apiLinks') === false) return;
         const active = adapters.filter((adapter) => adapter.languages.includes(codeBlock.language));
         if (active.length === 0) return;
-        const root = getRegistry()?.base;
+        const base = getRegistry()?.base;
         const lines = codeBlock.getLines();
         const tokenLinked = new Set(getDirectives(codeBlock, 'link').flatMap((d) => d.lines));
         // Output lines of a shell or Python session are not code.
@@ -192,27 +186,25 @@ export function pluginApiLinks({ adapters }: { adapters: ApiLinkAdapter[] }): Co
             const line = lines[index];
             const lineStart = starts[index] ?? 0;
             if (!line || tokenLinked.has(line) || end > lineStart + (texts[index]?.length ?? 0)) continue;
-            const resolution = adapter.resolve(symbol);
-            if (!resolution || !isSafeUrl(resolution.href)) continue;
-            const head = cardHead(resolution, symbol.name);
+            if (!isSafeUrl(symbol.href)) continue;
+            const head = cardHead(symbol);
             const properties: Record<string, string> = {
               class: cls(),
-              href: withBase(resolution.href, root),
-              'aria-description': sentences(head, resolution.summary, resolution.source),
+              href: withBase(symbol.href, base),
+              'aria-description': sentences(head, symbol.summary, symbol.source),
               dataScbApiHead: head,
-              dataScbApiSource: resolution.source,
+              dataScbApiSource: symbol.source,
             };
-            if (resolution.summary) properties.dataScbApiSummary = resolution.summary;
+            if (symbol.summary) properties.dataScbApiSummary = symbol.summary;
             line.addAnnotation(
               new ApiLinkAnnotation(properties, { columnStart: start - lineStart, columnEnd: end - lineStart }),
             );
             taken.push([start, end]);
-            blockData.getOrCreateFor(codeBlock).linked = true;
           }
         }
       },
-      postprocessRenderedBlock({ codeBlock, renderData }) {
-        if (!blockData.getOrCreateFor(codeBlock).linked) return;
+      postprocessRenderedBlock({ renderData }) {
+        if (!select(`.${cls()}`, renderData.blockAst)) return;
         const figure = select('figure', renderData.blockAst);
         if (figure) figure.properties.dataScbApiLinks = '';
       },

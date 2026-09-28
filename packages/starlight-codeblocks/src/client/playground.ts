@@ -1,9 +1,10 @@
+import { copiedCode, decodeCode } from './shared/copy.ts';
 import { typescriptPlaygroundUrl } from './shared/typescript-playground.ts';
 
 function update(block: Element) {
   const link = block.querySelector<HTMLAnchorElement>('a[data-scb-playground]');
-  const code = block.querySelector<HTMLElement>('.copy button[data-code]')?.dataset.code;
-  if (link && code !== undefined) link.href = typescriptPlaygroundUrl(code.replaceAll('\x7F', '\n'));
+  const code = copiedCode(block);
+  if (link && code !== undefined) link.href = typescriptPlaygroundUrl(decodeCode(code));
 }
 
 let listening = false;

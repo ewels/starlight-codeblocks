@@ -9,6 +9,12 @@ h1#_top,
   line-height: 1.3;
 }
 
+.reference-name code {
+  font-size: 0.75em;
+  background: none;
+  padding: 0;
+}
+
 /* Long code in a table cell would otherwise widen the table past a phone screen. */
 .sl-markdown-content :is(td, th) code {
   overflow-wrap: anywhere;

@@ -1,8 +1,7 @@
-import { anchored, below, follow } from './shared/position.ts';
+import { anchored, below, EDGE, follow } from './shared/position.ts';
 
 const END = 'scb-annotation-end';
 const WAIT = 'scb-annotation-wait';
-const edge = 12;
 const stops = new WeakMap<Element, () => void>();
 
 /** The right edge of a line's code text, without its markers and popovers. */
@@ -27,9 +26,9 @@ function fitsBeside(popover: HTMLElement, pre: HTMLElement) {
   const blockRight = block.left + pre.clientLeft + pre.clientWidth;
   if (
     box.left < block.left ||
-    box.right > Math.min(blockRight, innerWidth - edge) ||
-    box.top < Math.max(block.top, edge) ||
-    box.bottom > Math.min(block.bottom, innerHeight - edge)
+    box.right > Math.min(blockRight, innerWidth - EDGE) ||
+    box.top < Math.max(block.top, EDGE) ||
+    box.bottom > Math.min(block.bottom, innerHeight - EDGE)
   ) {
     return false;
   }
@@ -171,18 +170,26 @@ function pointerOut(event: PointerEvent) {
   );
 }
 
-/** Lights the note and the line number of `n` in the side-by-side block of `el`, and nothing elsewhere. */
-function light(el: Element | null, n?: string) {
-  const block = el?.closest('[data-scb-annotations]');
-  for (const on of document.querySelectorAll('.scb-annotation-on, .scb-annotation-lit')) {
-    if (!block?.contains(on)) on.classList.remove('scb-annotation-on', 'scb-annotation-lit');
-  }
+let lit: Element | null | undefined;
+let litN: string | undefined;
+
+const mark = (block: Element | null | undefined, n?: string) => {
   for (const note of block?.querySelectorAll<HTMLElement>('[data-scb-anno]') ?? []) {
     note.classList.toggle(
       note.tagName === 'LI' ? 'scb-annotation-on' : 'scb-annotation-lit',
       note.dataset.scbAnno === n,
     );
   }
+};
+
+/** Lights the note and the line number of `n` in the side-by-side block of `el`, and nothing elsewhere. */
+function light(el: Element | null, n?: string) {
+  const block = el?.closest('[data-scb-annotations]');
+  if (lit === block && litN === n) return;
+  if (lit !== block) mark(lit);
+  lit = block;
+  litN = n;
+  mark(block, n);
 }
 
 const over = (event: Event) => {
@@ -190,28 +197,25 @@ const over = (event: Event) => {
   light(target, target.closest?.<HTMLElement>('[data-scb-anno]')?.dataset.scbAnno);
 };
 
-function side(block: HTMLElement) {
+const sides = new Set<HTMLElement>();
+
+/** A column taller than the space below the header cannot stick usefully. */
+function checkHeight(block: HTMLElement) {
   const notes = block.querySelector<HTMLElement>('.scb-annotation-notes');
   if (!notes) return;
-  // A column taller than the space below the header cannot stick usefully.
-  const checkHeight = () => {
-    block.classList.remove('scb-side-static');
-    const top = Number.parseFloat(getComputedStyle(notes).top) || 0;
-    block.classList.toggle('scb-side-static', notes.offsetHeight > innerHeight - top);
-  };
-  checkHeight();
-  heights.set(block, checkHeight);
+  block.classList.remove('scb-side-static');
+  const top = Number.parseFloat(getComputedStyle(notes).top) || 0;
+  block.classList.toggle('scb-side-static', notes.offsetHeight > innerHeight - top);
 }
-
-const heights = new Map<HTMLElement, () => void>();
-let ready = false;
 
 function checkHeights() {
-  for (const [block, check] of heights) {
-    if (block.isConnected) check();
-    else heights.delete(block);
+  for (const block of sides) {
+    if (block.isConnected) checkHeight(block);
+    else sides.delete(block);
   }
 }
+
+let ready = false;
 
 /**
  * Places annotation popovers beside their marker when they fit (the `popover` attribute does the rest),
@@ -238,6 +242,7 @@ export default function initAnnotations() {
     '[data-scb-annotations]:not([data-scb-annotations-ready])',
   )) {
     block.dataset.scbAnnotationsReady = '';
-    side(block);
+    sides.add(block);
+    checkHeight(block);
   }
 }

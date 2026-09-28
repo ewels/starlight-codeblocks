@@ -1,9 +1,7 @@
 import { matches, selectAll } from '@expressive-code/core/hast';
 import { fromHtml } from 'hast-util-from-html';
 import { expect, test } from 'vitest';
-import { render } from './render.ts';
-
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
+import { block, render } from './render.ts';
 
 const blocks = [
   block('js', 'a(); // [!code error] Fails', 'b(); // [!code warning]'),

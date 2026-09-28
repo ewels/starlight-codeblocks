@@ -1,9 +1,10 @@
-import { type Element, h, select, selectAll, toHtml } from '@expressive-code/core/hast';
+import { addClassName, type Element, h, select, selectAll, toHtml } from '@expressive-code/core/hast';
 import { syncTokenKeys, toKeyedTokens } from '@shikijs/magic-move/core';
 import type { KeyedTokensInfo } from '@shikijs/magic-move/types';
 import { fromHtml } from 'hast-util-from-html';
 import { markDecorations, nameFigure } from '../expressive-code/core.ts';
 import { removeAutoExpandable } from '../expressive-code/expandable.ts';
+import { stepsHead } from '../expressive-code/walkthrough.ts';
 import { readTokens } from './tokens.ts';
 
 const S = 'scb-steps';
@@ -33,11 +34,11 @@ function controlsRow(current: number, total: number) {
  * The tokens of each block, keyed so that a token in two neighbouring blocks has the same key, as JSON for
  * a `<script type="application/json">`.
  */
-export function stepsData(figures: Element[]): string {
+export function stepsData(blocks: Element[]): string {
   let previous: KeyedTokensInfo | undefined;
   const keys = new Map<string, number>();
-  const steps = figures.map((figure) => {
-    const { code, lines } = readTokens(figure);
+  const steps = blocks.map((block) => {
+    const { code, lines } = readTokens(block);
     let info = toKeyedTokens(code, lines as never);
     if (previous) info = syncTokenKeys(previous, info).to;
     previous = info;
@@ -77,12 +78,6 @@ export function codeWalkthrough(html: string): string {
     const figure = select('figure', group) as Element;
     const header = select('.header', figure);
     if (header) {
-      let head = select(`.${S}-head`, header);
-      if (!head) {
-        head = h('span', { class: `${S}-head` });
-        const title = select('.title', header);
-        header.children.splice(title ? header.children.indexOf(title) + 1 : 0, 0, head);
-      }
       const stepper = h(
         'span',
         { class: `${S}-stepper scb-no-print`, role: 'group', ariaLabel: 'Steps' },
@@ -102,14 +97,13 @@ export function codeWalkthrough(html: string): string {
           return i === 0 ? [dot] : [h('span', { class: `${S}-line${done}`, ariaHidden: 'true' }), dot];
         }),
       );
-      head.children.unshift(stepper);
+      stepsHead(header).children.unshift(stepper);
       nameFigure(figure);
     }
     group.children.push(controlsRow(current, groups.length));
-    if (current === 0)
-      group.properties.className = [...((group.properties.className as string[]) ?? []), `${S}-current`];
+    if (current === 0) addClassName(group, `${S}-current`);
   });
-  const data = stepsData(groups.map((group) => select('figure', group) as Element));
+  const data = stepsData(groups);
   markDecorations(root);
   return `<div class="${S}" data-scb-steps>${toHtml(root)}<div class="sr-only" aria-live="polite"></div><script type="application/json">${data}</script></div>`;
 }

@@ -1,29 +1,21 @@
-import { readdirSync, readFileSync } from 'node:fs';
 import { expect, type Page, test } from '@playwright/test';
+import { clipboard, copyFromKeyboard, css, output, serveClient } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/fill-in-placeholders/');
 });
 
-const example = (page: Page, n = 0) => page.locator('.example').nth(n).locator('.pane.output');
-const token = (page: Page) => example(page).getByRole('textbox', { name: 'YOUR_TOKEN' });
+const token = (page: Page) => output(page).getByRole('textbox', { name: 'YOUR_TOKEN' });
 
-async function copied(page: Page, block: ReturnType<Page['locator']>) {
-  await block.locator('.copy button').focus();
-  await page.keyboard.press('Enter');
-  return page.evaluate(() => navigator.clipboard.readText());
-}
-
-test('typing in one field fills every field with the same text, and the copied code', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('typing in one field fills every field with the same text, and the copied code', async ({ page }) => {
   await token(page).first().click();
   await page.keyboard.type('tok_123');
   await expect(token(page).nth(1)).toHaveValue('tok_123');
-  const blocks = example(page).locator('.expressive-code');
-  expect(await copied(page, blocks.nth(0))).toBe(
+  const blocks = output(page).locator('.expressive-code');
+  expect(await copyFromKeyboard(blocks.nth(0))).toBe(
     'curl -H "Authorization: Bearer tok_123" \\\n  https://api.example.com/workspaces/WORKSPACE_ID/runs',
   );
-  expect(await copied(page, blocks.nth(1))).toBe('from example import Client\n\nclient = Client(token="tok_123")');
+  expect(await copyFromKeyboard(blocks.nth(1))).toBe('from example import Client\n\nclient = Client(token="tok_123")');
 });
 
 test('a field is as wide as its text or its value', async ({ page }) => {
@@ -55,19 +47,16 @@ test('a field draws its text in the colour of its token', async ({ page }) => {
     getComputedStyle(el).color,
     getComputedStyle(el.parentElement as Element).color,
   ]);
-  const plain = await example(page)
-    .locator('.expressive-code')
-    .nth(1)
-    .locator('.ec-line')
-    .first()
-    .locator('.code')
-    .evaluate((el) => getComputedStyle(el).color);
+  const plain = await css(
+    output(page).locator('.expressive-code').nth(1).locator('.ec-line').first().locator('.code'),
+    'color',
+  );
   expect(own).toBe(parent);
   expect(own).not.toBe(plain);
 });
 
 test('the TS Playground link gets the value', async ({ page }) => {
-  const block = example(page, 2);
+  const block = output(page, 2);
   const link = block.locator('a.scb-playground');
   const before = await link.getAttribute('href');
   await block.getByRole('textbox', { name: 'YOUR_TOKEN' }).fill('tok_123');
@@ -77,11 +66,7 @@ test('the TS Playground link gets the value', async ({ page }) => {
 });
 
 test('the field changes instantly, with or without reduced motion', async ({ page }) => {
-  expect(
-    await token(page)
-      .first()
-      .evaluate((el) => getComputedStyle(el).transitionDuration),
-  ).toBe('0s');
+  expect(await css(token(page).first(), 'transitionDuration')).toBe('0s');
 });
 
 test.describe('without JavaScript', () => {
@@ -92,14 +77,8 @@ test.describe('without JavaScript', () => {
   });
 });
 
-const clientDir = new URL('../../packages/starlight-codeblocks/dist/client/', import.meta.url);
-const clientFile = readdirSync(clientDir).find((name) => name.startsWith('scb-placeholders.')) as string;
-const clientSource = readFileSync(new URL(clientFile, clientDir), 'utf8');
-
 test.describe('custom playgrounds', () => {
   const origin = 'http://codeblocks.test';
-  const dir = clientDir;
-  const file = clientFile;
   const html = `<figure data-scb-placeholders="none">
     <input class="scb-placeholder" data-ph="MY KEY" placeholder="MY KEY" aria-label="MY KEY">
     <a class="scb-playground" href="https://example.com/?code=${encodeURIComponent('key = "MY KEY"')}">Open</a>
@@ -109,11 +88,7 @@ test.describe('custom playgrounds', () => {
   <script type="module">import init from '/placeholders.js'; init();</script>`;
 
   test('get the value in a URL and in a form field', async ({ page }) => {
-    await page.route(`${origin}/**`, (route) =>
-      route.request().url().endsWith('.js')
-        ? route.fulfill({ body: readFileSync(new URL(file, dir), 'utf8'), contentType: 'text/javascript' })
-        : route.fulfill({ body: html, contentType: 'text/html' }),
-    );
+    await serveClient(page, origin, 'placeholders', html);
     await page.goto(`${origin}/`);
     await page.getByRole('textbox', { name: 'MY KEY' }).fill('a&b c');
     await expect(page.locator('a.scb-playground')).toHaveAttribute(
@@ -131,13 +106,7 @@ test.describe('storage option', () => {
     `<figure data-scb-placeholders="${storage}"><input class="scb-placeholder" data-ph="MY KEY" placeholder="MY KEY" aria-label="MY KEY"></figure>
     <script type="module">import init from '/placeholders.js'; init();</script>`;
 
-  async function serve(page: Page, storage: string) {
-    await page.route(`${origin}/**`, (route) =>
-      route.request().url().endsWith('.js')
-        ? route.fulfill({ body: clientSource, contentType: 'text/javascript' })
-        : route.fulfill({ body: field(storage), contentType: 'text/html' }),
-    );
-  }
+  const serve = (page: Page, storage: string) => serveClient(page, origin, 'placeholders', field(storage));
 
   test('storage="session" saves the value in sessionStorage only, and it survives a reload', async ({ page }) => {
     await serve(page, 'session');
@@ -160,11 +129,7 @@ test.describe('storage option', () => {
   });
 
   test('the default local storage keeps the value across a full navigation to another page', async ({ page }) => {
-    await page.route(`${origin}/**`, (route) => {
-      const url = new URL(route.request().url());
-      if (url.pathname.endsWith('.js')) return route.fulfill({ body: clientSource, contentType: 'text/javascript' });
-      return route.fulfill({ body: field('local'), contentType: 'text/html' });
-    });
+    await serve(page, 'local');
     await page.goto(`${origin}/a`);
     await page.getByRole('textbox', { name: 'MY KEY' }).fill('tok_123');
     await page.goto(`${origin}/b`);
@@ -172,17 +137,16 @@ test.describe('storage option', () => {
   });
 });
 
-test('a manual copy gives the same text as the copy button, and a part of it for a part', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('a manual copy gives the same text as the copy button, and a part of it for a part', async ({ page }) => {
   await token(page).first().click();
   await page.keyboard.type('tok_123');
-  const block = example(page).locator('.expressive-code').first();
+  const block = output(page).locator('.expressive-code').first();
   const manual = async (select: (pre: HTMLElement) => void) => {
     await block.locator('pre').evaluate(select);
     await page.keyboard.press('ControlOrMeta+c');
-    return page.evaluate(() => navigator.clipboard.readText());
+    return clipboard(page);
   };
-  expect(await manual((pre) => getSelection()?.selectAllChildren(pre))).toBe(await copied(page, block));
+  expect(await manual((pre) => getSelection()?.selectAllChildren(pre))).toBe(await copyFromKeyboard(block));
   expect(
     await manual((pre) => getSelection()?.selectAllChildren(pre.querySelectorAll('.ec-line')[1] as HTMLElement)),
   ).toBe('  https://api.example.com/workspaces/WORKSPACE_ID/runs');

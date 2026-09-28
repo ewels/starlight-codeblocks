@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { css, reduced } from './helpers.ts';
 
 test('home page renders in the requested theme without horizontal scroll', async ({ page }, testInfo) => {
   await page.goto('./');
@@ -9,9 +10,9 @@ test('home page renders in the requested theme without horizontal scroll', async
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test('the copy button has no transition under reduced motion', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'reduced-motion', 'Only for the reduced-motion project.');
+test('the copy button has no transition under reduced motion', async ({ page }) => {
+  test.skip(!reduced(), 'Only for the reduced-motion project.');
   await page.goto('./features/focus/');
   const button = page.locator('.copy button').first();
-  expect(await button.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
+  expect(await css(button, 'transitionDuration')).toBe('0s');
 });

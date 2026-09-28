@@ -1,6 +1,7 @@
 import type { ExpressiveCodePlugin } from '@expressive-code/core';
 import { select, toHtml } from '@expressive-code/core/hast';
 import { ExpressiveCode } from 'expressive-code';
+import { decodeCode } from '../src/client/shared/copy.ts';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import type { CodeblocksOptions } from '../src/options.ts';
 
@@ -29,9 +30,45 @@ export async function render(markdown: string, options: CodeblocksOptions = {}, 
     /** The HTML without the decoration marker, which `test/decorations.test.ts` checks. */
     html: rawHtml.replaceAll(' scb-deco', '').replace(/ data-pagefind-ignore(="")?/g, ''),
     rawHtml,
-    copyText: String(button?.properties.dataCode ?? '').replaceAll('\x7F', '\n'),
+    copyText: decodeCode(String(button?.properties.dataCode ?? '')),
     /** The text of smart shell copy's Copy commands button, if the block has one. */
-    commandsText: commands && String(commands.properties.dataCode).replaceAll('\x7F', '\n'),
+    commandsText: commands && decodeCode(String(commands.properties.dataCode)),
     warnings,
   };
+}
+
+/** The CSS that the plugin adds to every page. */
+export const baseStyles = (options: CodeblocksOptions = {}) =>
+  new ExpressiveCode({ plugins: [pluginCodeblocks(options)] }).getBaseStyles();
+
+/** The resolved style variants, one per theme. */
+export async function styleVariants(options: CodeblocksOptions = {}) {
+  const ec = new ExpressiveCode({ plugins: [pluginCodeblocks(options)] });
+  await ec.getBaseStyles();
+  return ec.styleVariants;
+}
+
+/** A fenced code block: the fence line's language and meta, then the code lines. */
+export const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
+
+/** The classes after `ec-line` on each rendered line. */
+export const lineClasses = (html: string) => html.match(/<div class="ec-line[^"]*"/g)?.map((m) => m.slice(12, -1));
+
+const decode = (value?: string) =>
+  value?.replace(/&#x([0-9A-F]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)));
+
+/** The linked text and the attributes of each API link, in order. */
+export function apiLinks(html: string) {
+  return [...html.matchAll(/<a class="scb-api-link" ((?:[^>"]|"[^"]*")*)>(.*?)<\/a>/g)].map(
+    ([, attributes = '', inner = '']) => {
+      const attribute = (name: string) => decode(attributes.match(new RegExp(`${name}="([^"]*)"`))?.[1]);
+      return {
+        text: inner.replace(/<[^>]+>/g, ''),
+        href: attribute('href'),
+        head: attribute('data-scb-api-head'),
+        summary: attribute('data-scb-api-summary'),
+        source: attribute('data-scb-api-source'),
+      };
+    },
+  );
 }

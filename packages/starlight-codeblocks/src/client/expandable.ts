@@ -1,25 +1,24 @@
 const COLLAPSED = 'scb-expandable-collapsed';
 
+const linesOf = (pre: HTMLElement) => pre.querySelectorAll<HTMLElement>('.ec-line:not(summary > *)');
+
 function tail(pre: HTMLElement) {
-  const last = pre.querySelectorAll<HTMLElement>('.ec-line:not(summary > *)')[Number(pre.dataset.scbExpandable) - 1];
+  const last = linesOf(pre)[Number(pre.dataset.scbExpandable) - 1];
   return [...(last?.parentElement?.children ?? [])].filter(
     (el) => last && last.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING,
   );
 }
 
 function set(pre: HTMLElement, expanded: boolean) {
-  const button = pre.parentElement?.querySelector<HTMLButtonElement>('.scb-expandable-toggle');
   for (const line of tail(pre)) {
     if (expanded) line.removeAttribute('hidden');
     else line.setAttribute('hidden', 'until-found');
   }
   pre.classList.toggle(COLLAPSED, !expanded);
-  button?.setAttribute('aria-expanded', String(expanded));
-  if (button) {
-    button.textContent = expanded
-      ? 'Show fewer lines'
-      : `Show all ${pre.querySelectorAll('.ec-line:not(summary > *)').length} lines`;
-  }
+  const button = pre.parentElement?.querySelector('.scb-expandable-toggle');
+  if (!button) return;
+  button.setAttribute('aria-expanded', String(expanded));
+  button.textContent = expanded ? 'Show fewer lines' : `Show all ${linesOf(pre).length} lines`;
 }
 
 // Found through the event target, so that a copy of the block, as full screen plugins show, works too.
@@ -40,7 +39,8 @@ export default function initExpandable() {
     document.addEventListener(
       'beforematch',
       (event) => {
-        const pre = preOf(event.target as Element);
+        // Line permalinks also send it to a hidden-lines line, which this collapse may not hide.
+        const pre = (event.target as HTMLElement).hidden && preOf(event.target as Element);
         if (pre) set(pre, true);
       },
       true,

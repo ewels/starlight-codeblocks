@@ -15,19 +15,17 @@ const entries = Astro.props.adapter ? adapterOptions[Astro.props.adapter] : all 
 ---
 
 {
-  await Promise.all(
-    entries.map(async (option) => (
-      <ReferenceEntry
-        id={option.id}
-        labels={[option.label]}
-        description={option.description}
-        facts={[
-          ['Type', inlineCode(option.type)],
-          ['Default', inlineCode(option.default)],
-          ...(all ? [['Feature', await featureLink(option.page)] as [string, string]] : []),
-        ]}
-        level={all ? 2 : 3}
-      />
-    )),
-  )
+  entries.map((option) => (
+    <ReferenceEntry
+      id={option.id}
+      labels={[option.label]}
+      description={option.description}
+      facts={[
+        ['Type', inlineCode(option.type)],
+        ['Default', inlineCode(option.default)],
+        ...(all ? [['Feature', featureLink(option.page)] as [string, string]] : []),
+      ]}
+      level={all ? 2 : 3}
+    />
+  ))
 }

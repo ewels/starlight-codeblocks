@@ -6,6 +6,7 @@ import {
   PluginStyleSettings,
   type ResolverContext,
   type StyleResolverFn,
+  setAlpha,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 
@@ -37,18 +38,18 @@ declare module '@expressive-code/core' {
   }
 }
 
+type Context = Parameters<StyleResolverFn>[0];
+
 /**
  * The code background as a colour, for contrast sums. Themes such as starlight-theme-black set it to a CSS
  * variable, which the sums cannot read, so the theme background stands in.
  */
-export const solidCodeBackground = ({ resolveSetting, theme }: Parameters<StyleResolverFn>[0]) =>
+export const solidCodeBackground = ({ resolveSetting, theme }: Context) =>
   getFirstStaticColor(resolveSetting('codeBackground'), theme.bg) ?? (theme.type === 'dark' ? '#202020' : '#ffffff');
 
 /** The code foreground as a colour, for the same reason as `solidCodeBackground`. */
-export const solidCodeForeground = ({ resolveSetting, theme }: Parameters<StyleResolverFn>[0]) =>
+export const solidCodeForeground = ({ resolveSetting, theme }: Context) =>
   getFirstStaticColor(resolveSetting('codeForeground'), theme.fg) ?? (theme.type === 'dark' ? '#d6deeb' : '#403f53');
-
-type Context = Parameters<StyleResolverFn>[0];
 
 /**
  * The first of `keys` in the theme's colours, such as `terminal.ansiBlue`. Expressive Code fills in the VS Code
@@ -62,8 +63,10 @@ export const onCode = (context: Context, colour: string, min: number) =>
   ensureColorContrastOnBackground(colour, solidCodeBackground(context), min);
 
 /** A hover colour for `colour`: lighter in dark themes and darker in light themes, as it moves towards the text. */
-export const hoverColour = (colour: string, context: Parameters<StyleResolverFn>[0]) =>
-  mix(colour, solidCodeForeground(context), 0.45);
+export const hoverColour = (colour: string, context: Context) => mix(colour, solidCodeForeground(context), 0.45);
+
+/** A tint of `colour` light enough for every syntax colour as it is, so that a line keeps its colours when it lights up. */
+export const tint = (colour: string, { theme }: Context) => setAlpha(colour, theme.type === 'dark' ? 0.1 : 0.12);
 
 // Every colour comes from the theme, so that any Expressive Code theme, dark or light, keeps its look and contrast.
 export const styleSettings = new PluginStyleSettings({
@@ -100,6 +103,11 @@ export const styleSettings = new PluginStyleSettings({
   },
 });
 
+/** A line that a script lights: a tint, and a 3 px bar in Expressive Code's line border, which replaces the bar of a marked line. */
+export const litLine = (selector: string, background: string, bar: string) =>
+  `.ec-line:is(${selector}) { background: ${background}; }
+.ec-line:is(${selector}) .code { --ecLineBrdCol: ${bar}; --ecGtrBrdWd: 3px; }`;
+
 /** Layout of popovers and hover cards. `place()` in `src/client/shared/position.ts` positions them. */
 export const floatStyles = `.${PREFIX}-float {
   position: fixed;
@@ -125,6 +133,20 @@ export function baseStyles({ cssVar }: ResolverContext) {
   font-size: ${cssVar('codeblocks.popoverFontSize')};
   line-height: 1.5;
   white-space: normal;
+}
+/* .frame outweighs Expressive Code's square top corners for code in titled blocks. */
+.frame :is(.${PREFIX}-annotation-popover, .${PREFIX}-callout-bubble, .${PREFIX}-footnotes) code {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  font-family: ${cssVar('codeFontFamily')};
+  font-size: 0.95em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+:is(.${PREFIX}-annotation-popover, .${PREFIX}-callout-bubble, .${PREFIX}-footnotes) a:not(.${PREFIX}-footnote-num) {
+  color: inherit;
+  text-underline-offset: 3px;
 }
 .${PREFIX}-sr-only {
   position: absolute;

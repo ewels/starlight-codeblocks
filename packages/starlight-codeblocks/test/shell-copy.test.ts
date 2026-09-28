@@ -1,9 +1,7 @@
 import { getColorContrast } from '@expressive-code/core';
 import { expect, test } from 'vitest';
 import { variants } from './contrast.ts';
-import { render } from './render.ts';
-
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
+import { block, render } from './render.ts';
 
 const session = [
   '$ uv tool install ruff',

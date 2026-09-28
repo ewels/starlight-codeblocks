@@ -1,11 +1,9 @@
 import { getColorContrast, setAlpha } from '@expressive-code/core';
-import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { codeWalkthrough, type StepTokens } from '../src/components/steps.ts';
-import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import { pluginWalkthrough } from '../src/expressive-code/walkthrough.ts';
 import { variants } from './contrast.ts';
-import { render } from './render.ts';
+import { baseStyles, render, styleVariants } from './render.ts';
 
 const block = (meta: string, code: string) => [`\`\`\`js ${meta}`, code, '```'].join('\n');
 
@@ -121,23 +119,18 @@ test('the step colours meet their contrast targets', async () => {
     expect(getColorContrast(get('codeblocksWalkthrough.stepBorder'), bg), name).toBeGreaterThanOrEqual(3);
     expect(getColorContrast(get('codeblocksWalkthrough.doneForeground'), bg), name).toBeGreaterThanOrEqual(4.5);
   }
-  const ec = new ExpressiveCode({ plugins: pluginCodeblocks() });
-  await ec.getBaseStyles();
-  expect(ec.styleVariants.map((v) => v.resolvedStyleSettings.get('codeblocksWalkthrough.themeIndex' as never))).toEqual(
-    ['0', '1'],
-  );
+  expect(
+    (await styleVariants()).map((v) => v.resolvedStyleSettings.get('codeblocksWalkthrough.themeIndex' as never)),
+  ).toEqual(['0', '1']);
 });
 
 test("the tint of a new line is the theme's own terminal green", async () => {
-  const ec = new ExpressiveCode({ plugins: pluginCodeblocks() });
-  await ec.getBaseStyles();
-  for (const v of ec.styleVariants) {
+  for (const v of await styleVariants()) {
     const green = v.theme.colors['terminal.ansiGreen'] as string;
     expect(green).toBeTruthy();
     expect(v.resolvedStyleSettings.get('codeblocksWalkthrough.newLineBackground' as never)).toBe(setAlpha(green, 0.3));
   }
-  const css = await ec.getBaseStyles();
-  expect(css).toContain('@keyframes scb-steps-new');
+  expect(await baseStyles()).toContain('@keyframes scb-steps-new');
 });
 
 test('with the feature off, the plugin still shows the step label after the title', async () => {

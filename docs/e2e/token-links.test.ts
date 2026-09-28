@@ -1,11 +1,9 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { copyFromKeyboard, css, example } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/token-links/');
 });
-
-const example = (page: Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 test('links the text, keeps its token colour, and underlines it', async ({ page }) => {
   const link = example(page).getByRole('link', { name: 'linspace' });
@@ -20,20 +18,15 @@ test('links the text, keeps its token colour, and underlines it', async ({ page 
   });
   expect(style.line).toBe('underline');
   expect(style.underline).not.toBe(style.text);
-  const plain = await example(page)
-    .locator('.ec-line')
-    .first()
-    .locator('span')
-    .first()
-    .evaluate((el) => getComputedStyle(el).color);
+  const plain = await css(example(page).locator('.ec-line').first().locator('span').first(), 'color');
   expect(style.underline).not.toBe(plain);
 });
 
 test('the pointer shows a background on hover', async ({ page }) => {
   const link = example(page).getByRole('link', { name: 'linspace' });
-  const before = await link.evaluate((a) => getComputedStyle(a).backgroundColor);
+  const before = await css(link, 'backgroundColor');
   await link.hover();
-  expect(await link.evaluate((a) => getComputedStyle(a).backgroundColor)).not.toBe(before);
+  expect(await css(link, 'backgroundColor')).not.toBe(before);
 });
 
 test('readers can reach the link with the keyboard', async ({ page }) => {
@@ -42,7 +35,7 @@ test('readers can reach the link with the keyboard', async ({ page }) => {
   await page.keyboard.press('Tab');
   const next = block.getByRole('link', { name: 'read_text' });
   await expect(next).toBeFocused();
-  expect(await next.evaluate((a) => getComputedStyle(a).outlineStyle)).toBe('solid');
+  expect(await css(next, 'outlineStyle')).toBe('solid');
 });
 
 test('site-relative links get the base', async ({ page }) => {
@@ -52,11 +45,8 @@ test('site-relative links get the base', async ({ page }) => {
   await expect(page).toHaveURL(/\/reference\/options\/$/);
 });
 
-test('the copied text has no directive', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await example(page).locator('.copy button').focus();
-  await page.keyboard.press('Enter');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+test('the copied text has no directive', async ({ page }) => {
+  expect(await copyFromKeyboard(example(page))).toBe(
     'import numpy as np\n\nx = np.linspace(0, 1, 50)\ny = np.sin(2 * np.pi * x)',
   );
 });

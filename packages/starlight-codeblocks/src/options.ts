@@ -33,21 +33,22 @@ export interface AdapterContext {
   warn(message: string): void;
 }
 
-export interface SymbolRef {
-  start: number;
-  end: number;
-  name: string;
-  context?: unknown;
-}
-
+/** The link and the card text of a name in code. */
 export interface Resolution {
   href: string;
-  /** The qualified name, shown with `kind` when there is no signature. The default is the symbol's name. */
+  /** The qualified name, shown with `kind` when there is no signature. */
   name?: string;
   kind?: string;
   signature?: string;
   summary?: string;
   source: string;
+}
+
+/** A name in the code that `findSymbols` got, from index `start` up to `end`, with its link. */
+export interface SymbolRef extends Resolution {
+  start: number;
+  end: number;
+  name: string;
 }
 
 export interface ApiLinkAdapter {
@@ -56,7 +57,6 @@ export interface ApiLinkAdapter {
   setup(context: AdapterContext): Promise<void>;
   /** `attributes` has the string attributes of the fence line, such as `title`. */
   findSymbols(code: string, language: string, attributes: Record<string, string>): SymbolRef[];
-  resolve(symbol: SymbolRef): Resolution | null;
 }
 
 export interface CodeblocksOptions {

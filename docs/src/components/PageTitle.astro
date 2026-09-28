@@ -1,13 +1,11 @@
 ---
 import Default from '@astrojs/starlight/components/PageTitle.astro';
 import { Icon } from '@astrojs/starlight/components';
-import { getCollection } from 'astro:content';
-import { pageUrl } from '../markdown.ts';
+import { pageUrl, titles } from '../markdown.ts';
 // Build time only: this reads the path data below, the package never reaches the browser.
 // npm view simple-icons license -> CC0-1.0. Version pinned in package.json.
 import { siClaude } from 'simple-icons';
 
-const ids = new Set((await getCollection('docs')).map((entry) => entry.id));
 const id = Astro.locals.starlightRoute.entry.id || 'index';
 const markdown = pageUrl(id, true);
 const path = new URL(markdown).pathname;
@@ -20,7 +18,7 @@ const chatgptHref = `https://chatgpt.com/?q=${prompt}`;
 
 <Default />
 {
-  ids.has(id) && (
+  titles.has(id) && (
     <div class="page-actions not-content">
       <div class="split-button">
         <button type="button" class="page-action split-button-main" data-copy-markdown={path} hidden>
@@ -99,7 +97,6 @@ const chatgptHref = `https://chatgpt.com/?q=${prompt}`;
       menu.style.top = `${rect.bottom + 4}px`;
       menu.style.left = `${Math.max(8, rect.right - menu.offsetWidth)}px`;
     };
-    const onViewportChange = () => place();
 
     menu.addEventListener('toggle', (event) => {
       const open = (event as ToggleEvent).newState === 'open';
@@ -107,33 +104,24 @@ const chatgptHref = `https://chatgpt.com/?q=${prompt}`;
       if (open) {
         place();
         items()[0]?.focus();
-        addEventListener('scroll', onViewportChange, { passive: true, capture: true });
-        addEventListener('resize', onViewportChange);
+        addEventListener('scroll', place, { passive: true, capture: true });
+        addEventListener('resize', place);
       } else {
         trigger.focus();
-        removeEventListener('scroll', onViewportChange, { capture: true });
-        removeEventListener('resize', onViewportChange);
+        removeEventListener('scroll', place, { capture: true });
+        removeEventListener('resize', place);
       }
     });
 
     menu.addEventListener('keydown', (event) => {
       const list = items();
       const index = list.indexOf(document.activeElement as HTMLElement);
-      if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        list[(index + 1) % list.length]?.focus();
-      } else if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        list[(index - 1 + list.length) % list.length]?.focus();
-      } else if (event.key === 'Home') {
-        event.preventDefault();
-        list[0]?.focus();
-      } else if (event.key === 'End') {
-        event.preventDefault();
-        list[list.length - 1]?.focus();
-      } else if (event.key === 'Tab') {
-        menu.hidePopover();
-      }
+      if (event.key === 'Tab') return menu.hidePopover();
+      const moves: Record<string, number> = { ArrowDown: index + 1, ArrowUp: index - 1, Home: 0, End: -1 };
+      const next = moves[event.key];
+      if (next === undefined) return;
+      event.preventDefault();
+      list.at(next % list.length)?.focus();
     });
   }
 </script>

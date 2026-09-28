@@ -23,6 +23,7 @@ import {
   selectAll,
   visit,
 } from '@expressive-code/core/hast';
+import { bundledLanguagesInfo } from 'shiki/langs';
 import { getRegistry } from '../registry.ts';
 import type { DirectiveSpecs } from './notation.ts';
 import { parseRange, RangeSyntaxError } from './ranges.ts';
@@ -119,6 +120,11 @@ export function numberedLines(codeBlock: ExpressiveCodeBlock): readonly Expressi
   return lineData.getOrCreateFor(codeBlock).lines ?? codeBlock.getLines();
 }
 
+/** The number that readers see next to `line`, counted from `startLineNumber`. */
+export function lineNumber(codeBlock: ExpressiveCodeBlock, line: ExpressiveCodeLine) {
+  return numberedLines(codeBlock).indexOf(line) + (codeBlock.metaOptions.getInteger('startLineNumber') ?? 1);
+}
+
 const uids = new WeakMap<ExpressiveCodeBlock, string>();
 const uidCounts = new WeakMap<object, Map<string, number>>();
 
@@ -155,6 +161,10 @@ function where(codeBlock: ExpressiveCodeBlock, line?: number) {
  * A relative, `http:` or `https:` URL, so that no link runs `javascript:`. `URL` strips spaces, tabs and
  * control characters as a browser does, so they cannot hide the scheme.
  */
+/** Shiki's entry for the language `lang`, by id or alias. */
+export const bundledLanguage = (lang: string) =>
+  bundledLanguagesInfo.find((info) => info.id === lang || info.aliases?.includes(lang));
+
 export function isSafeUrl(href: string) {
   try {
     return ['http:', 'https:'].includes(new URL(href, 'https://x.invalid/').protocol);
@@ -169,7 +179,7 @@ export function warn({ codeBlock, config }: Context, message: string, line?: num
 }
 
 /** Throws a build error that names the file and the code block. */
-export function fail({ codeBlock }: Context, message: string): never {
+function fail({ codeBlock }: Context, message: string): never {
   throw new Error(`${where(codeBlock)}: ${message}`);
 }
 

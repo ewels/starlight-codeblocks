@@ -1,7 +1,7 @@
 import { mix, PluginStyleSettings, setAlpha, type UnresolvedStyleValue } from '@expressive-code/core';
-import { h, select } from '@expressive-code/core/hast';
+import { type Element, h, select } from '@expressive-code/core/hast';
 import type { CodeblocksPlugin } from './core.ts';
-import { onCode, PREFIX, solidCodeBackground, solidCodeForeground } from './styles.ts';
+import { onCode, PREFIX, solidCodeBackground, solidCodeForeground, themeColour } from './styles.ts';
 
 export interface WalkthroughStyleSettings {
   stepBorder: UnresolvedStyleValue;
@@ -28,8 +28,7 @@ const styleSettings = new PluginStyleSettings({
         onCode(context, mix(context.resolveSetting('codeblocks.accent'), solidCodeForeground(context), 0.5), 4.5),
       line: (context) => mix(solidCodeBackground(context), solidCodeForeground(context), 0.15),
       duration: '480ms',
-      // The theme's own green, from its terminal colours, which every theme defines.
-      newLineBackground: ({ theme }) => setAlpha(theme.colors['terminal.ansiGreen'] ?? theme.fg, 0.3),
+      newLineBackground: (context) => setAlpha(themeColour(context, 'terminal.ansiGreen'), 0.3),
       newLineDuration: '1000ms',
       themeIndex: ({ styleVariantIndex }) => String(styleVariantIndex),
     },
@@ -37,6 +36,17 @@ const styleSettings = new PluginStyleSettings({
 });
 
 const S = `${PREFIX}-steps`;
+
+/** The `scb-steps-head` span after the title of a title bar, added if it is not there yet. */
+export function stepsHead(header: Element): Element {
+  let head = select(`.${S}-head`, header);
+  if (!head) {
+    head = h('span', { class: `${S}-head` });
+    const title = select('.title', header);
+    header.children.splice(title ? header.children.indexOf(title) + 1 : 0, 0, head);
+  }
+  return head;
+}
 
 /**
  * Shows the `step="…"` label after the title, and styles the numbered steps that `<CodeWalkthrough>` adds to the
@@ -167,10 +177,7 @@ export function pluginWalkthrough(): CodeblocksPlugin {
         const label = codeBlock.metaOptions.getString('step');
         if (label === undefined) return;
         const header = select('.header', renderData.blockAst);
-        if (!header) return;
-        const title = select('.title', header);
-        const head = h('span', { class: `${S}-head` }, [h('span', { class: `${S}-label` }, label)]);
-        header.children.splice(title ? header.children.indexOf(title) + 1 : 0, 0, head);
+        if (header) stepsHead(header).children.push(h('span', { class: `${S}-label` }, label));
       },
     },
   };

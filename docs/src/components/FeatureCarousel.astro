@@ -1,7 +1,8 @@
 ---
-import { getEntry } from 'astro:content';
 import * as lucide from 'lucide-static';
+import { titles } from '../markdown.ts';
 import { sidebar } from '../sidebar.mjs';
+import { pageHref } from './feature-link.ts';
 
 const icons: Record<string, string> = {
   'features/annotations': lucide.MessageSquareMore,
@@ -29,19 +30,16 @@ const icons: Record<string, string> = {
   'features/run-in-the-browser': lucide.Play,
 };
 
-const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 // Shared syntax, not a feature in its own right: authors learn it under "Start here" but it gets no carousel slide.
 const excluded = new Set(['features/comment-notation']);
-const features = await Promise.all(
-  sidebar
-    .flatMap(({ items }) => items)
-    .filter((item): item is string => typeof item === 'string' && item.startsWith('features/') && !excluded.has(item))
-    .map(async (id) => {
-      const icon = icons[id];
-      if (!icon) throw new Error(`<FeatureCarousel> has no icon for ${id}`);
-      return { id, title: (await getEntry('docs', id))?.data.title ?? id, icon, href: `${base}/${id}/` };
-    }),
-);
+const features = sidebar
+  .flatMap(({ items }) => items)
+  .filter((item): item is string => typeof item === 'string' && item.startsWith('features/') && !excluded.has(item))
+  .map((id) => {
+    const icon = icons[id];
+    if (!icon) throw new Error(`<FeatureCarousel> has no icon for ${id}`);
+    return { id, title: titles.get(id) ?? id, icon, href: pageHref(id) };
+  });
 
 const slides = await Astro.slots.render('default');
 const order = features.map(({ id }) => slides.indexOf(`data-feature="${id}"`));
@@ -218,19 +216,14 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
       schedule();
     };
 
-    for (const [i, tile] of tiles.entries()) {
-      tile.addEventListener('click', () => {
-        setPlaying(false);
-        show(i, true);
-        revealCard();
-      });
-    }
-    for (const [i, dot] of dots.entries()) {
-      dot.addEventListener('click', () => {
-        setPlaying(false);
-        show(i, true);
-      });
-    }
+    const pick = (index: number, reveal = false) => {
+      setPlaying(false);
+      show(index, true);
+      if (reveal) revealCard();
+    };
+
+    for (const [i, tile] of tiles.entries()) tile.addEventListener('click', () => pick(i, true));
+    for (const [i, dot] of dots.entries()) dot.addEventListener('click', () => pick(i));
     // Roving tabindex (WAI carousel pattern): arrow keys move focus and jump to that slide.
     dotsWrap.addEventListener('keydown', (event) => {
       const i = dots.indexOf(document.activeElement as HTMLButtonElement);
@@ -239,20 +232,11 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
       const next = moves[event.key];
       if (next === undefined) return;
       event.preventDefault();
-      setPlaying(false);
-      show((next + dots.length) % dots.length, true);
-      dots[current].focus();
+      pick(next);
+      dots[current]?.focus();
     });
-    prevBtn.addEventListener('click', () => {
-      setPlaying(false);
-      show(current - 1, true);
-      revealCard();
-    });
-    nextBtn.addEventListener('click', () => {
-      setPlaying(false);
-      show(current + 1, true);
-      revealCard();
-    });
+    prevBtn.addEventListener('click', () => pick(current - 1, true));
+    nextBtn.addEventListener('click', () => pick(current + 1, true));
     rotation.addEventListener('click', () => setPlaying(!playing));
     root.addEventListener('mouseenter', () => {
       hovered = true;
@@ -272,11 +256,8 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
       schedule();
     });
 
-    rotation.hidden = false;
+    for (const control of [rotation, prevBtn, nextBtn, dotsWrap]) control.hidden = false;
     rotation.toggleAttribute('data-playing', playing);
-    prevBtn.hidden = false;
-    nextBtn.hidden = false;
-    dotsWrap.hidden = false;
     root.toggleAttribute('data-ready', true);
     show(0);
   }

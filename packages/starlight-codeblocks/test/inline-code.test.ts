@@ -117,7 +117,7 @@ test('styles follow the site themeCssSelector, themeCssRoot and useDarkModeMedia
 
 test('styles use the site engine style variants from the registry', () => {
   const custom = new ExpressiveCode({ styleOverrides: { codeBackground: '#123456' } }).styleVariants;
-  setRegistry({ options: resolveOptions(), plugins: [], clientAssets: true, styleVariants: custom });
+  setRegistry({ options: resolveOptions(), plugins: [], styleVariants: custom });
   try {
     expect(inlineStyles()).toContain('code.scb-inline { background: #123456;');
   } finally {

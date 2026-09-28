@@ -97,13 +97,18 @@ function change(text: string, value: string) {
   if (value) values[text] = value;
   else delete values[text];
   save();
+  const blocks = new Set<HTMLElement>();
   for (const input of document.querySelectorAll<HTMLInputElement>(FIELD)) {
     if (input.placeholder !== text) continue;
     if (input.value !== value) input.value = value;
     size(input);
     const block = input.closest<HTMLElement>('[data-scb-placeholders]');
-    if (block && !updates.has(block)) setup(block);
-    else if (block) updates.get(block)?.();
+    if (block) blocks.add(block);
+  }
+  for (const block of blocks) {
+    const update = updates.get(block);
+    if (update) update();
+    else setup(block);
   }
 }
 

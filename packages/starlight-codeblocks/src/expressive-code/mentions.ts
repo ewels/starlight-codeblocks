@@ -1,9 +1,9 @@
-import { PluginStyleSettings, type StyleResolverFn, setAlpha, type UnresolvedStyleValue } from '@expressive-code/core';
+import { PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { type CodeblocksPlugin, warn } from './core.ts';
 import { getDirectives } from './notation.ts';
-import { PREFIX } from './styles.ts';
+import { litLine, PREFIX, tint } from './styles.ts';
 
 export interface MentionsStyleSettings {
   bar: UnresolvedStyleValue;
@@ -20,10 +20,8 @@ declare module '@expressive-code/core' {
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksMentions: {
-      bar: ({ resolveSetting }: Parameters<StyleResolverFn>[0]) => resolveSetting('codeblocks.accent'),
-      // Light enough for every syntax colour as it is, so that a line keeps its colours when it lights up.
-      background: ({ resolveSetting, theme }: Parameters<StyleResolverFn>[0]) =>
-        setAlpha(resolveSetting('codeblocksMentions.bar'), theme.type === 'dark' ? 0.1 : 0.12),
+      bar: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),
+      background: (context) => tint(context.resolveSetting('codeblocksMentions.bar'), context),
       fadeOpacity: '0.42',
     },
   },
@@ -47,10 +45,7 @@ export function pluginMentions(): CodeblocksPlugin {
     styleSettings,
     baseStyles: ({ cssVar }) => `
 .${PREFIX}-mentioning .ec-line:not(.${PREFIX}-mention-on) { opacity: ${cssVar('codeblocksMentions.fadeOpacity')}; }
-.${PREFIX}-mention-on {
-  background: ${cssVar('codeblocksMentions.background')};
-  box-shadow: inset 3px 0 ${cssVar('codeblocksMentions.bar')};
-}
+${litLine(`.${PREFIX}-mention-on`, cssVar('codeblocksMentions.background'), cssVar('codeblocksMentions.bar'))}
 @media (prefers-reduced-motion: no-preference) {
   [data-scb-mentions] .ec-line { transition: opacity 0.2s ease; }
 }`,

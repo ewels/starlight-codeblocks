@@ -1,11 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { css, example, reduced } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/side-by-side-annotations/');
 });
-
-const example = (page: import('@playwright/test').Page) =>
-  page.locator('.example').first().locator('.pane.output').locator('.expressive-code');
 
 test('the notes are a column beside the code on a desktop, and a list under it on a phone', async ({
   page,
@@ -25,7 +23,7 @@ test('the notes are a column beside the code on a desktop, and a list under it o
 
 test('codeSide="right" puts the notes in the left column', async ({ page, isMobile }) => {
   test.skip(isMobile, 'The phone layout has no column.');
-  const block = page.locator('.example').nth(2).locator('.pane.output').locator('.expressive-code');
+  const block = example(page, 2);
   await expect(block.locator('.scb-side-code-right')).toBeAttached();
   const [code, notes] = await Promise.all([
     block.locator('figure').boundingBox(),
@@ -54,7 +52,7 @@ test('the notes column stops sticking when it is taller than the space below the
   await page.setViewportSize({ width: 1024, height: 260 });
   const block = page.locator('[data-scb-annotations]').first();
   await expect(block).toHaveClass(/scb-side-static/);
-  expect(await block.locator('.scb-annotation-notes').evaluate((el) => getComputedStyle(el).position)).toBe('static');
+  expect(await css(block.locator('.scb-annotation-notes'), 'position')).toBe('static');
 });
 
 test('hovering over a note highlights its line, and hovering over a line highlights its note', async ({ page }) => {
@@ -63,7 +61,7 @@ test('hovering over a note highlights its line, and hovering over a line highlig
   const line = block.locator('.ec-line[data-scb-anno="2"]');
   await note.hover();
   await expect(line).toHaveClass(/scb-annotation-lit/);
-  const bg = await line.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const bg = await css(line, 'backgroundColor');
   expect(bg).not.toBe('rgba(0, 0, 0, 0)');
   await block.locator('.ec-line[data-scb-anno="3"]').hover();
   await expect(block.locator('.scb-annotation-notes li').nth(2)).toHaveClass(/scb-annotation-on/);
@@ -73,7 +71,7 @@ test('hovering over a note highlights its line, and hovering over a line highlig
 test('a line marker takes the hover colour of annotation markers', async ({ page, isMobile }) => {
   test.skip(isMobile, 'Phones have no hover.');
   const marker = example(page).locator('.scb-annotation-num').first();
-  const rest = await marker.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const rest = await css(marker, 'backgroundColor');
   await marker.hover();
   const { hover, expected, duration } = await marker.evaluate((el) => {
     const probe = document.createElement('span');
@@ -99,21 +97,14 @@ test('focusing a note with the keyboard highlights its line', async ({ page }) =
   await expect(block.locator('.ec-line[data-scb-anno="1"]')).toHaveClass(/scb-annotation-lit/);
   await page.keyboard.press('Tab');
   await expect(block.locator('.ec-line[data-scb-anno="2"]')).toHaveClass(/scb-annotation-lit/);
-  const outline = await block
-    .locator('.scb-annotation-notes li')
-    .nth(1)
-    .evaluate((el) => getComputedStyle(el).outlineStyle);
+  const outline = await css(block.locator('.scb-annotation-notes li').nth(1), 'outlineStyle');
   expect(outline).toBe('solid');
   await expect(block.locator('.ec-line[data-scb-anno="1"]')).not.toHaveClass(/scb-annotation-lit/);
 });
 
 test('the note border changes instantly under reduced motion', async ({ page }) => {
-  const reduced = await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const duration = await example(page)
-    .locator('.scb-annotation-notes li')
-    .first()
-    .evaluate((el) => getComputedStyle(el).transitionDuration);
-  expect(duration).toBe(reduced ? '0s' : '0.15s');
+  const duration = await css(example(page).locator('.scb-annotation-notes li').first(), 'transitionDuration');
+  expect(duration).toBe(reduced() ? '0s' : '0.15s');
 });
 
 test.describe('without JavaScript', () => {
@@ -149,7 +140,7 @@ async function measure(page: Page, index: number) {
   return {
     column: await page.locator('.sl-markdown-content').boundingBox(),
     grid: await grid.boundingBox(),
-    display: await grid.evaluate((el) => getComputedStyle(el).display),
+    display: await css(grid, 'display'),
     overflow: await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
   };
 }

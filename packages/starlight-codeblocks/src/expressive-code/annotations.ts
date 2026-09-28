@@ -1,15 +1,10 @@
-import {
-  type ExpressiveCodeLine,
-  PluginStyleSettings,
-  setAlpha,
-  type UnresolvedStyleValue,
-} from '@expressive-code/core';
+import { type ExpressiveCodeLine, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { blockUid, type CodeblocksPlugin, lineElement, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
-import { hoverColour, PREFIX } from './styles.ts';
+import { hoverColour, litLine, PREFIX, tint } from './styles.ts';
 
 export interface AnnotationsStyleSettings {
   markerBackground: UnresolvedStyleValue;
@@ -39,14 +34,32 @@ export function sideSize(chars: number, reserve = 210) {
 }
 
 /**
- * Blocks too wide for Starlight's content column, placed straight in a page without a table of contents.
- * They spread over the free space on both sides of the column; the grid keeps to the column until
- * the columns fit. It must start with `:root` and not name `.expressive-code`, or Expressive Code
- * scopes it inside the block.
+ * Lets `target`, a block too wide for Starlight's content column placed straight in a page without a
+ * table of contents, spread over the free space on both sides of the column; `grid` keeps to the column
+ * until the columns fit. Selectors start with `:root` and do not name `.expressive-code`, or Expressive
+ * Code scopes them inside the block.
  */
-const BREAKOUT = `:root:not([data-has-toc]) .sl-markdown-content > * > :is(${SIDE_SIZES.slice(1)
-  .map((w) => `.${PREFIX}-side-${w}`)
-  .join(', ')})`;
+export const breakoutStyles = (
+  grid: string,
+  target: string,
+  outset: string,
+) => `${grid} { margin-inline: var(${outset}, 0px); }
+@media (min-width: 72rem) {
+  :root:not([data-has-toc]) .sl-markdown-content > ${target} {
+    ${outset}: max(0px, (100vw - 2 * var(--sl-content-pad-x) - var(--sl-content-width)) / 2);
+    margin-inline: calc(-1 * var(${outset}));
+  }
+  :root[data-has-sidebar]:not([data-has-toc]) .sl-markdown-content > ${target} {
+    ${outset}: max(
+      0px,
+      (100vw - var(--sl-sidebar-width) - 2 * var(--sl-content-pad-x) - var(--sl-content-width)) / 2
+    );
+  }
+}`;
+
+/** The margin of the grid of `breakoutStyles()` once the container is `width` px wide. */
+export const breakoutMargin = (outset: string, width: number) =>
+  `margin-inline: max(0px, min(var(${outset}, 0px), (100% - ${width}px) / 2));`;
 
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
@@ -56,9 +69,7 @@ const styleSettings = new PluginStyleSettings({
       markerHoverBackground: (context) =>
         hoverColour(context.resolveSetting('codeblocksAnnotations.markerBackground'), context),
       markerSize: '1.55em',
-      // Light enough for every syntax colour as it is, so that a line keeps its colours when it lights up.
-      lineBackground: ({ resolveSetting, theme }) =>
-        setAlpha(resolveSetting('codeblocks.accent'), theme.type === 'dark' ? 0.1 : 0.12),
+      lineBackground: (context) => tint(context.resolveSetting('codeblocks.accent'), context),
     },
   },
 });
@@ -83,25 +94,27 @@ export function pluginAnnotations(): CodeblocksPlugin {
     },
     styleSettings,
     baseStyles: ({ cssVar }) => `
-.${cls()} {
+:is(.${cls()}, .${cls('-badge')}) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
   width: ${cssVar('codeblocksAnnotations.markerSize')};
   height: ${cssVar('codeblocksAnnotations.markerSize')};
-  margin-inline-start: 1.6ch;
-  padding: 0;
   /* Forced colours remove the background, but draw the border. */
   border: 1px solid transparent;
   border-radius: 50%;
-  background: ${cssVar('codeblocksAnnotations.markerBackground')};
   color: ${cssVar('codeblocksAnnotations.markerForeground')};
+  user-select: none;
+  -webkit-user-select: none;
+}
+.${cls()} {
+  margin-inline-start: 1.6ch;
+  padding: 0;
+  background: ${cssVar('codeblocksAnnotations.markerBackground')};
   font: 600 0.8em/1 ${cssVar('codeFontFamily')};
   vertical-align: 0.1em;
   cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
 }
 .${cls()}:hover, .${cls()}:focus-visible, .${cls()}:has(+ :popover-open) {
   background: ${cssVar('codeblocksAnnotations.markerHoverBackground')};
@@ -111,30 +124,25 @@ export function pluginAnnotations(): CodeblocksPlugin {
   button.${cls()} { transition: background-color 160ms ease-out; }
   button.${cls()}:hover { transition-delay: 80ms; }
 }
+/* The whole note fades, in and out, on the timing of the marker colour. */
 .${cls('-popover')} {
   gap: 0.5rem;
   padding: 0.45rem 0.8rem 0.45rem 0.5rem;
   font-size: 0.875rem;
+  opacity: 0;
+  transition: opacity 160ms ease-out, display 160ms allow-discrete, overlay 160ms allow-discrete;
 }
-.${cls('-popover')}:popover-open { display: flex; align-items: flex-start; }
+.${cls('-popover')}:popover-open { display: flex; align-items: flex-start; opacity: 1; }
+@starting-style {
+  .${cls('-popover')}:popover-open { opacity: 0; }
+}
 .${cls('-popover')} p { min-width: 0; margin: 0; }
 /* The same circle as the open marker, centred on the first line of text (0.875rem × line-height 1.5). */
 .${cls('-badge')} {
-  display: inline-flex;
   flex: none;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: ${cssVar('codeblocksAnnotations.markerSize')};
-  height: ${cssVar('codeblocksAnnotations.markerSize')};
   margin-block: calc((1.3125rem - ${cssVar('codeblocksAnnotations.markerSize')}) / 2);
-  border: 1px solid transparent;
-  border-radius: 50%;
   background: ${cssVar('codeblocksAnnotations.markerHoverBackground')};
-  color: ${cssVar('codeblocksAnnotations.markerForeground')};
   font: 600 calc(0.8 * ${cssVar('codeFontSize')})/1 ${cssVar('codeFontFamily')};
-  user-select: none;
-  -webkit-user-select: none;
 }
 /* Set by the script when the box fits beside the marker: the badge covers the marker. Keep in step with the padding above. */
 .${cls('-end')} {
@@ -147,45 +155,20 @@ export function pluginAnnotations(): CodeblocksPlugin {
   left: calc(anchor(left) - 1px - 0.5rem);
   top: calc(anchor(center) - 1px - 0.45rem - 1.3125rem / 2);
 }
-/* The whole note fades, in and out, on the timing of the marker colour. */
-.${cls('-popover')} {
-  opacity: 0;
-  transition: opacity 160ms ease-out, display 160ms allow-discrete, overlay 160ms allow-discrete;
-}
-.${cls('-popover')}:popover-open { opacity: 1; }
-@starting-style {
-  .${cls('-popover')}:popover-open { opacity: 0; }
-}
 /* Until the script has placed the note, so that the fade starts where the note stays. */
 .${cls('-popover')}.${cls('-wait')} { opacity: 0; }
 /* The badge covers the marker and acts as it, and a click in a hover note keeps it. */
 .${cls('-badge')}, .${cls('-popover')}[data-scb-peek] { cursor: pointer; }
-/* .frame outweighs Expressive Code's square top corners for code in titled blocks. */
-.frame .${cls('-popover')} code {
-  padding: 0 4px;
-  border-radius: 3px;
-  background: color-mix(in srgb, currentColor 12%, transparent);
-  font-family: ${cssVar('codeFontFamily')};
-  font-size: 0.95em;
-}
-.${cls('-popover')} a { color: inherit; text-underline-offset: 3px; }
 .${cls('-num')} { cursor: default; }
-.ec-line.${cls('-lit')} { background: ${cssVar('codeblocksAnnotations.lineBackground')}; }
-.ec-line.${cls('-lit')} .code { --ecLineBrdCol: ${cssVar('codeblocks.accent')}; --ecGtrBrdWd: 3px; }
+${litLine(`.${cls('-lit')}`, cssVar('codeblocksAnnotations.lineBackground'), cssVar('codeblocks.accent'))}
 .${PREFIX}-side { container-type: inline-size; }
-.${PREFIX}-side-grid { margin-inline: var(--${PREFIX}-side-outset, 0px); }
-@media (min-width: 72rem) {
-  ${BREAKOUT} {
-    --${PREFIX}-side-outset: max(0px, (100vw - 2 * var(--sl-content-pad-x) - var(--sl-content-width)) / 2);
-    margin-inline: calc(-1 * var(--${PREFIX}-side-outset));
-  }
-  :root[data-has-sidebar]${BREAKOUT.slice(':root'.length)} {
-    --${PREFIX}-side-outset: max(
-      0px,
-      (100vw - var(--sl-sidebar-width) - 2 * var(--sl-content-pad-x) - var(--sl-content-width)) / 2
-    );
-  }
-}
+${breakoutStyles(
+  `.${PREFIX}-side-grid`,
+  `* > :is(${SIDE_SIZES.slice(1)
+    .map((w) => `.${PREFIX}-side-${w}`)
+    .join(', ')})`,
+  `--${PREFIX}-side-outset`,
+)}
 .${cls('-notes')} {
   margin: 0.75rem 0 0;
   padding: 0;
@@ -221,7 +204,7 @@ export function pluginAnnotations(): CodeblocksPlugin {
 ${SIDE_SIZES.map(
   (w) => `@container (min-width: ${w}px) {
   .${PREFIX}-side-${w} > .${PREFIX}-side-grid {
-    margin-inline: max(0px, min(var(--${PREFIX}-side-outset, 0px), (100% - ${w}px) / 2));
+    ${breakoutMargin(`--${PREFIX}-side-outset`, w)}
     display: grid;
     grid-template-columns: minmax(0, auto) minmax(12rem, 1fr);
     gap: 18px;
@@ -246,7 +229,6 @@ ${SIDE_SIZES.map(
     border-top: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
     font-size: 0.85em;
   }
-  .${cls()}, .${cls('-popover')} { display: none !important; }
 }`,
     jsModules: clientJsModules,
     hooks: {
@@ -268,19 +250,17 @@ ${SIDE_SIZES.map(
             `\`codeSide="${codeSide}"\` needs \`annotations="side"\` and must be \`"left"\` or \`"right"\`. The plugin ignores it.`,
           );
         }
-        const lines = codeBlock.getLines();
-        const ordered = annotations
-          .map((directive) => ({ directive, index: lines.indexOf(directive.lines[0] as never) }))
-          .sort((a, b) => a.index - b.index);
         const uid = blockUid(context);
-        const items = ordered.map(({ directive }, i) => {
+        const items = annotations.map((directive, i) => {
           const n = String(i + 1);
           const text = inlineMarkdown(directive.text ?? '');
           const lineEl = lineElement(directive.lines[0] as ExpressiveCodeLine);
           const code = lineEl && select('.code', lineEl);
           if (side) {
             if (lineEl) lineEl.properties.dataScbAnno = n;
-            code?.children.push(h('span', { class: `${cls()} ${cls('-num')}`, ariaHidden: 'true' }, n));
+            code?.children.push(
+              h('span', { class: `${cls()} ${cls('-num')} ${PREFIX}-no-print`, ariaHidden: 'true' }, n),
+            );
             return h('li', { tabindex: '0', dataScbAnno: n }, [h('span', { class: cls('-note-num') }, n), ...text]);
           }
           const id = `${PREFIX}-annotation-${uid}-${n}`;
@@ -290,7 +270,7 @@ ${SIDE_SIZES.map(
               'button',
               {
                 type: 'button',
-                class: cls(),
+                class: `${cls()} ${PREFIX}-no-print`,
                 popovertarget: id,
                 ariaLabel: `Annotation ${n}`,
                 style: `anchor-name:${anchor}`,
@@ -302,7 +282,7 @@ ${SIDE_SIZES.map(
               {
                 id,
                 popover: 'manual',
-                class: `${PREFIX}-float ${cls('-popover')}`,
+                class: `${PREFIX}-float ${cls('-popover')} ${PREFIX}-no-print`,
                 style: `position-anchor:${anchor}`,
               },
               [h('span', { class: cls('-badge'), ariaHidden: 'true' }, n), h('p', text)],
@@ -318,9 +298,13 @@ ${SIDE_SIZES.map(
         // The notes sit outside the frame, so the block becomes a two-column grid when its container is wide.
         const notes = h('ol', { class: cls('-notes') }, items);
         // A number takes about 3 characters, and the copy button pads the first line by about 4.
-        const numbered = new Set(ordered.map(({ directive }) => directive.lines[0]));
+        const numbered = new Set(annotations.map((directive) => directive.lines[0]));
         const size = sideSize(
-          Math.max(...lines.map((line, i) => line.text.length + (numbered.has(line) ? 3 : 0) + (i === 0 ? 4 : 0))),
+          Math.max(
+            ...codeBlock
+              .getLines()
+              .map((line, i) => line.text.length + (numbered.has(line) ? 3 : 0) + (i === 0 ? 4 : 0)),
+          ),
         );
         renderData.blockAst = h(
           'div',

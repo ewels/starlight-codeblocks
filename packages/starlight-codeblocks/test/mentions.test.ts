@@ -1,13 +1,9 @@
 import { getColorContrast } from '@expressive-code/core';
-import { ExpressiveCode } from 'expressive-code';
 import { markdownToHtml } from 'satteri';
 import { expect, test } from 'vitest';
-import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import { resolveOptions } from '../src/options.ts';
 import { mdastPlugins } from '../src/satteri/index.ts';
-import { render } from './render.ts';
-
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
+import { block, render, styleVariants } from './render.ts';
 
 test('tags lines with [!mention <name>] and removes the tags from the code and the copied text', async () => {
   const { html, copyText, warnings } = await render(
@@ -33,9 +29,7 @@ test('renders the same with the feature off, for a block without tags', async ()
 });
 
 test('the bar meets 3:1 contrast', async () => {
-  const ec = new ExpressiveCode({ plugins: pluginCodeblocks() });
-  await ec.getBaseStyles();
-  for (const v of ec.styleVariants) {
+  for (const v of await styleVariants()) {
     const get = (key: string) => v.resolvedStyleSettings.get(key as never) as string;
     expect(getColorContrast(get('codeblocksMentions.bar'), get('codeBackground'))).toBeGreaterThanOrEqual(3);
   }

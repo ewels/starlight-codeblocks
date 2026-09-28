@@ -3,9 +3,7 @@ import { expect, test } from 'vitest';
 import { pluginCore } from '../src/expressive-code/core.ts';
 import { pluginFootnotes } from '../src/expressive-code/footnotes.ts';
 import { variants } from './contrast.ts';
-import { render } from './render.ts';
-
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
+import { block, render } from './render.ts';
 
 test('turns [!ref] into a badge on the next line, described by an item in the list', async () => {
   const { html, copyText, warnings } = await render(block('py', 'import os', '# [!ref] Creates `app`.', 'app = 1'));

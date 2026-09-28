@@ -5,29 +5,10 @@ import { type PydocsRegistry, type PydocsSymbol, type PythonAdapterOptions, pyth
 import { readInventory } from '../src/adapters/python-index.ts';
 import { resolveOptions } from '../src/options.ts';
 import { setRegistry } from '../src/registry.ts';
-import { render } from './render.ts';
+import { block, apiLinks as links, render } from './render.ts';
 
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
 const withPython = (options: PythonAdapterOptions) => ({ apiLinks: { adapters: [python(options)] } });
 
-const decode = (value?: string) =>
-  value?.replace(/&#x([0-9A-F]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)));
-
-/** The linked text and the attributes of each link, in order. */
-function links(html: string) {
-  return [...html.matchAll(/<a class="scb-api-link" ((?:[^>"]|"[^"]*")*)>(.*?)<\/a>/g)].map(
-    ([, attributes = '', inner = '']) => {
-      const attribute = (name: string) => decode(attributes.match(new RegExp(`${name}="([^"]*)"`))?.[1]);
-      return {
-        text: inner.replace(/<[^>]+>/g, ''),
-        href: attribute('href'),
-        head: attribute('data-scb-api-head'),
-        summary: attribute('data-scb-api-summary'),
-        source: attribute('data-scb-api-source'),
-      };
-    },
-  );
-}
 const texts = async (...lines: string[]) => links((await render(block('py', ...lines))).html).map((l) => l.text);
 
 afterEach(() => {
@@ -146,7 +127,7 @@ const myproject = () =>
 
 test('links the objects of a starlight-pydocs package through its registry, with the site base', async () => {
   pydocs({ version: 1, packages: [{ name: 'myproject', base: 'api/myproject', symbols: myproject() }] });
-  setRegistry({ options: resolveOptions(), plugins: [], clientAssets: true, base: '/docs' });
+  setRegistry({ options: resolveOptions(), plugins: [], base: '/docs' });
   const { html, warnings } = await render(
     block('py', 'from myproject import summarise, Report', 'print(summarise(data))', 'Report("Run").render(width=80)'),
   );

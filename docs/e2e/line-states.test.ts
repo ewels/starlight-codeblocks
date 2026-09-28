@@ -1,11 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { copyFromKeyboard, example } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/line-states/');
 });
-
-const example = (page: import('@playwright/test').Page, n = 0) =>
-  page.locator('.example').nth(n).locator('.pane.output').locator('.expressive-code');
 
 test('tints each state and shows the messages as labels', async ({ page }) => {
   const block = example(page);
@@ -23,13 +21,10 @@ test('gives screen readers the state name before the line', async ({ page }) => 
   await expect(line).toMatchAriaSnapshot(`- text: "Error: for name in sys.argv[1:] SyntaxError: expected ':'"`);
 });
 
-test('leaves the messages out of the copied text and of a manual selection', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('leaves the messages out of the copied text and of a manual selection', async ({ page }) => {
   const block = example(page);
   const expected = 'import sys\n\nfor name in sys.argv[1:]\n    print(name)\n\ncount = len(sys.argv)';
-  await block.locator('.copy button').focus();
-  await page.keyboard.press('Enter');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
+  expect(await copyFromKeyboard(block)).toBe(expected);
   const selected = await block.locator('pre code').evaluate((code) => {
     getSelection()?.selectAllChildren(code);
     return getSelection()?.toString();

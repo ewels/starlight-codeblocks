@@ -9,15 +9,8 @@ import {
 } from '@expressive-code/core';
 import { addClassName, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import {
-  addTitleBarControl,
-  blockUid,
-  type CodeblocksPlugin,
-  insertBefore,
-  lineElement,
-  resolveRange,
-} from './core.ts';
-import { getDirectives } from './notation.ts';
+import { addTitleBarControl, blockUid, type CodeblocksPlugin, insertBefore, lineElement } from './core.ts';
+import { markedLines } from './notation.ts';
 import { PREFIX, solidCodeBackground, solidCodeForeground } from './styles.ts';
 
 export interface HiddenLinesStyleSettings {
@@ -55,8 +48,7 @@ const plural = (n: number) => `${n} hidden line${n === 1 ? '' : 's'}`;
 
 /**
  * Hides `hidden={…}` and `[!code hide]` lines behind a marker, and adds a title bar button that
- * shows every run at once. The copy button still copies hidden lines (SPEC 5): they stay in the
- * code, only their rendered line is hidden with CSS.
+ * shows every run at once. Only the rendered lines are hidden, so the copy button still copies them.
  */
 export function pluginHiddenLines(): CodeblocksPlugin {
   return {
@@ -125,17 +117,11 @@ export function pluginHiddenLines(): CodeblocksPlugin {
 }
 .${PREFIX}-hidden-marker:hover::before { border-top-color: ${cssVar('codeblocksHiddenLines.ruleHover')}; }
 .${PREFIX}-hidden-marker[aria-expanded='true']::before { border-top-color: ${cssVar('codeblocksHiddenLines.ruleOpen')}; }
-@media print {
-  .${PREFIX}-hidden-line { display: none !important; }
-}`,
+`,
     jsModules: clientJsModules,
     hooks: {
       preprocessMetadata(context) {
-        const { lines } = hiddenData.getOrCreateFor(context.codeBlock);
-        for (const line of resolveRange(context, 'hidden') ?? []) lines.add(line);
-        for (const directive of getDirectives(context.codeBlock, 'code hide')) {
-          for (const line of directive.lines) lines.add(line);
-        }
+        hiddenData.getOrCreateFor(context.codeBlock).lines = markedLines(context, 'hidden', 'code hide');
       },
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
@@ -145,20 +131,21 @@ export function pluginHiddenLines(): CodeblocksPlugin {
         const figure = select('figure', renderData.blockAst);
         if (!code || !figure) return;
         const lines = codeBlock.getLines();
+        const isHidden = (i: number) => hidden.has(lines[i] as ExpressiveCodeLine);
         const uid = blockUid(context);
         const markerIds: string[] = [];
         for (let i = 0; i < lines.length; i++) {
           const first = lineElement(lines[i] as ExpressiveCodeLine);
-          if (!first || !hidden.has(lines[i] as ExpressiveCodeLine) || hidden.has(lines[i - 1] as ExpressiveCodeLine))
-            continue;
+          if (!first || !isHidden(i) || isHidden(i - 1)) continue;
           const ids: string[] = [];
-          for (let k = i; k < lines.length && hidden.has(lines[k] as ExpressiveCodeLine); k++) {
+          for (let k = i; isHidden(k); k++) {
             const el = lineElement(lines[k] as ExpressiveCodeLine);
             if (!el) continue;
             // Line permalinks give lines their own ids.
             const id = String(el.properties.id ?? `${PREFIX}-hidden-${uid}-l${k}`);
             el.properties.id = id;
             addClassName(el, `${PREFIX}-hidden-line`);
+            addClassName(el, `${PREFIX}-no-print`);
             ids.push(id);
           }
           const markerId = `${PREFIX}-hidden-${uid}-m${markerIds.length + 1}`;

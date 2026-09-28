@@ -1,9 +1,8 @@
 import { PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
-import { bundledLanguagesInfo } from 'shiki/langs';
 import { clientJsModules } from '../client-modules.ts';
 import { getRegistry } from '../registry.ts';
-import { addTitleBarControl, type CodeblocksPlugin, warn } from './core.ts';
+import { addTitleBarControl, bundledLanguage, type CodeblocksPlugin, warn } from './core.ts';
 import { onCode, PREFIX, themeColour } from './styles.ts';
 
 export interface RunnableStyleSettings {
@@ -28,7 +27,7 @@ const styleSettings = new PluginStyleSettings({
   },
 });
 
-export const PYODIDE_RUNTIME = 'starlight-codeblocks/runtimes/pyodide';
+const PYODIDE_RUNTIME = 'starlight-codeblocks/runtimes/pyodide';
 
 interface RunnableSettings {
   runtimes?: Record<string, string>;
@@ -39,8 +38,8 @@ interface RunnableSettings {
  * The runtime modules by language. Without `codeblocks()`, nothing bundles the modules, so the
  * values are URLs as written and there is no built-in Python runtime.
  */
-export function runtimeModules(runtimes: Record<string, string> = {}, bundled = !!getRegistry()?.clientAssets) {
-  return bundled ? { python: PYODIDE_RUNTIME, ...runtimes } : runtimes;
+export function runtimeModules(runtimes: Record<string, string> | undefined, bundled: boolean): Record<string, string> {
+  return bundled ? { python: PYODIDE_RUNTIME, ...runtimes } : { ...runtimes };
 }
 
 /** The file name of a bundled runtime module, in Astro's assets folder. */
@@ -84,10 +83,9 @@ export function pluginRunnable({ runtimes, timeout = 10000 }: RunnableSettings =
         if (!codeBlock.metaOptions.getBoolean('runnable')) return;
         const figure = select('figure', renderData.blockAst);
         if (!figure) return;
-        const modules = runtimeModules(runtimes);
-        const info = bundledLanguagesInfo.find(
-          (l) => l.id === codeBlock.language || l.aliases?.includes(codeBlock.language),
-        );
+        const registry = getRegistry();
+        const modules = runtimeModules(runtimes, !!registry);
+        const info = bundledLanguage(codeBlock.language);
         const language = [codeBlock.language, info?.id].find((l) => l && Object.hasOwn(modules, l));
         if (!language) {
           warn(
@@ -96,8 +94,7 @@ export function pluginRunnable({ runtimes, timeout = 10000 }: RunnableSettings =
           );
           return;
         }
-        const registry = getRegistry();
-        figure.properties.dataScbRunnable = registry?.clientAssets
+        figure.properties.dataScbRunnable = registry
           ? `${(registry.base ?? '/').replace(/\/?$/, '/')}${registry.assets ?? '_astro'}/${runtimeFileName(language)}`
           : modules[language];
         figure.properties.dataScbRunnableName = info?.name ?? language;

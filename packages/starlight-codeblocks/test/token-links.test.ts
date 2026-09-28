@@ -5,9 +5,8 @@ import { withBase } from '../src/expressive-code/token-links.ts';
 import { resolveOptions } from '../src/options.ts';
 import { setRegistry } from '../src/registry.ts';
 import { variants } from './contrast.ts';
-import { render } from './render.ts';
+import { block, render } from './render.ts';
 
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
 const url = 'https://numpy.org/doc/stable/reference/generated/numpy.linspace.html';
 
 afterEach(() => setRegistry(undefined));
@@ -54,7 +53,7 @@ test('reads a site-relative URL as one word', async () => {
 });
 
 test('adds Astro base to site-relative URLs', async () => {
-  setRegistry({ options: resolveOptions(), plugins: [], clientAssets: true, base: '/docs' });
+  setRegistry({ options: resolveOptions(), plugins: [], base: '/docs' });
   const { html } = await render(block('js', '// [!link /createClient/ /reference/client/]', 'createClient()'));
   expect(html).toContain('href="/docs/reference/client/"');
 });

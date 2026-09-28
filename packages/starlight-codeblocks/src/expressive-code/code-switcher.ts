@@ -1,5 +1,5 @@
 import type { ExpressiveCodeBlock } from '@expressive-code/core';
-import { h, select } from '@expressive-code/core/hast';
+import { h } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { addTitleBarControl, type CodeblocksPlugin } from './core.ts';
 import { languageIcon } from './language-icons.ts';
@@ -64,10 +64,9 @@ export function pluginCodeSwitcher(): CodeblocksPlugin {
         const variant = readVariant(codeBlock);
         if (!variant) return;
         const { index, labels } = variant;
-        const figure = select('figure', renderData.blockAst) ?? renderData.blockAst;
         const path = languageIcon(codeBlock.language);
         addTitleBarControl(
-          figure,
+          renderData.blockAst,
           h('span', { class: `${FIELD} ${PREFIX}-no-print ${PREFIX}-needs-js` }, [
             icon(`${PREFIX}-switcher-icon`, path ?? CODE_ICON, !path),
             h(

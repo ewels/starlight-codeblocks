@@ -11,6 +11,7 @@ export default defineConfig({
   use: {
     ...devices['Desktop Chrome'],
     baseURL: `http://localhost:${port}/starlight-codeblocks/`,
+    permissions: ['clipboard-read', 'clipboard-write'],
   },
   projects: [
     { name: 'desktop-light', use: { colorScheme: 'light' } },

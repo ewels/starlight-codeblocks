@@ -1,8 +1,6 @@
 import { expect, test } from 'vitest';
 import { findPlaceholders } from '../src/expressive-code/placeholders.ts';
-import { render } from './render.ts';
-
-const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
+import { block, render } from './render.ts';
 
 const field = (text: string) =>
   `<input type="text" class="scb-placeholder" data-ph="${text}" placeholder="${text}" aria-label="${text}" spellcheck="false" autocomplete="off" style="width: ${text.length}ch"><span class="scb-placeholder-text">${text}</span>`;

@@ -1,7 +1,7 @@
 import {
   type AnnotationRenderOptions,
-  AttachedPluginData,
   ExpressiveCodeAnnotation,
+  type ExpressiveCodeLine,
   PluginStyleSettings,
   type StyleResolverFn,
   type UnresolvedStyleValue,
@@ -56,8 +56,7 @@ export interface BracketMatch {
 
 /**
  * Finds matching `()`, `[]` and `{}` pairs in code, skipping brackets in strings and line or block
- * comments. Strings and comments are approximated with common quote and escape rules, not a full
- * language grammar (SPEC 6.11 accepts this: it only asks that most brackets in real code are found).
+ * comments. Strings and comments follow common quote and escape rules, not a full language grammar.
  * A bracket with no partner is left out, so it keeps its normal colour.
  */
 export function findBrackets(lines: string[], syntaxes: CommentSyntax[]): BracketMatch[] {
@@ -133,8 +132,6 @@ class BracketAnnotation extends ExpressiveCodeAnnotation {
   }
 }
 
-const bracketData = new AttachedPluginData<{ active: boolean }>(() => ({ active: false }));
-
 /** Colours matching brackets by nesting depth. `brackets.languages` turns it on for every block of a language. */
 export function pluginBrackets({ languages = [] }: { languages?: string[] } = {}): CodeblocksPlugin {
   return {
@@ -156,10 +153,8 @@ export function pluginBrackets({ languages = [] }: { languages?: string[] } = {}
           lines.map((line) => line.text),
           commentSyntaxFor(codeBlock.language),
         );
-        if (matches.length === 0) return;
-        bracketData.getOrCreateFor(codeBlock).active = true;
         for (const match of matches) {
-          (lines[match.line] as (typeof lines)[number]).addAnnotation(
+          (lines[match.line] as ExpressiveCodeLine).addAnnotation(
             new BracketAnnotation(match.depth, match.pairId, {
               columnStart: match.column,
               columnEnd: match.column + 1,
@@ -167,10 +162,9 @@ export function pluginBrackets({ languages = [] }: { languages?: string[] } = {}
           );
         }
       },
-      postprocessRenderedBlock({ codeBlock, renderData }) {
-        if (!bracketData.getOrCreateFor(codeBlock).active) return;
+      postprocessRenderedBlock({ renderData }) {
         const pre = select('pre', renderData.blockAst);
-        if (pre) pre.properties.dataScbBrackets = '';
+        if (pre && select('[data-scb-pair]', pre)) pre.properties.dataScbBrackets = '';
       },
     },
   };

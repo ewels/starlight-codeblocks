@@ -1,17 +1,16 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { unlisted } from '../src/sidebar.mjs';
+import { clipboard, css, sitePages } from './helpers.ts';
 
 const site = 'https://ewels.github.io/starlight-codeblocks/';
-const sitemap = readFileSync(new URL('../dist/sitemap-0.xml', import.meta.url), 'utf8');
-const pages = [...sitemap.matchAll(/<loc>[^<]*?\/starlight-codeblocks\/([^<]*)<\/loc>/g)].map(([, path]) => path ?? '');
-const listed = pages.filter((path) => !unlisted.includes(path.replace(/\/$/, '')));
+const listed = sitePages.filter((path) => !unlisted.includes(path.replace(/\/$/, '')));
 const local = (url: string) => `./${url.slice(site.length)}`;
 
 const oneProject = () =>
   test.skip(test.info().project.name !== 'desktop-light', 'The output is the same in every project.');
 
-for (const path of pages) {
+for (const path of sitePages) {
   test(`/${path} links to a Markdown version that exists`, async ({ page, request }) => {
     oneProject();
     await page.goto(`./${path}`);
@@ -62,19 +61,17 @@ test('an example keeps its fence line in the Markdown', async ({ request }) => {
 });
 
 test.describe('page actions', () => {
-  test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
-
   test('the copy button works with the keyboard and copies the Markdown', async ({ page, request }) => {
     await page.goto('./features/focus/');
     const actions = page.locator('.page-actions');
     const copy = actions.locator('.split-button-main');
     await copy.focus();
-    expect(await copy.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
+    expect(await css(copy, 'outlineStyle')).toBe('solid');
     await page.keyboard.press('Enter');
     await expect(copy).toHaveText('Copied');
     await expect(actions.getByRole('status')).toHaveText('Copied the page as Markdown');
     const expected = await (await request.get('./features/focus.md')).text();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
+    expect(await clipboard(page)).toBe(expected);
     await expect(copy).toHaveText('Copy as Markdown', { timeout: 4000 });
   });
 
@@ -163,7 +160,7 @@ test.describe('page actions', () => {
   });
 });
 
-for (const path of pages) {
+for (const path of sitePages) {
   test(`/${path} has a share card of 1200 × 630 px`, async ({ page, request }) => {
     oneProject();
     await page.goto(`./${path}`);

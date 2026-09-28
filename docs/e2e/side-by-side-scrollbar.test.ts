@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { css } from './helpers.ts';
 
 // Playwright hides scrollbars by default, and `100vw` includes a classic one.
 test.use({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } });
@@ -16,7 +17,7 @@ test('a wide side-by-side block does not make the page scroll sideways with a cl
   });
   expect(await page.evaluate(() => innerWidth - document.documentElement.clientWidth)).toBeGreaterThan(10);
   const grids = page.locator('.sl-markdown-content > .expressive-code > .scb-side > .scb-side-grid');
-  expect(await grids.nth(1).evaluate((el) => getComputedStyle(el).display)).toBe('grid');
+  expect(await css(grids.nth(1), 'display')).toBe('grid');
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(
     0,
   );

@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro';
 import { entriesInOrder, pageUrl, siteUrl } from '../markdown.ts';
 
-export const GET: APIRoute = async () => {
-  const groups = await entriesInOrder();
+export const GET: APIRoute = () => {
+  const groups = entriesInOrder();
   const index = groups.find((group) => group.entries.some((entry) => entry.id === 'index'))?.entries[0];
   const sections = groups.map(({ label, entries }) =>
     [

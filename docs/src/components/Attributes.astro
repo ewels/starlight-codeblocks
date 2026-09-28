@@ -5,15 +5,13 @@ import ReferenceEntry from './ReferenceEntry.astro';
 ---
 
 {
-  await Promise.all(
-    attributes.map(async ({ id, syntax, description, page, example }) => (
-      <ReferenceEntry
-        id={id}
-        labels={syntax}
-        description={description}
-        facts={[['Feature', await featureLink(page)]]}
-        example={example && `\`\`\`${example.lang} ${example.meta}\n${example.code}\n\`\`\``}
-      />
-    )),
-  )
+  attributes.map(({ id, syntax, description, page, example }) => (
+    <ReferenceEntry
+      id={id}
+      labels={syntax}
+      description={description}
+      facts={[['Feature', featureLink(page)]]}
+      example={example}
+    />
+  ))
 }
