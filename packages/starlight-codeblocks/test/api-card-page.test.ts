@@ -28,7 +28,8 @@ test('scopes the float and card rules to the card outside code blocks', () => {
 
 test('the page loader imports the card module from the assets folder, under the site base', () => {
   const script = apiCardLoader('/docs/', '_astro') ?? '';
-  expect(script).toMatch(/import\(\/\* @vite-ignore \*\/ "\/docs\/_astro\/scb-api-links\.[\w-]+\.js"\)/);
+  expect(script).toMatch(/^const url = "\/docs\/_astro\/scb-api-links\.[\w-]+\.js";$/m);
+  expect(script).toContain('import(/* @vite-ignore */ url)');
   expect(script).toContain("document.querySelector('[data-scb-api-links]')");
-  expect(apiCardLoader('/', '_astro')).toMatch(/"\/_astro\/scb-api-links\./);
+  expect(apiCardLoader('/', '_astro')).toMatch(/^const url = "\/_astro\/scb-api-links\./m);
 });

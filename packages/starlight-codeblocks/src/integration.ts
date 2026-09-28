@@ -94,8 +94,10 @@ export function apiCardLoader(base: string, assetsDir: string) {
   const module = readClientModules().find((m) => m.feature === 'api-links');
   if (!module) return undefined;
   const url = `${base.replace(/\/$/, '')}/${assetsDir}/${module.fileName}`;
-  return `const load = () => {
-  if (document.querySelector('[data-scb-api-links]')) import(/* @vite-ignore */ ${JSON.stringify(url)}).then((m) => m.default?.());
+  // A variable, so that Vite does not try to resolve the URL in dev, which fails the whole page script.
+  return `const url = ${JSON.stringify(url)};
+const load = () => {
+  if (document.querySelector('[data-scb-api-links]')) import(/* @vite-ignore */ url).then((m) => m.default?.());
 };
 load();
 document.addEventListener('astro:page-load', load);`;

@@ -55,7 +55,11 @@ const linkOf = (target: EventTarget | null) =>
  * code blocks render, and any other `a[data-scb-api-head]` inside a `[data-scb-api-links]` element.
  */
 export default function initApiLinks() {
-  if (card) return;
+  // In dev, the loader in `ec.<hash>.js` and the page script can reach this module through two URLs.
+  const key = Symbol.for('starlight-codeblocks:api-card');
+  const store = globalThis as { [key]?: boolean };
+  if (card || store[key]) return;
+  store[key] = true;
   // Screen readers get the same text from each link's `aria-description`.
   card = document.createElement('span');
   card.className = 'scb-float scb-api-card';
