@@ -280,7 +280,7 @@ Colour matching brackets by nesting depth, so readers can match the pairs on a d
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/colourised-brackets.png" alt="Two lines of JavaScript. The nested brackets of the second line have a different colour for each depth.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/colourised-brackets.png" alt="Four lines of JavaScript. The nested brackets of the call that starts on the second line have a different colour for each depth.">
 
 [Colourised brackets documentation](https://ewels.github.io/starlight-codeblocks/features/colourised-brackets/)
 

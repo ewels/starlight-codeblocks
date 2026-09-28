@@ -100,3 +100,14 @@ test('without JavaScript, the first variant shows and the menu is hidden', async
   await expect(groups(page, 0).locator('select').first()).toBeHidden();
   await context.close();
 });
+
+test('the first example uses the editor frame, with the menu in the middle of the bar', async ({ page }) => {
+  const block = visible(page, 0);
+  await expect(block.locator('figure')).not.toHaveClass(/is-terminal/);
+  const { above, below } = await block.getByRole('combobox').evaluate((el) => {
+    const bar = (el.closest('.header') as Element).getBoundingClientRect();
+    const box = el.getBoundingClientRect();
+    return { above: box.top - bar.top, below: bar.bottom - box.bottom };
+  });
+  expect(Math.abs(above - below)).toBeLessThan(0.5);
+});

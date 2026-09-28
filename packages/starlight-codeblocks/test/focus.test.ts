@@ -7,9 +7,14 @@ const lineClasses = (html: string) => html.match(/<div class="ec-line[^"]*"/g)?.
 test('blurs the lines outside focus={range}', async () => {
   const { html, copyText, warnings } = await render(block('js focus={2-3}', 'a()', 'b()', 'c()', 'd()'));
   expect(lineClasses(html)).toEqual(['ec-line scb-focus-out', 'ec-line', 'ec-line', 'ec-line scb-focus-out']);
-  expect(html).toContain('<pre data-language="js"><code tabindex="0">');
+  expect(html).toContain('<pre data-language="js"><code tabindex="0" aria-label="Code block">');
   expect(copyText).toBe('a()\nb()\nc()\nd()');
   expect(warnings).toEqual([]);
+});
+
+test('names the focusable code after the title', async () => {
+  const { html } = await render(block('js title="app.js" focus={1}', 'a()', 'b()'));
+  expect(html).toContain('<code tabindex="0" aria-label="Code: app.js">');
 });
 
 test('focuses lines with [!code focus] and [!code focus:N]', async () => {

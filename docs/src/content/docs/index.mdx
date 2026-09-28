@@ -168,7 +168,7 @@ count = len(sys.argv)  # [!code warning] Includes the script name
 
 The [base case](#mention:base) stops the recursion. The [recursive step](#mention:step) calls the function again with a smaller number.
 
-```py title="factorial.py"
+```py
 def factorial(n):
     if n == 0:  # [!mention base]
         return 1  # [!mention base]
@@ -284,7 +284,9 @@ test:
 
 ```js brackets
 const title = document.title;
-const slug = encodeURIComponent(kebabCase(trim(title.toLowerCase())));
+const slug = encodeURIComponent(
+  kebab(trim(title.toLowerCase()))
+);
 ```
 
 </Feature>
@@ -348,13 +350,13 @@ logging:
 <Feature page="features/code-switcher">
 
 :::code-switcher{sync="pm"}
-```sh label="npm"
+```sh frame="code" label="npm"
 npm install starlight-codeblocks
 ```
-```sh label="pnpm"
+```sh frame="code" label="pnpm"
 pnpm add starlight-codeblocks
 ```
-```sh label="Yarn"
+```sh frame="code" label="Yarn"
 yarn add starlight-codeblocks
 ```
 :::

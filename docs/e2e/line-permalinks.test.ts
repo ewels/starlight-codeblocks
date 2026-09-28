@@ -111,3 +111,15 @@ test('without JavaScript, the numbers still link to their lines', async ({ brows
   await expect(example(page).locator('a.scb-permalink').first()).toHaveAttribute('href', '#cfg-L1');
   await context.close();
 });
+
+test('the focus ring goes round the number without covering it', async ({ page }) => {
+  const number = example(page).locator('a.scb-permalink').first();
+  await number.focus();
+  const gap = await number.evaluate((el) => {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const ringInner = el.getBoundingClientRect().right - 2 * Number.parseFloat(getComputedStyle(el).outlineWidth);
+    return ringInner - range.getBoundingClientRect().right;
+  });
+  expect(gap).toBeGreaterThanOrEqual(1);
+});

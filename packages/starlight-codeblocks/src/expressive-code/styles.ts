@@ -103,21 +103,24 @@ export function baseStyles({ cssVar }: ResolverContext) {
   margin-inline-start: auto;
   padding-inline: 8px;
 }
+/* Centred between the outer top edge and the line under the bar, as in titled bars. */
 .is-terminal .${PREFIX}-tools {
   position: absolute;
-  inset-block: 0;
+  inset-block: calc(-1 * ${cssVar('borderWidth')}) ${cssVar('borderWidth')};
   inset-inline-end: 0;
 }
 /* starlight-codeblock-fullscreen puts its button over the end of the title bar. */
 .header:has(> .cb-fullscreen__button) .${PREFIX}-tools { margin-inline-end: 2.25rem; }
 /* Without a title or a terminal frame, Expressive Code hides the header. Give it a minimal bar for the controls. */
 .frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools, .${PREFIX}-steps-head) {
-  --button-spacing: 2.1rem;
+  --button-spacing: calc(1.9rem + 2 * (${cssVar('uiPaddingBlock')} + ${cssVar('frames.editorActiveTabIndicatorHeight')}));
 }
 .frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools, .${PREFIX}-steps-head) .header {
   display: flex;
   align-items: center;
-  min-height: 1.9rem;
+  /* The height of Expressive Code's editor tab bar, so that untitled blocks match titled ones. */
+  min-height: calc(${cssVar('uiFontSize')} * ${cssVar('uiLineHeight')} + 2 * (${cssVar('uiPaddingBlock')} + ${cssVar('frames.editorActiveTabIndicatorHeight')}) + ${cssVar('borderWidth')});
+  box-sizing: border-box;
   padding-inline: ${cssVar('uiPaddingInline')} 0;
   background: color-mix(in srgb, ${cssVar('codeForeground')} 5%, ${cssVar('codeBackground')});
   /* The top border of the code is the line under the bar. */
@@ -125,6 +128,7 @@ export function baseStyles({ cssVar }: ResolverContext) {
   border-bottom: 0;
   border-radius: ${cssVar('borderRadius')} ${cssVar('borderRadius')} 0 0;
 }
+.frame:not(.has-title):not(.is-terminal) .header > .${PREFIX}-tools { margin-block-start: calc(-1 * ${cssVar('borderWidth')}); }
 .${PREFIX}-btn {
   display: inline-block;
   text-decoration: none;
@@ -136,7 +140,7 @@ export function baseStyles({ cssVar }: ResolverContext) {
   font: 0.75rem/1.4 ${cssVar('codeFontFamily')};
   color: ${cssVar('codeForeground')};
 }
-.${PREFIX}-btn:hover, .${PREFIX}-btn:focus-visible {
+.${PREFIX}-btn:hover {
   background: color-mix(in srgb, ${cssVar('codeForeground')} 13%, transparent);
 }
 /* The + and - markers of diff lines sit in the padding, which leaves no gap before the code. */

@@ -44,3 +44,21 @@ test('renders the custom state of the site', async ({ page }) => {
   await expect(line.locator('.scb-state-label')).toHaveText('To do Check the body against a schema');
   await expect(line.locator('.scb-state-prefix')).toHaveText('To do:');
 });
+
+test('the label sits in the middle of the line, 6px after the state name', async ({ page }) => {
+  const label = example(page).locator('.scb-state-error .scb-state-label');
+  const { offset, gap } = await label.evaluate((el) => {
+    const line = (el.closest('.ec-line') as Element).getBoundingClientRect();
+    const box = el.getBoundingClientRect();
+    const name = (el.querySelector('strong') as Element).getBoundingClientRect();
+    const range = document.createRange();
+    range.setStart(el.childNodes[1], 1);
+    range.setEnd(el.childNodes[1], 2);
+    return {
+      offset: (box.top + box.bottom - line.top - line.bottom) / 2,
+      gap: range.getBoundingClientRect().left - name.right,
+    };
+  });
+  expect(Math.abs(offset)).toBeLessThan(0.3);
+  expect(Math.abs(gap - 6)).toBeLessThan(0.5);
+});

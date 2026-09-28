@@ -81,7 +81,9 @@ pre > code[tabindex]:focus-visible {
         if (focusData.getOrCreateFor(codeBlock).lines.size === 0) return;
         // Not on the pre: Expressive Code's script removes its tabindex when the code does not scroll.
         const code = select('pre > code', renderData.blockAst);
-        if (code) code.properties.tabindex = '0';
+        if (!code) return;
+        code.properties.tabindex = '0';
+        code.properties.ariaLabel = codeBlock.props.title ? `Code: ${codeBlock.props.title}` : 'Code block';
       },
     },
   };

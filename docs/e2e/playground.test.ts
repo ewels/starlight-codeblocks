@@ -53,3 +53,25 @@ test.describe('without JavaScript', () => {
     await expect(example(page).locator('a.scb-playground')).toHaveAttribute('href', /typescriptlang/);
   });
 });
+
+test('the bar of an untitled block is as tall as a titled bar', async ({ page }) => {
+  const height = (selector: string) =>
+    page
+      .locator(selector)
+      .first()
+      .evaluate((el) => el.getBoundingClientRect().height);
+  const untitled = await height('.frame:not(.has-title):not(.is-terminal):has(.scb-tools) .header');
+  expect(Math.abs(untitled - (await height('.frame.has-title:not(.is-terminal) .header')))).toBeLessThan(0.5);
+});
+
+test('a focused button shows the focus ring, not the hover fill', async ({ page }) => {
+  const button = example(page).locator('a.scb-playground');
+  const background = () => button.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const rest = await background();
+  await button.focus();
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Tab');
+  await expect(button).toBeFocused();
+  expect(await button.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
+  expect(await background()).toBe(rest);
+});

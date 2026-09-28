@@ -69,3 +69,8 @@ test('outlines a bracket and its partner when the caret is on it, for caret brow
   await page.evaluate(() => document.getSelection()?.removeAllRanges());
   await expect(open).not.toHaveClass(/scb-brackets-on/);
 });
+
+test('the first example fits without scrolling sideways', async ({ page }) => {
+  const pre = example(page).locator('pre');
+  expect(await pre.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+});

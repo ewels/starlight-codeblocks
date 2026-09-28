@@ -67,7 +67,10 @@ function apply(group: Element, { focus, mark }: StepState, suffix: string) {
     if (mark.includes(i)) addClassName(line, 'mark');
   });
   const code = select('pre > code', copy);
-  if (code && focus.length > 0) code.properties.tabindex = '0';
+  if (code && focus.length > 0) {
+    code.properties.tabindex = '0';
+    code.properties.ariaLabel ??= 'Code block';
+  }
   return copy;
 }
 
@@ -110,7 +113,10 @@ export function scrollycoding(html: string, interactive = true): string {
     const figure = select('figure', sticky);
     if (figure) addClassName(figure, `${S}-frame`);
     const code = select('pre > code', sticky);
-    if (code && states.some((state) => state.focus.length > 0)) code.properties.tabindex = '0';
+    if (code && states.some((state) => state.focus.length > 0)) {
+      code.properties.tabindex = '0';
+      code.properties.ariaLabel ??= 'Code block';
+    }
     grid.children.push(h('div', { class: `${S}-code` }, [sticky]));
   }
   return toHtml(h('div', { class: S, dataScbScrolly: interactive ? '' : undefined }, [grid]));

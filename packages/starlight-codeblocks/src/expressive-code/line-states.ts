@@ -112,9 +112,10 @@ export function pluginLineStates({
   font-size: ${v('labelFontSize')};
   line-height: 1.55;
   white-space: nowrap;
-  vertical-align: 0.05em;
+  vertical-align: 0.09em;
 }
-.${cls('-label')} strong { margin-inline-end: 0.125rem; font-weight: 600; }
+/* The space after the name stays in the text for reading without styles. In monospace it is 1ch wide. */
+.${cls('-label')} strong { margin-inline-end: calc(6px - 1ch); font-weight: 600; }
 .${cls('-label')}, .${cls('-prefix')} { user-select: none; -webkit-user-select: none; }
 ${Object.keys(all)
   .map(

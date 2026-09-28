@@ -64,7 +64,13 @@ export function pluginPermalinks(): CodeblocksPlugin {
   text-decoration: none;
   pointer-events: auto;
 }
-.ec-line .gutter > a.${LINK}:focus-visible { outline-offset: -2px; }
+/* Inset, because the pre clips a ring outside the gutter. The box runs into the code padding so the ring clears the digits. */
+.ec-line .gutter > a.${LINK}:focus-visible {
+  outline-offset: -2px;
+  width: calc(var(--scb-gutter) + 0.75ch);
+  margin-inline-end: -0.75ch;
+  padding-inline-end: 0.75ch;
+}
 .ec-line .gutter > a.${LINK}:hover {
   color: ${cssVar('codeForeground')};
   text-decoration: underline;

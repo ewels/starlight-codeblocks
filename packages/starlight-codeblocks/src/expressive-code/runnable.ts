@@ -56,14 +56,14 @@ export function pluginRunnable({ runtimes, timeout = 10000 }: RunnableSettings =
     baseStyles: ({ cssVar }) => `
 .frame:has(> .${cls('-output')}:not(:empty)) > pre { border-end-start-radius: 0; border-end-end-radius: 0; }
 .${cls('-output')}:not(:empty) {
-  padding: 0.55rem 1.1rem 0.65rem;
+  padding: 9px 16px;
   border: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
   border-top: 0;
   border-radius: 0 0 ${cssVar('borderRadius')} ${cssVar('borderRadius')};
   background: ${cssVar('codeBackground')};
   font-family: ${cssVar('codeFontFamily')};
-  font-size: 0.8125rem;
-  line-height: 1.55;
+  font-size: 0.78125rem;
+  line-height: 1.65;
 }
 .${cls('-output')} > * { margin: 0; padding: 0; background: none; border: 0; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
 .${cls('-label')}, .${cls('-status')} { color: ${cssVar('codeblocks.mutedForeground')}; }

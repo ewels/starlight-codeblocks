@@ -59,7 +59,7 @@ test('adds a sticky copy in the state of the first step, and marks the first ste
   expect(out).toContain('class="scb-scrolly-step scb-scrolly-on" data-scb-focus="0" data-scb-mark=""');
   expect(outLines('.scb-scrolly-code')).toEqual(outLines('.scb-scrolly-step:nth-child(1)'));
   expect(out).toContain('<figure class="frame has-title scb-scrolly-frame">');
-  expect(out.match(/<code tabindex="0">/g)).toHaveLength(3);
+  expect(out.match(/<code tabindex="0" aria-label="Code block">/g)).toHaveLength(3);
 });
 
 test('each copy keeps the copy text of the whole block', async () => {
