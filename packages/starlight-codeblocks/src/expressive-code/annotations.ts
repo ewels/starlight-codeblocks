@@ -25,6 +25,29 @@ declare module '@expressive-code/core' {
   }
 }
 
+/** Container widths, in px, at which a side-by-side block can become two columns. */
+const SIDE_SIZES = [600, 800, 1000];
+
+/**
+ * The smallest size whose code column shows `chars` characters without scrolling: 8.4 px per character
+ * at Starlight's 14 px code font, 34 px of frame padding, and 210 px for the gap and the notes.
+ * Longer lines get the largest size and scroll.
+ */
+function sideSize(chars: number) {
+  const need = 244 + chars * 8.4;
+  return SIDE_SIZES.find((w) => w >= need) ?? SIDE_SIZES[SIDE_SIZES.length - 1];
+}
+
+/**
+ * Blocks too wide for Starlight's content column, placed straight in a page without a table of contents.
+ * They spread over the free space on both sides of the column; the grid keeps to the column until
+ * the columns fit. It must start with `:root` and not name `.expressive-code`, or Expressive Code
+ * scopes it inside the block.
+ */
+const BREAKOUT = `:root:not([data-has-toc]) .sl-markdown-content > * > :is(${SIDE_SIZES.slice(1)
+  .map((w) => `.${PREFIX}-side-${w}`)
+  .join(', ')})`;
+
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksAnnotations: {
@@ -138,6 +161,19 @@ export function pluginAnnotations(): CodeblocksPlugin {
 .ec-line.${cls('-lit')} { background: ${cssVar('codeblocksAnnotations.lineBackground')}; }
 .ec-line.${cls('-lit')} .code { --ecLineBrdCol: ${cssVar('codeblocks.accent')}; --ecGtrBrdWd: 3px; }
 .${PREFIX}-side { container-type: inline-size; }
+.${PREFIX}-side-grid { margin-inline: var(--${PREFIX}-side-outset, 0px); }
+@media (min-width: 72rem) {
+  ${BREAKOUT} {
+    --${PREFIX}-side-outset: max(0px, (100vw - 2 * var(--sl-content-pad-x) - var(--sl-content-width)) / 2);
+    margin-inline: calc(-1 * var(--${PREFIX}-side-outset));
+  }
+  :root[data-has-sidebar]${BREAKOUT.slice(':root'.length)} {
+    --${PREFIX}-side-outset: max(
+      0px,
+      (100vw - var(--sl-sidebar-width) - 2 * var(--sl-content-pad-x) - var(--sl-content-width)) / 2
+    );
+  }
+}
 .${cls('-notes')} {
   margin: 0.75rem 0 0;
   padding: 0;
@@ -170,20 +206,23 @@ export function pluginAnnotations(): CodeblocksPlugin {
   background: color-mix(in srgb, currentColor 12%, transparent);
   font-size: 0.9em;
 }
-@container (min-width: 600px) {
-  .${PREFIX}-side-grid {
+${SIDE_SIZES.map(
+  (w) => `@container (min-width: ${w}px) {
+  .${PREFIX}-side-${w} > .${PREFIX}-side-grid {
+    margin-inline: max(0px, min(var(--${PREFIX}-side-outset, 0px), (100% - ${w}px) / 2));
     display: grid;
     grid-template-columns: minmax(0, auto) minmax(12rem, 1fr);
     gap: 18px;
     align-items: start;
   }
-  .${cls('-notes')} {
+  .${PREFIX}-side-${w} .${cls('-notes')} {
     position: sticky;
     top: calc(var(--sl-nav-height, 0px) + var(--sl-mobile-toc-height, 0px) + 1rem);
     margin: 0;
   }
-  .${PREFIX}-side-static .${cls('-notes')} { position: static; }
-}
+}`,
+).join('\n')}
+.${PREFIX}-side-static .${cls('-notes')} { position: static; }
 .${cls('-list')} { display: none; }
 @media print {
   .${cls('-list')} {
@@ -252,9 +291,16 @@ export function pluginAnnotations(): CodeblocksPlugin {
         }
         // The notes sit outside the frame, so the block becomes a two-column grid when its container is wide.
         const notes = h('ol', { class: cls('-notes') }, items);
-        renderData.blockAst = h('div', { class: `${PREFIX}-side not-content`, dataScbAnnotations: '' }, [
-          h('div', { class: `${PREFIX}-side-grid` }, [renderData.blockAst, notes]),
-        ]);
+        // A number takes about 3 characters, and the copy button pads the first line by about 4.
+        const numbered = new Set(ordered.map(({ directive }) => directive.lines[0]));
+        const size = sideSize(
+          Math.max(...lines.map((line, i) => line.text.length + (numbered.has(line) ? 3 : 0) + (i === 0 ? 4 : 0))),
+        );
+        renderData.blockAst = h(
+          'div',
+          { class: `${PREFIX}-side ${PREFIX}-side-${size} not-content`, dataScbAnnotations: '' },
+          [h('div', { class: `${PREFIX}-side-grid` }, [renderData.blockAst, notes])],
+        );
       },
     },
   };

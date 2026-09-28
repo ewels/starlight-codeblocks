@@ -127,3 +127,89 @@ test('the code of every example fits its column on a desktop, without a scroll b
     }
   }
 });
+
+type Page = import('@playwright/test').Page;
+
+/** The box of a side-by-side block's grid and the content column, and whether the notes are beside the code. */
+async function measure(page: Page, index: number) {
+  const side = page.locator('.sl-markdown-content > .expressive-code > .scb-side').nth(index);
+  const grid = side.locator('.scb-side-grid');
+  return {
+    column: await page.locator('.sl-markdown-content').boundingBox(),
+    grid: await grid.boundingBox(),
+    display: await grid.evaluate((el) => getComputedStyle(el).display),
+    overflow: await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+  };
+}
+
+test.describe('on a page without a table of contents', () => {
+  test.skip(({ isMobile }) => isMobile, 'Phones have no space beside the content column.');
+
+  test('wide blocks spread by the same amount on each side, as far as the columns need', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('./features/side-by-side-annotations/wide/');
+    for (const [index, width] of [
+      [0, 800],
+      [1, 1000],
+    ]) {
+      const { column, grid, display, overflow } = await measure(page, index);
+      expect(display).toBe('grid');
+      expect(grid?.width).toBeCloseTo(width, 0);
+      const left = (column?.x ?? 0) - (grid?.x ?? 0);
+      const right = (grid?.x ?? 0) + (grid?.width ?? 0) - (column?.x ?? 0) - (column?.width ?? 0);
+      expect(Math.abs(left - right)).toBeLessThan(1);
+      expect(overflow).toBe(0);
+    }
+  });
+
+  test('a block that fits the content column does not spread', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('./features/side-by-side-annotations/wide/');
+    const { column, grid, display } = await measure(page, 2);
+    expect(display).toBe('grid');
+    expect(grid?.x).toBeCloseTo(column?.x ?? 0, 0);
+    expect(grid?.width).toBeCloseTo(column?.width ?? 0, 0);
+  });
+
+  test('a block keeps to the content column when the window is too narrow for its columns', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('./features/side-by-side-annotations/wide/');
+    expect((await measure(page, 0)).display).toBe('grid');
+    const { column, grid, display, overflow } = await measure(page, 1);
+    expect(display).toBe('block');
+    expect(grid?.x).toBeCloseTo(column?.x ?? 0, 0);
+    expect(grid?.width).toBeCloseTo(column?.width ?? 0, 0);
+    expect(overflow).toBe(0);
+  });
+
+  test('no block spreads below the width at which Starlight shows a table of contents', async ({ page }) => {
+    await page.setViewportSize({ width: 1100, height: 900 });
+    await page.goto('./features/side-by-side-annotations/wide/');
+    for (const index of [0, 1]) {
+      const { column, grid } = await measure(page, index);
+      expect(grid?.width).toBeCloseTo(column?.width ?? 0, 0);
+    }
+  });
+});
+
+test('a wide block keeps to the content column on a page with a table of contents', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'The phone layout has no column.');
+  await page.setViewportSize({ width: 1920, height: 900 });
+  const { render } = await import('../../packages/starlight-codeblocks/test/render.ts');
+  const { html } = await render(
+    [
+      '```py annotations="side"',
+      'rows = [r for r in read_rows(path) if r["ok"]]  # [!annotate] Keeps the rows to report.',
+      '```',
+    ].join('\n'),
+  );
+  await page.evaluate((html) => {
+    const box = document.createElement('div');
+    box.innerHTML = html;
+    document.querySelector('.sl-markdown-content')?.prepend(box.firstElementChild as Element);
+  }, html);
+  const { column, grid, display } = await measure(page, 0);
+  expect(display).toBe('block');
+  expect(grid?.x).toBeCloseTo(column?.x ?? 0, 0);
+  expect(grid?.width).toBeCloseTo(column?.width ?? 0, 0);
+});

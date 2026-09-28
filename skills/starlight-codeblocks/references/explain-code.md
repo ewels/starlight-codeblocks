@@ -102,11 +102,13 @@ with path.open() as fh:  # [!annotate] Opens the file and closes it when the blo
 ```
 ````
 
-- In a container of 600 px or more, the notes are a column beside the code. The column sticks below the site header.
+- The notes are a column beside the code when the container has space for the longest line. From its longest line, each block gets a width of 600, 800 or 1000 px. These hold about 42, 66 or 90 characters. The column sticks below the site header.
+- In Starlight's default content column (45rem), only blocks with lines of about 42 characters or fewer get columns. Keep the lines of a side-by-side block short, or move a note off the longest line.
+- For a page with longer lines, set `tableOfContents: false` in its frontmatter. Then a block that needs 800 or 1000 px spreads over the free space on each side of the content column. The text stays 45rem wide. This works only for a block directly on the page, not in tabs, asides, lists or components.
 - In a narrower container, such as on a phone, the notes are a numbered list under the block.
 - Hovering over a note, or focusing it, highlights its line. Hovering over a line highlights its note.
 - No options of its own. `annotations: false` turns it off.
-- Limits: each note is next to its number, not next to its line. Long lines scroll inside the narrower code column.
+- Limits: each note is next to its number, not next to its line. Lines of more than about 90 characters scroll inside the code column.
 
 ## Scrollycoding
 

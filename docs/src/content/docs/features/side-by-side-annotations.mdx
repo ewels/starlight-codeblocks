@@ -20,8 +20,8 @@ def read_rows(path):
         return list(csv.DictReader(fh))  # [!annotate] Each row becomes a dict keyed by the header line.
 
 
-def summarise(rows, key):
-    return Counter(r[key] for r in rows)  # [!annotate] Counts the rows for each value in the column \`key\`.
+def summarise(rows, key):  # [!annotate] Counts the rows for each value in the column \`key\`.
+    return Counter(r[key] for r in rows)
 
 
 def main():
@@ -51,7 +51,9 @@ Add `annotations="side"` to the fence line of a block that uses `[!annotate]`. T
 
 ## Behaviour
 
-- When the block's container is at least 600 px wide, the code and the notes are two columns. The code column is about 1.65 times as wide as the notes column.
+- The code and the notes are two columns when the block's container has space for the longest line beside the notes. The plugin measures the lines at build time and gives each block one of three widths: 600, 800 or 1000 px. In a container narrower than that width, the notes are a list under the block.
+- At 600 px, the code column shows about 42 characters on a line. At 800 px it shows about 66, and at 1000 px about 90. A line with a number needs 3 characters more, and the first line needs 4 more for the copy button.
+- The notes column is at least 12rem wide.
 - The notes column starts level with the top of the block. It sticks below the site header while the block scrolls past.
 - If the notes column is taller than the space below the header, it scrolls with the page instead.
 - In a narrower container, such as on a phone, the notes are a numbered list under the block.
@@ -91,11 +93,32 @@ app.listen(3000); // [!annotate] See the [Express guide](https://expressjs.com/e
 
 <Example code={server} />
 
+## Make space for long lines
+
+Starlight's content column is 45rem (720 px) wide on each page that has a sidebar. So on a default page, a block with lines of more than about 42 characters shows the notes as a list under the code.
+
+On a page without a table of contents, the column has free space on each side. A block that needs 800 or 1000 px spreads over that space, so it gets the columns in a wide window. The text stays in the content column. See [a page without a table of contents](/starlight-codeblocks/features/side-by-side-annotations/wide/) for a demo.
+
+To use this, turn off the table of contents of the page:
+
+```md title="src/content/docs/guides/walkthrough.md"
+---
+title: Walkthrough
+tableOfContents: false
+---
+```
+
+- The block spreads only when it is directly on the page. A block in tabs, an aside, a list or a component stays in its column.
+- The block spreads by the same amount on each side, and not more than it needs for the columns.
+- If the window is too narrow for the columns, the block stays in the content column and shows the list.
+- A block that fits the content column does not spread.
+
 ## Limitations
 
-- The columns need a container of 600 px or more. In Starlight's default layout, that means a desktop window. Smaller windows get the list under the block.
+- The columns need a container of 600 px or more. Blocks with long lines need a wider container, or a page without a table of contents. Smaller windows and phones get the list under the block.
+- The widths are estimates for Starlight's default code font. A larger code font can make a line scroll in the code column.
+- Lines of more than about 90 characters scroll inside the code column at every width.
 - Each note is next to its number, not next to its line. Notes in the column follow each other from the top of the block.
-- Long lines of code scroll inside the code column, which is narrower than a normal block.
 
 ## Related
 

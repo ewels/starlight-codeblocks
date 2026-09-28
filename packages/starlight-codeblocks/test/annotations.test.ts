@@ -53,7 +53,7 @@ test('annotations="side" puts the notes in a column beside the block, with numbe
     block('py annotations="side"', 'x = 1  # [!annotate] Sets `x`.', 'y = 2  # [!annotate] Sets y.'),
   );
   expect(html).toMatch(
-    /^<div class="expressive-code"><div class="scb-side not-content" data-scb-annotations=""><div class="scb-side-grid"><figure/,
+    /^<div class="expressive-code"><div class="scb-side scb-side-600 not-content" data-scb-annotations=""><div class="scb-side-grid"><figure/,
   );
   expect(html).toContain('<div class="ec-line" data-scb-anno="1">');
   expect(html).toContain('<span class="scb-annotation scb-annotation-num" aria-hidden="true">1</span>');
@@ -62,6 +62,17 @@ test('annotations="side" puts the notes in a column beside the block, with numbe
   );
   expect(html).not.toContain('popover');
   expect(copyText).toBe('x = 1\ny = 2');
+});
+
+test('annotations="side" needs a wider container for the columns when the lines are longer', async () => {
+  const size = async (chars: number) => {
+    const { html } = await render(block('py annotations="side"', `x = ${'1'.repeat(chars - 4)}  # [!annotate] Note`));
+    return html.match(/scb-side-(\d+)/)?.[1];
+  };
+  expect(await size(30)).toBe('600');
+  expect(await size(55)).toBe('800');
+  expect(await size(80)).toBe('1000');
+  expect(await size(200)).toBe('1000');
 });
 
 test('warns about an unknown annotations value and uses popovers', async () => {

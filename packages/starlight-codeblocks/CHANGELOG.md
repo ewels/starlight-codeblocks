@@ -10,7 +10,7 @@ The first version of the plugin. It adds these features to the code blocks of St
 - Inline callouts: a bubble that points at a word on a line.
 - Annotations: numbered popover notes.
 - Footnotes: numbered notes under the block, with an optional sticky list.
-- Side-by-side annotations: notes in a column next to the code.
+- Side-by-side annotations: notes in a column next to the code, when the longest line fits. On a page without a table of contents, wide blocks spread past the content column.
 - Hidden lines: lines that readers can show, and that the copy button still copies.
 - Smart shell copy: a Copy commands button in the title bar of terminal blocks, and of Python blocks with `>>>` prompts, copies the commands without prompts or output.
 - Word-level diff: a highlight on the words that changed between a removed line and an added line.

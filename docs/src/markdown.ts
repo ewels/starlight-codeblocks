@@ -11,7 +11,7 @@ import {
   pageOptions,
   styleGroups,
 } from './components/reference.ts';
-import { sidebar } from './sidebar.mjs';
+import { sidebar, unlisted } from './sidebar.mjs';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 export const siteUrl = new URL(`${base}/`, import.meta.env.SITE).href;
@@ -31,6 +31,7 @@ export async function entriesInOrder() {
     groups.push({ label: group.label, entries: ids.map((id) => entries.get(id)).filter((e) => e !== undefined) });
     for (const id of ids) entries.delete(id);
   }
+  for (const id of unlisted) entries.delete(id);
   if (entries.size > 0) throw new Error(`Pages missing from the sidebar: ${[...entries.keys()].join(', ')}`);
   return groups;
 }

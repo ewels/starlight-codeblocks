@@ -70,3 +70,6 @@ export const sidebar = [
     ],
   },
 ];
+
+/** Pages that the sidebar and `llms.txt` leave out, such as demos that a feature page links to. */
+export const unlisted = ['features/side-by-side-annotations/wide'];

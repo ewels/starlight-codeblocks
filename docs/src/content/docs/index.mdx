@@ -90,8 +90,8 @@ def read_rows(path):
         return list(csv.DictReader(fh))  # [!annotate] Each row becomes a dict keyed by the header line.
 
 
-def summarise(rows, key):
-    return Counter(r[key] for r in rows)  # [!annotate] Counts the rows for each value in the column `key`.
+def summarise(rows, key):  # [!annotate] Counts the rows for each value in the column `key`.
+    return Counter(r[key] for r in rows)
 
 
 def main():

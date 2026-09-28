@@ -1,9 +1,11 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { unlisted } from '../src/sidebar.mjs';
 
 const site = 'https://ewels.github.io/starlight-codeblocks/';
 const sitemap = readFileSync(new URL('../dist/sitemap-0.xml', import.meta.url), 'utf8');
 const pages = [...sitemap.matchAll(/<loc>[^<]*?\/starlight-codeblocks\/([^<]*)<\/loc>/g)].map(([, path]) => path ?? '');
+const listed = pages.filter((path) => !unlisted.includes(path.replace(/\/$/, '')));
 const local = (url: string) => `./${url.slice(site.length)}`;
 
 const oneProject = () =>
@@ -32,13 +34,13 @@ test('llms.txt lists the Markdown version of every page', async ({ request }) =>
   const response = await request.get('./llms.txt');
   expect(response.status()).toBe(200);
   const text = await response.text();
-  for (const path of pages) expect(text).toContain(`(${site}${path ? path.replace(/\/$/, '') : 'index'}.md)`);
+  for (const path of listed) expect(text).toContain(`(${site}${path ? path.replace(/\/$/, '') : 'index'}.md)`);
 });
 
 test('llms-full.txt has every page', async ({ request }) => {
   oneProject();
   const text = await (await request.get('./llms-full.txt')).text();
-  for (const path of pages) expect(text).toContain(`<!-- ${site}${path} -->`);
+  for (const path of listed) expect(text).toContain(`<!-- ${site}${path} -->`);
 });
 
 test('the agent skill page has every skill file, on the page and in its Markdown', async ({ page, request }) => {

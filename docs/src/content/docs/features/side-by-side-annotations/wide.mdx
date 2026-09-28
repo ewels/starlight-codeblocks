@@ -1,0 +1,51 @@
+---
+title: Side-by-side annotations on a page without a table of contents
+description: A demo page. Side-by-side blocks with long lines spread past the content column to show their notes beside the code.
+tableOfContents: false
+---
+
+This page shows [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/) on a page that has no table of contents. The text stays in Starlight's content column. A side-by-side block with lines too long for that column spreads over the free space on each side. Then it shows the notes beside the code. Make the window narrower to see the notes move under the block.
+
+This block needs a width of 800 px:
+
+```py title="orders.py" annotations="side"
+import csv
+from collections import Counter
+from pathlib import Path
+
+
+def load_orders(path: Path) -> list[dict[str, str]]:
+    with path.open(newline="", encoding="utf-8") as fh:  # [!annotate] `newline=""` lets the CSV reader handle line ends.
+        return [r for r in csv.DictReader(fh) if r["status"]]  # [!annotate] Skips rows with no status.
+
+
+def count_by_status(orders: list[dict[str, str]]) -> Counter[str]:
+    return Counter(order["status"] for order in orders)  # [!annotate] Counts the orders for each status.
+```
+
+This block needs a width of 1000 px:
+
+```py title="report.py" annotations="side"
+from pathlib import Path
+
+from orders import count_by_status
+
+
+def write_report(orders: list[dict[str, str]], out: Path, *, width: int = 12):  # [!annotate] `*` makes `width` a keyword argument.
+    counts = count_by_status(orders)
+    items = sorted(counts.items(), key=lambda item: item[1], reverse=True)  # [!annotate] The largest counts come first.
+    out.write_text("\n".join(f"{status:<{width}} {n:>6}" for status, n in items))  # [!annotate] One line for each status, in columns.
+```
+
+The lines of this block fit the content column, so the block stays in line with the text:
+
+```py title="main.py" annotations="side"
+import sys
+from pathlib import Path
+
+from orders import load_orders
+from report import write_report
+
+orders = load_orders(Path(sys.argv[1]))  # [!annotate] Reads the file from the command line.
+write_report(orders, Path("report.txt"))
+```
