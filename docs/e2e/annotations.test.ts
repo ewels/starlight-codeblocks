@@ -66,6 +66,29 @@ test.describe('hover', () => {
     await expect(note).toBeHidden();
   });
 
+  test('the note fades in as one element, and the pointer stays a hand over the marker', async ({ page }, info) => {
+    const block = example(page);
+    const marker = block.getByRole('button', { name: 'Annotation 1' });
+    const note = block.locator('.scb-annotation-popover').first();
+    await marker.hover();
+    await expect(note).toBeVisible();
+    await expect(note).not.toHaveClass(/scb-annotation-wait/);
+    const style = await note.evaluate((el) => ({
+      transition: getComputedStyle(el).transitionProperty,
+      clip: getComputedStyle(el).clipPath,
+    }));
+    expect(style.clip).toBe('none');
+    if (info.project.name !== 'reduced-motion') expect(style.transition).toContain('opacity');
+    await expect.poll(() => note.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+    // Whatever is on top of the marker, the note's badge or the marker itself, shows a hand.
+    const box = await marker.boundingBox();
+    const cursor = await page.evaluate(
+      ([x, y]) => getComputedStyle(document.elementFromPoint(x, y) as Element).cursor,
+      [(box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2],
+    );
+    expect(cursor).toBe('pointer');
+  });
+
   test('the pointer can move from the marker into the note, which stays', async ({ page }) => {
     const block = example(page);
     const note = block.locator('.scb-annotation-popover').first();

@@ -146,13 +146,20 @@ export function pluginAnnotations(): CodeblocksPlugin {
   position-try-fallbacks: none;
   left: calc(anchor(left) - 1px - 0.5rem);
   top: calc(anchor(center) - 1px - 0.45rem - 1.3125rem / 2);
-  animation: scb-annotation-grow 160ms ease-out;
 }
-/* A clip, not a transform, so that the script measures the box at its real size while it opens. */
-@keyframes scb-annotation-grow {
-  from { clip-path: inset(0 calc(100% - 2rem) calc(100% - 2.2rem) 0 round 1rem); }
+/* The whole note fades, in and out, on the timing of the marker colour. */
+.${cls('-popover')} {
+  opacity: 0;
+  transition: opacity 160ms ease-out, display 160ms allow-discrete, overlay 160ms allow-discrete;
 }
-.${cls('-wait')} { opacity: 0; }
+.${cls('-popover')}:popover-open { opacity: 1; }
+@starting-style {
+  .${cls('-popover')}:popover-open { opacity: 0; }
+}
+/* Until the script has placed the note, so that the fade starts where the note stays. */
+.${cls('-popover')}.${cls('-wait')} { opacity: 0; }
+/* The badge covers the marker and acts as it, and a click in a hover note keeps it. */
+.${cls('-badge')}, .${cls('-popover')}[data-scb-peek] { cursor: pointer; }
 /* .frame outweighs Expressive Code's square top corners for code in titled blocks. */
 .frame .${cls('-popover')} code {
   padding: 0 4px;

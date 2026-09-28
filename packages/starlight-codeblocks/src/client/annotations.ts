@@ -81,6 +81,8 @@ function toggle(event: Event) {
 }
 
 const NOTE = '.scb-annotation-popover';
+// Notes that a click closed. Hover does not show them again until the pointer leaves.
+const closed = new WeakSet<Element>();
 const openNotes = () => document.querySelectorAll<HTMLElement>(`${NOTE}:popover-open`);
 
 /**
@@ -93,7 +95,10 @@ function click(event: MouseEvent) {
   const note = target.closest<HTMLElement>(NOTE);
   if (note) {
     if (note.dataset.scbPeek !== undefined) delete note.dataset.scbPeek;
-    else if (target.closest('.scb-annotation-badge')) note.hidePopover();
+    else if (target.closest('.scb-annotation-badge')) {
+      closed.add(note);
+      note.hidePopover();
+    }
     return;
   }
   const button = target.closest<HTMLElement>('button.scb-annotation');
@@ -107,6 +112,7 @@ function click(event: MouseEvent) {
     delete popover.dataset.scbPeek;
     return;
   }
+  if (popover.matches(':popover-open')) closed.add(popover);
   // `popovertarget` finds the popover by id, so in a copy of the block, as full screen plugins show, it
   // would open the popover of the original. The popover right after the button is the button's own.
   if (document.getElementById(popover.id) === popover) return;
@@ -142,7 +148,7 @@ function pointerOver(event: PointerEvent) {
   const { popover, button } = hovered(event);
   if (!popover) return;
   clearTimeout(hiding.get(popover));
-  if (!button || popover.matches(':popover-open')) return;
+  if (!button || closed.has(popover) || popover.matches(':popover-open')) return;
   clearTimeout(showing);
   showing = window.setTimeout(() => {
     if (popover.matches(':popover-open')) return;
@@ -156,6 +162,8 @@ function pointerOut(event: PointerEvent) {
   const { popover } = hovered(event);
   if (!popover) return;
   clearTimeout(showing);
+  const to = (event.relatedTarget as Element | null)?.closest?.('button.scb-annotation, .scb-annotation-popover');
+  if (to !== popover && to !== popover.previousElementSibling) closed.delete(popover);
   if (popover.dataset.scbPeek === undefined) return;
   hiding.set(
     popover,

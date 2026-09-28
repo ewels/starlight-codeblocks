@@ -1396,3 +1396,11 @@ Use this format:
 - Decision: A click on a badge or a note toggles its highlight, and other highlights stay; a click outside the badges and notes clears them all. The number link in the list keeps its highlight, because it is the way back to the line. Highlights fade over 160 ms; a hover highlight waits 80 ms first, and a click highlight starts at once. The badge fades with its line. This replaces the badge colour "at once, with no fade".
 - Reason: The user asked to unselect with a second click, to pin several, and for a slightly delayed fade so that hover does not flash. The transitions sit in `prefers-reduced-motion: no-preference`, because a line loses its `scb-` class as it fades out, so the shared reduced-motion rule would not reach it.
 - Alternatives: A longer delay (feels slow). A delay on the click highlight too (the click should answer at once).
+
+## Annotations: the note fades, and the pointer stays a hand
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: The note fades its opacity in and out over 160 ms (`@starting-style`, with `display` and `overlay` as discrete transitions), in place of the clip that grew it out of the marker. The script's wait class keeps it at 0 until it is placed, so the fade starts where the note stays. The note's badge and a hover note have `cursor: pointer`. A note that a click closed does not open again on hover until the pointer leaves its marker and the note.
+- Reason: The user saw the note flicker in, and the cursor change from a hand to an arrow when the hover note's badge covered the marker. With the badge on top, a click that closed the note left the pointer on the marker, and hover opened the note again.
+- Alternatives: Keeping the grow and delaying it until the note is placed (still a clip over a moving box). `pointer-events: none` on the badge (the click would reach the marker, but the badge would no longer close a note placed beside it the same way in a copy of the block).
