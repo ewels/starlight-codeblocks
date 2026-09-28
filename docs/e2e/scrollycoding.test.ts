@@ -9,13 +9,15 @@ const clear = (page: Page, n = 0) =>
     .locator('.ec-line')
     .evaluateAll((lines) => lines.flatMap((l, i) => (l.classList.contains('scb-focus-out') ? [] : [i + 1])));
 
-/** Scrolls so that the middle of the step is in the middle of the window. */
+/** Scrolls so that the middle of the step is on the line where steps become active. */
 async function centre(page: Page, n: number, k: number) {
   await steps(page, n)
     .nth(k)
     .evaluate((e) => {
       const r = e.getBoundingClientRect();
-      window.scrollTo({ top: scrollY + r.top + r.height / 2 - innerHeight / 2, behavior: 'instant' });
+      const root = e.closest<HTMLElement>('.scb-scrolly');
+      const line = Number.parseFloat(root?.style.getPropertyValue('--scb-scrolly-line') ?? '') || innerHeight / 2;
+      window.scrollTo({ top: scrollY + r.top + r.height / 2 - line, behavior: 'instant' });
     });
 }
 
@@ -37,7 +39,38 @@ test.describe('wide layout', () => {
     expect(b?.x).toBeGreaterThan((a?.x ?? 0) + (a?.width ?? 0));
   });
 
-  test('the step in the middle of the window sets the focus', async ({ page }) => {
+  test('the active step stays level with the sticky block, from the first step to the last', async ({ page }) => {
+    for (const [width, height] of [
+      [1280, 720],
+      [1440, 900],
+      [1920, 1200],
+    ]) {
+      await page.setViewportSize({ width, height });
+      const seen = new Set<number>();
+      const top = await scrolly(page).evaluate((e) => e.getBoundingClientRect().top + scrollY);
+      for (let y = top; y < top + 3000; y += 30) {
+        await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), y);
+        await page.waitForTimeout(30);
+        const r = await scrolly(page).evaluate((root) => {
+          const code = root.querySelector('.scb-scrolly-code')?.getBoundingClientRect();
+          const on = root.querySelector('.scb-scrolly-on');
+          const text = on?.querySelector('.scb-scrolly-text')?.getBoundingClientRect();
+          const k = [...root.querySelectorAll('.scb-scrolly-step')].indexOf(on as Element);
+          const step = on?.getBoundingClientRect();
+          return { k, code, text, past: !!code && !!step && step.bottom < (code.top + code.bottom) / 2 };
+        });
+        if (!r.code || !r.text) break;
+        // The last step stays active after it has scrolled past.
+        if (r.past) continue;
+        seen.add(r.k);
+        expect(r.text.top, `step ${r.k + 1} at ${width}×${height}`).toBeGreaterThanOrEqual(r.code.top);
+        expect(r.text.bottom, `step ${r.k + 1} at ${width}×${height}`).toBeLessThanOrEqual(r.code.bottom);
+      }
+      expect(seen).toEqual(new Set([0, 1, 2, 3, 4]));
+    }
+  });
+
+  test('the step on the middle of the block sets the focus', async ({ page }) => {
     expect(await clear(page)).toEqual([1]);
     await centre(page, 0, 3);
     await expect(steps(page).nth(3)).toHaveClass(/scb-scrolly-on/);

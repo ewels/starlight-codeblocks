@@ -139,6 +139,6 @@ test('the label hides next to the stepper in a narrow container, not in a narrow
   const css = String((pluginTransitions().baseStyles as (c: unknown) => string)({ cssVar: (k: string) => k }));
   expect(css).not.toMatch(/@media[^{]*max-width/);
   expect(css).toMatch(
-    /@container \(max-width: 640px\) \{\s*\.scb-steps-head:has\(> \.scb-steps-stepper\) > \.scb-steps-label \{ display: none; \}/,
+    /@container \(max-width: 480px\) \{\s*\.scb-steps-head:has\(> \.scb-steps-stepper\) > \.scb-steps-label \{ display: none; \}/,
   );
 });

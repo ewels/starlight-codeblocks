@@ -129,11 +129,13 @@ export function pluginTransitions(): CodeblocksPlugin {
 .${S}-nav:hover:not(:disabled) { border-color: ${cssVar('codeblocks.accent')}; }
 .${S}-nav:disabled { opacity: 0.45; cursor: default; }
 .${S}-nav-icon { font-size: 1rem; line-height: 1; }
+/* magic-move sets a unitless \`--smm-stagger: 0\` on its container, which makes its phase delays invalid. */
+.${S}-anim > * { --smm-stagger: 0ms; }
 @container (max-width: 480px) {
   .${S}-line { width: 10px; }
 }
 @media screen and (scripting: enabled) {
-  @container (max-width: 640px) {
+  @container (max-width: 480px) {
     .${S}-head:has(> .${S}-stepper) > .${S}-label { display: none; }
   }
 }

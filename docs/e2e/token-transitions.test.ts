@@ -22,6 +22,17 @@ test('shows the first step, with the steps and the label in the title bar', asyn
   else await expect(current(page).locator('.scb-steps-label')).toHaveText('Create the app');
 });
 
+test('the label shows at desktop widths, and hides on a phone', async ({ page }) => {
+  const label = current(page).locator('.scb-steps-label');
+  for (const width of [1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 800 });
+    await expect(label).toBeVisible();
+    expect(await label.evaluate((e) => e.scrollWidth <= e.clientWidth)).toBe(true);
+  }
+  await page.setViewportSize({ width: 360, height: 780 });
+  await expect(label).toBeHidden();
+});
+
 test('Previous, Next and the step counter sit under the block, not in the title bar', async ({ page }) => {
   const header = current(page).locator('.header');
   await expect(header.getByRole('button', { name: 'Previous' })).toHaveCount(0);
@@ -88,6 +99,13 @@ test('animates the tokens in the colours of the theme, or changes at once under 
     return;
   }
   const token = anim.locator('.shiki-magic-move-item', { hasText: /^listen$/ });
+  const delays = await anim.evaluate((box) =>
+    [...box.querySelectorAll('.shiki-magic-move-move, .shiki-magic-move-enter-active')].map(
+      (e) => getComputedStyle(e).transitionDelay,
+    ),
+  );
+  // magic-move moves at 0.3 and enters at 0.7 of the 500 ms duration.
+  expect(new Set(delays)).toEqual(new Set(['0.15s', '0.35s']));
   await expect(token).toHaveCSS('color', final);
   await expect(anim).toHaveCount(0);
   await expect(current(page).locator('code')).toBeVisible();

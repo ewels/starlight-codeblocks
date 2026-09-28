@@ -6,7 +6,7 @@ description: Explain a code block in prose steps that scroll past it, while the 
 import { Scrollycoding, Step } from 'starlight-codeblocks/components';
 import Example from '../../../components/Example.astro';
 
-A walkthrough of a file often puts the whole block first, then explains it in paragraphs below. Readers scroll back up to find each line that a paragraph names. Scrollycoding keeps the block next to the prose. As each step scrolls past the middle of the window, the block focuses the lines of that step.
+A walkthrough of a file often puts the whole block first, then explains it in paragraphs below. Readers scroll back up to find each line that a paragraph names. Scrollycoding keeps the block next to the prose. As each step scrolls past the middle of the block, the block focuses the lines of that step.
 
 export const basic = `
 <Scrollycoding>
@@ -60,7 +60,7 @@ app.listen(3000);
 
 </Example>
 
-Scroll down the page. The block stays below the site header, and each step that reaches the middle of the window changes the focus. On a narrow screen, each step has its own copy of the block, focused for that step.
+Scroll down the page. The block stays below the site header, and each step that reaches the middle of the block changes the focus. On a narrow screen, each step has its own copy of the block, focused for that step.
 
 ## Syntax
 
@@ -82,7 +82,7 @@ Put one code block first, then the steps. Leave an empty line after `<Scrollycod
 ## Behaviour
 
 - On a wide screen, the steps are a column on the left, and the block is on the right. The block stays below the site header while the steps scroll with the page.
-- The step that crosses the middle of the window is the active step. It shows at full opacity, and the other steps fade.
+- The step that crosses the middle of the block is the active step. It shows at full opacity, and the other steps fade.
 - When the active step changes, the block changes its focused and marked lines, with the 250 ms transition of [focus](/starlight-codeblocks/features/focus/).
 - The block stays blurred when the pointer is over it, because the pointer often rests there while the reader scrolls. Move keyboard focus into the block to make every line sharp.
 - On a narrow screen, each step shows its own copy of the block below its text. The two columns need a content width of 600 px or more.

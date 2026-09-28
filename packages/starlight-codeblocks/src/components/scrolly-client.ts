@@ -15,14 +15,28 @@ function setup(root: HTMLElement) {
       line.classList.toggle('mark', mark.has(i));
     });
   };
-  // The band in the middle of the window: a step is active while it crosses it.
-  const observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) if (entry.isIntersecting) show(entry.target as HTMLElement);
-    },
-    { rootMargin: '-45% 0px -45% 0px' },
-  );
-  for (const step of steps) observer.observe(step);
+  // A step is active while it crosses the middle of the sticky block (or of the window, in the narrow layout).
+  const code = root.querySelector<HTMLElement>(`.${S}-code`);
+  let observer: IntersectionObserver | undefined;
+  const observe = () => {
+    observer?.disconnect();
+    const height = code?.offsetHeight ?? 0;
+    const top = code && height ? Number.parseFloat(getComputedStyle(code).top) || 0 : 0;
+    const line = Math.round(height ? Math.min(top + height / 2, (top + innerHeight) / 2) : innerHeight / 2);
+    root.style.setProperty('--scb-scrolly-line', `${line}px`);
+    root.style.setProperty('--scb-scrolly-lead', `${line - top}px`);
+    root.style.setProperty('--scb-scrolly-height', `${height}px`);
+    observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) if (entry.isIntersecting) show(entry.target as HTMLElement);
+      },
+      { rootMargin: `${-line}px 0px ${line + 1 - innerHeight}px 0px` },
+    );
+    for (const step of steps) observer.observe(step);
+  };
+  if (code) new ResizeObserver(observe).observe(code);
+  addEventListener('resize', observe);
+  observe();
 }
 
 const init = () => {

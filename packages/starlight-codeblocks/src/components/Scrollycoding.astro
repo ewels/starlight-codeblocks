@@ -33,12 +33,19 @@ const html = scrollycoding(await Astro.slots.render('default'), getRegistry()?.o
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
         gap: 22px;
+        /* Shorter than the block, so that the active step's text stays level with the block. */
+        --scb-scrolly-slot: min(30vh, 0.6 * var(--scb-scrolly-height, 50vh));
       }
       [data-scb-scrolly] .scb-scrolly-steps {
-        padding-block-end: 20vh;
+        /* So that the first and the last step can reach the middle of the block. */
+        padding-block: max(0px, var(--scb-scrolly-lead, 0px) - var(--scb-scrolly-slot) / 2)
+          max(20vh, 100vh - var(--scb-scrolly-line, 50vh) - var(--scb-scrolly-slot) / 2);
       }
       [data-scb-scrolly] .scb-scrolly-step {
-        min-height: 30vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: var(--scb-scrolly-slot);
         margin-top: 0;
         opacity: 0.38;
       }

@@ -111,7 +111,7 @@ with path.open() as fh:  # [!annotate] Opens the file and closes it when the blo
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/scrollycoding/
 
-Use for a walkthrough of one code block in prose steps. On a wide screen, the steps scroll in a column and the block stays in view. The step at the middle of the window sets the focus of the block. Do not use when the code changes between steps: use token transitions.
+Use for a walkthrough of one code block in prose steps. On a wide screen, the steps scroll in a column and the block stays in view. The step at the middle of the block sets the focus of the block. Do not use when the code changes between steps: use token transitions.
 
 | Syntax | Where |
 |---|---|
