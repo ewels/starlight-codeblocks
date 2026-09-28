@@ -64,7 +64,8 @@ code.${CLASS} span[style^='--'] {
   const base = variants[0]?.theme;
   const baseSelector = base && selector(base);
   const notBase = baseSelector ? `:not(${baseSelector})` : '';
-  let css = rules(0);
+  // A chip that wraps keeps its padding and corners on each line.
+  let css = `code.${CLASS} { border-radius: 4px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }\n${rules(0)}`;
   const altIndex = variants.findIndex((v) => v.theme.type !== base?.type);
   if ((ec.useDarkModeMediaQuery ?? (variants.length === 2 && altIndex === 1)) && altIndex > 0) {
     css += `\n@media (prefers-color-scheme: ${variants[altIndex]?.theme.type}) {\n${scoped(`${root}${notBase}`, rules(altIndex))}\n}`;

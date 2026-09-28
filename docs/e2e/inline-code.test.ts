@@ -67,3 +67,12 @@ test.describe('without JavaScript', () => {
     expect([rgb(colours.dark), rgb(colours.light)]).toContain(colours.drawn);
   });
 });
+
+test('chips have rounded corners, also on each line of a chip that wraps', async ({ page }) => {
+  const code = page.locator('.example .pane.output').first().locator('code.scb-inline').first();
+  const style = await code.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return [s.borderRadius, s.boxDecorationBreak || s.getPropertyValue('-webkit-box-decoration-break')];
+  });
+  expect(style).toEqual(['4px', 'clone']);
+});

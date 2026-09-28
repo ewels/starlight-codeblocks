@@ -69,6 +69,9 @@ test('styles switch themes the way Starlight switches Expressive Code themes', (
   const css = inlineStyles(variants, {});
   expect(css).toContain('code.scb-inline { background: #24292e; color: #e1e4e8; }');
   expect(css).toContain('color: var(--0, inherit)');
+  expect(css).toContain(
+    'code.scb-inline { border-radius: 4px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }',
+  );
   expect(css).toContain(":root:not([data-theme='dark']) code.scb-inline { background: #fff;");
   expect(css).toContain(":root[data-theme='light'] code.scb-inline span[style^='--'] {\n  color: var(--1, inherit)");
 });
