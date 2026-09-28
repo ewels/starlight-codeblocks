@@ -1,0 +1,112 @@
+---
+import { Code } from '@astrojs/starlight/components';
+import { ExpressiveCode, ExpressiveCodeTheme } from '@astrojs/starlight/expressive-code';
+import { toHtml } from '@astrojs/starlight/expressive-code/hast';
+import { pluginCodeblocks } from 'starlight-codeblocks/expressive-code';
+
+interface Props {
+  /** Markdown with one fenced code block, which renders once in each theme. */
+  code: string;
+}
+
+// Dark and light pairs, by Shiki's names for its bundled themes.
+const themes = [
+  ['github-dark', 'GitHub Dark'],
+  ['github-light', 'GitHub Light'],
+  ['dracula', 'Dracula'],
+  ['solarized-light', 'Solarized Light'],
+  ['one-dark-pro', 'One Dark Pro'],
+  ['catppuccin-latte', 'Catppuccin Latte'],
+  ['nord', 'Nord'],
+  ['min-light', 'Min Light'],
+] as const;
+
+const { code } = Astro.props;
+const match = code.trim().match(/^(`{3,}|~{3,})([^\s`]*)[ \t]*(.*)\n([\s\S]*?)\n?\1[ \t]*$/);
+if (!match) throw new Error(`<ThemeGallery> needs one fenced code block:\n${code}`);
+const [, , language = '', meta = '', body = ''] = match;
+
+// Starlight's own style settings for code blocks, so that only the theme differs from the rest of the site.
+const styleOverrides = {
+  borderRadius: '0px',
+  borderWidth: '1px',
+  codePaddingBlock: '0.75rem',
+  codePaddingInline: '1rem',
+  codeFontFamily: 'var(--__sl-font-mono)',
+  codeFontSize: 'var(--sl-text-code)',
+  codeLineHeight: 'var(--sl-line-height)',
+  uiFontFamily: 'var(--__sl-font)',
+  textMarkers: { lineDiffIndicatorMarginLeft: '0.25rem', defaultChroma: '45', backgroundOpacity: '60%' },
+};
+
+const cards = await Promise.all(
+  themes.map(async ([name, label]) => {
+    // Astro's build leaves Shiki's list of bundled themes empty, so each theme comes from its own module.
+    const theme = new ExpressiveCodeTheme((await import(`@shikijs/themes/${name}`)).default);
+    // The theme twice, so that the token colours of both of the site's style variants come from it.
+    const ec = new ExpressiveCode({ themes: [theme, theme], plugins: pluginCodeblocks(), styleOverrides });
+    const { renderedGroupAst } = await ec.render({
+      code: body,
+      language,
+      meta,
+      // Each theme gets its own ids for notes and footnotes.
+      parentDocument: { sourceFilePath: `theme-gallery/${name}` },
+    });
+    const vars = [...(ec.styleVariants[0]?.cssVarDeclarations ?? [])].map(([k, v]) => `${k}:${v}`).join(';');
+    return { name, label, type: theme.type, html: toHtml(renderedGroupAst), css: `[data-scb-theme='${name}'] .expressive-code{${vars}}` };
+  }),
+);
+---
+
+<style is:inline set:html={cards.map((c) => c.css).join('\n')} />
+<div class="theme-gallery not-content">
+  <p class="label">Readers see</p>
+  <ul class="cards">
+    {
+      cards.map(({ name, label, type, html }) => (
+        <li class="card" data-scb-theme={name}>
+          <p class="name">
+            {label} <span class="type">({type})</span>
+          </p>
+          <Fragment set:html={html} />
+        </li>
+      ))
+    }
+  </ul>
+  <p class="label">You write</p>
+  <Code code={code.trim()} lang="md" />
+</div>
+
+<style>
+  .theme-gallery {
+    margin-top: 1.5rem;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+    gap: 1rem;
+    margin: 0 0 1rem;
+    padding: 0;
+    list-style: none;
+  }
+  .card {
+    min-width: 0;
+  }
+  .label,
+  .name {
+    margin: 0 0 0.375rem;
+    font-size: var(--sl-text-sm);
+  }
+  .label {
+    font-style: italic;
+    color: var(--sl-color-gray-3);
+  }
+  .name {
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+  .type {
+    font-weight: 400;
+    color: var(--sl-color-gray-3);
+  }
+</style>

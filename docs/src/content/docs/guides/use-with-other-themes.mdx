@@ -1,0 +1,114 @@
+---
+title: Use with other themes
+description: See the features in eight Expressive Code themes, and learn how the plugin takes its colours from the theme of your site.
+---
+
+import ThemeGallery from '../../../components/ThemeGallery.astro';
+
+Starlight shows code blocks in the Night Owl theme, with a dark and a light version. You can use any theme that Expressive Code knows instead. The plugin takes its colours from the theme, so markers, messages and notes match the syntax colours of the block.
+
+Each example on this page shows the same code block in eight themes. The examples combine several features, so that one block shows many of the colours of the plugin.
+
+## Notes and line states
+
+This block has an annotation, a footnote and a warning. The marker of the annotation and the bar of the warning take the blue and the warning colour of each theme:
+
+export const notes = `
+\`\`\`py title="app.py"
+from flask import Flask
+
+app = Flask(__name__)  # [!annotate] Creates the application object.
+
+# [!ref] Runs this function for \`GET /health\`.
+@app.get("/health")
+def health():
+    return {"ok": True}  # [!code warning] Always 200
+\`\`\`
+`;
+
+<ThemeGallery code={notes} />
+
+## Changes
+
+Word-level diff tints the words that changed with the green and the red of the terminal colours of each theme:
+
+export const changes = `
+\`\`\`diff lang="js" title="client.js"
+-const timeout = 5000;
++const timeout = options.timeout ?? 5000;
+ const client = createClient({
+-  retries: 3,
++  retries: options.retries,
+ });
+\`\`\`
+`;
+
+<ThemeGallery code={changes} />
+
+## Terminal commands
+
+Smart shell copy colours the prompts with the cyan of each theme, and mutes the output lines:
+
+export const terminal = `
+\`\`\`sh
+$ npm install starlight-codeblocks
+added 1 package in 2s
+$ npx astro build
+\`\`\`
+`;
+
+<ThemeGallery code={terminal} />
+
+## Choose the themes of your site
+
+Give the names of a dark and a light theme in the `expressiveCode` option of Starlight. The theme menu of Starlight switches between them:
+
+```js title="astro.config.mjs" {3}
+starlight({
+  expressiveCode: {
+    themes: ['dracula', 'solarized-light'],
+  },
+  plugins: [codeblocks()],
+});
+```
+
+The names are the names of the themes that Shiki includes, such as `github-dark` or `catppuccin-latte`. The [Expressive Code docs](https://expressive-code.com/guides/themes/) list them, and explain how to load a theme from a JSON file.
+
+## Colours from the theme
+
+A theme gives colours for many parts of an editor, such as the terminal, the error squiggles and the bracket pairs. The plugin uses these colours:
+
+| Plugin colour | Theme colour |
+|---|---|
+| Markers, focus rings and active states (`codeblocks.accent`) | `terminal.ansiBlue` |
+| Error, warning and info states | `editorError.foreground`, `editorWarning.foreground`, `editorInfo.foreground` |
+| Colourised brackets | `editorBracketHighlight.foreground1` to `3` |
+| Footnotes | `terminal.ansiMagenta` |
+| Word-level diff, Run output and errors | `terminal.ansiGreen`, `terminal.ansiRed` |
+| Shell prompts | `terminal.ansiCyan` |
+| Permalink target | `terminal.ansiYellow` |
+| Muted text, popovers and borders | Mixes of the code colour and the code background |
+
+The plugin then makes each colour lighter or darker, until it has its contrast target on the code background of that theme. The [accessibility](/starlight-codeblocks/reference/accessibility/) page gives the targets. If a theme has no colour for a part, the plugin uses the default colour of VS Code. The [style settings](/starlight-codeblocks/reference/style-settings/) reference says how each default is made.
+
+## Change a colour
+
+A theme can give a colour that does not suit the site, such as a grey accent. To change a colour for every theme, set the style setting in `styleOverrides`:
+
+```js title="astro.config.mjs" {3-5}
+starlight({
+  expressiveCode: {
+    themes: ['min-light', 'github-dark'],
+    styleOverrides: { codeblocks: { accent: ['#58a6ff', '#0969da'] } },
+  },
+  plugins: [codeblocks()],
+});
+```
+
+A pair gives the dark value, then the light value. The plugin does not correct the contrast of a colour that you set. Check it against the code background of each theme.
+
+## Limitations
+
+- Min Light has a grey terminal blue, so its accent is grey. Colour is never the only mark of a feature, so the blocks still work.
+- Custom line states keep the colours that you give in the `lineStates` option.
+- If a theme sets the code background to a CSS variable, the plugin cannot read it. It measures the contrast against the background of the theme instead.

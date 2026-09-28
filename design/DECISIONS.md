@@ -1220,3 +1220,11 @@ Use this format:
 - Reason: The 1 px band fired only when a step crossed it, so a jump (the End key, an anchor, `scrollTo()`, a fast fling) left the wrong step active. The old padding of at least 20vh left about 400 px of scrolling with the block stuck alone and no step text beside it.
 - Alternatives: Keep the observer and add a check on `scrollend` (two mechanisms for one job).
 
+
+## Docs: a themes guide with the same blocks in eight themes
+
+- Date: 2026-09-28
+- Step: after the plan (user request)
+- Decision: A new guide, "Use with other themes" (`guides/use-with-other-themes.mdx`), shows three blocks (notes and a line state, a word-level diff, terminal commands), each in GitHub Dark and Light, Dracula, Solarized Light, One Dark Pro, Catppuccin Latte, Nord and Min Light, side by side, with the source once below. `ThemeGallery.astro` renders each block with its own Expressive Code engine: `pluginCodeblocks()`, Starlight's non-colour style overrides, and the theme twice, so that the token colours of both site style variants (`--0` and `--1`) come from it and the site's light and dark switch does not change the cards. It writes the theme's CSS variables on each card's `.expressive-code`; the site's own base styles, copy button and client loader do the rest. Each theme gets its own `sourceFilePath`, so that note and footnote ids stay unique. The themes come from `@shikijs/themes/<name>` (a docs dev dependency, the version the workspace already uses), because Astro's build leaves Shiki's list of bundled themes empty, so `loadShikiTheme()` fails there. The Markdown version of the page shows the source of each gallery, as for `<Example>`. A Playwright test checks that each card keeps its theme under both site themes.
+- Reason: The user asked for a page about themes with examples side by side in different themes. The plugin now takes its colours from the theme, and the page shows that.
+- Alternatives: Screenshots (images of code are against the writing style, and go stale). `<Code>` with a theme prop (it has none; every block on a site uses the site's themes).

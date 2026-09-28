@@ -196,9 +196,9 @@ export function pageMarkdown(entry: Entry) {
     const [, indent = '', closing, name = '', rest = '', selfClosing] = tag;
     const props = attrs(rest);
     if (closing || ['Tabs', 'Steps'].includes(name)) continue;
-    if (name === 'Example') {
+    if (name === 'Example' || name === 'ThemeGallery') {
       const code = strings[props.code ?? ''];
-      if (code === undefined) throw new Error(`<Example> in ${entry.id} uses an unknown export`);
+      if (code === undefined) throw new Error(`<${name}> in ${entry.id} uses an unknown export`);
       out.push(fenced(code.trim(), 'md'));
       if (!selfClosing)
         while (lines[++i]?.trim() !== '</Example>') if (i >= lines.length) throw new Error('Unclosed <Example>');
