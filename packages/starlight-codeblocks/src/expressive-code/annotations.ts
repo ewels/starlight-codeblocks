@@ -106,6 +106,11 @@ export function pluginAnnotations(): CodeblocksPlugin {
 .${cls()}:hover, .${cls()}:focus-visible, .${cls()}:has(+ :popover-open) {
   background: ${cssVar('codeblocksAnnotations.markerHoverBackground')};
 }
+/* On the timing of the hover note: it waits 80 ms, then grows for 160 ms. */
+@media (prefers-reduced-motion: no-preference) {
+  button.${cls()} { transition: background-color 160ms ease-out; }
+  button.${cls()}:hover { transition-delay: 80ms; }
+}
 .${cls('-popover')} {
   gap: 0.5rem;
   padding: 0.45rem 0.8rem 0.45rem 0.5rem;
@@ -287,7 +292,12 @@ ${SIDE_SIZES.map(
             ),
             h(
               'div',
-              { id, popover: 'auto', class: `${PREFIX}-float ${cls('-popover')}`, style: `position-anchor:${anchor}` },
+              {
+                id,
+                popover: 'manual',
+                class: `${PREFIX}-float ${cls('-popover')}`,
+                style: `position-anchor:${anchor}`,
+              },
               [h('span', { class: cls('-badge'), ariaHidden: 'true' }, n), h('p', text)],
             ),
           );

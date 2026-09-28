@@ -13,7 +13,7 @@ test('turns [!annotate] into a numbered button with a popover after it', async (
   expect(button).toBeTruthy();
   const id = (button as RegExpMatchArray)[1];
   expect(html).toContain(
-    `</button><div id="${id}" popover="auto" class="scb-float scb-annotation-popover" style="position-anchor:--${id}"><span class="scb-annotation-badge" aria-hidden="true">1</span><p>Sets <code>x</code>.</p></div>`,
+    `</button><div id="${id}" popover="manual" class="scb-float scb-annotation-popover" style="position-anchor:--${id}"><span class="scb-annotation-badge" aria-hidden="true">1</span><p>Sets <code>x</code>.</p></div>`,
   );
   expect(html).not.toContain('[!annotate]');
   expect(copyText).toBe('x = 1\ny = 2');

@@ -13,7 +13,7 @@ These rules apply to all features, so the sections below do not repeat them:
 - Every control shows a focus ring in `codeblocks.focusRing` when it has keyboard focus. The ring has 3:1 contrast or more on the code background. The code area of a block, which takes focus when it scrolls, uses the same ring.
 - In forced colours mode, markers keep their outline and the current step keeps its highlight.
 - A block with controls in its title bar has the title as its accessible name. Without a title, the name is "Code block". The labels of the controls are not part of the name.
-- A change that happens on hover over a control also happens on keyboard focus.
+- A change that happens on hover over a control also happens on keyboard focus, or when the reader selects the control.
 - Escape closes an open popover or hover card.
 - When the reader's system asks for reduced motion, every transition and animation of the plugin stops, and so does the transition of the copy button. The change still happens, at once, and pages jump instead of scrolling smoothly.
 - The copy button and a manual selection give the code only. Messages, markers, notes, line numbers and glyphs are not part of the copied text.
@@ -54,7 +54,7 @@ The plugin reads directives at build time and removes them from the page. Reader
 
 - Each marker is a button with the label "Annotation N". Screen readers read the note after its marker. The number at the start of the note is hidden from screen readers, so they do not read it twice.
 - The note grows out of its marker. With reduced motion, it opens at once.
-- Escape, or a selection outside the note, closes it.
+- Escape, or a selection outside the markers and the notes, closes every open note.
 - A hover note stays while the pointer is on the marker or the note, and Escape closes it. Touch screens and the keyboard open a note only when the reader selects the marker.
 - When the page prints, the notes print as a numbered list under the block.
 

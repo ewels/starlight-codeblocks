@@ -1380,3 +1380,19 @@ Use this format:
 - Decision: At build time, a callout between two lines with the same highlight classes (Expressive Code's `mark`, `ins` and `del`, and the line state classes) gets those classes and `scb-callout-on`, which draws the line's background and its bar after the gutter (a gradient at `--scb-callout-bar-wd` from `--scb-gutter`). A callout with a highlight on one side only, or two different highlights, stays plain. Highlights that scripts add, such as footnotes or code mentions, are not copied.
 - Reason: The user asked for an unbroken highlight when both sides match. The callout is not an `.ec-line`, so Expressive Code's line rules do not reach it, and giving it `ec-line` would make other features count it as a line.
 - Alternatives: CSS `:has()` sibling selectors (need one selector for each number of stacked callouts). Copying script highlights at run time (JavaScript for a rare case).
+
+## Annotations: manual popovers, so that several notes stay open
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: The notes are `popover="manual"`, not `auto`. The script closes them: a click on the marker, or on the note's badge that covers the marker, toggles the note; a click in a note shown on hover keeps it; a click anywhere else, or Escape, closes every open note, and Escape moves focus from a note to its marker. Hover works while other notes are open, and each hover note has its own hide timer. On hover, the marker's colour waits 80 ms and fades for 160 ms, the timing of the note. This replaces "Opening a note closes the other" and the marker colour "at once, without a fade".
+- Reason: The user found that a click on a hover note could not keep it (the note's badge covers the marker, so the click missed the button), that a kept note stopped hover on the other markers, and that only one note could stay open. Auto popovers close each other when one opens, so both limits came from the popover type. The user also asked for the marker colour and the note to animate on the same timescale.
+- Alternatives: `popover="hint"` for hover notes (no Firefox or Safari support yet). `pointer-events: none` on the badge (the badge would no longer close the note, and the click would still miss for a note placed under the marker). Without JavaScript, manual popovers have no light dismiss; a second click on the marker closes the note, which is enough for a fallback.
+
+## Footnotes: highlights toggle, several stay on, and they fade
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: A click on a badge or a note toggles its highlight, and other highlights stay; a click outside the badges and notes clears them all. The number link in the list keeps its highlight, because it is the way back to the line. Highlights fade over 160 ms; a hover highlight waits 80 ms first, and a click highlight starts at once. The badge fades with its line. This replaces the badge colour "at once, with no fade".
+- Reason: The user asked to unselect with a second click, to pin several, and for a slightly delayed fade so that hover does not flash. The transitions sit in `prefers-reduced-motion: no-preference`, because a line loses its `scb-` class as it fades out, so the shared reduced-motion rule would not reach it.
+- Alternatives: A longer delay (feels slow). A delay on the click highlight too (the click should answer at once).

@@ -37,11 +37,14 @@ test('a badge highlights its line and its note, and a click elsewhere clears it'
   await badge.click();
   await expect(line).toHaveClass(/scb-footnote-on/);
   await expect(note).toHaveClass(/scb-footnote-on/);
+  // After the fade.
+  await page.waitForTimeout(300);
   const bar = await line.locator('.code').evaluate((el) => getComputedStyle(el).borderInlineStartColor);
   expect(bar).not.toBe('rgba(0, 0, 0, 0)');
   // The note has the same tint and bar as its line, and its text stays where it was.
   const style = (el: Element) => [getComputedStyle(el).backgroundColor, getComputedStyle(el).borderInlineStartColor];
-  expect(await note.evaluate(style)).toEqual([await line.evaluate((el) => getComputedStyle(el).backgroundColor), bar]);
+  const lineTint = await line.evaluate((el) => getComputedStyle(el).backgroundColor);
+  await expect.poll(() => note.evaluate(style)).toEqual([lineTint, bar]);
   const other = block.locator('.scb-footnotes li').nth(1);
   const x = (el: Element) => (el.querySelector('.scb-footnote-num') as Element).getBoundingClientRect().x;
   expect(await note.evaluate(x)).toBeCloseTo(await other.evaluate(x), 0);
@@ -64,10 +67,10 @@ test('hovering over a badge or a note highlights both until the pointer leaves, 
   await badge.hover();
   await expect(line).toHaveClass(/scb-footnote-peek/);
   await expect(note).toHaveClass(/scb-footnote-peek/);
-  expect(await note.evaluate(tint)).toBe(await line.evaluate(tint));
+  await expect.poll(async () => (await note.evaluate(tint)) === (await line.evaluate(tint))).toBe(true);
   await page.mouse.move(0, 0);
   await expect(line).not.toHaveClass(/scb-footnote-peek/);
-  expect(await note.evaluate(tint)).toBe(plain);
+  await expect.poll(() => note.evaluate(tint)).toBe(plain);
   await note.hover();
   await expect(line).toHaveClass(/scb-footnote-peek/);
   await badge.click();
@@ -75,6 +78,37 @@ test('hovering over a badge or a note highlights both until the pointer leaves, 
   await expect(line).toHaveClass(/scb-footnote-on/);
   await expect(note).toHaveClass(/scb-footnote-on/);
   await expect(note).not.toHaveClass(/scb-footnote-peek/);
+});
+
+test('a hover highlight fades in after a short delay, and a click highlight at once', async ({ page }, info) => {
+  const note = example(page).locator('.scb-footnotes li').first();
+  const timing = () =>
+    note.evaluate((el) => [getComputedStyle(el).transitionDuration, getComputedStyle(el).transitionDelay]);
+  if (info.project.name === 'reduced-motion') {
+    expect((await timing())[0]).toBe('0s');
+    return;
+  }
+  expect(await timing()).toEqual(['0.16s, 0.16s, 0.16s', '0s, 0s, 0s']);
+  await note.evaluate((el) => el.classList.add('scb-footnote-peek'));
+  expect((await timing())[1]).toBe('0.08s');
+  await note.evaluate((el) => el.classList.add('scb-footnote-on'));
+  expect((await timing())[1]).toBe('0s, 0s, 0s');
+});
+
+test('a second click on a badge or a note clears its highlight, and several can stay on', async ({ page }) => {
+  const block = example(page);
+  const notes = block.locator('.scb-footnotes li');
+  const first = block.getByRole('link', { name: 'Footnote 1', exact: true });
+  await first.click();
+  await block.getByRole('link', { name: 'Footnote 2', exact: true }).click();
+  await expect(notes.nth(0)).toHaveClass(/scb-footnote-on/);
+  await expect(notes.nth(1)).toHaveClass(/scb-footnote-on/);
+  await first.click();
+  await expect(notes.nth(0)).not.toHaveClass(/scb-footnote-on/);
+  await expect(notes.nth(1)).toHaveClass(/scb-footnote-on/);
+  await notes.nth(1).click();
+  await expect(notes.nth(1)).not.toHaveClass(/scb-footnote-on/);
+  await expect(block.locator('.ec-line.scb-footnote-on')).toHaveCount(0);
 });
 
 test('a note highlights its line, with the keyboard', async ({ page }) => {
@@ -228,7 +262,8 @@ test.describe('without JavaScript', () => {
   });
 });
 
-test('a badge changes colour at once, with no fade', async ({ page }) => {
+test('a badge fades with its line, and at once under reduced motion', async ({ page }, info) => {
   const badge = page.locator('.example .pane.output .scb-footnote-badge').first();
-  expect(await badge.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
+  const duration = await badge.evaluate((el) => getComputedStyle(el).transitionDuration);
+  expect(duration).toBe(info.project.name === 'reduced-motion' ? '0s' : '0.16s, 0.16s, 0.16s');
 });

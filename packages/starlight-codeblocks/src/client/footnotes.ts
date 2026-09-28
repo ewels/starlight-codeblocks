@@ -8,18 +8,27 @@ function reveal(el: Element) {
   el.scrollIntoView({ block: 'center', behavior: smooth ? 'smooth' : 'auto' });
 }
 
+/** A click on a badge or a note toggles its highlight, and several can stay on. A click elsewhere clears them. */
 function select(event: MouseEvent) {
-  for (const el of document.querySelectorAll(`.${ON}`)) el.classList.remove(ON);
   const target = event.target as Element;
   const badge = target.closest<HTMLElement>('.scb-footnote-badge');
   const item = target.closest<HTMLElement>('.scb-footnotes li');
   const block = (badge ?? item)?.closest('[data-scb-footnotes]');
-  if (!block) return;
+  if (!block) {
+    for (const el of document.querySelectorAll(`.${ON}`)) el.classList.remove(ON);
+    return;
+  }
   const link = target.closest('a.scb-footnote-badge, a.scb-footnote-num');
   if (link) event.preventDefault();
   const n = (badge ?? item)?.dataset.scbFn;
   const line = block.querySelector(`.scb-footnote-badge[data-scb-fn="${n}"]`)?.closest('.ec-line');
   const entry = block.querySelector<HTMLElement>(`.scb-footnotes li[data-scb-fn="${n}"]`);
+  // The number in the list is the way back to the line, so it keeps the highlight.
+  if (entry?.classList.contains(ON) && !target.closest('a.scb-footnote-num')) {
+    line?.classList.remove(ON);
+    entry.classList.remove(ON);
+    return;
+  }
   line?.classList.add(ON);
   entry?.classList.add(ON);
   const other = badge ? entry : line;

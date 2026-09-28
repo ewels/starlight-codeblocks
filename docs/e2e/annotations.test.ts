@@ -90,14 +90,52 @@ test.describe('hover', () => {
     await expect(note).toBeHidden();
   });
 
-  test('while a clicked note is open, hovering over another marker leaves it open', async ({ page }) => {
+  test('while a clicked note is open, hovering over another marker shows that note too', async ({ page }) => {
     const block = example(page);
     const notes = block.locator('.scb-annotation-popover');
     await block.getByRole('button', { name: 'Annotation 1' }).click();
     await expect(notes.first()).toBeVisible();
     await block.getByRole('button', { name: 'Annotation 2' }).hover();
-    await page.waitForTimeout(300);
+    await expect(notes.nth(1)).toBeVisible();
     await expect(notes.first()).toBeVisible();
+    await page.mouse.move(0, 0);
+    await expect(notes.nth(1)).toBeHidden();
+    await expect(notes.first()).toBeVisible();
+  });
+
+  test('a click where the hover note covers the marker keeps the note, and a second click closes it', async ({
+    page,
+  }) => {
+    const block = example(page);
+    const marker = block.getByRole('button', { name: 'Annotation 1' });
+    const note = block.locator('.scb-annotation-popover').first();
+    await marker.hover();
+    await expect(note).toBeVisible();
+    await expect(note).not.toHaveClass(/scb-annotation-wait/);
+    // A real click at the marker, which lands on whatever is on top of it.
+    const box = await marker.boundingBox();
+    const [x, y] = [(box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2];
+    await page.mouse.click(x, y);
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(400);
+    await expect(note).toBeVisible();
+    await page.mouse.click(x, y);
+    await expect(note).toBeHidden();
+  });
+
+  test('two notes can be kept open with clicks', async ({ page }) => {
+    const block = example(page);
+    const notes = block.locator('.scb-annotation-popover');
+    for (const n of [1, 2]) {
+      const box = await block.getByRole('button', { name: `Annotation ${n}` }).boundingBox();
+      await page.mouse.click((box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2);
+    }
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(400);
+    await expect(notes.nth(0)).toBeVisible();
+    await expect(notes.nth(1)).toBeVisible();
+    await page.mouse.click(5, 5);
+    await expect(notes.nth(0)).toBeHidden();
     await expect(notes.nth(1)).toBeHidden();
   });
 });
@@ -159,7 +197,7 @@ test('the note opens at once under reduced motion', async ({ page }, info) => {
   expect(await note.evaluate((el) => getComputedStyle(el).animationName)).toBe('none');
 });
 
-test('opening one note closes the other, and Escape closes it, with the keyboard', async ({ page }) => {
+test('several notes can stay open, and Escape closes them, with the keyboard', async ({ page }) => {
   const block = example(page);
   const notes = block.locator('.scb-annotation-popover');
   await block.getByRole('button', { name: 'Annotation 1' }).focus();
@@ -169,10 +207,11 @@ test('opening one note closes the other, and Escape closes it, with the keyboard
   await second.focus();
   await page.keyboard.press('Enter');
   await expect(notes.nth(1)).toBeVisible();
-  await expect(notes.nth(0)).toBeHidden();
+  await expect(notes.nth(0)).toBeVisible();
   await expect(notes.nth(1).locator('code')).toHaveText('uv');
   await page.keyboard.press('Escape');
   await expect(notes.nth(1)).toBeHidden();
+  await expect(notes.nth(0)).toBeHidden();
   await expect(second).toBeFocused();
 });
 
@@ -206,22 +245,29 @@ test('copying leaves the markers and notes out', async ({ page, context }) => {
   expect(copied).not.toContain('One job');
 });
 
-test('the marker changes to the hover colour at once, without a fade', async ({ page, isMobile }) => {
+test('the marker fades to the hover colour on the timing of the hover note', async ({ page, isMobile }, info) => {
   const marker = example(page).locator('.scb-annotation').first();
-  expect(await marker.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
+  const timing = () =>
+    marker.evaluate((el) => [getComputedStyle(el).transitionDuration, getComputedStyle(el).transitionDelay]);
+  if (info.project.name === 'reduced-motion') {
+    expect((await timing())[0]).toBe('0s');
+    return;
+  }
+  expect(await timing()).toEqual(['0.16s', '0s']);
   test.skip(isMobile, 'Phones have no hover.');
   const rest = await marker.evaluate((el) => getComputedStyle(el).backgroundColor);
   await marker.hover();
-  const { hover, expected } = await marker.evaluate((el) => {
+  expect(await timing()).toEqual(['0.16s', '0.08s']);
+  const expected = await marker.evaluate((el) => {
     const probe = document.createElement('span');
     probe.style.color = 'var(--ec-codeblocksAnnotations-markerHoverBg)';
     el.after(probe);
-    const out = { hover: getComputedStyle(el).backgroundColor, expected: getComputedStyle(probe).color };
+    const colour = getComputedStyle(probe).color;
     probe.remove();
-    return out;
+    return colour;
   });
-  expect(hover).toBe(expected);
-  expect(hover).not.toBe(rest);
+  await expect.poll(() => marker.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(expected);
+  expect(expected).not.toBe(rest);
 });
 
 test.describe('without JavaScript', () => {

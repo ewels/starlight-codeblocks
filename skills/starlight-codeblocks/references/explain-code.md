@@ -60,7 +60,7 @@ matrix:
   python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
 ```
 
-- Markers are numbered from 1 in each block. Hovering over a marker with a mouse shows its note until the pointer leaves the marker and the note. Selecting a marker keeps its note open. Escape closes it.
+- Markers are numbered from 1 in each block. Hovering over a marker with a mouse shows its note until the pointer leaves the marker and the note. Selecting a marker keeps its note open, and several can be open. Escape, or a selection elsewhere, closes them.
 - The note opens out of the marker, to the right of the line, when it fits there without covering code. Otherwise it opens under the marker, 340 px wide at most. Short notes on short lines fit beside the line.
 - The note can hold inline code, links and bold text.
 - Works without JavaScript, through the browser's `popover` attribute.
@@ -85,7 +85,7 @@ Use when every reader needs every note, and the block is short enough that the l
 app = Flask(__name__)
 ```
 
-- Hovering over a badge or a note highlights its line and its note. Selecting one keeps the highlight. Selecting a note does the same from the list.
+- Hovering over a badge or a note highlights its line and its note. Selecting one keeps the highlight, and a second selection clears it. Several can stay highlighted. Selecting a note does the same from the list.
 - Without JavaScript, the badges and the numbers are plain links to each other.
 - Option: `footnotes.sticky` (default `false`) makes every list sticky. `footnotes: false` turns the feature off.
 - Limits: a footnote applies to one line. A sticky list covers the bottom of the block, so keep the notes short.

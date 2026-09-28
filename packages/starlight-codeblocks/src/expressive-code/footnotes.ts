@@ -132,13 +132,26 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
   scroll-margin-block: 5rem;
 }
 /* The same tint and bar as its line. The padding reaches past the text by as much as the margin pulls back. */
-.${cls('s')} li:is(.${cls('-on')}, .${cls('-peek')}) {
+.${cls('s')} li {
   margin-inline: -0.5rem;
   padding-inline: calc(0.5rem - 3px) 0.5rem;
-  border-inline-start: 3px solid ${v('accent')};
+  border-inline-start: 3px solid transparent;
   border-radius: 0 3px 3px 0;
+}
+.${cls('s')} li:is(.${cls('-on')}, .${cls('-peek')}) {
+  border-inline-start-color: ${v('accent')};
   background: ${v('lineBackground')};
   color: ${cssVar('codeForeground')};
+}
+/* A short delay before a hover highlight, so that it does not flash while the pointer passes over. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-scb-footnotes] .ec-line, [data-scb-footnotes] .ec-line .code, .${cls('-badge')}, .${cls('s')} li {
+    transition: background-color 160ms ease-out, border-color 160ms ease-out, color 160ms ease-out;
+  }
+  :is(.ec-line, li).${cls('-peek')}:not(.${cls('-on')}),
+  .ec-line.${cls('-peek')}:not(.${cls('-on')}) :is(.code, .${cls('-badge')}) {
+    transition-delay: 80ms;
+  }
 }
 .${cls('-num')} {
   flex: none;
