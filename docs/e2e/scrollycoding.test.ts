@@ -87,6 +87,31 @@ test.describe('wide layout', () => {
     await expect.poll(() => clear(page)).toEqual([3]);
   });
 
+  test('a jump past several steps, such as the End key, still picks the right step', async ({ page }) => {
+    const last = (await steps(page).count()) - 1;
+    await centre(page, 0, last);
+    await expect(steps(page).nth(last)).toHaveClass(/scb-scrolly-on/);
+    await centre(page, 0, 0);
+    await expect(steps(page).nth(0)).toHaveClass(/scb-scrolly-on/);
+    await page.keyboard.press('End');
+    await expect(steps(page).nth(last)).toHaveClass(/scb-scrolly-on/);
+    await page.keyboard.press('Home');
+    await expect(steps(page).nth(0)).toHaveClass(/scb-scrolly-on/);
+  });
+
+  test('the block does not stay stuck alone after the last step', async ({ page }) => {
+    const last = (await steps(page).count()) - 1;
+    await centre(page, 0, last);
+    const { spare, half } = await scrolly(page).evaluate((root) => {
+      const grid = root.querySelector('.scb-scrolly-steps')?.getBoundingClientRect();
+      const code = root.querySelector('.scb-scrolly-code')?.getBoundingClientRect();
+      const step = [...root.querySelectorAll('.scb-scrolly-step')].at(-1)?.getBoundingClientRect();
+      return { spare: (grid?.bottom ?? 0) - (code?.bottom ?? 0), half: (step?.height ?? 0) / 2 };
+    });
+    expect(spare).toBeGreaterThanOrEqual(-1);
+    expect(spare).toBeLessThanOrEqual(half);
+  });
+
   test('a step can mark lines', async ({ page }) => {
     await centre(page, 1, 1);
     await expect(sticky(page, 1).locator('.ec-line').nth(2)).toHaveClass(/mark/);

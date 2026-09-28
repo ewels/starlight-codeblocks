@@ -37,9 +37,9 @@ const html = scrollycoding(await Astro.slots.render('default'), getRegistry()?.o
         --scb-scrolly-slot: min(30vh, 0.6 * var(--scb-scrolly-height, 50vh));
       }
       [data-scb-scrolly] .scb-scrolly-steps {
-        /* So that the first and the last step can reach the middle of the block. */
+        /* So that the first and the last step can reach the middle of the block, while the block is stuck. */
         padding-block: max(0px, var(--scb-scrolly-lead, 0px) - var(--scb-scrolly-slot) / 2)
-          max(20vh, 100vh - var(--scb-scrolly-line, 50vh) - var(--scb-scrolly-slot) / 2);
+          max(0px, var(--scb-scrolly-height, 50vh) - var(--scb-scrolly-lead, 0px) - var(--scb-scrolly-slot) / 2);
       }
       [data-scb-scrolly] .scb-scrolly-step {
         display: flex;

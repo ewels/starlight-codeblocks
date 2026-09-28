@@ -15,28 +15,38 @@ function setup(root: HTMLElement) {
       line.classList.toggle('mark', mark.has(i));
     });
   };
-  // A step is active while it crosses the middle of the sticky block (or of the window, in the narrow layout).
+  // The active step is the one at the middle of the sticky block (or of the window, in the narrow layout), or
+  // the nearest one. Reading the positions on each scroll also catches jumps, such as the End key or an anchor.
   const code = root.querySelector<HTMLElement>(`.${S}-code`);
-  let observer: IntersectionObserver | undefined;
-  const observe = () => {
-    observer?.disconnect();
+  let line = 0;
+  let frame = 0;
+  const pick = () => {
+    frame = 0;
+    let best: HTMLElement | undefined;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    for (const step of steps) {
+      const { top, bottom } = step.getBoundingClientRect();
+      const distance = Math.max(top - line, line - bottom, 0);
+      if (distance < bestDistance) [best, bestDistance] = [step, distance];
+    }
+    if (best && !best.classList.contains(`${S}-on`)) show(best);
+  };
+  const schedule = () => {
+    if (!frame) frame = requestAnimationFrame(pick);
+  };
+  const measure = () => {
     const height = code?.offsetHeight ?? 0;
     const top = code && height ? Number.parseFloat(getComputedStyle(code).top) || 0 : 0;
-    const line = Math.round(height ? Math.min(top + height / 2, (top + innerHeight) / 2) : innerHeight / 2);
+    line = Math.round(height ? Math.min(top + height / 2, (top + innerHeight) / 2) : innerHeight / 2);
     root.style.setProperty('--scb-scrolly-line', `${line}px`);
     root.style.setProperty('--scb-scrolly-lead', `${line - top}px`);
     root.style.setProperty('--scb-scrolly-height', `${height}px`);
-    observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) if (entry.isIntersecting) show(entry.target as HTMLElement);
-      },
-      { rootMargin: `${-line}px 0px ${line + 1 - innerHeight}px 0px` },
-    );
-    for (const step of steps) observer.observe(step);
+    schedule();
   };
-  if (code) new ResizeObserver(observe).observe(code);
-  addEventListener('resize', observe);
-  observe();
+  if (code) new ResizeObserver(measure).observe(code);
+  addEventListener('resize', measure);
+  addEventListener('scroll', schedule, { passive: true });
+  measure();
 }
 
 const init = () => {
