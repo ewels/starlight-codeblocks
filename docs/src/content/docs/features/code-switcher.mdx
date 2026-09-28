@@ -93,6 +93,10 @@ import { readFile } from 'node:fs/promises';
 
 const config = JSON.parse(await readFile('config.json', 'utf8'));
 \`\`\`
+\`\`\`rust
+let text = std::fs::read_to_string("config.json")?;
+let config: serde_json::Value = serde_json::from_str(&text)?;
+\`\`\`
 :::
 
 :::code-switcher{sync="lang"}
@@ -102,6 +106,9 @@ with open("config.json", "w") as fh:
 \`\`\`
 \`\`\`js
 await writeFile('config.json', JSON.stringify(config, null, 2));
+\`\`\`
+\`\`\`rust
+std::fs::write("config.json", serde_json::to_string_pretty(&config)?)?;
 \`\`\`
 :::
 `;
@@ -120,6 +127,10 @@ import { readFile } from 'node:fs/promises';
 
 const config = JSON.parse(await readFile('config.json', 'utf8'));
 ```
+```rust apiLinks=false
+let text = std::fs::read_to_string("config.json")?;
+let config: serde_json::Value = serde_json::from_str(&text)?;
+```
 :::
 
 :::code-switcher{sync="lang"}
@@ -129,6 +140,9 @@ with open("config.json", "w") as fh:
 ```
 ```js apiLinks=false
 await writeFile('config.json', JSON.stringify(config, null, 2));
+```
+```rust apiLinks=false
+std::fs::write("config.json", serde_json::to_string_pretty(&config)?)?;
 ```
 :::
 

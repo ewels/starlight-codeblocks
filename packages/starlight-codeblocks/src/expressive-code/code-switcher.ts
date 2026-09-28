@@ -39,7 +39,7 @@ export function pluginCodeSwitcher(): CodeblocksPlugin {
   display: inline-flex;
   align-items: center;
 }
-.${MENU} {
+.${MENU}, .${MENU}:hover {
   appearance: none;
   font-family: ${cssVar('codeFontFamily')};
   background: ${cssVar('codeBackground')};
@@ -57,10 +57,6 @@ export function pluginCodeSwitcher(): CodeblocksPlugin {
   inset-inline: auto 8px;
   width: 10px;
   height: 10px;
-}
-@media (scripting: none) {
-  .${FIELD} { display: none; }
-  .frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools > .${FIELD}:only-child) .header { display: none; }
 }`,
     jsModules: clientJsModules,
     hooks: {
@@ -72,7 +68,7 @@ export function pluginCodeSwitcher(): CodeblocksPlugin {
         const path = languageIcon(codeBlock.language);
         addTitleBarControl(
           figure,
-          h('span', { class: `${FIELD} ${PREFIX}-no-print` }, [
+          h('span', { class: `${FIELD} ${PREFIX}-no-print ${PREFIX}-needs-js` }, [
             icon(`${PREFIX}-switcher-icon`, path ?? CODE_ICON, !path),
             h(
               'select',

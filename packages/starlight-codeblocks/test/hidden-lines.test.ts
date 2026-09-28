@@ -33,7 +33,7 @@ test('groups consecutive hidden lines into one run, each with its own marker', a
 
 test('adds a title bar button that shows every run at once', async () => {
   const { html } = await render(block('js title="a.js" hidden={1,3}', 'a()', 'b()', 'c()'));
-  expect(html).toContain('class="scb-btn scb-hidden-toggle scb-no-print"');
+  expect(html).toContain('class="scb-btn scb-hidden-toggle scb-no-print scb-needs-js"');
   expect(html).toContain('Show 2 hidden lines');
   expect(html).not.toContain('aria-pressed');
 });

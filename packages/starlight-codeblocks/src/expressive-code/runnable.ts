@@ -76,10 +76,7 @@ export function pluginRunnable({ runtimes, timeout = 10000 }: RunnableSettings =
 }
 .${cls('-stdout')} + .${cls('-stderr')} { margin-top: 0.4rem; }
 .${cls('')}[aria-disabled='true'] { opacity: 0.6; cursor: progress; }
-@media (scripting: none) {
-  .${cls('')} { display: none; }
-  .frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools > .${cls('')}:only-child) .header { display: none; }
-}`,
+`,
     jsModules: clientJsModules,
     hooks: {
       postprocessRenderedBlock(context) {
@@ -107,7 +104,11 @@ export function pluginRunnable({ runtimes, timeout = 10000 }: RunnableSettings =
         figure.properties.dataScbRunnableTimeout = String(timeout);
         addTitleBarControl(
           renderData.blockAst,
-          h('button', { type: 'button', class: `${PREFIX}-btn ${cls('')} ${PREFIX}-no-print` }, 'Run'),
+          h(
+            'button',
+            { type: 'button', class: `${PREFIX}-btn ${cls('')} ${PREFIX}-no-print ${PREFIX}-needs-js` },
+            'Run',
+          ),
         );
         figure.children.push(h('div', { class: cls('-output'), ariaLive: 'polite' }));
       },

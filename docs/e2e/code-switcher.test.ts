@@ -72,8 +72,28 @@ test('the chevron keeps a gap from the right edge of the menu', async ({ page })
   expect(text).toBeGreaterThanOrEqual(20);
 });
 
+test('the menu sits 8px from the end of the frame, with or without a title', async ({ page }) => {
+  for (const block of [visible(page, 0), visible(page, 2)]) {
+    const [frame, menu] = await Promise.all([
+      block.locator('.frame').boundingBox(),
+      block.getByRole('combobox').boundingBox(),
+    ]);
+    expect(frame && menu && Math.round(frame.x + frame.width - (menu.x + menu.width))).toBe(8);
+  }
+});
+
+test('the menu keeps its background under the pointer', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Phones have no hover.');
+  const menu = visible(page, 0).getByRole('combobox');
+  const background = () => menu.evaluate((el) => getComputedStyle(el).backgroundColor);
+  await page.mouse.move(0, 0);
+  const rest = await background();
+  await menu.hover();
+  expect(await background()).toBe(rest);
+});
+
 test('a block without the saved label shows its first variant', async ({ page }) => {
-  await page.evaluate(() => localStorage.setItem('scb-code-switcher:lang', 'Rust'));
+  await page.evaluate(() => localStorage.setItem('scb-code-switcher:lang', 'Go'));
   await page.reload();
   await expect(visible(page, 1, 0)).toContainText('json.load');
 });

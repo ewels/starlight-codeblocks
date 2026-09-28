@@ -140,11 +140,15 @@ export function baseStyles({ cssVar }: ResolverContext) {
   border-bottom: 0;
   border-radius: ${cssVar('borderRadius')} ${cssVar('borderRadius')} 0 0;
 }
-.frame:not(.has-title):not(.is-terminal) .header > .${PREFIX}-tools { margin-block-start: calc(-1 * ${cssVar('borderWidth')}); }
+/* The bar's own border counts towards the 8px end gap, as the frame border does in titled bars. */
+.frame:not(.has-title):not(.is-terminal) .header > .${PREFIX}-tools {
+  margin-block-start: calc(-1 * ${cssVar('borderWidth')});
+  padding-inline-end: calc(8px - ${cssVar('borderWidth')});
+}
 .${PREFIX}-btn {
   display: inline-block;
   text-decoration: none;
-  border: 1px solid color-mix(in srgb, ${cssVar('codeForeground')} 16%, transparent);
+  border: 1px solid color-mix(in srgb, ${cssVar('codeForeground')} 14%, transparent);
   border-radius: 4px;
   padding: 3px 8px;
   background: color-mix(in srgb, ${cssVar('codeForeground')} 6%, transparent);
@@ -173,6 +177,11 @@ pre:focus-visible {
     transition: none !important;
     animation: none !important;
   }
+}
+@media (scripting: none) {
+  .${PREFIX}-needs-js { display: none; }
+  /* The minimal bar has nothing left to show. */
+  .frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools):not(:has(.${PREFIX}-tools > :not(.${PREFIX}-needs-js), .${PREFIX}-steps-head)) .header { display: none; }
 }
 @media print {
   .${PREFIX}-no-print { display: none !important; }

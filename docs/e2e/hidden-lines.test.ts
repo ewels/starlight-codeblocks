@@ -124,4 +124,9 @@ test.describe('without JavaScript', () => {
   test('the title bar button is hidden', async ({ page }) => {
     await expect(example(page).locator('.scb-hidden-toggle')).toBeHidden();
   });
+  test('a block with no title shows no empty title bar', async ({ page }) => {
+    const untitled = example(page, 2);
+    await expect(untitled.locator('.frame')).not.toHaveClass(/has-title/);
+    await expect(untitled.locator('.header')).toBeHidden();
+  });
 });

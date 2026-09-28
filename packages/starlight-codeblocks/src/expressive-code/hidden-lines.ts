@@ -125,9 +125,6 @@ export function pluginHiddenLines(): CodeblocksPlugin {
 }
 .${PREFIX}-hidden-marker:hover::before { border-top-color: ${cssVar('codeblocksHiddenLines.ruleHover')}; }
 .${PREFIX}-hidden-marker[aria-expanded='true']::before { border-top-color: ${cssVar('codeblocksHiddenLines.ruleOpen')}; }
-@media (scripting: none) {
-  .${PREFIX}-hidden-toggle { display: none; }
-}
 @media print {
   .${PREFIX}-hidden-line { display: none !important; }
 }`,
@@ -189,7 +186,7 @@ export function pluginHiddenLines(): CodeblocksPlugin {
             'button',
             {
               type: 'button',
-              class: `${PREFIX}-btn ${PREFIX}-hidden-toggle ${PREFIX}-no-print`,
+              class: `${PREFIX}-btn ${PREFIX}-hidden-toggle ${PREFIX}-no-print ${PREFIX}-needs-js`,
               ariaControls: markerIds.join(' '),
             },
             `Show ${plural(hidden.size)}`,
