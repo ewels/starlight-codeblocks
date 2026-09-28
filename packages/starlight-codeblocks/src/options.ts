@@ -54,7 +54,8 @@ export interface ApiLinkAdapter {
   name: string;
   languages: string[];
   setup(context: AdapterContext): Promise<void>;
-  findSymbols(code: string, language: string): SymbolRef[];
+  /** `attributes` has the string attributes of the fence line, such as `title`. */
+  findSymbols(code: string, language: string, attributes: Record<string, string>): SymbolRef[];
   resolve(symbol: SymbolRef): Resolution | null;
 }
 
@@ -315,7 +316,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   },
   transitions: {
     description: 'Animates the code between the steps of a `<CodeSteps>` component.',
-    page: 'features/token-transitions',
+    page: 'features/code-walkthrough',
     off: '`<CodeSteps>` then shows each step as a separate block, with its label after the title, and loads no script.',
   },
   scrollycoding: {

@@ -1,6 +1,6 @@
 # Make code easier to read
 
-Five features make a block, or the code in the prose, easier to read. None of them changes the copied text.
+Six features make a block, or the code in the prose, easier to read. None of them changes the copied text.
 
 - If lines are needed to run the code but not to understand it, hide them with hidden lines.
 - If the whole file matters but readers scan it, cap it with an expandable block.
@@ -8,6 +8,7 @@ Five features make a block, or the code in the prose, easier to read. None of th
 - If the exact whitespace changes the meaning, show it with visible whitespace.
 - If brackets nest deeply on dense lines, colour them with colourised brackets.
 - If code is inside a sentence, colour it with inline code highlighting.
+- If the reader compares one before and one after of a few lines, use a diff in one block. Word-level diff starts on its own.
 
 ## Hidden lines
 
@@ -107,3 +108,31 @@ Install the package with `pnpm add starlight-codeblocks{:sh}`, then restart the 
 - Option: `inlineHighlighting: false` leaves the suffix in the prose as text.
 - Option: `inlineHighlighting.defaultLanguage`, such as `'py'`, highlights inline code with no suffix in that language. A suffix wins over it. `{:txt}` keeps one piece of inline code plain.
 - Limits: one line of code only. No attributes or directives. No token form, such as `{:.entity.name.function}`. Needs Starlight, and does not work in Markdoc files.
+
+## Word-level diff
+
+Docs: https://ewels.github.io/starlight-codeblocks/features/word-level-diff/
+
+Word-level diff highlights the words that changed inside each pair of removed and added lines, so readers find a one-word edit in a long line. It has no attribute to turn it on. It applies to every removed line that has an added line below it, from any of these sources:
+
+| Source | Where |
+|---|---|
+| A `diff` block, such as `diff lang="js"` | Fence line. `lang` keeps the syntax colours. |
+| `ins={range}`, `del={range}` | Fence line, in a block of any language |
+| `[!code ++]`, `[!code --]` | Comment at the end of the line |
+| `wordDiff=false` | Fence line: turns the feature off for one block |
+
+````md
+```diff lang="js"
+-const timeout = 5000;
++const timeout = options.timeout ?? 5000;
+```
+````
+
+- Prefer `[!code ++]` and `[!code --]` when the block can change, because they move with their line.
+- Changed words get a stronger tint. Added words are underlined, and removed words have a line through them.
+- A pair that is less than 40% similar keeps the whole-line tints only.
+- Needs no JavaScript.
+- Option: `wordDiff.minSimilarity` (default `0.4`, from 0 to 1). Raise it to show the highlight only for close edits. `wordDiff: false` turns it off for the site.
+- Limits: pairing is by position, so a run of removed lines pairs one by one with the run of added lines below it. It compares visible text and does not parse the language. It skips long pairs, such as minified code.
+- Add `wordDiff=false` to a block with `[!code ++]` and `[!code --]` that shows a different feature.

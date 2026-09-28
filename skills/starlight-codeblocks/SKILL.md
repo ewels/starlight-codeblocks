@@ -1,6 +1,6 @@
 ---
 name: starlight-codeblocks
-description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side-by-side annotations, scrollycoding, code mentions, word-level diff, token transitions, hidden lines, expandable blocks, visible whitespace, colourised brackets, inline code highlighting, token links, API auto-linking, line permalinks, the code switcher, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
+description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side-by-side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, inline code highlighting, token links, API auto-linking, line permalinks, the code switcher, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
 license: MIT
 ---
 
@@ -45,10 +45,13 @@ Find the goal, then use the feature in the same row. Each reference file has the
 | A long note, or a note for only some readers | Annotation: `[!annotate]` at the end of the line | A numbered marker. The note opens in a popover only when the reader asks. |
 | Every reader needs every note, and the block is short | Footnotes: `[!ref]` on the line above | A numbered list under the block, the same on phones and desktops. |
 | Every reader needs every note, and the block is long | Side-by-side annotations: `[!annotate]` plus `annotations="side"` | Notes in a column beside the code on wide screens, a list on narrow screens. |
-| A walkthrough of one block in prose steps (MDX only) | Scrollycoding: `<Scrollycoding>` with `<Step focus="...">` | The block stays in view and focuses the lines of each step as it scrolls past. |
+| A walkthrough of one block in prose steps (MDX only) | Scrollycoding: `<Scrollycoding>` with `<Step focus="...">` | The block stays in view and focuses the lines of each step as it scrolls past. A block between steps changes the code. |
+| A file that grows or changes over the steps of a tutorial (MDX only) | Code walkthrough: `<CodeSteps>` with `step="label"` on each block | One block with numbered steps. Code that stays moves, new code fades in. |
 | A paragraph that names lines of the block below it | Code mentions: `[!mention name]` plus `[text](#mention:name)` | The link highlights the tagged lines. The page stays plain Markdown. |
 
 Use one note style in a block. Annotations and side-by-side annotations use the same directive, so a change between them is only the fence line.
+
+Use scrollycoding when prose explains the code step by step as the reader scrolls. Use code walkthrough when readers step through the versions of a file with buttons. For versions that are alternatives, not steps in an order, use the code switcher.
 
 ### Draw attention
 
@@ -61,18 +64,6 @@ Use one note style in a block. Annotations and side-by-side annotations use the 
 | A neutral highlight with no meaning | `{3}` on the fence line or `[!code highlight]` | The `mark` of Expressive Code. |
 | A state that is not error, warning or info, such as "To do" | A custom state in `lineStates.states` | Its name becomes an attribute and a directive. |
 
-### Show what changed
-
-[references/show-changes.md](references/show-changes.md)
-
-| Goal | Use | Why |
-|---|---|---|
-| An edit to a few lines, before and after in one block | A `diff` block, `ins={}` and `del={}`, or `[!code ++]` and `[!code --]` | Word-level diff then highlights the changed words. It starts on its own. |
-| A file that grows or changes over the steps of a tutorial (MDX only) | Token transitions: `<CodeSteps>` with `step="label"` on each block | One block with numbered steps. Code that stays moves, new code fades in. |
-| Versions that are alternatives, not steps in an order | The code switcher | See [Adapt to the reader](#adapt-to-the-reader). |
-
-Use scrollycoding when one block stays the same and the prose moves. Use token transitions when the code itself changes between steps.
-
 ### Make code easier to read
 
 [references/readability.md](references/readability.md)
@@ -84,6 +75,7 @@ Use scrollycoding when one block stays the same and the prose moves. Use token t
 | Indentation or tabs change the meaning (Make, Python, YAML) | Visible whitespace: `whitespace` or `whitespace="all"` | Shows spaces and tabs as faint glyphs. |
 | Deep nesting on dense lines | Colourised brackets: `brackets` | Colours bracket pairs by depth. |
 | Code inside a sentence of prose | Inline code highlighting: `` `code{:lang}` `` | Syntax colours for inline code. |
+| An edit to a few lines, before and after in one block | A `diff` block, `ins={}` and `del={}`, or `[!code ++]` and `[!code --]` | Word-level diff then highlights the changed words. It starts on its own. |
 
 Hidden lines remove chosen lines. Expandable blocks cut a block at a line count. Focus keeps every line in view.
 

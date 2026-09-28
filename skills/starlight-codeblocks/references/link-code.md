@@ -38,6 +38,7 @@ API auto-linking finds library names in a block and links each one to its refere
 | Syntax | Where |
 |---|---|
 | `apiLinks=false` | Fence line: turns the feature off for one block |
+| `pydocsBase="<base>"` | Fence line of a Python block: prefers the starlight-pydocs package at this base |
 
 - The Python adapter runs on `py` and `python` blocks. It reads `import x`, `import x as y` and `from a import b as c`, then links the names that they bind and attribute chains on them, such as `os.path.join`.
 - The Nextflow adapter runs on `nextflow` and `nf` blocks. It links channel factories, such as `channel.of`, and operators after them. With the `modules` option, it links processes and workflows from `include` statements.
@@ -58,6 +59,7 @@ API auto-linking finds library names in a block and links each one to its refere
 
 - Python adapter options: `stdlib` (default `true`) and `inventories` (Sphinx `objects.inv` URLs).
 - starlight-pydocs: install both plugins. The Python adapter links every package that starlight-pydocs documents, with signatures and summaries, and needs no configuration.
+- `pydocsBase="<base>"` on a Python block links its names to the starlight-pydocs package at that base first, for example an older version at `1x/api/myproject`. Names that the package does not have link as usual. starlight-pydocs sets it on its docstring examples.
 - Nextflow adapter option: `modules`, a function of `{ name, path }` that returns a URL, an object with `href`, or `undefined`.
 - Another language needs an adapter of your own: https://ewels.github.io/starlight-codeblocks/extend/write-an-api-link-adapter/
 - Limits: the Python adapter does not follow assignments and does not link built-ins such as `print`. A name that the block binds again does not link.

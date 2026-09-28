@@ -26,15 +26,15 @@ declare module '@expressive-code/core' {
 }
 
 /** Container widths, in px, at which a side-by-side block can become two columns. */
-const SIDE_SIZES = [600, 800, 1000];
+export const SIDE_SIZES = [600, 800, 1000];
 
 /**
  * The smallest size whose code column shows `chars` characters without scrolling: 8.4 px per character
- * at Starlight's 14 px code font, 34 px of frame padding, and 210 px for the gap and the notes.
+ * at Starlight's 14 px code font, 34 px of frame padding, and `reserve` px for the gap and the other column.
  * Longer lines get the largest size and scroll.
  */
-function sideSize(chars: number) {
-  const need = 244 + chars * 8.4;
+export function sideSize(chars: number, reserve = 210) {
+  const need = 34 + reserve + chars * 8.4;
   return SIDE_SIZES.find((w) => w >= need) ?? SIDE_SIZES[SIDE_SIZES.length - 1];
 }
 
@@ -222,6 +222,8 @@ ${SIDE_SIZES.map(
   }
 }`,
 ).join('\n')}
+.${PREFIX}-side-code-right > .${PREFIX}-side-grid { grid-template-columns: minmax(12rem, 1fr) minmax(0, auto); }
+.${PREFIX}-side-code-right .${cls('-notes')} { order: -1; }
 .${PREFIX}-side-static .${cls('-notes')} { position: static; }
 .${cls('-list')} { display: none; }
 @media print {
@@ -247,6 +249,13 @@ ${SIDE_SIZES.map(
           warn(context, `\`annotations="${mode}"\` must be \`"side"\`. The plugin ignores it.`);
         }
         const side = mode === 'side';
+        const codeSide = codeBlock.metaOptions.getString('codeSide');
+        if (codeSide !== undefined && (!side || !['left', 'right'].includes(codeSide))) {
+          warn(
+            context,
+            `\`codeSide="${codeSide}"\` needs \`annotations="side"\` and must be \`"left"\` or \`"right"\`. The plugin ignores it.`,
+          );
+        }
         const lines = codeBlock.getLines();
         const ordered = annotations
           .map((directive) => ({ directive, index: lines.indexOf(directive.lines[0] as never) }))
@@ -298,7 +307,10 @@ ${SIDE_SIZES.map(
         );
         renderData.blockAst = h(
           'div',
-          { class: `${PREFIX}-side ${PREFIX}-side-${size} not-content`, dataScbAnnotations: '' },
+          {
+            class: `${PREFIX}-side ${PREFIX}-side-${size}${codeSide === 'right' ? ` ${PREFIX}-side-code-right` : ''} not-content`,
+            dataScbAnnotations: '',
+          },
           [h('div', { class: `${PREFIX}-side-grid` }, [renderData.blockAst, notes])],
         );
       },

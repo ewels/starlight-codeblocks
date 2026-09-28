@@ -196,7 +196,11 @@ export function pageMarkdown(entry: Entry) {
     }
     const [, indent = '', closing, name = '', rest = '', selfClosing] = tag;
     const props = attrs(rest);
-    if (closing || ['Tabs', 'Steps'].includes(name)) continue;
+    if (closing || ['Tabs', 'Steps', 'Scrollycoding'].includes(name)) continue;
+    if (name === 'Step') {
+      out.push(absoluteLinks(line.replace(/<\/?Step[^>]*>/g, '').trim()), '');
+      continue;
+    }
     if (name === 'Example' || name === 'ThemeGallery') {
       const code = strings[props.code ?? ''];
       if (code === undefined) throw new Error(`<${name}> in ${entry.id} uses an unknown export`);

@@ -46,8 +46,9 @@ Each annotated line has a small number, and the note with the same number is in 
 |---|---|---|
 | `annotations="side"` | Fence line | `annotations="side"` |
 | `[!annotate] note` | Comment at the end of a line | `print(total)  # [!annotate] Shows the total.` |
+| `codeSide="right"` | Fence line | `annotations="side" codeSide="right"` |
 
-Add `annotations="side"` to the fence line of a block that uses `[!annotate]`. The directive works as on the [annotations](/starlight-codeblocks/features/annotations/) page.
+Add `annotations="side"` to the fence line of a block that uses `[!annotate]`. The directive works as on the [annotations](/starlight-codeblocks/features/annotations/) page. The code is in the left column. To put it in the right column, add `codeSide="right"`.
 
 ## Behaviour
 
@@ -92,6 +93,20 @@ app.listen(3000); // [!annotate] See the [Express guide](https://expressjs.com/e
 `;
 
 <Example code={server} />
+
+`codeSide="right"` puts the code in the right column and the notes in the left column:
+
+export const right = `
+\`\`\`yaml title="config.yml" annotations="side" codeSide="right"
+server:
+  port: 8080 # [!annotate] The port that the server listens on.
+  host: 0.0.0.0 # [!annotate] Listens on every network interface.
+log:
+  level: info # [!annotate] One of \`debug\`, \`info\`, \`warn\` or \`error\`.
+\`\`\`
+`;
+
+<Example code={right} />
 
 ## Make space for long lines
 

@@ -37,7 +37,7 @@ codeblocks({
 | `permalinks` | None | Line permalinks |
 | `placeholders` | `storage`: `'local'`, `'session'` or `'none'`, default `'local'` | Fill-in placeholders |
 | `codeSwitcher` | None | Code switcher |
-| `transitions` | None | Token transitions |
+| `transitions` | None | Code walkthrough |
 | `scrollycoding` | None | Scrollycoding |
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
 | `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms | Run in the browser |

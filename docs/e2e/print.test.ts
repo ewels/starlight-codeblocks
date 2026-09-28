@@ -34,8 +34,8 @@ test('code switcher: the menu does not print, and the selected variant does', as
   await expect(block.locator('.expressive-code:not([hidden]) pre').first()).toBeVisible();
 });
 
-test('token transitions: every step prints with its label', async ({ page }) => {
-  await page.goto('./features/token-transitions/');
+test('code walkthrough: every step prints with its label', async ({ page }) => {
+  await page.goto('./features/code-walkthrough/');
   const blocks = example(page).locator('.scb-steps > .expressive-code');
   expect(await blocks.count()).toBe(3);
   for (const block of await blocks.all()) {
@@ -67,8 +67,8 @@ test('scrollycoding: every step prints in full with its own code, and nothing st
   await expect(page.locator('.scb-scrolly-code').first()).toBeHidden();
 });
 
-test('token transitions: the steps and the Previous and Next buttons do not print', async ({ page }) => {
-  await page.goto('./features/token-transitions/');
+test('code walkthrough: the steps and the Previous and Next buttons do not print', async ({ page }) => {
+  await page.goto('./features/code-walkthrough/');
   const current = page.locator('.scb-steps-current').first();
   await expect(current.locator('.scb-steps-stepper')).toBeHidden();
   for (const nav of await current.locator('.scb-steps-nav').all()) await expect(nav).toBeHidden();

@@ -80,7 +80,17 @@ starlight({
 });
 ```
 
-For these names, the card has the signature and the first sentence of the docstring, as starlight-pydocs shows them. A name links to the site's own page, also if an inventory has the same name. Names that a package re-exports, such as `myproject.Report` from a private `myproject._report` module, link to the object's page. If starlight-pydocs documents one package at two bases, the first entry in its `packages` list wins.
+For these names, the card has the signature and the first sentence of the docstring, as starlight-pydocs shows them. A name links to the site's own page, also if an inventory has the same name. Names that a package re-exports, such as `myproject.Report` from a private `myproject._report` module, link to the object's page. If starlight-pydocs documents one package at two bases, such as the current version and an older one, the first entry in its `packages` list wins.
+
+To link a block to another version, set `pydocsBase` to the `base` of that package. starlight-pydocs sets it on the examples in its docstrings, so that each version links to its own pages. You can also set it on a block that you write:
+
+````md
+```py pydocsBase="1x/api/myproject"
+from myproject import Report
+```
+````
+
+A name that the package at `pydocsBase` does not have links to the first package that has it, or to an inventory. If no package has the base, the build shows a warning, and the block links as it does without the attribute.
 
 ## Nextflow adapter
 

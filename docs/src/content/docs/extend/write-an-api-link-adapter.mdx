@@ -17,7 +17,7 @@ interface ApiLinkAdapter {
   name: string;
   languages: string[];
   setup(context: AdapterContext): Promise<void>;
-  findSymbols(code: string, language: string): SymbolRef[];
+  findSymbols(code: string, language: string, attributes: Record<string, string>): SymbolRef[];
   resolve(symbol: SymbolRef): Resolution | null;
 }
 
@@ -43,7 +43,7 @@ interface Resolution {
 | `name` | The name of the adapter. Build warnings start with it. |
 | `languages` | The languages of the code blocks that the adapter reads, as written on the fence line, such as `py`. |
 | `setup` | Loads the indexes. The plugin calls it once, before the first code block in one of the languages. |
-| `findSymbols` | Returns the names in the code that can be links. |
+| `findSymbols` | Returns the names in the code that can be links. `attributes` has the attributes of the fence line that have a text value, such as `title`. |
 | `resolve` | Returns the link and the card text for one name, or `null`. |
 
 A `SymbolRef` gives the position of a name in `code`. `start` is the index of its first character, and `end` is the index after its last character. `name` is the name that `resolve` looks up. `context` is free for the adapter, for example for data that `findSymbols` already found.

@@ -29,6 +29,26 @@ function controlsRow(current: number, total: number) {
   ]);
 }
 
+/**
+ * The tokens of each block, keyed so that a token in two neighbouring blocks has the same key, as JSON for
+ * a `<script type="application/json">`.
+ */
+export function stepsData(figures: Element[]): string {
+  let previous: KeyedTokensInfo | undefined;
+  const keys = new Map<string, number>();
+  const steps = figures.map((figure) => {
+    const { code, lines } = readTokens(figure);
+    let info = toKeyedTokens(code, lines as never);
+    if (previous) info = syncTokenKeys(previous, info).to;
+    previous = info;
+    return info.tokens.map((t): StepTokens[number] => {
+      if (!keys.has(t.key)) keys.set(t.key, keys.size);
+      return [keys.get(t.key) as number, t.content, typeof t.htmlStyle === 'string' ? t.htmlStyle : ''];
+    });
+  });
+  return JSON.stringify(steps).replaceAll('<', '\\u003c');
+}
+
 /** The steps as separate blocks, for `<CodeSteps>` with transitions off. */
 export function plainSteps(html: string): string {
   const root = fromHtml(html, { fragment: true });
@@ -53,9 +73,7 @@ export function codeSteps(html: string): string {
   );
   const name = (i: number) => `Step ${i + 1}${labels[i] ? `: ${labels[i]}` : ''}`;
 
-  let previous: KeyedTokensInfo | undefined;
-  const keys = new Map<string, number>();
-  const steps = groups.map((group, current) => {
+  groups.forEach((group, current) => {
     const figure = select('figure', group) as Element;
     const header = select('.header', figure);
     if (header) {
@@ -90,18 +108,8 @@ export function codeSteps(html: string): string {
     group.children.push(controlsRow(current, groups.length));
     if (current === 0)
       group.properties.className = [...((group.properties.className as string[]) ?? []), `${S}-current`];
-
-    const { code, lines } = readTokens(figure);
-    let info = toKeyedTokens(code, lines as never);
-    if (previous) info = syncTokenKeys(previous, info).to;
-    previous = info;
-    return info.tokens.map((t): StepTokens[number] => {
-      if (!keys.has(t.key)) keys.set(t.key, keys.size);
-      return [keys.get(t.key) as number, t.content, typeof t.htmlStyle === 'string' ? t.htmlStyle : ''];
-    });
   });
-
+  const data = stepsData(groups.map((group) => select('figure', group) as Element));
   markDecorations(root);
-  const data = JSON.stringify(steps).replaceAll('<', '\\u003c');
   return `<div class="${S}" data-scb-steps>${toHtml(root)}<div class="sr-only" aria-live="polite"></div><script type="application/json">${data}</script></div>`;
 }

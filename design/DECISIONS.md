@@ -1308,3 +1308,43 @@ Use this format:
 - Decision: At 72rem and wider, on a page without `data-has-toc`, a `scb-side-800` or `scb-side-1000` wrapper that is a grandchild of `.sl-markdown-content` (its `.expressive-code` is directly on the page) gets `--scb-side-outset`: half of `100vw` minus the sidebar width (when `data-has-sidebar`), twice `--sl-content-pad-x` and `--sl-content-width`, and not below 0. Its inline margins are minus that value on each side, so the container widens symmetrically. The grid has the same value as positive margins, so it stays in the content column until the container reaches the block's width; from there its margins are `max(0px, min(outset, (100% - width) / 2))`, so it grows only to its width class. The docs have a demo page without a table of contents (`features/side-by-side-annotations/wide`), listed in `unlisted` in `sidebar.mjs` and left out of the sidebar and `llms.txt`.
 - Reason: Starlight keeps `--sl-content-width` at 45rem on a page without a table of contents and centres the column (`margin-inline: auto` at 72rem), so the space is free on both sides. Spreading only the blocks that need it keeps the text at a readable width, as in Distill and Tufte layouts; Starlight has no precedent of its own. A symmetric spread looks deliberate, where a block that sticks out on one side looks broken. `100vw` includes a classic scrollbar, which makes the outset up to half a scrollbar too large on each side; that eats into the 1.5rem page padding and does not overflow (a Playwright test with a 17 px scrollbar checks this). The selector starts with `:root` and does not name `.expressive-code`, because Expressive Code otherwise scopes it inside the block. Blocks in tabs, asides, lists and components do not match, because their parent is not directly on the page.
 - Alternatives: Telling authors to set `--sl-content-width: 60rem` on pages without a table of contents (widens the text too, and gives less space: 960 px against about 1090 px at 1440 px). Spreading to the right only (looks like a bug next to the text). A container on Starlight's `.main-pane` for an exact width (changes Starlight's layout for every element on the page). Spreading every side-by-side block (a block that fits would stop lining up with the text). An option to turn it off (nothing needs it yet; an author who does not want it keeps the table of contents).
+
+## API link adapters get the string attributes of the block
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: `findSymbols(code, language, attributes)` gets a third argument: the fence line's attributes that have a text value, as a `Record<string, string>` (for example `{ title: 'app.py', pydocsBase: '1x/api/myproject' }`). The Python adapter reads `pydocsBase`: a path in the starlight-pydocs package with that `base` wins over the first package that has the path, and a path that it does not have falls back to the first package, then to the inventories. An unknown base logs one warning for the block. The registry contract stays `version: 1`.
+- Reason: starlight-pydocs documents one package at several bases (a current and an archived version), and a docstring example on a 1.x page must link to the 1.x pages. The adapter cannot know the page: pydocs renders docstrings with no `fileURL`, and several at the same time, so a global "current page" would race. A fence attribute travels with the block, and authors can write it too. A plain record keeps Expressive Code's `MetaOptions` class out of the public adapter interface. Adapters that take two arguments keep working.
+- Alternatives: Passing `codeBlock.metaOptions` (ties adapters to an Expressive Code class). A `pydocsBase` value in `resolve()` (the Python adapter picks its entries in `findSymbols`, so it would have to look again). A page URL in the registry (races, as above).
+
+## Scrollycoding: widths from the longest line, as side-by-side annotations
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: `<Scrollycoding>` gets `scb-scrolly-600`, `-800` or `-1000` from the longest line of all its versions, with the same `sideSize()` estimate as side-by-side annotations and a text column of `minmax(12rem, 1fr)` beside `minmax(0, auto)` code (22 px gap). On a page without a table of contents, an 800 or 1000 px block that is a child of `.sl-markdown-content` spreads on both sides by the same rules. The layout styles are built in TypeScript from `SIDE_SIZES` and written once per page, in an inline `<style>` that the first `<Scrollycoding>` of the request emits.
+- Reason: The user asked for the annotation width work on scrollycoding. The old `1fr 1.45fr` grid at 600 px scrolled any line over about 42 characters. The container queries need one copy of the rules for each width, so the rules come from one template. Astro cannot interpolate a hoisted `<style>`, and a style for each instance repeated about 2.5 kB on pages with several blocks.
+- Alternatives: A 15rem text column (only lines up to about 36 characters fit 600 px, which moved the docs examples to the narrow layout). Three hand-written copies of the rules in a static stylesheet (they drift). A client script that toggles the layout (layout shift on load).
+
+## Scrollycoding: a code block between steps is a new version
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: `<Scrollycoding>` reads its top-level children in order. The first must be a code block and the last a step. Each code block after a step is a new version of the code for the steps after it; their `focus` and `mark` count its lines. The sticky column has one copy of each version, and the steps' own copies (the narrow layout) show their version. When the active step changes the version, the client animates the tokens with the same magic-move code as `<CodeSteps>` (moved to `src/components/animate.ts`, and loaded with a dynamic import only for blocks with several versions). `transitions: false` and reduced motion change the version without the animation.
+- Reason: The user wanted scrollycoding to add lines of code as a code walkthrough does. Blocks between steps read in the order the reader sees them and need no new attribute. Code blocks inside a step stay part of the step's text.
+- Alternatives: A `code` prop on `<Step>` naming a block (indirect, and blocks would need ids). A code block inside each `<Step>` as the new version (a step could then no longer show an unrelated block in its text).
+
+## Code side for side-by-side annotations and scrollycoding
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: `codeSide="left"` or `"right"` sets the column of the code: a fence attribute with `annotations="side"` (default `left`), and a prop on `<Scrollycoding>` (default `right`). The swap is CSS only (`order: -1` and the reversed column template); the DOM, reading order and focus order stay code, then notes, and steps, then code. A bad value warns (annotations) or fails the build (the component prop, as for `<Step>` ranges).
+- Reason: The user asked for a choice of side for both. One name for both features is easier to remember. The default of each feature stays as it was.
+- Alternatives: `annotations="side-left"` (a second meaning in one value, and no match for the component). A site-wide option (nothing needs it yet).
+
+## Code walkthrough: new name, and the "Show what changed" group goes
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: "Token transitions" is now "Code walkthrough", at `features/code-walkthrough` (with a redirect from `features/token-transitions` in the docs config). It moves to "Explain code", after scrollycoding. Word-level diff moves to the end of "Make code easier to read". "Show what changed" has no pages left and goes, and the skill's `show-changes.md` is split into `explain-code.md` and `readability.md`. Groups now have two to six pages. The API names stay: `<CodeSteps>`, the `transitions` option and the `codeblocksTransitions` style settings.
+- Reason: The user asked for the rename and the moves. The API names describe the mechanism, which scrollycoding now shares (`transitions: false` turns off both animations), and a rename there would break every site for a label.
+- Alternatives: Renaming `transitions` to `walkthrough` (breaks configs, and reads wrongly for scrollycoding's animation). Keeping a one-page "Show what changed" group.

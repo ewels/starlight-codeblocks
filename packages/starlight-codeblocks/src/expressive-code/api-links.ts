@@ -180,9 +180,12 @@ export function pluginApiLinks({ adapters }: { adapters: ApiLinkAdapter[] }): Co
         }
         const code = texts.join('\n');
         const taken: [number, number][] = [];
+        const attributes = Object.fromEntries(
+          codeBlock.metaOptions.list(undefined, 'string').flatMap(({ key, value }) => (key ? [[key, value]] : [])),
+        );
         for (const adapter of active) {
           if (!(await ready(adapter, context))) continue;
-          for (const symbol of adapter.findSymbols(code, codeBlock.language)) {
+          for (const symbol of adapter.findSymbols(code, codeBlock.language, attributes)) {
             const { start, end } = symbol;
             if (end <= start || taken.some(([s, e]) => start < e && end > s)) continue;
             const index = starts.findLastIndex((s) => s <= start);

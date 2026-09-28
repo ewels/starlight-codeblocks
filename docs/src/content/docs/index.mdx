@@ -134,6 +134,38 @@ app.listen(3000);
 
 </Feature>
 
+<Feature page="features/code-walkthrough">
+
+<CodeSteps>
+
+```js title="server.js" step="Create the app"
+const app = express();
+
+app.listen(3000);
+```
+
+```js title="server.js" step="Parse JSON bodies"
+const app = express();
+app.use(express.json());
+
+app.listen(3000);
+```
+
+```js title="server.js" step="Add a health route"
+const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ ok: true });
+});
+
+app.listen(3000);
+```
+
+</CodeSteps>
+
+</Feature>
+
 <Feature page="features/focus">
 
 ```js title="src/config.js" focus={4-7}
@@ -174,51 +206,6 @@ def factorial(n):
         return 1  # [!mention base]
     return n * factorial(n - 1)  # [!mention step]
 ```
-
-</Feature>
-
-<Feature page="features/word-level-diff">
-
-```diff lang="js"
--const timeout = 5000;
-+const timeout = options.timeout ?? 5000;
-const client = createClient({
--  retries: 3,
-+  retries: options.retries,
-});
-```
-
-</Feature>
-
-<Feature page="features/token-transitions">
-
-<CodeSteps>
-
-```js title="server.js" step="Create the app"
-const app = express();
-
-app.listen(3000);
-```
-
-```js title="server.js" step="Parse JSON bodies"
-const app = express();
-app.use(express.json());
-
-app.listen(3000);
-```
-
-```js title="server.js" step="Add a health route"
-const app = express();
-app.use(express.json());
-
-app.get('/health', (req, res) => {
-  res.json({ ok: true });
-});
-
-app.listen(3000);
-```
-
-</CodeSteps>
 
 </Feature>
 
@@ -305,6 +292,19 @@ const slug = encodeURIComponent(
 > removes the suffix. Interactive features add
 > `<pre data-scb-expandable="12">{:html}` to their own blocks, and a
 > loader script imports the matching client module.
+
+</Feature>
+
+<Feature page="features/word-level-diff">
+
+```diff lang="js"
+-const timeout = 5000;
++const timeout = options.timeout ?? 5000;
+const client = createClient({
+-  retries: 3,
++  retries: options.retries,
+});
+```
 
 </Feature>
 

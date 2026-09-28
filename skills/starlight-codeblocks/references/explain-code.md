@@ -1,6 +1,6 @@
 # Explain code
 
-Five features attach an explanation to lines of code: inline callouts, annotations, footnotes, side-by-side annotations and scrollycoding. Code mentions link the prose around a block to its lines. All of them keep the explanation out of the copied code.
+Five features attach an explanation to lines of code: inline callouts, annotations, footnotes, side-by-side annotations and scrollycoding. Code walkthrough steps through versions of a block that changes. Code mentions link the prose around a block to its lines. All of them keep the explanation out of the copied code.
 
 | Style | Reader sees the note | Note goes |
 |---|---|---|
@@ -107,6 +107,7 @@ with path.open() as fh:  # [!annotate] Opens the file and closes it when the blo
 - For a page with longer lines, set `tableOfContents: false` in its frontmatter. Then a block that needs 800 or 1000 px spreads over the free space on each side of the content column. The text stays 45rem wide. This works only for a block directly on the page, not in tabs, asides, lists or components.
 - In a narrower container, such as on a phone, the notes are a numbered list under the block.
 - Hovering over a note, or focusing it, highlights its line. Hovering over a line highlights its note.
+- `codeSide="right"` on the fence line puts the code in the right column and the notes on the left.
 - No options of its own. `annotations: false` turns it off.
 - Limits: each note is next to its number, not next to its line. Lines of more than about 90 characters scroll inside the code column.
 
@@ -114,7 +115,7 @@ with path.open() as fh:  # [!annotate] Opens the file and closes it when the blo
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/scrollycoding/
 
-Use for a walkthrough of one code block in prose steps. On a wide screen, the steps scroll in a column and the block stays in view. The step at the middle of the block sets the focus of the block. Do not use when the code changes between steps: use token transitions.
+Use for a walkthrough of a code block in prose steps. On a wide screen, the steps scroll in a column and the block stays in view. The step at the middle of the block sets the focus of the block. A code block between two steps is a new version of the code from the next step on. Use a code walkthrough instead when readers step through versions with buttons and need no prose between them.
 
 | Syntax | Where |
 |---|---|
@@ -122,6 +123,8 @@ Use for a walkthrough of one code block in prose steps. On a wide screen, the st
 | `<Step>` ... `</Step>` | After the code block, one for each step |
 | `focus="<range>"` | On `<Step>`: a range without braces, such as `6-8` |
 | `mark="<range>"` | On `<Step>`: marks lines as well |
+| A code block between two steps | A new version of the code. The next steps count its lines. |
+| `codeSide="left"` | On `<Scrollycoding>`: the code in the left column. The default is `right`. |
 
 ````mdx
 import { Scrollycoding, Step } from 'starlight-codeblocks/components';
@@ -144,9 +147,52 @@ app.listen(3000);
 
 - Put one code block first, then the steps. Leave an empty line after `<Scrollycoding>` and before `</Scrollycoding>`.
 - A step can contain any Markdown.
-- The two columns need a content width of 600 px. On a narrow screen, and without JavaScript, each step shows its own copy of the block.
-- Option: `scrollycoding: false` shows the narrow layout at every width, with no script.
-- Limits: MDX only. One code block for each `<Scrollycoding>`. A `focus` attribute on the fence line has no effect. Many steps with a long block make a long page on phones.
+- A new version animates in as in a code walkthrough: code in both versions moves, new lines fade in. Under reduced motion, the code changes at once.
+- The two columns need space for the longest line beside a text column of 12rem. From its longest line, the block gets a width of 600, 800 or 1000 px, which hold about 41, 65 or 89 characters. On a page with `tableOfContents: false`, a block directly on the page that needs 800 or 1000 px spreads past the content column.
+- On a narrow screen, and without JavaScript, each step shows its own copy of the block, in the version of that step.
+- Option: `scrollycoding: false` shows the narrow layout at every width, with no script. `transitions: false` changes versions without the animation.
+- Limits: MDX only. A `focus` attribute on the fence line has no effect. Many steps with a long block make a long page on phones.
+
+## Code walkthrough
+
+Docs: https://ewels.github.io/starlight-codeblocks/features/code-walkthrough/
+
+Use for a tutorial that shows the same file several times, with changes each time. The versions become one block with numbered steps in the title bar, and **Previous** and **Next** buttons under it. Code that stays moves to its new place, and new code fades in. Do not use for alternatives with no order: use the code switcher.
+
+| Syntax | Where |
+|---|---|
+| `<CodeSteps>` ... `</CodeSteps>` | Around two or more code blocks, in an MDX file |
+| `step="<text>"` | Fence line of each step: the label of the step. Optional. |
+
+````mdx
+import { CodeSteps } from 'starlight-codeblocks/components';
+
+<CodeSteps>
+
+```js title="server.js" step="Create the app"
+const app = express();
+
+app.listen(3000);
+```
+
+```js title="server.js" step="Parse JSON bodies"
+const app = express();
+app.use(express.json());
+
+app.listen(3000);
+```
+
+</CodeSteps>
+````
+
+- Leave an empty line after `<CodeSteps>` and before `</CodeSteps>`. Each code block is one step, in order. Each keeps its other attributes, such as `title`.
+- The copy button copies the code of the current step.
+- Arrow keys move between steps when a numbered step has focus. Under reduced motion, steps change without the animation.
+- A line that is new in a step flashes the theme's green, then fades out in 1 second. There is no flash under reduced motion.
+- Without JavaScript, and when the page prints, each step shows as a separate block with its label after the title.
+- The page loads the animation library, about 3 kB, only on pages with `<CodeSteps>`.
+- Option: `transitions: false` shows each step as a separate block, with no script. The `codeblocksTransitions` style settings change the colours and `duration`.
+- Limits: MDX only. During the animation, only the syntax colours show. Line states, line numbers and other decorations come back at the end.
 
 ## Code mentions
 

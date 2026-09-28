@@ -31,11 +31,20 @@ export interface PydocsSymbol {
 
 const PYDOCS = Symbol.for('starlight-pydocs');
 
-/** The object at `path` in the first starlight-pydocs package that has it. Read on each call, so that dev re-extraction shows. */
-function pydocsEntry(path: string): (Resolution & { name: string }) | undefined {
+const pydocsRegistry = () => {
   const registry = (globalThis as { [PYDOCS]?: PydocsRegistry })[PYDOCS];
-  if (registry?.version !== 1) return undefined;
-  for (const pkg of registry.packages) {
+  return registry?.version === 1 ? registry : undefined;
+};
+
+/**
+ * The object at `path` in the starlight-pydocs package at `base`, or else in the first package that has it.
+ * Read on each call, so that dev re-extraction shows.
+ */
+function pydocsEntry(path: string, base?: string): (Resolution & { name: string }) | undefined {
+  const registry = pydocsRegistry();
+  if (!registry) return undefined;
+  const preferred = registry.packages.filter((pkg) => pkg.base === base);
+  for (const pkg of [...preferred, ...registry.packages]) {
     const symbol = pkg.symbols.get(path);
     if (symbol) return { ...symbol, name: path, source: `${pkg.name} API reference` };
   }
@@ -214,8 +223,10 @@ function skipBrackets(tokens: Token[], i: number) {
 export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
   const { stdlib = true, inventories = [] } = options;
   const index: PythonIndex = new Map();
+  let warn = (_message: string) => {};
   // starlight-pydocs pages win over the inventories.
-  const lookup = (path: string) => pydocsEntry(path) ?? index.get(path);
+  let base: string | undefined;
+  const lookup = (path: string) => pydocsEntry(path, base) ?? index.get(path);
   const ref = (parts: Token[], path: string): SymbolRef | undefined => {
     const entry = lookup(path);
     const first = parts[0];
@@ -227,6 +238,7 @@ export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
     name: 'python',
     languages: ['python', 'py'],
     async setup(context) {
+      warn = context.warn;
       const all = [...(stdlib ? [STDLIB_INVENTORY] : []), ...inventories];
       for (const item of all) {
         const { url, base = new URL('.', url).href } = typeof item === 'string' ? { url: item } : item;
@@ -239,7 +251,11 @@ export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
         }
       }
     },
-    findSymbols(code) {
+    findSymbols(code, _language, attributes = {}) {
+      base = attributes.pydocsBase;
+      if (base !== undefined && !pydocsRegistry()?.packages.some((pkg) => pkg.base === base)) {
+        warn(`pydocsBase="${base}" is not the base of a starlight-pydocs package. Links use the first package.`);
+      }
       const tokens = tokenize(code);
       const stmts = statements(tokens);
       const { bindings, names, aliases } = readImports(stmts);

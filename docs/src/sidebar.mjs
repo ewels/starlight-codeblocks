@@ -22,15 +22,12 @@ export const sidebar = [
       'features/inline-callouts',
       'features/side-by-side-annotations',
       'features/scrollycoding',
+      'features/code-walkthrough',
     ],
   },
   {
     label: 'Draw attention',
     items: ['features/focus', 'features/line-states', 'features/code-mentions'],
-  },
-  {
-    label: 'Show what changed',
-    items: ['features/word-level-diff', 'features/token-transitions'],
   },
   {
     label: 'Make code easier to read',
@@ -40,6 +37,7 @@ export const sidebar = [
       'features/visible-whitespace',
       'features/colourised-brackets',
       'features/inline-code-highlighting',
+      'features/word-level-diff',
     ],
   },
   {
@@ -72,4 +70,4 @@ export const sidebar = [
 ];
 
 /** Pages that the sidebar and `llms.txt` leave out, such as demos that a feature page links to. */
-export const unlisted = ['features/side-by-side-annotations/wide'];
+export const unlisted = ['features/side-by-side-annotations/wide', 'features/scrollycoding/wide'];

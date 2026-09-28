@@ -46,7 +46,7 @@ test('the Vite plugins serve the modules in dev and emit them in the build', () 
   expect(emitted).toEqual(readClientModules().map((m) => `_astro/${m.fileName}`));
 });
 
-// Token transitions and runtimes are outside the budget (SPEC section 2).
+// Code walkthrough and runtimes are outside the budget (SPEC section 2).
 test.each(readClientModules().filter((m) => !['transitions', 'runnable'].includes(m.feature)))(
   '$feature is 3 kB or less, minified and gzipped',
   ({ source }) => {

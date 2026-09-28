@@ -12,7 +12,7 @@ The docs site lives in `docs/`. It is a Starlight site that uses the plugin thro
 
 ## Sidebar
 
-The feature groups say what authors use the features for, not how the features work. Each group has two to five pages. Comment notation is syntax that many features use, so it is in "Start here". `docs/src/sidebar.mjs` is the source; the README, `llms.txt`, the accessibility page and the home page follow its groups and order. Its `unlisted` array names demo pages that a feature page links to, such as a page without a table of contents; they are not in the sidebar or `llms.txt`.
+The feature groups say what authors use the features for, not how the features work. Each group has two to six pages. Comment notation is syntax that many features use, so it is in "Start here". `docs/src/sidebar.mjs` is the source; the README, `llms.txt`, the accessibility page and the home page follow its groups and order. Its `unlisted` array names demo pages that a feature page links to, such as a page without a table of contents; they are not in the sidebar or `llms.txt`.
 
 ```
 Start here
@@ -33,19 +33,18 @@ Explain code
   Inline callouts
   Side-by-side annotations
   Scrollycoding
+  Code walkthrough
 Draw attention
   Focus
   Line states
   Code mentions
-Show what changed
-  Word-level diff
-  Token transitions
 Make code easier to read
   Hidden lines
   Expandable blocks
   Visible whitespace
   Colourised brackets
   Inline code highlighting
+  Word-level diff
 Link code
   Token links
   API auto-linking

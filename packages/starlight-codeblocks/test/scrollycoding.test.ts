@@ -16,7 +16,7 @@ const step = (attrs: string, text: string) => `<div class="scb-scrolly-step"${at
 
 async function build(steps: string[], meta = '', interactive = true) {
   const { html } = await render(code.join('\n').replace('title="server.js"', `title="server.js" ${meta}`));
-  const out = scrollycoding([html, ...steps].join('\n'), interactive);
+  const out = scrollycoding([html, ...steps].join('\n'), { interactive });
   const tree = fromHtml(out, { fragment: true });
   const outLines = (selector: string) =>
     selectAll(`${selector} .ec-line`, tree).map((line) => (line.properties.className as string[]).join(' '));
@@ -55,7 +55,7 @@ test('keeps the Markdown of each step before its copy', async () => {
 
 test('adds a sticky copy in the state of the first step, and marks the first step as active', async () => {
   const { out, outLines } = await build(steps);
-  expect(out).toMatch(/^<div class="scb-scrolly" data-scb-scrolly=""><div class="scb-scrolly-grid">/);
+  expect(out).toMatch(/^<div class="scb-scrolly scb-scrolly-600" data-scb-scrolly=""><div class="scb-scrolly-grid">/);
   expect(out).toContain('class="scb-scrolly-step scb-scrolly-on" data-scb-focus="0" data-scb-mark=""');
   expect(outLines('.scb-scrolly-code')).toEqual(outLines('.scb-scrolly-step:nth-child(1)'));
   expect(out).toContain('<figure class="frame has-title scb-scrolly-frame">');
@@ -82,7 +82,7 @@ test('a step with no focus leaves every line clear', async () => {
 
 test('with the feature off, renders the copies only, with no sticky copy', async () => {
   const { out } = await build(steps, '', false);
-  expect(out).toMatch(/^<div class="scb-scrolly"><div class="scb-scrolly-grid">/);
+  expect(out).toMatch(/^<div class="scb-scrolly scb-scrolly-600"><div class="scb-scrolly-grid">/);
   expect(out).not.toContain('scb-scrolly-code');
 });
 
@@ -91,8 +91,9 @@ test('fails the build for a range that is not valid, or without one block and a 
     '<Step focus="4-2"> in <Scrollycoding>: 4-2 ends before it starts.',
   );
   const { html } = await render(code.join('\n'));
-  expect(() => scrollycoding(html)).toThrow('needs one code block and one or more <Step> components');
-  expect(() => scrollycoding([html, html, steps[0]].join(''))).toThrow('It has 2 code blocks and 1 steps.');
+  expect(() => scrollycoding(html)).toThrow('needs a code block, then one or more <Step> components');
+  expect(() => scrollycoding([steps[0], html, steps[1]].join(''))).toThrow('does not start with a code block');
+  expect(() => scrollycoding([html, steps[0], html].join(''))).toThrow('end with a step');
 });
 
 test('gives each copy its own ids, and points its references at them', async () => {
@@ -134,4 +135,49 @@ test('renames the line ids of a block whose id holds regular expression characte
     expect(out).toContain(`id="${id}-s1-L1"`);
     expect(out).toContain(`href="#${id}-s1-L1"`);
   }
+});
+
+const version2 = [
+  '```js title="server.js"',
+  "import express from 'express';",
+  '',
+  'const app = express();',
+  'app.use(express.json());',
+  'app.listen(3000);',
+  '```',
+];
+
+test('a block between steps is the code from the next step on, with a sticky copy of each version', async () => {
+  const { html: first } = await render(code.join('\n'));
+  const { html: second } = await render(version2.join('\n'));
+  const out = scrollycoding([first, steps[0], second, step(' data-focus="5"', 'Parse JSON.')].join('\n'));
+  const tree = fromHtml(out, { fragment: true });
+  const [one, two] = selectAll('.scb-scrolly-step', tree);
+  expect(one?.properties.dataScbVersion).toBe('0');
+  expect(two?.properties.dataScbVersion).toBe('1');
+  expect(selectAll('.ec-line', two as never)).toHaveLength(5);
+  expect(two?.properties.dataScbFocus).toBe('4');
+  const sticky = selectAll('.scb-scrolly-code > .expressive-code', tree);
+  expect(sticky.map((g) => (g.properties.className as string[]).includes('scb-scrolly-current'))).toEqual([
+    true,
+    false,
+  ]);
+  const data = JSON.parse(out.match(/<script type="application\/json">(.*?)<\/script>/)?.[1] ?? '');
+  expect(data).toHaveLength(2);
+  // A token in both versions has the same key.
+  const key = (i: number, text: string) => data[i].find((t: [number, string]) => t[1] === text)?.[0];
+  expect(key(0, 'listen')).toBe(key(1, 'listen'));
+  expect(scrollycoding([first, steps[0], second, steps[1]].join('\n'), { animate: false })).not.toContain('<script');
+});
+
+test('a block with one version has no token data', async () => {
+  const { out } = await build(steps);
+  expect(out).not.toContain('<script');
+  expect(out).not.toContain('data-scb-version');
+});
+
+test('needs a wider container for the columns when the lines are longer, and can put the code on the left', async () => {
+  const { html } = await render(['```js', `const x = ${'1'.repeat(40)};`, '```'].join('\n'));
+  const out = scrollycoding([html, steps[0]].join('\n'), { codeSide: 'left' });
+  expect(out).toMatch(/^<div class="scb-scrolly scb-scrolly-800 scb-scrolly-code-left"/);
 });

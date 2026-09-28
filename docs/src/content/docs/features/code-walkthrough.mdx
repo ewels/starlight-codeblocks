@@ -1,12 +1,12 @@
 ---
-title: Token transitions
+title: Code walkthrough
 description: Step through versions of one code block, and watch the code move from each version to the next, so readers see what changed.
 ---
 
 import { CodeSteps } from 'starlight-codeblocks/components';
 import Example from '../../../components/Example.astro';
 
-A tutorial often shows the same file several times, with a few lines more each time. Readers must compare the blocks line by line to find the change. Token transitions put the versions in one block with numbered steps in the title bar. When the reader changes step, unchanged code moves to its new place, and new code fades in.
+A tutorial often shows the same file several times, with a few lines more each time. Readers must compare the blocks line by line to find the change. A code walkthrough puts the versions in one block with numbered steps in the title bar. When the reader changes step, unchanged code moves to its new place, and new code fades in.
 
 export const basic = `
 <CodeSteps>
@@ -106,7 +106,7 @@ Put two or more code blocks between the tags, with an empty line after `<CodeSte
 
 ## Options
 
-Token transitions have no options. To turn the feature off for the whole site, set `transitions` to `false`:
+Code walkthrough has no options. To turn the feature off for the whole site, set `transitions` to `false`:
 
 ```js title="astro.config.mjs"
 codeblocks({
@@ -211,6 +211,6 @@ def total(items):
 
 ## Related
 
-- [Scrollycoding](/starlight-codeblocks/features/scrollycoding/): one block that changes its focus as the reader scrolls through prose steps.
+- [Scrollycoding](/starlight-codeblocks/features/scrollycoding/): prose steps that change the focus of a block, and can change its code, as the reader scrolls.
 - [Word-level diff](/starlight-codeblocks/features/word-level-diff/): one block that marks the changed words between two versions.
 - [Code switcher](/starlight-codeblocks/features/code-switcher/): versions that are alternatives, such as package managers, and not steps in an order.

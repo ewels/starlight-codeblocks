@@ -165,7 +165,7 @@ const features = [
     },
   },
   {
-    slug: 'token-transitions',
+    slug: 'code-walkthrough',
     run: async (page, rec) => {
       const next = () =>
         pane(page).locator('[data-scb-steps] > .expressive-code:visible').getByRole('button', { name: 'Next' });

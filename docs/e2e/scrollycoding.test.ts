@@ -153,3 +153,67 @@ test('without JavaScript, the page shows the narrow layout', async ({ browser })
   for (const copy of await steps(page).locator('.expressive-code').all()) await expect(copy).toBeVisible();
   await context.close();
 });
+
+test.describe('versions of the code', () => {
+  const lines = (page: Page) => sticky(page, 2).locator('.scb-scrolly-current .ec-line');
+  const sharp = (page: Page) =>
+    lines(page).evaluateAll((all) => all.flatMap((l, i) => (l.classList.contains('scb-focus-out') ? [] : [i + 1])));
+
+  test('each step copy shows the version of its step', async ({ page }) => {
+    await expect(steps(page, 2).nth(1).locator('.expressive-code .ec-line')).toHaveCount(3);
+    await expect(steps(page, 2).nth(2).locator('.expressive-code .ec-line')).toHaveCount(4);
+  });
+
+  test('a step after a new version animates the sticky block to it, and back', async ({ page }) => {
+    test.skip(phone(), 'The two columns need 600 px.');
+    await expect(lines(page)).toHaveCount(3);
+    await centre(page, 2, 2);
+    await expect(steps(page, 2).nth(2)).toHaveClass(/scb-scrolly-on/);
+    await expect(lines(page)).toHaveCount(4);
+    if (test.info().project.name !== 'reduced-motion') {
+      await expect(sticky(page, 2).locator('.scb-steps-anim')).toBeAttached();
+    }
+    await expect(sticky(page, 2).locator('.scb-steps-anim')).toHaveCount(0);
+    await expect.poll(() => sharp(page)).toEqual([2]);
+    await centre(page, 2, 1);
+    await expect(lines(page)).toHaveCount(3);
+    await expect.poll(() => sharp(page)).toEqual([3]);
+  });
+});
+
+test('codeSide="left" puts the block in the left column', async ({ page }) => {
+  test.skip(phone(), 'The two columns need 600 px.');
+  const [code, step] = await Promise.all([sticky(page, 3).boundingBox(), steps(page, 3).first().boundingBox()]);
+  expect((code?.x ?? 0) + (code?.width ?? 0)).toBeLessThanOrEqual(step?.x ?? 0);
+});
+
+test.describe('on a page without a table of contents', () => {
+  test.skip(phone, 'Phones have no space beside the content column.');
+  const measure = async (page: Page) => ({
+    column: await page.locator('.sl-markdown-content').boundingBox(),
+    grid: await scrolly(page).locator('.scb-scrolly-grid').boundingBox(),
+    code: await sticky(page).isVisible(),
+    overflow: await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+  });
+
+  test('a block with long lines spreads by the same amount on each side', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('./features/scrollycoding/wide/');
+    const { column, grid, code, overflow } = await measure(page);
+    expect(code).toBe(true);
+    expect(grid?.width).toBeCloseTo(1000, 0);
+    const left = (column?.x ?? 0) - (grid?.x ?? 0);
+    const right = (grid?.x ?? 0) + (grid?.width ?? 0) - (column?.x ?? 0) - (column?.width ?? 0);
+    expect(Math.abs(left - right)).toBeLessThan(1);
+    expect(overflow).toBe(0);
+  });
+
+  test('the block keeps to the content column when the window is too narrow', async ({ page }) => {
+    await page.setViewportSize({ width: 1100, height: 900 });
+    await page.goto('./features/scrollycoding/wide/');
+    const { column, grid, code, overflow } = await measure(page);
+    expect(code).toBe(false);
+    expect(grid?.width).toBeCloseTo(column?.width ?? 0, 0);
+    expect(overflow).toBe(0);
+  });
+});

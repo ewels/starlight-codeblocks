@@ -1,0 +1,48 @@
+---
+title: Scrollycoding on a page without a table of contents
+description: A demo page. A scrollycoding block with long lines spreads past the content column to show its steps beside the code.
+tableOfContents: false
+---
+
+import { Scrollycoding, Step } from 'starlight-codeblocks/components';
+
+This page shows [scrollycoding](/starlight-codeblocks/features/scrollycoding/) on a page that has no table of contents. The text stays in Starlight's content column. The block below has lines too long for that column, so it spreads over the free space on each side. Then it shows the steps beside the code. Make the window narrower to see each step get its own copy of the block.
+
+<Scrollycoding>
+
+```py title="orders.py"
+import csv
+from collections import Counter
+from pathlib import Path
+
+
+def load_orders(path: Path) -> list[dict[str, str]]:
+    with path.open(newline="", encoding="utf-8") as fh:
+        return [row for row in csv.DictReader(fh) if row["status"]]
+```
+
+<Step focus="6">`load_orders` takes the path of a CSV file and returns one dict for each row.</Step>
+<Step focus="7">`newline=""` lets the CSV reader handle the line ends.</Step>
+<Step focus="8">Rows with no status are left out.</Step>
+
+```py title="orders.py"
+import csv
+from collections import Counter
+from pathlib import Path
+
+
+def load_orders(path: Path) -> list[dict[str, str]]:
+    with path.open(newline="", encoding="utf-8") as fh:
+        return [row for row in csv.DictReader(fh) if row["status"]]
+
+
+def count_by_status(orders: list[dict[str, str]]) -> Counter[str]:
+    return Counter(order["status"] for order in orders)
+```
+
+<Step focus="11-12">`count_by_status` counts the orders for each status.</Step>
+<Step focus="2, 12">`Counter` comes from the standard library.</Step>
+
+</Scrollycoding>
+
+The text after the block is in the content column again.

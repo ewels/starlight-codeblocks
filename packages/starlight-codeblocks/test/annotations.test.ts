@@ -81,6 +81,18 @@ test('warns about an unknown annotations value and uses popovers', async () => {
   expect(html).toContain('popovertarget');
 });
 
+test('codeSide="right" puts the code in the right column, and warns about other values', async () => {
+  const right = await render(block('py annotations="side" codeSide="right"', 'x = 1  # [!annotate] Note'));
+  expect(right.html).toContain('class="scb-side scb-side-600 scb-side-code-right not-content"');
+  expect(right.warnings).toEqual([]);
+  const left = await render(block('py annotations="side" codeSide="left"', 'x = 1  # [!annotate] Note'));
+  expect(left.html).not.toContain('scb-side-code-right');
+  expect(left.warnings).toEqual([]);
+  const bad = await render(block('py annotations="side" codeSide="top"', 'x = 1  # [!annotate] Note'));
+  expect(bad.warnings.join('\n')).toContain('`codeSide="top"`');
+  expect(bad.html).not.toContain('scb-side-code-right');
+});
+
 test('the hover colour of a marker comes from the theme and keeps the number readable', async () => {
   for (const v of await variants()) {
     const hover = v.get('codeblocksAnnotations.markerHoverBackground');

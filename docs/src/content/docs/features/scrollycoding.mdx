@@ -66,10 +66,12 @@ Scroll down the page. The block stays below the site header, and each step that 
 
 | Syntax | Where | Example |
 |---|---|---|
-| `<Scrollycoding>` ... `</Scrollycoding>` | Around one code block and its steps, in an MDX file | `<Scrollycoding>` |
+| `<Scrollycoding>` ... `</Scrollycoding>` | Around the code blocks and the steps, in an MDX file | `<Scrollycoding>` |
 | `<Step>` ... `</Step>` | After the code block, one for each step | `<Step focus="6-8">Text</Step>` |
 | `focus="<range>"` | On `<Step>` | `focus="6-8"` |
 | `mark="<range>"` | On `<Step>` | `mark="4"` |
+| A code block between two steps | After a `<Step>` | A new version of the code |
+| `codeSide="left"` | On `<Scrollycoding>` | `<Scrollycoding codeSide="left">` |
 
 Import both components at the top of the MDX file:
 
@@ -79,14 +81,18 @@ import { Scrollycoding, Step } from 'starlight-codeblocks/components';
 
 Put one code block first, then the steps. Leave an empty line after `<Scrollycoding>` and before `</Scrollycoding>`. `focus` and `mark` take a [range](/starlight-codeblocks/features/comment-notation/#line-numbers) without braces, such as `4` or `1, 6-8`. A step can contain any Markdown, such as links, inline code or several paragraphs.
 
+To change the code during the walkthrough, put a new version of the code block between two steps. The steps after it show the new version, and their `focus` and `mark` ranges count its lines. See [Change the code between steps](#change-the-code-between-steps).
+
 ## Behaviour
 
-- On a wide screen, the steps are a column on the left, and the block is on the right. The block stays below the site header while the steps scroll with the page.
+- On a wide screen, the steps are a column on the left, and the block is on the right. With `codeSide="left"`, the block is on the left and the steps are on the right. The block stays below the site header while the steps scroll with the page.
+- The two columns need space for the longest line of the block beside a text column of 12rem. The plugin measures the lines at build time and gives the block one of three widths: 600, 800 or 1000 px. In a narrower container, the page shows the narrow layout. The widths are the same as for [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/#make-space-for-long-lines).
 - The step that crosses the middle of the block is the active step. It shows at full opacity, and the other steps fade.
 - When the active step changes, the block changes its focused and marked lines, with the 250 ms transition of [focus](/starlight-codeblocks/features/focus/).
+- When the active step has a new version of the code, the code moves to the new version as in a [code walkthrough](/starlight-codeblocks/features/code-walkthrough/). Code that is in both versions moves, and new lines fade in with a green tint.
 - The block stays blurred when the pointer is over it, because the pointer often rests there while the reader scrolls. Move keyboard focus into the block to make every line sharp.
-- On a narrow screen, each step shows its own copy of the block below its text. The two columns need a content width of 600 px or more.
-- When the reader's system asks for reduced motion, the focus and the fade change without a transition.
+- On a narrow screen, each step shows its own copy of the block below its text, in the version of that step.
+- When the reader's system asks for reduced motion, the focus, the fade and the code change without a transition.
 - The copy button copies the whole block, in every step.
 - Without JavaScript, the page shows the narrow layout at every width.
 
@@ -100,7 +106,7 @@ codeblocks({
 });
 ```
 
-With `scrollycoding: false`, `<Scrollycoding>` shows the narrow layout at every width, with no script.
+With `scrollycoding: false`, `<Scrollycoding>` shows the narrow layout at every width, with no script. With `transitions: false`, a new version of the code shows without the animation.
 
 ## Examples
 
@@ -111,12 +117,12 @@ export const marks = `
 
 \`\`\`py title="cart.py"
 def total(items, discount=0):
-    subtotal = sum(item.price for item in items)
-    return subtotal * (1 - discount)
+    price = sum(i.price for i in items)
+    return price * (1 - discount)
 \`\`\`
 
 <Step focus="1">The function takes the items and an optional discount, from 0 to 1.</Step>
-<Step focus="1-3" mark="3">The last line applies the discount to the subtotal.</Step>
+<Step focus="1-3" mark="3">The last line applies the discount to the sum.</Step>
 
 </Scrollycoding>
 `;
@@ -127,26 +133,127 @@ def total(items, discount=0):
 
 ```py title="cart.py"
 def total(items, discount=0):
-    subtotal = sum(item.price for item in items)
-    return subtotal * (1 - discount)
+    price = sum(i.price for i in items)
+    return price * (1 - discount)
 ```
 
 <Step focus="1">The function takes the items and an optional discount, from 0 to 1.</Step>
-<Step focus="1-3" mark="3">The last line applies the discount to the subtotal.</Step>
+<Step focus="1-3" mark="3">The last line applies the discount to the sum.</Step>
 
 </Scrollycoding>
 
 </Example>
 
+### Change the code between steps
+
+A code block between two steps is a new version of the code. Here, the third step adds a line, and the block animates to the new version when that step becomes active:
+
+export const versions = `
+<Scrollycoding>
+
+\`\`\`js title="server.js"
+const app = express();
+
+app.listen(3000);
+\`\`\`
+
+<Step focus="1">Create the app object that holds routes and middleware.</Step>
+<Step focus="3">Start listening on port 3000.</Step>
+
+\`\`\`js title="server.js"
+const app = express();
+app.use(express.json());
+
+app.listen(3000);
+\`\`\`
+
+<Step focus="2">Parse JSON request bodies before any route sees them.</Step>
+<Step focus="4">The server still listens on port 3000.</Step>
+
+</Scrollycoding>
+`;
+
+<Example code={versions}>
+
+<Scrollycoding>
+
+```js title="server.js"
+const app = express();
+
+app.listen(3000);
+```
+
+<Step focus="1">Create the app object that holds routes and middleware.</Step>
+<Step focus="3">Start listening on port 3000.</Step>
+
+```js title="server.js"
+const app = express();
+app.use(express.json());
+
+app.listen(3000);
+```
+
+<Step focus="2">Parse JSON request bodies before any route sees them.</Step>
+<Step focus="4">The server still listens on port 3000.</Step>
+
+</Scrollycoding>
+
+</Example>
+
+### Code on the left
+
+`codeSide="left"` puts the block in the left column and the steps in the right column:
+
+export const left = `
+<Scrollycoding codeSide="left">
+
+\`\`\`py title="cart.py"
+def total(items, discount=0):
+    price = sum(i.price for i in items)
+    return price * (1 - discount)
+\`\`\`
+
+<Step focus="1">The function takes the items and an optional discount, from 0 to 1.</Step>
+<Step focus="2">Add up the price of each item.</Step>
+<Step focus="3">Apply the discount to the sum.</Step>
+
+</Scrollycoding>
+`;
+
+<Example code={left}>
+
+<Scrollycoding codeSide="left">
+
+```py title="cart.py"
+def total(items, discount=0):
+    price = sum(i.price for i in items)
+    return price * (1 - discount)
+```
+
+<Step focus="1">The function takes the items and an optional discount, from 0 to 1.</Step>
+<Step focus="2">Add up the price of each item.</Step>
+<Step focus="3">Apply the discount to the sum.</Step>
+
+</Scrollycoding>
+
+</Example>
+
+## Make space for long lines
+
+A block with lines of more than about 41 characters needs more than 600 px for the two columns. On a page without a table of contents, the content column has free space on each side. A `<Scrollycoding>` that needs 800 or 1000 px spreads over that space, as [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/#make-space-for-long-lines) do. See [a page without a table of contents](/starlight-codeblocks/features/scrollycoding/wide/) for a demo.
+
+To use this, turn off the table of contents of the page with `tableOfContents: false` in its front matter. The component spreads only when it is directly on the page, not in tabs, an aside or another component.
+
 ## Limitations
 
 - `<Scrollycoding>` works in MDX files only, because Markdown files cannot contain components.
-- A `<Scrollycoding>` holds one code block. To show code that changes between steps, use [token transitions](/starlight-codeblocks/features/token-transitions/).
+- During the animation to a new version, the block shows the syntax colours only. The focus shows again when the animation ends.
+- The widths are estimates for Starlight's default code font. A larger code font can make a line scroll in the code column.
 - The narrow layout repeats the block for each step, so a long block with many steps makes a long page.
 - The component replaces the focus of the block. A `focus` attribute on the fence line has no effect.
 
 ## Related
 
 - [Focus](/starlight-codeblocks/features/focus/): one block with one focus range, with no prose steps.
-- [Token transitions](/starlight-codeblocks/features/token-transitions/): steps through versions of a block that change.
+- [Code walkthrough](/starlight-codeblocks/features/code-walkthrough/): versions of a block, with buttons to step through them and no prose between the steps.
 - [Side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/): notes for many lines in a column next to the block, all visible at once.

@@ -96,7 +96,7 @@ test('a field in a copy of the block fills its own copied code', async ({ page }
 });
 
 test('the step buttons move between steps in a copy of the block', async ({ page }) => {
-  await page.goto('./features/token-transitions/');
+  await page.goto('./features/code-walkthrough/');
   const steps = page.locator('.example').first().locator('[data-scb-steps]');
   const copy = await copyToOverlay(page, steps.locator('> .expressive-code:visible'));
   await copy.getByRole('button', { name: 'Next' }).click();
@@ -118,7 +118,7 @@ test('the menu of a code switcher picks a variant in a copy of the block', async
 });
 
 test('a full screen button in the title bar leaves the step buttons free', async ({ page }) => {
-  await page.goto('./features/token-transitions/');
+  await page.goto('./features/code-walkthrough/');
   const current = page.locator('.example').first().locator('[data-scb-steps] > .expressive-code:visible');
   // starlight-codeblock-fullscreen puts its button over the end of the title bar with these styles.
   await current.locator('figcaption.header').evaluate((header) => {

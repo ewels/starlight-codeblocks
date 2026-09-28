@@ -208,6 +208,53 @@ test('takes the first starlight-pydocs package that has a path, and wins over th
   ]);
 });
 
+const versions = (): PydocsRegistry => ({
+  version: 1,
+  packages: [
+    { name: 'myproject', base: 'api/myproject', symbols: myproject() },
+    {
+      name: 'myproject',
+      base: '1x/api/myproject',
+      symbols: new Map([
+        ['myproject', { href: '/1x/api/myproject/', kind: 'module' }],
+        ['myproject.Report', { href: '/1x/api/myproject/#myproject.Report', kind: 'class' }],
+      ]),
+    },
+  ],
+});
+
+test('prefers the starlight-pydocs package at the pydocsBase of the block', async () => {
+  pydocs(versions());
+  const code = ['from myproject import Report'];
+  const current = await render(block('py', ...code));
+  expect(links(current.html).map((l) => l.href)).toEqual([
+    '/api/myproject/',
+    '/api/myproject/report/#myproject.report.Report',
+  ]);
+  const archived = await render(block('py pydocsBase="1x/api/myproject"', ...code));
+  expect(links(archived.html).map((l) => l.href)).toEqual([
+    '/1x/api/myproject/',
+    '/1x/api/myproject/#myproject.Report',
+  ]);
+  expect(archived.warnings).toEqual([]);
+});
+
+test('falls back to the first package for a path that the pydocsBase package does not have', async () => {
+  pydocs(versions());
+  const { html } = await render(block('py pydocsBase="1x/api/myproject"', 'from myproject import summarise'));
+  expect(links(html).map((l) => l.href)).toEqual(['/1x/api/myproject/', '/api/myproject/#myproject.summarise']);
+});
+
+test('warns once for a pydocsBase that no package has, and links as usual', async () => {
+  pydocs(versions());
+  const { html, warnings } = await render(
+    block('py pydocsBase="2x/api/myproject"', 'import myproject', 'myproject.Report'),
+  );
+  expect(links(html).map((l) => l.href)).toEqual(['/api/myproject/', '/api/myproject/report/#myproject.report.Report']);
+  expect(warnings).toHaveLength(1);
+  expect(warnings[0]).toContain('pydocsBase="2x/api/myproject"');
+});
+
 test('reads the starlight-pydocs registry on each render, so that changes in dev show', async () => {
   const adapter = { apiLinks: { adapters: [python({ stdlib: false })] } };
   const code = block('py', 'from myproject import summarise');

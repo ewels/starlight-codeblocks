@@ -1,8 +1,23 @@
 ---
+import '@shikijs/magic-move/style.css';
 import { getRegistry } from '../registry.ts';
-import { scrollycoding } from './scrolly.ts';
+import { firstOnPage, scrollycoding, scrollyStyles } from './scrolly.ts';
 
-const html = scrollycoding(await Astro.slots.render('default'), getRegistry()?.options.scrollycoding !== false);
+interface Props {
+  /** The side of the code in the two-column layout. The default is `right`. */
+  codeSide?: 'left' | 'right';
+}
+
+const { codeSide } = Astro.props;
+if (codeSide !== undefined && codeSide !== 'left' && codeSide !== 'right') {
+  throw new Error(`<Scrollycoding codeSide="${codeSide}">: codeSide must be "left" or "right".`);
+}
+const options = getRegistry()?.options;
+const html = scrollycoding(await Astro.slots.render('default'), {
+  interactive: options?.scrollycoding !== false,
+  animate: options?.transitions !== false,
+  codeSide,
+});
 ---
 
 <Fragment set:html={html} />
@@ -10,6 +25,8 @@ const html = scrollycoding(await Astro.slots.render('default'), getRegistry()?.o
 <script>
   import './scrolly-client.ts';
 </script>
+
+{firstOnPage(Astro.request) && <style is:inline set:html={scrollyStyles} />}
 
 <style is:global>
   .scb-scrolly {
@@ -27,42 +44,8 @@ const html = scrollycoding(await Astro.slots.render('default'), getRegistry()?.o
   .scb-scrolly-code {
     display: none;
   }
-  @media screen and (scripting: enabled) {
-    @container (min-width: 600px) {
-      [data-scb-scrolly] .scb-scrolly-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
-        gap: 22px;
-        /* Shorter than the block, so that the active step's text stays level with the block. */
-        --scb-scrolly-slot: min(30vh, 0.6 * var(--scb-scrolly-height, 50vh));
-      }
-      [data-scb-scrolly] .scb-scrolly-steps {
-        /* So that the first and the last step can reach the middle of the block, while the block is stuck. */
-        padding-block: max(0px, var(--scb-scrolly-lead, 0px) - var(--scb-scrolly-slot) / 2)
-          max(0px, var(--scb-scrolly-height, 50vh) - var(--scb-scrolly-lead, 0px) - var(--scb-scrolly-slot) / 2);
-      }
-      [data-scb-scrolly] .scb-scrolly-step {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        min-height: var(--scb-scrolly-slot);
-        margin-top: 0;
-        opacity: 0.38;
-      }
-      [data-scb-scrolly] .scb-scrolly-step.scb-scrolly-on {
-        opacity: 1;
-      }
-      [data-scb-scrolly] .scb-scrolly-step > .expressive-code {
-        display: none;
-      }
-      [data-scb-scrolly] .scb-scrolly-code {
-        display: block;
-        position: sticky;
-        top: calc(var(--sl-nav-height, 0px) + var(--sl-mobile-toc-height, 0px) + 1rem);
-        align-self: start;
-        margin-top: 0;
-      }
-    }
+  .scb-scrolly-code > .expressive-code:not(.scb-scrolly-current) {
+    display: none;
   }
   @media (prefers-reduced-motion: no-preference) {
     .scb-scrolly-step {

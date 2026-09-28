@@ -23,6 +23,18 @@ test('the notes are a column beside the code on a desktop, and a list under it o
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+test('codeSide="right" puts the notes in the left column', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'The phone layout has no column.');
+  const block = page.locator('.example').nth(2).locator('.pane.output').locator('.expressive-code');
+  await expect(block.locator('.scb-side-code-right')).toBeAttached();
+  const [code, notes] = await Promise.all([
+    block.locator('figure').boundingBox(),
+    block.locator('.scb-annotation-notes').boundingBox(),
+  ]);
+  expect((notes?.x ?? 0) + (notes?.width ?? 0)).toBeLessThanOrEqual(code?.x ?? 0);
+  expect(Math.abs((notes?.y ?? 0) - (code?.y ?? 0))).toBeLessThan(2);
+});
+
 test('the notes column sticks below the header while the block scrolls past', async ({ page, isMobile }) => {
   test.skip(isMobile, 'The phone layout has no column.');
   const block = example(page);

@@ -81,6 +81,13 @@ export const attributesReference: AttributeDoc[] = [
     example: { lang: 'py', meta: 'apiLinks=false', code: 'import json\n\nconfig = json.loads(\'{"port": 8080}\')' },
   },
   {
+    name: 'pydocsBase',
+    syntax: ['pydocsBase="<base>"'],
+    description:
+      'Makes the Python adapter link names to the starlight-pydocs package at this base first, such as `1x/api/myproject` for an older version. Names that this package does not have link as usual.',
+    page: 'features/api-auto-linking',
+  },
+  {
     name: 'expandable',
     syntax: ['expandable', 'expandable={N}', 'expandable=false'],
     description:
@@ -127,6 +134,13 @@ export const attributesReference: AttributeDoc[] = [
     },
   },
   {
+    name: 'codeSide',
+    syntax: ['codeSide="right"'],
+    description:
+      'With `annotations="side"`, puts the code in the right column and the notes in the left column. The default is `left`.',
+    page: 'features/side-by-side-annotations',
+  },
+  {
     name: 'footnotes',
     syntax: ['footnotes="sticky"', 'footnotes="static"'],
     description:
@@ -150,7 +164,7 @@ export const attributesReference: AttributeDoc[] = [
     syntax: ['step="<text>"'],
     description:
       'Gives the label of a step in a `<CodeSteps>` component. The title bar shows the label after the title.',
-    page: 'features/token-transitions',
+    page: 'features/code-walkthrough',
     example: {
       lang: 'js',
       meta: 'title="server.js" step="Create the app"',
@@ -419,7 +433,7 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
     },
   },
   codeblocksTransitions: {
-    page: 'features/token-transitions',
+    page: 'features/code-walkthrough',
     settings: {
       stepBorder: {
         description: 'The border of a step that is not done yet.',

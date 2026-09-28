@@ -6,7 +6,7 @@ const reduced = () => test.info().project.name === 'reduced-motion';
 const phone = () => test.info().project.name.startsWith('phone');
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('./features/token-transitions/');
+  await page.goto('./features/code-walkthrough/');
 });
 
 test('shows the first step, with the steps and the label in the title bar', async ({ page }) => {
@@ -193,7 +193,7 @@ test('the title bar fits the block, and the page does not scroll sideways', asyn
 test('without JavaScript, every step shows as its own block, with its label', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await page.goto('./features/token-transitions/');
+  await page.goto('./features/code-walkthrough/');
   await expect(current(page)).toHaveCount(3);
   await expect(current(page).locator('.scb-steps-label')).toHaveText([
     'Create the app',

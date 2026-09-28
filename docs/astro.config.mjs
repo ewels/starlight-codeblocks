@@ -10,6 +10,7 @@ import { sidebar } from './src/sidebar.mjs';
 export default defineConfig({
   site: 'https://ewels.github.io',
   base: '/starlight-codeblocks',
+  redirects: { '/features/token-transitions': '/starlight-codeblocks/features/code-walkthrough/' },
   integrations: [
     starlight({
       title: 'starlight-codeblocks',

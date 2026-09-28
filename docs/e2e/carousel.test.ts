@@ -134,7 +134,7 @@ test('selecting a button shows its example and announces it', async ({ page }) =
   await expect(page.locator('.carousel .slide:not([data-current])').first()).toBeHidden();
   await expect(page.locator('.carousel .tile[aria-pressed="true"]')).toHaveCount(1);
   await expect(tile(page, 'Word-level diff')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('.carousel [data-status]')).toHaveText('Word-level diff, 9 of 23');
+  await expect(page.locator('.carousel [data-status]')).toHaveText('Word-level diff, 15 of 23');
 });
 
 const box = async (locator: ReturnType<Page['locator']>) => {
@@ -230,7 +230,7 @@ test('clicking a dot shows its slide, announces it and stops the rotation', asyn
   await expect(dot(page, 'Word-level diff')).toHaveAttribute('aria-current', 'true');
   await expect(dot(page, 'Annotations')).toHaveAttribute('aria-current', 'false');
   await expect(tile(page, 'Word-level diff')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('.carousel [data-status]')).toHaveText('Word-level diff, 9 of 23');
+  await expect(page.locator('.carousel [data-status]')).toHaveText('Word-level diff, 15 of 23');
   await expect(page.locator('.carousel .rotation')).toHaveAccessibleName('Play');
 });
 

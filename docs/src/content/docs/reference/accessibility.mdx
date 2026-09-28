@@ -82,6 +82,14 @@ The plugin reads directives at build time and removes them from the page. Reader
 - The pointer does not clear the focus of the sticky block. Move keyboard focus into the block to make every line sharp.
 - Under reduced motion, the focus and the fade of the steps change at once.
 
+### Code walkthrough
+
+- The numbered steps and the **Previous** and **Next** buttons under the block are buttons. The left and right arrow keys go to the previous and the next step when a numbered step has focus.
+- The row under the block also shows the step count in text, such as "Step 2 of 3".
+- Screen readers announce the number and the label of the new step. The current step has `aria-current`.
+- The green tint on new lines is a visual extra only. It fades out, and it gives no information that the code does not give.
+- Under reduced motion, the code changes without the animation, and new lines get no tint.
+
 ## Draw attention
 
 ### Focus
@@ -100,22 +108,6 @@ The plugin reads directives at build time and removes them from the page. Reader
 - Keyboard focus on a mention link highlights its lines, the same as hover.
 - Screen readers read the tagged lines as the description of the link.
 - Under reduced motion, the fade and the scroll happen at once.
-
-## Show what changed
-
-### Word-level diff
-
-- The line markers of Expressive Code show which lines are removed and which are added. The changed words get a stronger tint on top of them.
-- An added word is underlined and a removed word has a line through it, so colour is not the only mark of a changed word.
-- Each changed word has the `insertion` or the `deletion` role. Screen readers that support these roles announce the change. All screen readers get the removed line and the added line in full, so a reader can compare the two.
-
-### Token transitions
-
-- The numbered steps and the **Previous** and **Next** buttons under the block are buttons. The left and right arrow keys go to the previous and the next step when a numbered step has focus.
-- The row under the block also shows the step count in text, such as "Step 2 of 3".
-- Screen readers announce the number and the label of the new step. The current step has `aria-current`.
-- The green tint on new lines is a visual extra only. It fades out, and it gives no information that the code does not give.
-- Under reduced motion, the code changes without the animation, and new lines get no tint.
 
 ## Make code easier to read
 
@@ -143,6 +135,12 @@ The glyphs are hidden from screen readers, which read the same code as in a bloc
 ### Inline code highlighting
 
 The highlighted code is a normal `code` element, with the same characters as before. The token colours have the same contrast correction as the code blocks.
+
+### Word-level diff
+
+- The line markers of Expressive Code show which lines are removed and which are added. The changed words get a stronger tint on top of them.
+- An added word is underlined and a removed word has a line through it, so colour is not the only mark of a changed word.
+- Each changed word has the `insertion` or the `deletion` role. Screen readers that support these roles announce the change. All screen readers get the removed line and the added line in full, so a reader can compare the two.
 
 ## Link code
 

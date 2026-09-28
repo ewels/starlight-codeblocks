@@ -204,7 +204,7 @@ Use these words, and only these words, for these concepts.
 | marker | the dashed line that shows hidden lines | separator, placeholder |
 | placeholder field | an input that replaces a placeholder | input, variable |
 | variant | one of the code blocks in a code switcher | tab, option |
-| step | one version in token transitions or scrollycoding | slide, stage, frame |
+| step | one version in a code walkthrough, or one prose step in scrollycoding | slide, stage, frame |
 | adapter | code that resolves names for API auto-linking | plugin, resolver |
 | playground | an external site that runs code | sandbox (unless it is the site's name) |
 | runtime | code that runs examples in the browser | engine, interpreter |

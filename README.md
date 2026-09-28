@@ -127,6 +127,29 @@ Explain a code block in prose steps that scroll past it, while the block stays i
 
 </details>
 
+<details>
+<summary>Code walkthrough</summary>
+
+Step through versions of one code block, and watch the code move from each version to the next, so readers see what changed.
+
+````mdx
+<CodeSteps>
+
+```js step="Create the app"
+```
+
+```js step="Parse JSON bodies"
+```
+
+</CodeSteps>
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-walkthrough.webp" alt="A JavaScript block with step buttons. Selecting Next moves the code to the next version, and the new lines fade in.">
+
+[Code walkthrough documentation](https://ewels.github.io/starlight-codeblocks/features/code-walkthrough/)
+
+</details>
+
 ### Draw attention
 
 <details>
@@ -176,47 +199,6 @@ The [base case](#mention:base) stops the recursion.
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-mentions.webp" alt="A paragraph with two linked phrases above a Python block. The pointer moves over each phrase and the lines it names stay sharp while the others fade.">
 
 [Code mentions documentation](https://ewels.github.io/starlight-codeblocks/features/code-mentions/)
-
-</details>
-
-### Show what changed
-
-<details>
-<summary>Word-level diff</summary>
-
-Highlight the words that changed inside each line of a diff, so readers find a small edit in a long line. It applies to each removed line that an added line follows.
-
-```diff
--const timeout = 5000;
-+const timeout = options.timeout ?? 5000;
-```
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/word-level-diff.png" alt="A diff block where only the changed words in each line are tinted, underlined when added and struck through when removed.">
-
-[Word-level diff documentation](https://ewels.github.io/starlight-codeblocks/features/word-level-diff/)
-
-</details>
-
-<details>
-<summary>Token transitions</summary>
-
-Step through versions of one code block, and watch the code move from each version to the next, so readers see what changed.
-
-````mdx
-<CodeSteps>
-
-```js step="Create the app"
-```
-
-```js step="Parse JSON bodies"
-```
-
-</CodeSteps>
-````
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/token-transitions.webp" alt="A JavaScript block with step buttons. Selecting Next moves the code to the next version, and the new lines fade in.">
-
-[Token transitions documentation](https://ewels.github.io/starlight-codeblocks/features/token-transitions/)
 
 </details>
 
@@ -298,6 +280,22 @@ Give inline code in the prose the same syntax colours as the code blocks, with a
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/inline-code-highlighting.png" alt="A quoted paragraph with several pieces of inline code in syntax colours, in JavaScript, shell, TypeScript, CSS, Python and HTML.">
 
 [Inline code highlighting documentation](https://ewels.github.io/starlight-codeblocks/features/inline-code-highlighting/)
+
+</details>
+
+<details>
+<summary>Word-level diff</summary>
+
+Highlight the words that changed inside each line of a diff, so readers find a small edit in a long line. It applies to each removed line that an added line follows.
+
+```diff
+-const timeout = 5000;
++const timeout = options.timeout ?? 5000;
+```
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/word-level-diff.png" alt="A diff block where only the changed words in each line are tinted, underlined when added and struck through when removed.">
+
+[Word-level diff documentation](https://ewels.github.io/starlight-codeblocks/features/word-level-diff/)
 
 </details>
 

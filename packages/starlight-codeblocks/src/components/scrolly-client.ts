@@ -1,16 +1,41 @@
+import type { StepTokens } from './steps.ts';
+
 const S = 'scb-scrolly';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 const list = (value: string | undefined) => new Set(value ? value.split(',').map(Number) : []);
 
 function setup(root: HTMLElement) {
   if (root.dataset.scbScrollyReady !== undefined) return;
   root.dataset.scbScrollyReady = '';
   const steps = [...root.querySelectorAll<HTMLElement>(`.${S}-step`)];
-  const lines = [...root.querySelectorAll(`.${S}-code .ec-line:not(summary > *)`)];
-  const show = (step: HTMLElement) => {
+  const versions = [...root.querySelectorAll<HTMLElement>(`.${S}-code > .expressive-code`)];
+  const data = root.querySelector(`.${S}-code > script`)?.textContent;
+  const tokens = data ? (JSON.parse(data) as StepTokens[]) : [];
+  // Only blocks with several versions load the animation.
+  const animation = tokens.length > 0 ? import('./animate.ts') : undefined;
+  let version = 0;
+  let active: HTMLElement | undefined;
+  let stop = () => {};
+  const show = async (step: HTMLElement) => {
+    active = step;
     for (const s of steps) s.classList.toggle(`${S}-on`, s === step);
+    const v = Number(step.dataset.scbVersion ?? 0);
+    const group = versions[v];
+    if (!group) return;
+    if (v !== version) {
+      stop();
+      const from = version;
+      version = v;
+      for (const g of versions) g.classList.toggle(`${S}-current`, g === group);
+      if (animation && tokens[from] && tokens[v] && !reduce.matches) {
+        const { animate } = await animation;
+        if (active !== step) return;
+        stop = animate(group, tokens[from], tokens[v]);
+      }
+    }
     const focus = list(step.dataset.scbFocus);
     const mark = list(step.dataset.scbMark);
-    lines.forEach((line, i) => {
+    group.querySelectorAll('.ec-line:not(summary > *)').forEach((line, i) => {
       line.classList.toggle('scb-focus-out', focus.size > 0 && !focus.has(i));
       line.classList.toggle('mark', mark.has(i));
     });
@@ -29,7 +54,7 @@ function setup(root: HTMLElement) {
       const distance = Math.max(top - line, line - bottom, 0);
       if (distance < bestDistance) [best, bestDistance] = [step, distance];
     }
-    if (best && !best.classList.contains(`${S}-on`)) show(best);
+    if (best && !best.classList.contains(`${S}-on`)) void show(best);
   };
   const schedule = () => {
     if (!frame) frame = requestAnimationFrame(pick);
