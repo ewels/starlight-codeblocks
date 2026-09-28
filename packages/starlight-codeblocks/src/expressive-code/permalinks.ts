@@ -11,7 +11,7 @@ import {
 import { type Element, getClassNames, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { type CodeblocksPlugin, lineNumber, numberedLines } from './core.ts';
-import { onCode, PREFIX, solidCodeBackground, themeColour } from './styles.ts';
+import { litLine, onCode, PREFIX, solidCodeBackground, themeColour } from './styles.ts';
 
 export interface PermalinksStyleSettings {
   foreground: UnresolvedStyleValue;
@@ -69,27 +69,19 @@ export function pluginPermalinks(): CodeblocksPlugin {
   display: block;
   box-sizing: border-box;
   width: var(--scb-gutter);
+  padding-inline: 2ch;
   text-align: end;
   color: ${cssVar('codeblocksPermalinks.foreground')};
   text-decoration: none;
   pointer-events: auto;
 }
-/* Inset, because the pre clips a ring outside the gutter. The box runs into the code padding so the ring clears the digits. */
-.ec-line .gutter > a.${LINK}:focus-visible {
-  outline-offset: -2px;
-  width: calc(var(--scb-gutter) + 0.75ch);
-  margin-inline-end: -0.75ch;
-  padding-inline-end: 0.75ch;
-}
+/* Inset, because the pre clips a ring outside the gutter. */
+.ec-line .gutter > a.${LINK}:focus-visible { outline-offset: -2px; }
 .ec-line .gutter > a.${LINK}:hover {
   color: ${cssVar('codeForeground')};
   text-decoration: underline;
 }
-/* The bar goes before the line numbers: after them, as \`litLine()\` draws it, it touches the digits. */
-.${LINK}-target {
-  background: ${cssVar('codeblocksPermalinks.targetBackground')};
-  box-shadow: inset 3px 0 ${cssVar('codeblocksPermalinks.target')};
-}`,
+${litLine(`.${LINK}-target`, cssVar('codeblocksPermalinks.targetBackground'), cssVar('codeblocksPermalinks.target'))}`,
     jsModules: clientJsModules,
     hooks: {
       preprocessMetadata({ codeBlock, addGutterElement }) {
@@ -121,7 +113,7 @@ export function pluginPermalinks(): CodeblocksPlugin {
         figure.properties.dataScbPermalinks = '';
         // Hidden-line markers and callouts read this width to line up with the code.
         const style = String(figure.properties.style ?? '');
-        figure.properties.style = `${style}${style ? ';' : ''}--scb-gutter:${Math.max(2, digits) + 2.2}ch`;
+        figure.properties.style = `${style}${style ? ';' : ''}--scb-gutter:${Math.max(2, digits) + 4}ch`;
       },
     },
   };

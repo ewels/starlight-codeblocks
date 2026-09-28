@@ -149,12 +149,13 @@ test('the docs link sits in the same top-right spot on every slide, with a 24px+
 }) => {
   await page.goto('./');
   const docsLink = (name: string) => page.getByRole('link', { name: `Read docs : ${name}` });
-  // Position relative to the card, not the viewport: clicking a tile can scroll the page.
-  const offsetFromCard = async (name: string) => {
-    const card = await box(page.locator('.carousel .card'));
-    const link = await box(docsLink(name));
-    return { top: link.y - card.y, right: card.x + card.width - (link.x + link.width) };
-  };
+  // Both rects in one frame: clicking a tile starts a smooth scroll.
+  const offsetFromCard = (name: string) =>
+    docsLink(name).evaluate((el) => {
+      const link = el.getBoundingClientRect();
+      const card = (el.closest('.card') as HTMLElement).getBoundingClientRect();
+      return { top: link.top - card.top, right: card.right - link.right };
+    });
 
   const first = await box(docsLink('Annotations'));
   expect(first.width).toBeGreaterThanOrEqual(24);

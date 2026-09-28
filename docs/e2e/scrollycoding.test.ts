@@ -154,6 +154,29 @@ test('without JavaScript, the page shows the narrow layout', async ({ browser })
   await context.close();
 });
 
+test('after a view transition, the old steps are no longer measured', async ({ page }) => {
+  const stale = await page.evaluate(async () => {
+    const html = await (await fetch(location.href)).text();
+    let calls = 0;
+    for (const step of document.querySelectorAll<HTMLElement>('.scb-scrolly-step')) {
+      step.getBoundingClientRect = () => {
+        calls++;
+        return new DOMRect();
+      };
+    }
+    document.body.replaceWith(new DOMParser().parseFromString(html, 'text/html').body);
+    document.dispatchEvent(new Event('astro:page-load'));
+    for (const y of [400, 800]) {
+      window.scrollTo({ top: y, behavior: 'instant' });
+      dispatchEvent(new Event('resize'));
+      await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+    }
+    return calls;
+  });
+  expect(stale).toBe(0);
+  await expect(scrolly(page).locator('.scb-scrolly-on')).toHaveCount(1);
+});
+
 test.describe('versions of the code', () => {
   const lines = (page: Page) => sticky(page, 2).locator('.scb-scrolly-current .ec-line');
   const sharp = (page: Page) =>

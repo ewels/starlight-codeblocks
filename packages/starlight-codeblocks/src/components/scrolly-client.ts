@@ -45,8 +45,15 @@ function setup(root: HTMLElement) {
   const code = root.querySelector<HTMLElement>(`.${S}-code`);
   let line = 0;
   let frame = 0;
+  // A view transition removes the root, but not its window listeners.
+  const listening = new AbortController();
+  const gone = () => {
+    if (!root.isConnected) listening.abort();
+    return listening.signal.aborted;
+  };
   const pick = () => {
     frame = 0;
+    if (gone()) return;
     let best: HTMLElement | undefined;
     let bestDistance = Number.POSITIVE_INFINITY;
     for (const step of steps) {
@@ -60,6 +67,7 @@ function setup(root: HTMLElement) {
     if (!frame) frame = requestAnimationFrame(pick);
   };
   const measure = () => {
+    if (gone()) return;
     const height = code?.offsetHeight ?? 0;
     const top = code && height ? Number.parseFloat(getComputedStyle(code).top) || 0 : 0;
     line = Math.round(height ? Math.min(top + height / 2, (top + innerHeight) / 2) : innerHeight / 2);
@@ -68,9 +76,13 @@ function setup(root: HTMLElement) {
     root.style.setProperty('--scb-scrolly-height', `${height}px`);
     schedule();
   };
-  if (code) new ResizeObserver(measure).observe(code);
-  addEventListener('resize', measure);
-  addEventListener('scroll', schedule, { passive: true });
+  if (code) {
+    const observer = new ResizeObserver(measure);
+    observer.observe(code);
+    listening.signal.addEventListener('abort', () => observer.disconnect());
+  }
+  addEventListener('resize', measure, { signal: listening.signal });
+  addEventListener('scroll', schedule, { passive: true, signal: listening.signal });
   measure();
 }
 

@@ -14,7 +14,7 @@ test('turns line numbers into links to each line, and gives the block and each l
   const { html, copyText, warnings } = await render(block('yaml id="cfg"', 'server:', '  port: 8080'));
   expect(html).toContain('id="cfg"');
   expect(html).toContain('data-scb-permalinks');
-  expect(html).toContain('--scb-gutter:4.2ch');
+  expect(html).toContain('--scb-gutter:6ch');
   expect(html).toContain(
     '<div class="ec-line" id="cfg-L1"><div class="gutter"><a class="scb-permalink" href="#cfg-L1" aria-label="Link to line 1">1</a></div>',
   );
@@ -28,12 +28,12 @@ test('counts the lines that readers see, from startLineNumber', async () => {
   expect(html).toContain('id="app-L9"');
   expect(html).toContain('href="#app-L10"');
   expect(html).not.toContain('app-L11');
-  expect(html).toContain('--scb-gutter:4.2ch');
+  expect(html).toContain('--scb-gutter:6ch');
 });
 
 test('widens the gutter for three-digit line numbers', async () => {
   const { html } = await render(block('js id="big" startLineNumber=99', 'a()', 'b()'));
-  expect(html).toContain('--scb-gutter:5.2ch');
+  expect(html).toContain('--scb-gutter:7ch');
 });
 
 test('keeps the line ids on hidden lines, so that the hidden lines script opens them', async () => {

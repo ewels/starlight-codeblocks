@@ -104,7 +104,7 @@ export function pluginLineStates({
       const v = (key: string) => cssVar(`codeblocksLineStates.${key}` as never);
       return `
 .${cls('')} { background: var(--scbStateBg); }
-.${cls('')} .code { --ecLineBrdCol: var(--scbStateBar); --ecGtrBrdWd: ${v('barWidth')}; }
+.ec-line.${cls('')} .code { --ecLineBrdCol: var(--scbStateBar); --ecGtrBrdWd: ${v('barWidth')}; }
 .${cls('-label')} {
   display: inline-block;
   margin-inline-start: 2.5ch;
