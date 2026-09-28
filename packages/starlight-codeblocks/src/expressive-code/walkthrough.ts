@@ -3,7 +3,7 @@ import { h, select } from '@expressive-code/core/hast';
 import type { CodeblocksPlugin } from './core.ts';
 import { onCode, PREFIX, solidCodeBackground, solidCodeForeground } from './styles.ts';
 
-export interface TransitionsStyleSettings {
+export interface WalkthroughStyleSettings {
   stepBorder: UnresolvedStyleValue;
   doneForeground: UnresolvedStyleValue;
   line: UnresolvedStyleValue;
@@ -16,13 +16,13 @@ export interface TransitionsStyleSettings {
 
 declare module '@expressive-code/core' {
   export interface StyleSettings {
-    codeblocksTransitions: TransitionsStyleSettings;
+    codeblocksWalkthrough: WalkthroughStyleSettings;
   }
 }
 
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
-    codeblocksTransitions: {
+    codeblocksWalkthrough: {
       stepBorder: (context) => onCode(context, mix(solidCodeForeground(context), solidCodeBackground(context), 0.5), 3),
       doneForeground: (context) =>
         onCode(context, mix(context.resolveSetting('codeblocks.accent'), solidCodeForeground(context), 0.5), 4.5),
@@ -39,12 +39,12 @@ const styleSettings = new PluginStyleSettings({
 const S = `${PREFIX}-steps`;
 
 /**
- * Shows the `step="…"` label after the title, and styles the numbered steps that `<CodeSteps>` adds to the
+ * Shows the `step="…"` label after the title, and styles the numbered steps that `<CodeWalkthrough>` adds to the
  * title bar and the Previous/Next/counter row it adds under the block.
  */
-export function pluginTransitions(): CodeblocksPlugin {
+export function pluginWalkthrough(): CodeblocksPlugin {
   return {
-    name: 'starlight-codeblocks:transitions',
+    name: 'starlight-codeblocks:walkthrough',
     styleSettings,
     baseStyles: ({ cssVar }) => `
 .${S}-head {
@@ -63,7 +63,7 @@ export function pluginTransitions(): CodeblocksPlugin {
   width: 22px;
   height: 22px;
   padding: 0;
-  border: 1.5px solid ${cssVar('codeblocksTransitions.stepBorder')};
+  border: 1.5px solid ${cssVar('codeblocksWalkthrough.stepBorder')};
   border-radius: 50%;
   background: ${cssVar('codeBackground')};
   color: ${cssVar('codeblocks.mutedForeground')};
@@ -72,7 +72,7 @@ export function pluginTransitions(): CodeblocksPlugin {
 }
 .${S}-dot.${S}-done {
   border-color: ${cssVar('codeblocks.accent')};
-  color: ${cssVar('codeblocksTransitions.doneForeground')};
+  color: ${cssVar('codeblocksWalkthrough.doneForeground')};
 }
 .${S}-dot[aria-current] {
   background: ${cssVar('codeblocks.accent')};
@@ -85,7 +85,7 @@ export function pluginTransitions(): CodeblocksPlugin {
 .${S}-line {
   width: 18px;
   height: 2px;
-  background: ${cssVar('codeblocksTransitions.line')};
+  background: ${cssVar('codeblocksWalkthrough.line')};
 }
 .${S}-line.${S}-done { background: ${cssVar('codeblocks.accent')}; }
 .${S}-label {
@@ -125,7 +125,7 @@ export function pluginTransitions(): CodeblocksPlugin {
   min-height: 2rem;
   min-width: 2rem;
   padding: 0.25rem 0.9rem;
-  border: 1px solid ${cssVar('codeblocksTransitions.stepBorder')};
+  border: 1px solid ${cssVar('codeblocksWalkthrough.stepBorder')};
   border-radius: 999px;
   background: ${cssVar('codeBackground')};
   color: ${cssVar('codeForeground')};
@@ -145,10 +145,10 @@ export function pluginTransitions(): CodeblocksPlugin {
   height: 1lh;
   pointer-events: none;
 }
-.${S}-new { animation: scb-steps-new ${cssVar('codeblocksTransitions.newLineDuration')} ease-out backwards; }
+.${S}-new { animation: scb-steps-new ${cssVar('codeblocksWalkthrough.newLineDuration')} ease-out backwards; }
 @keyframes scb-steps-new {
-  from { background-color: ${cssVar('codeblocksTransitions.newLineBackground')}; }
-  55% { background-color: color-mix(in srgb, ${cssVar('codeblocksTransitions.newLineBackground')} 47%, transparent); }
+  from { background-color: ${cssVar('codeblocksWalkthrough.newLineBackground')}; }
+  55% { background-color: color-mix(in srgb, ${cssVar('codeblocksWalkthrough.newLineBackground')} 47%, transparent); }
   to { background-color: transparent; }
 }
 @container (max-width: 480px) {

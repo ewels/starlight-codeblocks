@@ -1345,6 +1345,14 @@ Use this format:
 
 - Date: 2026-09-28
 - Step: after the plan
-- Decision: "Token transitions" is now "Code walkthrough", at `features/code-walkthrough` (with a redirect from `features/token-transitions` in the docs config). It moves to "Explain code", after scrollycoding. Word-level diff moves to the end of "Make code easier to read". "Show what changed" has no pages left and goes, and the skill's `show-changes.md` is split into `explain-code.md` and `readability.md`. Groups now have two to six pages. The API names stay: `<CodeSteps>`, the `transitions` option and the `codeblocksTransitions` style settings.
-- Reason: The user asked for the rename and the moves. The API names describe the mechanism, which scrollycoding now shares (`transitions: false` turns off both animations), and a rename there would break every site for a label.
-- Alternatives: Renaming `transitions` to `walkthrough` (breaks configs, and reads wrongly for scrollycoding's animation). Keeping a one-page "Show what changed" group.
+- Decision: "Token transitions" is now "Code walkthrough", at `features/code-walkthrough`, with no redirect. The API follows the name: `<CodeWalkthrough>` (was `<CodeSteps>`), the `walkthrough` option (was `transitions`, and it also turns off the scrollycoding animation), the `codeblocksWalkthrough` style settings and `pluginWalkthrough()`. `step="…"` and the internal `scb-steps` classes stay. The page moves to "Explain code", after scrollycoding. Word-level diff moves to the end of "Make code easier to read". "Show what changed" has no pages left and goes, and the skill's `show-changes.md` is split into `explain-code.md` and `readability.md`. Groups now have two to six pages.
+- Reason: The user asked for the rename and the moves. The package is not released and no site uses it, so the API can change with the name, and one name for the feature is easier to find than a label that differs from its component and option.
+- Alternatives: Keeping the old API names (a feature called one thing in the docs and another in code). A redirect from the old URL (nothing links to it yet). Keeping a one-page "Show what changed" group.
+
+## Scrollycoding: versions keep the height of the tallest one
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: In the wide layout, the versions of the sticky block share one grid cell, and the versions that are not current are `visibility: hidden`, not `display: none`. The sticky block keeps one height for every version.
+- Reason: With a height per version, a new version changed the height of the sticky block. The client then moved the activation line and the padding of the steps, so the previous step became active again, which changed the height back. At some scroll positions this repeated many times a second. A Playwright test scans the scroll positions around a version change and fails if the block changes with no scroll.
+- Alternatives: Hysteresis on the activation line (hides the loop at one threshold but leaves the layout shift). Measuring the height once (wrong after a resize or a font load).

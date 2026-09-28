@@ -52,7 +52,7 @@ Use when a full file is the clearest example, but a reader who scans the page do
 - Find in the page still finds text in the collapsed lines, in browsers that support `hidden="until-found"`.
 - Without JavaScript, and when the page prints, the block shows in full.
 - Option: `expandable.lines` (default `12`) sets the count for the bare `expandable` attribute.
-- Option: `expandable.auto` (default `false`) makes every block with more lines than this number expandable, at `expandable.lines`. It skips the variants of a code switcher, blocks with a **Run** button, blocks with Expressive Code's `collapse` and the blocks in `<CodeSteps>` and `<Scrollycoding>`.
+- Option: `expandable.auto` (default `false`) makes every block with more lines than this number expandable, at `expandable.lines`. It skips the variants of a code switcher, blocks with a **Run** button, blocks with Expressive Code's `collapse` and the blocks in `<CodeWalkthrough>` and `<Scrollycoding>`.
 
 ## Visible whitespace
 

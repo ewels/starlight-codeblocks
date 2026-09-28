@@ -46,7 +46,7 @@ Find the goal, then use the feature in the same row. Each reference file has the
 | Every reader needs every note, and the block is short | Footnotes: `[!ref]` on the line above | A numbered list under the block, the same on phones and desktops. |
 | Every reader needs every note, and the block is long | Side-by-side annotations: `[!annotate]` plus `annotations="side"` | Notes in a column beside the code on wide screens, a list on narrow screens. |
 | A walkthrough of one block in prose steps (MDX only) | Scrollycoding: `<Scrollycoding>` with `<Step focus="...">` | The block stays in view and focuses the lines of each step as it scrolls past. A block between steps changes the code. |
-| A file that grows or changes over the steps of a tutorial (MDX only) | Code walkthrough: `<CodeSteps>` with `step="label"` on each block | One block with numbered steps. Code that stays moves, new code fades in. |
+| A file that grows or changes over the steps of a tutorial (MDX only) | Code walkthrough: `<CodeWalkthrough>` with `step="label"` on each block | One block with numbered steps. Code that stays moves, new code fades in. |
 | A paragraph that names lines of the block below it | Code mentions: `[!mention name]` plus `[text](#mention:name)` | The link highlights the tagged lines. The page stays plain Markdown. |
 
 Use one note style in a block. Annotations and side-by-side annotations use the same directive, so a change between them is only the fence line.
@@ -158,7 +158,7 @@ If a page shows one feature, keep the others out of its examples with these attr
 
 ## Gotchas
 
-- `<CodeSteps>` and `<Scrollycoding>` work in MDX files only. Import them with `import { CodeSteps, Scrollycoding, Step } from 'starlight-codeblocks/components';`. Put an empty line after the opening tag and before the closing tag.
+- `<CodeWalkthrough>` and `<Scrollycoding>` work in MDX files only. Import them with `import { CodeWalkthrough, Scrollycoding, Step } from 'starlight-codeblocks/components';`. Put an empty line after the opening tag and before the closing tag.
 - A `:::code-switcher` directive can contain only code blocks. A paragraph inside it fails the build.
 - For inline code highlighting, put the suffix inside the backticks: `` `res.ok{:js}` ``. MDX reads `` `res.ok`{:js} `` as a JavaScript expression and the build fails.
 - A directive with an unknown name, or of a feature that is off, stays in the code and logs a build warning. Read the build warnings after every change: each gives the file, the block and the line.

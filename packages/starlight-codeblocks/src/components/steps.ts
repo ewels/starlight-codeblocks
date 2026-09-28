@@ -49,7 +49,7 @@ export function stepsData(figures: Element[]): string {
   return JSON.stringify(steps).replaceAll('<', '\\u003c');
 }
 
-/** The steps as separate blocks, for `<CodeSteps>` with transitions off. */
+/** The steps as separate blocks, for `<CodeWalkthrough>` with the walkthrough off. */
 export function plainSteps(html: string): string {
   const root = fromHtml(html, { fragment: true });
   removeAutoExpandable(root);
@@ -57,10 +57,10 @@ export function plainSteps(html: string): string {
 }
 
 /**
- * Turns the blocks that Expressive Code rendered inside `<CodeSteps>` into steps: adds the numbered steps
+ * Turns the blocks that Expressive Code rendered inside `<CodeWalkthrough>` into steps: adds the numbered steps
  * to each title bar, a Previous/Next/counter row under each block, and keys the tokens for the animation.
  */
-export function codeSteps(html: string): string {
+export function codeWalkthrough(html: string): string {
   const root = fromHtml(html, { fragment: true });
   removeAutoExpandable(root);
   const groups = selectAll('.expressive-code', root).filter((group) => select('figure', group));

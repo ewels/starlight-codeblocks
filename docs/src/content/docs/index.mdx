@@ -21,7 +21,7 @@ hero:
       icon: external
 ---
 
-import { CodeSteps, Scrollycoding, Step } from 'starlight-codeblocks/components';
+import { CodeWalkthrough, Scrollycoding, Step } from 'starlight-codeblocks/components';
 import Feature from '../../components/Feature.astro';
 import FeatureCarousel from '../../components/FeatureCarousel.astro';
 
@@ -136,7 +136,7 @@ app.listen(3000);
 
 <Feature page="features/code-walkthrough">
 
-<CodeSteps>
+<CodeWalkthrough>
 
 ```js title="server.js" step="Create the app"
 const app = express();
@@ -162,7 +162,7 @@ app.get('/health', (req, res) => {
 app.listen(3000);
 ```
 
-</CodeSteps>
+</CodeWalkthrough>
 
 </Feature>
 

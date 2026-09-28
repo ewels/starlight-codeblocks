@@ -37,7 +37,7 @@ codeblocks({
 | `permalinks` | None | Line permalinks |
 | `placeholders` | `storage`: `'local'`, `'session'` or `'none'`, default `'local'` | Fill-in placeholders |
 | `codeSwitcher` | None | Code switcher |
-| `transitions` | None | Code walkthrough |
+| `walkthrough` | None | Code walkthrough |
 | `scrollycoding` | None | Scrollycoding |
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
 | `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms | Run in the browser |
@@ -115,4 +115,4 @@ export default {
 };
 ```
 
-The code switcher, inline code highlighting, `<CodeSteps>` and `<Scrollycoding>` need Starlight. The features inside code blocks work on every site. `runnable.runtimes` values are then URLs that the browser imports as they are. The single plugins, such as `pluginFocus()`, are in https://ewels.github.io/starlight-codeblocks/reference/expressive-code-plugins/
+The code switcher, inline code highlighting, `<CodeWalkthrough>` and `<Scrollycoding>` need Starlight. The features inside code blocks work on every site. `runnable.runtimes` values are then URLs that the browser imports as they are. The single plugins, such as `pluginFocus()`, are in https://ewels.github.io/starlight-codeblocks/reference/expressive-code-plugins/

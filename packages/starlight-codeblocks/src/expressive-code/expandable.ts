@@ -11,7 +11,7 @@ const ownLayout = (codeBlock: ExpressiveCodeBlock) =>
   codeBlock.metaOptions.getBoolean('runnable') === true ||
   ((codeBlock.props as { collapse?: unknown[] }).collapse?.length ?? 0) > 0;
 
-/** Undoes the `auto` option in `<CodeSteps>` and `<Scrollycoding>`, whose steps must show every line. */
+/** Undoes the `auto` option in `<CodeWalkthrough>` and `<Scrollycoding>`, whose steps must show every line. */
 export function removeAutoExpandable(root: Parents) {
   for (const figure of selectAll('figure', root)) {
     const pre = select('pre[data-scb-expandable-auto]', figure);

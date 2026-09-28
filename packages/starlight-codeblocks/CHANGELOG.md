@@ -24,7 +24,7 @@ The first version of the plugin. It adds these features to the code blocks of St
 - Line permalinks: line numbers that are links to a line or a range.
 - Fill-in placeholders: fields in the code that readers fill in, kept across pages.
 - Code switcher: several variants of a block, with a menu in the title bar.
-- Code walkthrough: steps of a block, with animated changes between them.
+- Code walkthrough: `<CodeWalkthrough>`, steps of a block, with animated changes between them.
 - Scrollycoding: prose steps next to a sticky block that changes with each step. A code block between steps animates the block to a new version. The columns get a width from the longest line, spread past the content column on a page without a table of contents, and `codeSide="left"` puts the code on the left.
 - Inline code highlighting: syntax colours for inline code with a `{:lang}` suffix, or in a default language for the site.
 - Run in the browser: a Run button with an output panel, with a Pyodide runtime for Python.

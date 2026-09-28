@@ -1,9 +1,9 @@
 import { getColorContrast, setAlpha } from '@expressive-code/core';
 import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
-import { codeSteps, type StepTokens } from '../src/components/steps.ts';
+import { codeWalkthrough, type StepTokens } from '../src/components/steps.ts';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
-import { pluginTransitions } from '../src/expressive-code/transitions.ts';
+import { pluginWalkthrough } from '../src/expressive-code/walkthrough.ts';
 import { variants } from './contrast.ts';
 import { render } from './render.ts';
 
@@ -20,7 +20,7 @@ const steps = [
 
 async function renderSteps(blocks = steps) {
   const rendered = await Promise.all(blocks.map((b) => render(b)));
-  const html = codeSteps(rendered.map((r) => r.rawHtml).join('\n'))
+  const html = codeWalkthrough(rendered.map((r) => r.rawHtml).join('\n'))
     .replaceAll(' scb-deco', '')
     .replace(/ data-pagefind-ignore(="")?/g, '');
   const data = JSON.parse(html.match(/<script type="application\/json">(.*?)<\/script>/)?.[1] ?? '[]') as StepTokens[];
@@ -44,7 +44,7 @@ test('the plugin puts the label first in a block with no title', async () => {
 
 test('a block without step renders the same with the feature off', async () => {
   const md = block('title="a.js"', 'a()');
-  expect((await render(md)).html).toBe((await render(md, { transitions: false })).html);
+  expect((await render(md)).html).toBe((await render(md, { walkthrough: false })).html);
 });
 
 test('adds numbered steps, with the current step marked, to each title bar', async () => {
@@ -112,18 +112,18 @@ test('leaves out decorations, such as line state labels', async () => {
 });
 
 test('returns the HTML as it is when there is no code block', () => {
-  expect(codeSteps('<p>Text</p>')).toBe('<p>Text</p>');
+  expect(codeWalkthrough('<p>Text</p>')).toBe('<p>Text</p>');
 });
 
 test('the step colours meet their contrast targets', async () => {
   for (const { get, name } of await variants()) {
     const bg = get('codeBackground');
-    expect(getColorContrast(get('codeblocksTransitions.stepBorder'), bg), name).toBeGreaterThanOrEqual(3);
-    expect(getColorContrast(get('codeblocksTransitions.doneForeground'), bg), name).toBeGreaterThanOrEqual(4.5);
+    expect(getColorContrast(get('codeblocksWalkthrough.stepBorder'), bg), name).toBeGreaterThanOrEqual(3);
+    expect(getColorContrast(get('codeblocksWalkthrough.doneForeground'), bg), name).toBeGreaterThanOrEqual(4.5);
   }
   const ec = new ExpressiveCode({ plugins: pluginCodeblocks() });
   await ec.getBaseStyles();
-  expect(ec.styleVariants.map((v) => v.resolvedStyleSettings.get('codeblocksTransitions.themeIndex' as never))).toEqual(
+  expect(ec.styleVariants.map((v) => v.resolvedStyleSettings.get('codeblocksWalkthrough.themeIndex' as never))).toEqual(
     ['0', '1'],
   );
 });
@@ -134,19 +134,19 @@ test("the tint of a new line is the theme's own terminal green", async () => {
   for (const v of ec.styleVariants) {
     const green = v.theme.colors['terminal.ansiGreen'] as string;
     expect(green).toBeTruthy();
-    expect(v.resolvedStyleSettings.get('codeblocksTransitions.newLineBackground' as never)).toBe(setAlpha(green, 0.3));
+    expect(v.resolvedStyleSettings.get('codeblocksWalkthrough.newLineBackground' as never)).toBe(setAlpha(green, 0.3));
   }
   const css = await ec.getBaseStyles();
   expect(css).toContain('@keyframes scb-steps-new');
 });
 
 test('with the feature off, the plugin still shows the step label after the title', async () => {
-  const { html } = await render(steps[0], { transitions: false });
+  const { html } = await render(steps[0], { walkthrough: false });
   expect(html).toContain('<span class="scb-steps-label">Create the app</span>');
 });
 
 test('the label hides next to the stepper in a narrow container, not in a narrow window', () => {
-  const css = String((pluginTransitions().baseStyles as (c: unknown) => string)({ cssVar: (k: string) => k }));
+  const css = String((pluginWalkthrough().baseStyles as (c: unknown) => string)({ cssVar: (k: string) => k }));
   expect(css).not.toMatch(/@media[^{]*max-width/);
   expect(css).toMatch(
     /@container \(max-width: 480px\) \{\s*\.scb-steps-head:has\(> \.scb-steps-stepper\) > \.scb-steps-label \{ display: none; \}/,

@@ -79,7 +79,7 @@ export interface CodeblocksOptions {
   permalinks?: false;
   placeholders?: false | { storage?: 'local' | 'session' | 'none' };
   codeSwitcher?: false;
-  transitions?: false;
+  walkthrough?: false;
   scrollycoding?: false;
   inlineHighlighting?: false | { defaultLanguage?: string | false };
   runnable?: false | { runtimes?: Record<string, string>; timeout?: number };
@@ -314,10 +314,10 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     description: 'Combines several variants of a block, with a menu in the title bar.',
     page: 'features/code-switcher',
   },
-  transitions: {
-    description: 'Animates the code between the steps of a `<CodeSteps>` component.',
+  walkthrough: {
+    description: 'Animates the code between the steps of a `<CodeWalkthrough>` component.',
     page: 'features/code-walkthrough',
-    off: '`<CodeSteps>` then shows each step as a separate block, with its label after the title, and loads no script.',
+    off: '`<CodeWalkthrough>` then shows each step as a separate block, with its label after the title, and loads no script.',
   },
   scrollycoding: {
     description: 'Changes the focus of a sticky block as the prose steps scroll past.',

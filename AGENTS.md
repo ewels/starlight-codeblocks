@@ -68,7 +68,7 @@ pnpm readme:media [slug...]   docs:build, then regenerate the README images in .
 
 ### Components, adapters and runtimes
 
-- `<CodeSteps>` and `<Scrollycoding>` (`src/components/`, shipped as source through `starlight-codeblocks/components`) read tokens from the HTML that Expressive Code rendered and animate with `@shikijs/magic-move/renderer`. They use their own Astro `<script>`.
+- `<CodeWalkthrough>` and `<Scrollycoding>` (`src/components/`, shipped as source through `starlight-codeblocks/components`) read tokens from the HTML that Expressive Code rendered and animate with `@shikijs/magic-move/renderer`. They use their own Astro `<script>`.
 - API link adapters are subpath exports in `src/adapters/` (`python`, `nextflow`). Run button runtimes are in `src/runtimes/` (`pyodide`). The docs site has its own adapter and JavaScript runtime in `docs/src/adapters/` and `docs/src/runtimes/`.
 - Reference data for the docs tables lives in the package: `optionsReference` (`options.ts`), the `directives` of each plugin, and `attributesReference` and `styleSettingsReference` (`src/reference.ts`). `test/reference.test.ts` fails when a new attribute or style setting is missing from it.
 

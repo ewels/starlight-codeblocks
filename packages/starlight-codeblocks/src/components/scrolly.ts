@@ -241,9 +241,11 @@ ${SIDE_SIZES.map((w) => {
     opacity: 0.38;
   }
   ${on} .${S}-step.${S}-on { opacity: 1; }
+  ${on} .${S}-code > .expressive-code { grid-area: 1 / 1; margin: 0; }
   ${on} .${S}-step > .expressive-code { display: none; }
   ${on} .${S}-code {
-    display: block;
+    /* The versions share one cell, so the block keeps the height of the tallest one. */
+    display: grid;
     position: sticky;
     top: calc(var(--sl-nav-height, 0px) + var(--sl-mobile-toc-height, 0px) + 1rem);
     align-self: start;

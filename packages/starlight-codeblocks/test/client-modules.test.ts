@@ -47,7 +47,7 @@ test('the Vite plugins serve the modules in dev and emit them in the build', () 
 });
 
 // Code walkthrough and runtimes are outside the budget (SPEC section 2).
-test.each(readClientModules().filter((m) => !['transitions', 'runnable'].includes(m.feature)))(
+test.each(readClientModules().filter((m) => !['walkthrough', 'runnable'].includes(m.feature)))(
   '$feature is 3 kB or less, minified and gzipped',
   ({ source }) => {
     expect(gzipSync(source).length).toBeLessThanOrEqual(3072);

@@ -15,7 +15,7 @@ if (codeSide !== undefined && codeSide !== 'left' && codeSide !== 'right') {
 const options = getRegistry()?.options;
 const html = scrollycoding(await Astro.slots.render('default'), {
   interactive: options?.scrollycoding !== false,
-  animate: options?.transitions !== false,
+  animate: options?.walkthrough !== false,
   codeSide,
 });
 ---
@@ -44,8 +44,9 @@ const html = scrollycoding(await Astro.slots.render('default'), {
   .scb-scrolly-code {
     display: none;
   }
+  /* Hidden versions keep their space: a change of height would move the steps and pick the other version again. */
   .scb-scrolly-code > .expressive-code:not(.scb-scrolly-current) {
-    display: none;
+    visibility: hidden;
   }
   @media (prefers-reduced-motion: no-preference) {
     .scb-scrolly-step {

@@ -133,7 +133,7 @@ Explain a code block in prose steps that scroll past it, while the block stays i
 Step through versions of one code block, and watch the code move from each version to the next, so readers see what changed.
 
 ````mdx
-<CodeSteps>
+<CodeWalkthrough>
 
 ```js step="Create the app"
 ```
@@ -141,7 +141,7 @@ Step through versions of one code block, and watch the code move from each versi
 ```js step="Parse JSON bodies"
 ```
 
-</CodeSteps>
+</CodeWalkthrough>
 ````
 
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-walkthrough.webp" alt="A JavaScript block with step buttons. Selecting Next moves the code to the next version, and the new lines fade in.">

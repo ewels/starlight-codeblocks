@@ -163,7 +163,7 @@ export const attributesReference: AttributeDoc[] = [
     name: 'step',
     syntax: ['step="<text>"'],
     description:
-      'Gives the label of a step in a `<CodeSteps>` component. The title bar shows the label after the title.',
+      'Gives the label of a step in a `<CodeWalkthrough>` component. The title bar shows the label after the title.',
     page: 'features/code-walkthrough',
     example: {
       lang: 'js',
@@ -432,7 +432,7 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       },
     },
   },
-  codeblocksTransitions: {
+  codeblocksWalkthrough: {
     page: 'features/code-walkthrough',
     settings: {
       stepBorder: {

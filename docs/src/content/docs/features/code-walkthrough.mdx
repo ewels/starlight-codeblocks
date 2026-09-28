@@ -3,13 +3,13 @@ title: Code walkthrough
 description: Step through versions of one code block, and watch the code move from each version to the next, so readers see what changed.
 ---
 
-import { CodeSteps } from 'starlight-codeblocks/components';
+import { CodeWalkthrough } from 'starlight-codeblocks/components';
 import Example from '../../../components/Example.astro';
 
 A tutorial often shows the same file several times, with a few lines more each time. Readers must compare the blocks line by line to find the change. A code walkthrough puts the versions in one block with numbered steps in the title bar. When the reader changes step, unchanged code moves to its new place, and new code fades in.
 
 export const basic = `
-<CodeSteps>
+<CodeWalkthrough>
 
 \`\`\`js title="server.js" step="Create the app"
 const app = express();
@@ -35,12 +35,12 @@ app.get('/health', (req, res) => {
 app.listen(3000);
 \`\`\`
 
-</CodeSteps>
+</CodeWalkthrough>
 `;
 
 <Example code={basic}>
 
-<CodeSteps>
+<CodeWalkthrough>
 
 ```js title="server.js" step="Create the app"
 const app = express();
@@ -66,7 +66,7 @@ app.get('/health', (req, res) => {
 app.listen(3000);
 ```
 
-</CodeSteps>
+</CodeWalkthrough>
 
 </Example>
 
@@ -76,16 +76,16 @@ Select **Next**, and `app.listen(3000);` moves down while the new line fades in.
 
 | Syntax | Where | Example |
 |---|---|---|
-| `<CodeSteps>` ... `</CodeSteps>` | Around the code blocks, in an MDX file | `<CodeSteps>` |
+| `<CodeWalkthrough>` ... `</CodeWalkthrough>` | Around the code blocks, in an MDX file | `<CodeWalkthrough>` |
 | `step="<label>"` | Fence line of each step | `step="Parse JSON bodies"` |
 
 Import the component at the top of the MDX file:
 
 ```mdx
-import { CodeSteps } from 'starlight-codeblocks/components';
+import { CodeWalkthrough } from 'starlight-codeblocks/components';
 ```
 
-Put two or more code blocks between the tags, with an empty line after `<CodeSteps>` and before `</CodeSteps>`. Each code block is one step, in order. The `step` attribute is optional. Each step keeps its other attributes, such as `title`.
+Put two or more code blocks between the tags, with an empty line after `<CodeWalkthrough>` and before `</CodeWalkthrough>`. Each code block is one step, in order. The `step` attribute is optional. Each step keeps its other attributes, such as `title`.
 
 ## Behaviour
 
@@ -106,24 +106,24 @@ Put two or more code blocks between the tags, with an empty line after `<CodeSte
 
 ## Options
 
-Code walkthrough has no options. To turn the feature off for the whole site, set `transitions` to `false`:
+Code walkthrough has no options. To turn the feature off for the whole site, set `walkthrough` to `false`:
 
 ```js title="astro.config.mjs"
 codeblocks({
-  transitions: false,
+  walkthrough: false,
 });
 ```
 
-With `transitions: false`, `<CodeSteps>` shows each step as a separate code block with its label after the title, as it does without JavaScript. The page loads no script for the steps.
+With `walkthrough: false`, `<CodeWalkthrough>` shows each step as a separate code block with its label after the title, as it does without JavaScript. The page loads no script for the steps.
 
-The style settings in the `codeblocksTransitions` group change the colours of the steps and the length of the animation. For example, `codeblocksTransitions.duration` sets the length of the animation, and `codeblocksTransitions.newLineBackground` sets the tint of new lines.
+The style settings in the `codeblocksWalkthrough` group change the colours of the steps and the length of the animation. For example, `codeblocksWalkthrough.duration` sets the length of the animation, and `codeblocksWalkthrough.newLineBackground` sets the tint of new lines.
 
 ## Examples
 
 A configuration file grows one section at a time. The steps have no titles, so the title bar shows the steps only:
 
 export const config = `
-<CodeSteps>
+<CodeWalkthrough>
 
 \`\`\`yaml step="Name the site"
 site:
@@ -137,12 +137,12 @@ search:
   index: true
 \`\`\`
 
-</CodeSteps>
+</CodeWalkthrough>
 `;
 
 <Example code={config}>
 
-<CodeSteps>
+<CodeWalkthrough>
 
 ```yaml step="Name the site"
 site:
@@ -156,14 +156,14 @@ search:
   index: true
 ```
 
-</CodeSteps>
+</CodeWalkthrough>
 
 </Example>
 
 A refactor changes the code inside a function. Code that stays moves to its new place, so readers see the loop become one call to `sum()`:
 
 export const refactor = `
-<CodeSteps>
+<CodeWalkthrough>
 
 \`\`\`py title="prices.py" step="Before"
 def total(items):
@@ -178,12 +178,12 @@ def total(items):
     return sum(item.price for item in items)
 \`\`\`
 
-</CodeSteps>
+</CodeWalkthrough>
 `;
 
 <Example code={refactor}>
 
-<CodeSteps>
+<CodeWalkthrough>
 
 ```py title="prices.py" step="Before"
 def total(items):
@@ -198,16 +198,16 @@ def total(items):
     return sum(item.price for item in items)
 ```
 
-</CodeSteps>
+</CodeWalkthrough>
 
 </Example>
 
 ## Limitations
 
-- `<CodeSteps>` works in MDX files only, because Markdown files cannot contain components.
+- `<CodeWalkthrough>` works in MDX files only, because Markdown files cannot contain components.
 - During the animation, the block shows the syntax colours only. Line numbers, line states and other decorations show again when the animation ends.
 - A jump over several steps animates from the first version to the last. Code that exists in both only through a middle step fades out and in again.
-- The page loads the animation library, about 3 kB, only on pages with `<CodeSteps>`.
+- The page loads the animation library, about 3 kB, only on pages with `<CodeWalkthrough>`.
 
 ## Related
 

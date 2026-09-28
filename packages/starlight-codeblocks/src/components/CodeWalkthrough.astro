@@ -1,18 +1,18 @@
 ---
 import '@shikijs/magic-move/style.css';
 import { getRegistry } from '../registry.ts';
-import { codeSteps, plainSteps } from './steps.ts';
+import { codeWalkthrough, plainSteps } from './steps.ts';
 
 const html = await Astro.slots.render('default');
-const on = getRegistry()?.options.transitions !== false;
+const on = getRegistry()?.options.walkthrough !== false;
 ---
 
-<Fragment set:html={on ? codeSteps(html) : plainSteps(html)} />
+<Fragment set:html={on ? codeWalkthrough(html) : plainSteps(html)} />
 
 {
   on && (
     <script>
-      import './code-steps-client.ts';
+      import './walkthrough-client.ts';
     </script>
   )
 }

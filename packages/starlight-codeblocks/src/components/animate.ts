@@ -28,8 +28,8 @@ export function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
   const code = pre?.querySelector('code');
   if (!pre || !code) return () => {};
   const style = getComputedStyle(group.querySelector('figure') ?? group);
-  const i = style.getPropertyValue('--ec-codeblocksTransitions-themeIndex').trim() || '0';
-  const duration = Number.parseFloat(style.getPropertyValue('--ec-codeblocksTransitions-duration')) || 480;
+  const i = style.getPropertyValue('--ec-codeblocksWalkthrough-themeIndex').trim() || '0';
+  const duration = Number.parseFloat(style.getPropertyValue('--ec-codeblocksWalkthrough-duration')) || 480;
   // New tokens enter at this point of the move, so the tint of a new line starts there too.
   const enter = duration * DELAY_ENTER;
   // Expressive Code picks the token colour of the theme with a selector that needs `.ec-line`, so each token names its own.

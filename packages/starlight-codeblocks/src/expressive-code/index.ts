@@ -20,7 +20,7 @@ import { pluginPlayground } from './playground.ts';
 import { pluginRunnable } from './runnable.ts';
 import { pluginShellCopy } from './shell-copy.ts';
 import { pluginTokenLinks } from './token-links.ts';
-import { pluginTransitions } from './transitions.ts';
+import { pluginWalkthrough } from './walkthrough.ts';
 import { pluginWhitespace } from './whitespace.ts';
 import { pluginWordDiff } from './word-diff.ts';
 
@@ -45,7 +45,7 @@ export {
   pluginRunnable,
   pluginShellCopy,
   pluginTokenLinks,
-  pluginTransitions,
+  pluginWalkthrough,
   pluginWhitespace,
   pluginWordDiff,
 };
@@ -84,8 +84,8 @@ export function createPlugins(options: ResolvedOptions): ExpressiveCodePlugin[] 
     ...(options.playgrounds ? [pluginPlayground(options.playgrounds)] : []),
     ...(options.runnable ? [pluginRunnable(options.runnable)] : []),
     ...(options.codeSwitcher ? [pluginCodeSwitcher()] : []),
-    // Also with transitions off: the step label is how a block names its step without the stepper.
-    pluginTransitions(),
+    // Also with the walkthrough off: the step label is how a block names its step without the stepper.
+    pluginWalkthrough(),
     // After hidden lines, which rebuilds the children of the code element.
     ...(options.callouts ? [pluginCallouts()] : []),
     ...(options.annotations ? [pluginAnnotations()] : []),

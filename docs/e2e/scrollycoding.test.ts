@@ -181,6 +181,34 @@ test.describe('versions of the code', () => {
   });
 });
 
+test('the active step stays still at every scroll position near a new version', async ({ page }) => {
+  test.skip(phone(), 'The two columns need 600 px.');
+  test.setTimeout(60_000);
+  // From the last step of the first version to the first step of the second.
+  await centre(page, 2, 1);
+  const from = await page.evaluate(() => scrollY);
+  await centre(page, 2, 2);
+  const to = await page.evaluate(() => scrollY);
+  const moving = await scrolly(page, 2).evaluate(
+    async (root, [from, to]) => {
+      let changes = 0;
+      new MutationObserver(() => changes++).observe(root, { subtree: true, attributeFilter: ['class'] });
+      const wait = (ms: number) => new Promise((done) => setTimeout(done, ms));
+      const found: number[] = [];
+      for (let y = from - 40; y <= to + 40; y += 4) {
+        window.scrollTo({ top: y, behavior: 'instant' });
+        await wait(80);
+        changes = 0;
+        await wait(250);
+        if (changes > 3) found.push(y);
+      }
+      return found;
+    },
+    [from, to],
+  );
+  expect(moving, 'scroll positions where the block changes with no scroll').toEqual([]);
+});
+
 test('codeSide="left" puts the block in the left column', async ({ page }) => {
   test.skip(phone(), 'The two columns need 600 px.');
   const [code, step] = await Promise.all([sticky(page, 3).boundingBox(), steps(page, 3).first().boundingBox()]);

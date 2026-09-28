@@ -150,7 +150,7 @@ app.listen(3000);
 - A new version animates in as in a code walkthrough: code in both versions moves, new lines fade in. Under reduced motion, the code changes at once.
 - The two columns need space for the longest line beside a text column of 12rem. From its longest line, the block gets a width of 600, 800 or 1000 px, which hold about 41, 65 or 89 characters. On a page with `tableOfContents: false`, a block directly on the page that needs 800 or 1000 px spreads past the content column.
 - On a narrow screen, and without JavaScript, each step shows its own copy of the block, in the version of that step.
-- Option: `scrollycoding: false` shows the narrow layout at every width, with no script. `transitions: false` changes versions without the animation.
+- Option: `scrollycoding: false` shows the narrow layout at every width, with no script. `walkthrough: false` changes versions without the animation.
 - Limits: MDX only. A `focus` attribute on the fence line has no effect. Many steps with a long block make a long page on phones.
 
 ## Code walkthrough
@@ -161,13 +161,13 @@ Use for a tutorial that shows the same file several times, with changes each tim
 
 | Syntax | Where |
 |---|---|
-| `<CodeSteps>` ... `</CodeSteps>` | Around two or more code blocks, in an MDX file |
+| `<CodeWalkthrough>` ... `</CodeWalkthrough>` | Around two or more code blocks, in an MDX file |
 | `step="<text>"` | Fence line of each step: the label of the step. Optional. |
 
 ````mdx
-import { CodeSteps } from 'starlight-codeblocks/components';
+import { CodeWalkthrough } from 'starlight-codeblocks/components';
 
-<CodeSteps>
+<CodeWalkthrough>
 
 ```js title="server.js" step="Create the app"
 const app = express();
@@ -182,16 +182,16 @@ app.use(express.json());
 app.listen(3000);
 ```
 
-</CodeSteps>
+</CodeWalkthrough>
 ````
 
-- Leave an empty line after `<CodeSteps>` and before `</CodeSteps>`. Each code block is one step, in order. Each keeps its other attributes, such as `title`.
+- Leave an empty line after `<CodeWalkthrough>` and before `</CodeWalkthrough>`. Each code block is one step, in order. Each keeps its other attributes, such as `title`.
 - The copy button copies the code of the current step.
 - Arrow keys move between steps when a numbered step has focus. Under reduced motion, steps change without the animation.
 - A line that is new in a step flashes the theme's green, then fades out in 1 second. There is no flash under reduced motion.
 - Without JavaScript, and when the page prints, each step shows as a separate block with its label after the title.
-- The page loads the animation library, about 3 kB, only on pages with `<CodeSteps>`.
-- Option: `transitions: false` shows each step as a separate block, with no script. The `codeblocksTransitions` style settings change the colours and `duration`.
+- The page loads the animation library, about 3 kB, only on pages with `<CodeWalkthrough>`.
+- Option: `walkthrough: false` shows each step as a separate block, with no script. The `codeblocksWalkthrough` style settings change the colours and `duration`.
 - Limits: MDX only. During the animation, only the syntax colours show. Line states, line numbers and other decorations come back at the end.
 
 ## Code mentions

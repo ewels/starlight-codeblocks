@@ -1,7 +1,7 @@
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 import { describe, expect, test } from 'vitest';
 import { scrollycoding } from '../src/components/scrolly.ts';
-import { codeSteps, plainSteps } from '../src/components/steps.ts';
+import { codeWalkthrough, plainSteps } from '../src/components/steps.ts';
 import { encodeVariant, SWITCHER_META } from '../src/expressive-code/code-switcher.ts';
 import { render } from './render.ts';
 
@@ -78,10 +78,10 @@ describe('the auto option', () => {
     expect(html).not.toContain('scb-expandable');
   });
 
-  test('skips blocks in <CodeSteps> and <Scrollycoding>, and keeps expandable on the fence line there', async () => {
+  test('skips blocks in <CodeWalkthrough> and <Scrollycoding>, and keeps expandable on the fence line there', async () => {
     const automatic = (await render(block('js', ...many(20)), auto)).html;
     const explicit = (await render(block('js expandable', ...many(20)), auto)).html;
-    for (const build of [codeSteps, plainSteps]) {
+    for (const build of [codeWalkthrough, plainSteps]) {
       expect(build(automatic)).not.toContain('scb-expandable');
       expect(build(explicit)).toContain('scb-expandable-bar');
     }
