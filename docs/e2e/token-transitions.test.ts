@@ -104,8 +104,8 @@ test('animates the tokens in the colours of the theme, or changes at once under 
       (e) => getComputedStyle(e).transitionDelay,
     ),
   );
-  // magic-move moves at 0.3 and enters at 0.7 of the 500 ms duration.
-  expect(new Set(delays)).toEqual(new Set(['0.15s', '0.35s']));
+  // magic-move moves at 0.3 and enters at 0.7 of the 480 ms duration.
+  expect(new Set(delays)).toEqual(new Set(['0.144s', '0.336s']));
   await expect(token).toHaveCSS('color', final);
   await expect(anim).toHaveCount(0);
   await expect(current(page).locator('code')).toBeVisible();
@@ -122,7 +122,7 @@ test('a new line flashes a green tint that fades out, and not under reduced moti
   }
   // Only the added line of step 2 is new.
   await expect(tint).toHaveCount(1);
-  const { top, lineHeight, colour, name, duration } = await tint.evaluate((el) => {
+  const { top, lineHeight, colour, name, duration, delay } = await tint.evaluate((el) => {
     const style = getComputedStyle(el);
     return {
       top: el.getBoundingClientRect().top - (el.parentElement as HTMLElement).getBoundingClientRect().top,
@@ -130,10 +130,13 @@ test('a new line flashes a green tint that fades out, and not under reduced moti
       colour: style.backgroundColor,
       name: style.animationName,
       duration: style.animationDuration,
+      delay: style.animationDelay,
     };
   });
   expect(name).toBe('scb-steps-new');
   expect(duration).toBe('1s');
+  // The tint peaks as the new tokens enter.
+  expect(delay).toBe('0.336s');
   expect(top).toBeGreaterThan(lineHeight);
   // Canvas turns any CSS colour syntax, such as color-mix() results, into RGBA.
   const [r = 0, g = 0, b = 0, a = 255] = await page.evaluate((colour) => {

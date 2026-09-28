@@ -5,6 +5,7 @@ import type { StepTokens } from './steps.ts';
 
 const S = 'scb-steps';
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+const DELAY_ENTER = 0.7;
 
 const lines = (tokens: StepTokens) =>
   tokens
@@ -30,7 +31,9 @@ function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
   if (!pre || !code) return () => {};
   const style = getComputedStyle(group.querySelector('figure') ?? group);
   const i = style.getPropertyValue('--ec-codeblocksTransitions-themeIndex').trim() || '0';
-  const duration = Number.parseFloat(style.getPropertyValue('--ec-codeblocksTransitions-duration')) || 500;
+  const duration = Number.parseFloat(style.getPropertyValue('--ec-codeblocksTransitions-duration')) || 480;
+  // New tokens enter at this point of the move, so the tint of a new line starts there too.
+  const enter = duration * DELAY_ENTER;
   // Expressive Code picks the token colour of the theme with a selector that needs `.ec-line`, so each token names its own.
   const theme = `;color:var(--${i},inherit);font-style:var(--${i}fs,inherit);font-weight:var(--${i}fw,inherit)`;
   const info = (tokens: StepTokens) =>
@@ -56,6 +59,7 @@ function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
       const tint = document.createElement('div');
       tint.className = `${S}-new`;
       tint.style.setProperty('--scb-steps-line', String(n));
+      tint.style.animationDelay = `${enter}ms`;
       return tint;
     }),
   );
@@ -76,7 +80,7 @@ function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
     for (const n of added) {
       const line = real[n];
       if (!line) continue;
-      line.style.animationDelay = `${start - performance.now()}ms`;
+      line.style.animationDelay = `${start + enter - performance.now()}ms`;
       line.classList.add(`${S}-new`);
       const clear = () => {
         line.classList.remove(`${S}-new`);
@@ -87,7 +91,13 @@ function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
       line.addEventListener('animationcancel', clear, { once: true });
     }
   };
-  const renderer = new MagicMoveRenderer(move, { duration, containerStyle: false });
+  const renderer = new MagicMoveRenderer(move, {
+    duration,
+    delayEnter: DELAY_ENTER,
+    easing: 'cubic-bezier(.2, .7, .2, 1)',
+    containerStyle: false,
+    animateContainer: false,
+  });
   renderer.render(info(from));
   renderer.render(info(to)).then(() => done(true));
   return () => done();

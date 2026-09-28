@@ -26,7 +26,7 @@ const styleSettings = new PluginStyleSettings({
       stepBorder: ['#6b7894', '#7b8599'],
       doneForeground: ['#cfdcff', '#2c4a8c'],
       line: ['#3f4860', '#c9ced8'],
-      duration: '500ms',
+      duration: '480ms',
       // The theme's own green, from its terminal colours, which every theme defines.
       newLineBackground: ({ theme }) => setAlpha(theme.colors['terminal.ansiGreen'] ?? theme.fg, 0.3),
       newLineDuration: '1000ms',
@@ -144,7 +144,7 @@ export function pluginTransitions(): CodeblocksPlugin {
   height: 1lh;
   pointer-events: none;
 }
-.${S}-new { animation: scb-steps-new ${cssVar('codeblocksTransitions.newLineDuration')} ease-out; }
+.${S}-new { animation: scb-steps-new ${cssVar('codeblocksTransitions.newLineDuration')} ease-out backwards; }
 @keyframes scb-steps-new {
   from { background-color: ${cssVar('codeblocksTransitions.newLineBackground')}; }
   55% { background-color: color-mix(in srgb, ${cssVar('codeblocksTransitions.newLineBackground')} 47%, transparent); }
