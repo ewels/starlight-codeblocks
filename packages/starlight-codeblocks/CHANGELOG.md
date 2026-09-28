@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-The first version of the plugin. It added these features to the code blocks of Starlight, on top of Expressive Code:
+The first version of the plugin. It adds these features to the code blocks of Starlight, on top of Expressive Code:
 
 - Comment notation: `[!code …]` directives in code comments, compatible with VitePress.
 - Focus: blurred or dimmed lines outside a range.
