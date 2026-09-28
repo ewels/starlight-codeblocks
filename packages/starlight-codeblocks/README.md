@@ -50,7 +50,7 @@ Add numbered markers to lines. Each marker opens a note in a popover, so the cod
 python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
 ```
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/annotations.webp" alt="A YAML block with two numbered markers. The pointer selects each marker and a note opens in a popover under it.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/annotations.webp" alt="A YAML block with two numbered markers. The pointer selects each marker. The first note opens out of its marker, beside the line, and the second opens under its marker.">
 
 [Annotations documentation](https://ewels.github.io/starlight-codeblocks/features/annotations/)
 

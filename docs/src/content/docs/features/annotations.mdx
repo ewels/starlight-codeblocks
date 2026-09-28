@@ -39,12 +39,16 @@ The directive goes at the end of the line it explains. The note is the rest of t
 ## Behaviour
 
 - Markers are numbered from 1 in each block, in line order.
-- Selecting a marker opens its note under the marker, or above it if there is no room below. Opening a note closes any other open note.
+- Selecting a marker opens its note out of the marker. The note starts with the same number, on top of the marker. The box goes to the right, over the empty space after the line. A long note wraps onto more lines, up to the popover width (340 px by default).
+- If the box does not fit there, the note opens under the marker instead. It is centred and as wide as the popover width, with the number at its start. The box does not fit when it would cover code on its line or the lines next to it. It also does not fit when it would go past the right edge of the block or the window. On a phone, most notes open this way. The note moves between the two places when the window changes size or the page scrolls.
+- If there is no room under the marker, the note opens above it. Opening a note closes any other open note.
+- The number in the note is hidden from screen readers, because the marker already has the label.
 - Escape, or a selection outside the note, closes it.
 - The copy button leaves the markers and the notes out. A manual selection leaves the markers out.
 - Each marker is a button with the label "Annotation N", where N is its number. Screen readers read the note directly after its marker.
 - When the page prints, the markers are hidden and the notes print as a numbered list under the block.
-- The browser's `popover` attribute opens and closes the notes, so they work without JavaScript. Without JavaScript, the popover appears where the browser puts it by default, in browsers that do not support CSS anchor positioning.
+- The browser's `popover` attribute opens and closes the notes, so they work without JavaScript. Without JavaScript, the note always opens under the marker. In browsers without CSS anchor positioning, it opens where the browser puts it by default.
+- The box grows out of the marker in 160 ms. With reduced motion, it opens at once.
 - When the pointer is on a marker, or the marker has keyboard focus or an open note, it changes colour at once, with no fade. The colour is the marker colour moved towards the code text: lighter in dark themes and darker in light themes.
 
 ## Options

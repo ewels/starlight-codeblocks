@@ -5,7 +5,7 @@ Five features attach an explanation to lines of code: inline callouts, annotatio
 | Style | Reader sees the note | Note goes |
 |---|---|---|
 | Inline callout | At once | Above the line, with an arrow at one name |
-| Annotation | After a selection | In a popover under a marker |
+| Annotation | After a selection | In a popover that opens from a marker |
 | Footnote | At once | In a list under the block |
 | Side-by-side annotation | At once | In a column beside the code, on a wide screen |
 | Scrollycoding | As each step scrolls past | In prose steps next to the block |
@@ -60,6 +60,7 @@ matrix:
 ```
 
 - Markers are numbered from 1 in each block. Selecting a marker opens its note. Escape closes it.
+- The note opens out of the marker, to the right of the line, when it fits there without covering code. Otherwise it opens under the marker, 340 px wide at most. Short notes on short lines fit beside the line.
 - The note can hold inline code, links and bold text.
 - Works without JavaScript, through the browser's `popover` attribute.
 - When the page prints, the notes print as a numbered list under the block.

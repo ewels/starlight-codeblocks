@@ -1,13 +1,82 @@
-import { place } from './shared/position.ts';
+import { anchored, below, follow } from './shared/position.ts';
 
+const END = 'scb-annotation-end';
+const WAIT = 'scb-annotation-wait';
+const edge = 12;
 const stops = new WeakMap<Element, () => void>();
+
+/** The right edge of a line's code text, without its markers and popovers. */
+function textEnd(line: Element) {
+  let right = Number.NEGATIVE_INFINITY;
+  const range = document.createRange();
+  const walker = document.createTreeWalker(line, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const end = node.textContent?.trimEnd().length ?? 0;
+    if (!end || node.parentElement?.closest('.scb-annotation, .scb-float')) continue;
+    range.setStart(node, 0);
+    range.setEnd(node, end);
+    right = Math.max(right, range.getBoundingClientRect().right);
+  }
+  return right;
+}
+
+/** True when the box, beside the marker, stays in the visible block and the viewport and covers no code. */
+function fitsBeside(popover: HTMLElement, pre: HTMLElement) {
+  const box = popover.getBoundingClientRect();
+  const block = pre.getBoundingClientRect();
+  const blockRight = block.left + pre.clientLeft + pre.clientWidth;
+  if (
+    box.left < block.left ||
+    box.right > Math.min(blockRight, innerWidth - edge) ||
+    box.top < Math.max(block.top, edge) ||
+    box.bottom > Math.min(block.bottom, innerHeight - edge)
+  ) {
+    return false;
+  }
+  for (const line of pre.querySelectorAll('.ec-line')) {
+    const r = line.getBoundingClientRect();
+    if (r.bottom > box.top && r.top < box.bottom && textEnd(line) > box.left) return false;
+  }
+  return true;
+}
+
+/** Puts the popover's badge over the marker, with the box to its right, or else centred below the marker. */
+function open(popover: HTMLElement, button: HTMLElement) {
+  const pre = button.closest('pre');
+  const css = anchored();
+  return follow(() => {
+    popover.classList.add(END);
+    if (!css) {
+      const badge = popover.querySelector('.scb-annotation-badge')?.getBoundingClientRect();
+      const box = popover.getBoundingClientRect();
+      const a = button.getBoundingClientRect();
+      if (badge) {
+        const left = box.left + a.left + a.width / 2 - (badge.left + badge.width / 2);
+        const top = box.top + a.top + a.height / 2 - (badge.top + badge.height / 2);
+        Object.assign(popover.style, { margin: '0', left: `${left}px`, top: `${top}px` });
+      }
+    }
+    const beside = pre !== null && fitsBeside(popover, pre);
+    popover.classList.toggle(END, beside);
+    if (!beside && !css) below(popover, button);
+    popover.classList.remove(WAIT);
+  });
+}
+
+// Hidden from its first frame until `toggle`, after it opens, has measured where it goes.
+function beforeToggle(event: Event) {
+  const popover = event.target as HTMLElement;
+  if (popover.classList?.contains('scb-annotation-popover') && (event as ToggleEvent).newState === 'open') {
+    popover.classList.add(WAIT);
+  }
+}
 
 function toggle(event: Event) {
   const popover = event.target as HTMLElement;
   if (!popover.classList?.contains('scb-annotation-popover')) return;
   stops.get(popover)?.();
   const button = popover.previousElementSibling as HTMLElement | null;
-  if (button && (event as ToggleEvent).newState === 'open') stops.set(popover, place(popover, button));
+  if (button && (event as ToggleEvent).newState === 'open') stops.set(popover, open(popover, button));
 }
 
 /**
@@ -65,14 +134,15 @@ function checkHeights() {
 }
 
 /**
- * Positions annotation popovers where CSS anchor positioning is missing (the `popover` attribute does
- * the rest), and links each side-by-side note with its line on hover and focus.
+ * Places annotation popovers beside their marker when they fit (the `popover` attribute does the rest),
+ * and links each side-by-side note with its line on hover and focus.
  */
 export default function initAnnotations() {
   if (!ready) {
     ready = true;
     addEventListener('resize', checkHeights, { passive: true });
     // Toggle events do not bubble, so listen in the capture phase.
+    document.addEventListener('beforetoggle', beforeToggle, true);
     document.addEventListener('toggle', toggle, true);
     document.addEventListener('click', click);
     // On the document, so that copies of a block, as full screen plugins show, light up too.

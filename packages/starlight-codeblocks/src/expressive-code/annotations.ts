@@ -83,8 +83,48 @@ export function pluginAnnotations(): CodeblocksPlugin {
 .${cls()}:hover, .${cls()}:focus-visible, .${cls()}:has(+ :popover-open) {
   background: ${cssVar('codeblocksAnnotations.markerHoverBackground')};
 }
-.${cls('-popover')} { padding: 0.6rem 0.8rem; font-size: 0.875rem; }
-.${cls('-popover')} p { margin: 0; }
+.${cls('-popover')} {
+  gap: 0.5rem;
+  padding: 0.45rem 0.8rem 0.45rem 0.5rem;
+  font-size: 0.875rem;
+}
+.${cls('-popover')}:popover-open { display: flex; align-items: flex-start; }
+.${cls('-popover')} p { min-width: 0; margin: 0; }
+/* The same circle as the open marker, centred on the first line of text (0.875rem × line-height 1.5). */
+.${cls('-badge')} {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: ${cssVar('codeblocksAnnotations.markerSize')};
+  height: ${cssVar('codeblocksAnnotations.markerSize')};
+  margin-block: calc((1.3125rem - ${cssVar('codeblocksAnnotations.markerSize')}) / 2);
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: ${cssVar('codeblocksAnnotations.markerHoverBackground')};
+  color: ${cssVar('codeblocksAnnotations.markerForeground')};
+  font: 600 calc(0.8 * ${cssVar('codeFontSize')})/1 ${cssVar('codeFontFamily')};
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* Set by the script when the box fits beside the marker: the badge covers the marker. Keep in step with the padding above. */
+.${cls('-end')} {
+  width: max-content;
+  max-width: min(${cssVar('codeblocks.popoverMaxWidth')}, calc(100vw - 24px));
+  margin: 0;
+  position-area: none;
+  justify-self: auto;
+  position-try-fallbacks: none;
+  left: calc(anchor(left) - 1px - 0.5rem);
+  top: calc(anchor(center) - 1px - 0.45rem - 1.3125rem / 2);
+  animation: scb-annotation-grow 160ms ease-out;
+}
+/* A clip, not a transform, so that the script measures the box at its real size while it opens. */
+@keyframes scb-annotation-grow {
+  from { clip-path: inset(0 calc(100% - 2rem) calc(100% - 2.2rem) 0 round 1rem); }
+}
+.${cls('-wait')} { opacity: 0; }
 /* .frame outweighs Expressive Code's square top corners for code in titled blocks. */
 .frame .${cls('-popover')} code {
   padding: 0 4px;
@@ -200,7 +240,7 @@ export function pluginAnnotations(): CodeblocksPlugin {
             h(
               'div',
               { id, popover: 'auto', class: `${PREFIX}-float ${cls('-popover')}`, style: `position-anchor:${anchor}` },
-              [h('p', text)],
+              [h('span', { class: cls('-badge'), ariaHidden: 'true' }, n), h('p', text)],
             ),
           );
           return h('li', inlineMarkdown(directive.text ?? ''));
