@@ -25,7 +25,7 @@ test('Copy commands copies the commands only, with the keyboard', async ({ page,
 
 test('Copy commands copies the commands with the pointer', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await example(page, 1).getByRole('button', { name: 'Copy commands' }).click();
+  await example(page, 2).getByRole('button', { name: 'Copy commands' }).click();
   await expect.poll(() => clipboard(page)).toBe('Get-ChildItem -Name\nGet-Content summary.txt');
 });
 
@@ -123,4 +123,18 @@ test.describe('without JavaScript', () => {
   test('the Copy commands button is hidden', async ({ page }) => {
     await expect(example(page).locator('.scb-shell-copy')).toBeHidden();
   });
+});
+
+test('a Python session keeps the editor frame, and Copy commands copies its commands', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const block = example(page, 1);
+  await expect(block.locator('figure')).not.toHaveClass(/is-terminal/);
+  await expect(block.locator('.scb-shell-prompt').first()).toHaveText('>>> ');
+  await expect(block.locator('.ec-line.scb-shell-output')).toHaveCount(2);
+  await block.getByRole('button', { name: 'Copy commands' }).click();
+  await expect
+    .poll(() => clipboard(page))
+    .toBe(
+      'from collections import Counter\ncounts = Counter(["ok", "ok", "failed"])\nfor status, n in counts.most_common():\n    print(f"{status:<8} {n}")\n',
+    );
 });

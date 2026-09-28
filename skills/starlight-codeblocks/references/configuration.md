@@ -25,13 +25,13 @@ codeblocks({
 | `annotations` | None | Annotations and side-by-side annotations |
 | `footnotes` | `sticky`: default `false` | Footnotes |
 | `hiddenLines` | None | Hidden lines |
-| `shellCopy` | `prompts`: default `['$ ', '> ']` | Smart shell copy |
+| `shellCopy` | `prompts`: default `['$ ', '> ']`. Python `>>>` sessions need no prompt setting | Smart shell copy |
 | `wordDiff` | `minSimilarity`: from 0 to 1, default `0.4` | Word-level diff |
 | `whitespace` | None | Visible whitespace |
 | `brackets` | `languages`: default `[]` | Colourised brackets |
 | `tokenLinks` | None | Token links |
 | `apiLinks` | `adapters`: default `[python(), nextflow()]` | API auto-linking |
-| `expandable` | `lines`: default `12` | Expandable blocks |
+| `expandable` | `lines`: default `12`. `auto`: a line count, default `false` | Expandable blocks |
 | `playgrounds` | Custom playgrounds by name | Open in playground |
 | `mentions` | None | Code mentions |
 | `permalinks` | None | Line permalinks |
@@ -39,7 +39,7 @@ codeblocks({
 | `codeSwitcher` | None | Code switcher |
 | `transitions` | None | Token transitions |
 | `scrollycoding` | None | Scrollycoding |
-| `inlineHighlighting` | None | Inline code highlighting |
+| `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
 | `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms | Run in the browser |
 
 A directive of a feature that is off stays in the code, with a build warning. With `notation: false`, the plugin reads no directives, and every comment renders as written. Attributes still work.

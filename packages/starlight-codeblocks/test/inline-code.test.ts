@@ -58,6 +58,34 @@ test('renders an unknown language as plain inline code, with a warning', async (
   ]);
 });
 
+test('highlights inline code with no suffix in the default language, and a suffix wins over it', async () => {
+  const options = { inlineHighlighting: { defaultLanguage: 'py' } };
+  const { html, warnings } = await md('Call `len(items)` or `fetch(url){:js}`.', options);
+  expect(html).toMatch(/^<p>Call <code class="scb-inline" data-lang="py"><span style="--0:/);
+  expect(html).toContain('<code class="scb-inline" data-lang="js">');
+  expect(warnings).toEqual([]);
+});
+
+test.each(['`config.toml{:txt}`', '`config.toml`{:txt}', '`config.toml{:text}`'])(
+  'keeps %s as plain inline code, with the default language on or off',
+  async (source) => {
+    for (const options of [{}, { inlineHighlighting: { defaultLanguage: 'py' } }]) {
+      const { html, warnings } = await md(`Edit ${source} now.`, options);
+      expect(html).toBe('<p>Edit <code>config.toml</code> now.</p>');
+      expect(warnings).toEqual([]);
+    }
+  },
+);
+
+test('warns once about an unknown default language, and keeps the inline code plain', async () => {
+  const options = { inlineHighlighting: { defaultLanguage: 'nope-lang' } };
+  const { html, warnings } = await md('Use `a` and `b`.\n\nThen `c`.', options);
+  expect(html).toBe('<p>Use <code>a</code> and <code>b</code>.</p>\n<p>Then <code>c</code>.</p>');
+  expect(warnings).toEqual([
+    expect.stringMatching(/page\.md: `inlineHighlighting\.defaultLanguage` is the unknown language `nope-lang`\./),
+  ]);
+});
+
 test('with the feature off, the suffix stays as written', async () => {
   const { html } = await md('Call `f()`{:js}.', { inlineHighlighting: false }, false);
   expect(html).toBe('<p>Call <code>f()</code>{:js}.</p>');

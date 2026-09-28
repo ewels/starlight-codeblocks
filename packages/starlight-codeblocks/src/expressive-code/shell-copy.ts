@@ -1,5 +1,6 @@
 import {
   AttachedPluginData,
+  type ExpressiveCodeBlock,
   type ExpressiveCodeLine,
   isInlineStyleAnnotation,
   PluginStyleSettings,
@@ -36,8 +37,34 @@ const shellData = new AttachedPluginData<{
   commands: Set<ExpressiveCodeLine>;
 }>(() => ({ prompts: new Map(), commands: new Set() }));
 
+const PYTHON = ['python', 'py', 'pycon'];
+const STRINGS = /("""|''')[\s\S]*?\1|(["'])(?:\\.|(?!\2).)*\2|#.*/g;
+const COMPOUND = /^(?:async\s+)?(?:def|class|if|for|while|try|with|match)\b|^@/;
+
 /**
- * In terminal blocks with prompts, moves each prompt out of the code into an unselectable span,
+ * True when a REPL statement needs more lines, as the Python REPL decides when it shows `...`.
+ * After a complete statement, a line that starts with `...` is output, for example from `print("...")`.
+ */
+function statementOpen(statement: string[]) {
+  const code = statement.join('\n').replace(STRINGS, '""');
+  let depth = 0;
+  for (const char of code) {
+    if ('([{'.includes(char)) depth++;
+    else if (')]}'.includes(char)) depth--;
+  }
+  if (depth > 0 || code.endsWith('\\') || /"""|'''/.test(code)) return true;
+  return COMPOUND.test(statement[0] ?? '') && statement.at(-1)?.trim() !== '';
+}
+
+/** True for an output line of a block that smart shell copy splits into commands and output. */
+export function isShellOutput(codeBlock: ExpressiveCodeBlock, line: ExpressiveCodeLine) {
+  const { commands } = shellData.getOrCreateFor(codeBlock);
+  return commands.size > 0 && !commands.has(line);
+}
+
+/**
+ * In terminal blocks with prompts, and in Python blocks with `>>>` prompts,
+ * moves each prompt out of the code into an unselectable span,
  * mutes the output, and adds a title bar button that copies the commands only.
  */
 export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[] } = {}): CodeblocksPlugin {
@@ -59,11 +86,28 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
     jsModules: clientJsModules,
     hooks: {
       preprocessCode({ codeBlock }) {
+        const lines = codeBlock.getLines();
+        if (PYTHON.includes(codeBlock.language) && lines.some((line) => /^>>>(?: |$)/.test(line.text))) {
+          const data = shellData.getOrCreateFor(codeBlock);
+          let statement: string[] = [];
+          for (const line of lines) {
+            const open = statement.length > 0 && statementOpen(statement);
+            const prompt: string | undefined = line.text.match(open ? /^(?:>>>|\.\.\.)(?: |$)/ : /^>>>(?: |$)/)?.[0];
+            if (prompt) {
+              data.prompts.set(line, prompt);
+              data.commands.add(line);
+              line.editText(0, prompt.length, '');
+              statement = prompt.startsWith('>') ? [line.text] : [...statement, line.text];
+            } else {
+              statement = [];
+            }
+          }
+          return;
+        }
         const { frame = 'auto' } = codeBlock.props;
         const terminal =
           frame === 'terminal' || (frame === 'auto' && LanguageGroups.terminal.includes(codeBlock.language));
         if (!terminal) return;
-        const lines = codeBlock.getLines();
         if (!lines.some((line) => prompts.some((p) => line.text.startsWith(p)))) return;
         const data = shellData.getOrCreateFor(codeBlock);
         let continued = false;

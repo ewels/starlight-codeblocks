@@ -69,6 +69,14 @@ test('turns a link with no block into plain text, with a warning', async () => {
   expect(escaped.html).not.toContain('href="#mention:y"');
 });
 
+test('keeps a link with no block in a render with no file, which is one fragment of a page', async () => {
+  const warnings: string[] = [];
+  const plugins = mdastPlugins(resolveOptions(), { warn: (m) => warnings.push(m) });
+  const { html } = await markdownToHtml('See [the value](#mention:x).', { mdastPlugins: plugins });
+  expect(html).toContain('href="#mention:x"');
+  expect(warnings).toEqual([]);
+});
+
 test('leaves mention links alone with the feature off', async () => {
   const { html, warnings } = await page('See [it](#mention:z).', { mentions: false });
   expect(html).toContain('href="#mention:z"');

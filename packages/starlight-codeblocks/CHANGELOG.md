@@ -12,13 +12,13 @@ The first version of the plugin. It adds these features to the code blocks of St
 - Footnotes: numbered notes under the block, with an optional sticky list.
 - Side-by-side annotations: notes in a column next to the code.
 - Hidden lines: lines that readers can show, and that the copy button still copies.
-- Smart shell copy: a Copy commands button in the title bar of terminal blocks copies the commands without prompts or output.
+- Smart shell copy: a Copy commands button in the title bar of terminal blocks, and of Python blocks with `>>>` prompts, copies the commands without prompts or output.
 - Word-level diff: a highlight on the words that changed between a removed line and an added line.
 - Visible whitespace: glyphs for spaces and tabs.
 - Colourised brackets: bracket colours by nesting depth.
 - Token links: links on words in the code.
-- API auto-linking: links and hover cards for API names, with adapters for Python and Nextflow.
-- Expandable blocks: long blocks that show the first lines until the reader expands them.
+- API auto-linking: links and hover cards for API names, with adapters for Python and Nextflow. The Python adapter links the packages of starlight-pydocs with no configuration.
+- Expandable blocks: long blocks that show the first lines until the reader expands them, for one block or for every block over a line count.
 - Open in playground: a button that opens the code in the TypeScript Playground, the Rust Playground or a custom playground.
 - Code mentions: links in the prose that highlight lines of a block.
 - Line permalinks: line numbers that are links to a line or a range.
@@ -26,5 +26,5 @@ The first version of the plugin. It adds these features to the code blocks of St
 - Code switcher: several variants of a block, with a menu in the title bar.
 - Token transitions: steps of a block, with animated changes between them.
 - Scrollycoding: prose steps next to a sticky block that changes with each step.
-- Inline code highlighting: syntax colours for inline code with a `{:lang}` suffix.
+- Inline code highlighting: syntax colours for inline code with a `{:lang}` suffix, or in a default language for the site.
 - Run in the browser: a Run button with an output panel, with a Pyodide runtime for Python.

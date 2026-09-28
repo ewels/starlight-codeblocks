@@ -398,7 +398,7 @@ Turn placeholders such as `YOUR_TOKEN` into fields, so readers type their own va
 <details>
 <summary>Smart shell copy</summary>
 
-Add a Copy commands button to terminal blocks, which copies the commands without the prompts or the output. It applies to every terminal block with a prompt line.
+Add a Copy commands button to terminal blocks, which copies the commands without the prompts or the output. It applies to every terminal block with a prompt line, and to Python sessions with `>>>` prompts.
 
 ```sh
 $ uv tool install ruff

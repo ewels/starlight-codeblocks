@@ -47,6 +47,7 @@ The block shows its first eight lines, faded at the bottom, with "Show all 24 li
 |---|---|---|
 | `expandable` | Fence line | Caps the block at the site default, 12 lines |
 | `expandable={N}` | Fence line | Caps the block at `N` lines |
+| `expandable=false` | Fence line | Turns off the `auto` option for the block |
 
 ## Behaviour
 
@@ -68,6 +69,25 @@ codeblocks({
   expandable: { lines: 20 },
 });
 ```
+
+### Make every long block expandable
+
+The `auto` option makes every block with more lines than its value expandable, with no attribute. The block shows `lines` lines:
+
+```js title="astro.config.mjs"
+codeblocks({
+  expandable: { lines: 12, auto: 30 },
+});
+```
+
+With this configuration, a block of 31 lines or more shows its first 12 lines. Add `expandable=false` to the fence line of a block that must show in full. An `expandable={N}` attribute wins over the option.
+
+`auto` skips blocks that have their own layout or their own controls:
+
+- The variants of a [code switcher](/starlight-codeblocks/features/code-switcher/).
+- Blocks with a [**Run** button](/starlight-codeblocks/features/run-in-the-browser/).
+- Blocks with Expressive Code's `collapse` attribute, from its collapsible sections plugin.
+- Blocks in [`<CodeSteps>`](/starlight-codeblocks/features/token-transitions/) and [`<Scrollycoding>`](/starlight-codeblocks/features/scrollycoding/), where each step must show every line.
 
 ## Examples
 

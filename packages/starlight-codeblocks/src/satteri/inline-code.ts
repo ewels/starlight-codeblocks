@@ -129,24 +129,43 @@ function suffix(siblings: readonly Nodes[], index: number) {
   }
 }
 
-export async function inlineCode(node: InlineCode, ctx: MdastVisitorContext, warn: (message: string) => void) {
+const PLAIN = new Set(['txt', 'text', 'plain', 'plaintext']);
+const warnedDefaults = new Set<string>();
+
+export async function inlineCode(
+  node: InlineCode,
+  ctx: MdastVisitorContext,
+  warn: (message: string) => void,
+  defaultLanguage: string | false = false,
+) {
   const parent = ctx.parent(node);
   const index = ctx.indexOf(node);
   if (!parent || index === undefined) return;
   const found = suffix(parent.children as Nodes[], index);
   const inner = found ? undefined : node.value.match(INNER_SUFFIX);
-  if (!found && !inner) return;
+  if (!found && !inner && !defaultLanguage) return;
   if (found) {
     for (const removed of found.remove) ctx.removeNode(removed);
     if (found.restValue) ctx.setProperty(found.rest as Text, 'value', found.restValue);
     else ctx.removeNode(found.rest);
   }
   const code = inner ? (inner[1] as string) : node.value;
-  const lang = inner ? (inner[2] as string) : (found?.lang as string);
+  const lang = inner?.[2] ?? found?.lang ?? (defaultLanguage as string);
+  const plain = inner ? ({ type: 'inlineCode', value: code } as const) : undefined;
+  if (PLAIN.has(lang)) return plain;
   const tokens = await highlight(code, lang);
   if (tokens === undefined) {
+    if (!found && !inner) {
+      if (!warnedDefaults.has(lang)) {
+        warnedDefaults.add(lang);
+        warn(
+          `\`inlineHighlighting.defaultLanguage\` is the unknown language \`${lang}\`. Inline code without a suffix shows as plain inline code.`,
+        );
+      }
+      return;
+    }
     warn(`inline code \`${code}\` has the unknown language \`${lang}\`. It shows as plain inline code.`);
-    return inner ? ({ type: 'inlineCode', value: code } as const) : undefined;
+    return plain;
   }
   return { type: 'html', value: `<code class="${CLASS}" data-lang="${lang}">${tokens}</code>` } as const;
 }

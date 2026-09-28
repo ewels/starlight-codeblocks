@@ -1,5 +1,5 @@
-import type { ApiLinkAdapter, SymbolRef } from '../options.ts';
-import { type PythonIndex, readInventory, readPydocs } from './python-index.ts';
+import type { ApiLinkAdapter, Resolution, SymbolRef } from '../options.ts';
+import { type PythonIndex, readInventory } from './python-index.ts';
 
 export interface PythonInventory {
   /** The URL of a Sphinx `objects.inv`. */
@@ -8,22 +8,38 @@ export interface PythonInventory {
   base?: string;
 }
 
-export interface PydocsPackage {
-  /** The package name, as given to starlight-pydocs. */
-  package: string;
-  /** The URL base of its pages, as given to starlight-pydocs. The default is `api/<package>`. */
-  base?: string;
-  /** A Griffe dump to read, relative to the project root. The default is the one starlight-pydocs made. */
-  dump?: string;
-}
-
 export interface PythonAdapterOptions {
   /** Link names from the Python standard library. The default is `true`. */
   stdlib?: boolean;
   /** More Sphinx inventories, such as `https://numpy.org/doc/stable/objects.inv`. */
   inventories?: (string | PythonInventory)[];
-  /** Packages that the site documents with starlight-pydocs. Their pages win over the inventories. */
-  pydocs?: PydocsPackage[];
+}
+
+/** What starlight-pydocs publishes at `globalThis[Symbol.for('starlight-pydocs')]`. */
+export interface PydocsRegistry {
+  version: 1;
+  packages: { name: string; base: string; symbols: Map<string, PydocsSymbol> }[];
+}
+
+export interface PydocsSymbol {
+  /** Root-relative, without Astro's `base`. */
+  href: string;
+  kind: 'module' | 'class' | 'function' | 'method' | 'attribute';
+  signature?: string;
+  summary?: string;
+}
+
+const PYDOCS = Symbol.for('starlight-pydocs');
+
+/** The object at `path` in the first starlight-pydocs package that has it. Read on each call, so that dev re-extraction shows. */
+function pydocsEntry(path: string): (Resolution & { name: string }) | undefined {
+  const registry = (globalThis as { [PYDOCS]?: PydocsRegistry })[PYDOCS];
+  if (registry?.version !== 1) return undefined;
+  for (const pkg of registry.packages) {
+    const symbol = pkg.symbols.get(path);
+    if (symbol) return { ...symbol, name: path, source: `${pkg.name} API reference` };
+  }
+  return undefined;
 }
 
 export const STDLIB_INVENTORY = { url: 'https://docs.python.org/3/objects.inv', base: 'https://docs.python.org/3/' };
@@ -196,10 +212,12 @@ function skipBrackets(tokens: Token[], i: number) {
  * and methods called on a new instance, such as `Path(…).read_text`.
  */
 export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
-  const { stdlib = true, inventories = [], pydocs = [] } = options;
+  const { stdlib = true, inventories = [] } = options;
   const index: PythonIndex = new Map();
+  // starlight-pydocs pages win over the inventories.
+  const lookup = (path: string) => pydocsEntry(path) ?? index.get(path);
   const ref = (parts: Token[], path: string): SymbolRef | undefined => {
-    const entry = index.get(path);
+    const entry = lookup(path);
     const first = parts[0];
     const last = parts.at(-1);
     return entry && first && last ? { start: first.start, end: last.end, name: path, context: entry } : undefined;
@@ -209,13 +227,6 @@ export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
     name: 'python',
     languages: ['python', 'py'],
     async setup(context) {
-      for (const source of pydocs) {
-        try {
-          readPydocs(source, context, index);
-        } catch (error) {
-          context.warn(error instanceof Error ? error.message : String(error));
-        }
-      }
       const all = [...(stdlib ? [STDLIB_INVENTORY] : []), ...inventories];
       for (const item of all) {
         const { url, base = new URL('.', url).href } = typeof item === 'string' ? { url: item } : item;
@@ -247,13 +258,13 @@ export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
         const { parts, next } = dotted(tokens, i);
         let j = parts.length;
         const path = (n: number) => [binding, ...parts.slice(1, n).map((p) => p.value)].join('.');
-        while (j > 0 && !index.has(path(j))) j--;
+        while (j > 0 && !lookup(path(j))) j--;
         if (j === 0) continue;
         const found = ref(parts.slice(0, j), path(j));
         if (found) symbols.push(found);
         i = next - 1;
         // A call to a class gives an instance of it, so the attribute after the call is certain.
-        const entry = index.get(path(j));
+        const entry = lookup(path(j));
         if (j === parts.length && entry?.kind === 'class' && tokens[next]?.value === '(') {
           const after = skipBrackets(tokens, next);
           const attribute = tokens[after + 1];

@@ -105,14 +105,6 @@ export const adapterOptions: Record<'python' | 'nextflow', OptionEntry[]> = {
         'More Sphinx `objects.inv` files. `base` is the URL that relative links start from, if it is not the folder of `url`.',
       page: apiLinks,
     },
-    {
-      id: 'python-pydocs',
-      label: 'pydocs',
-      type: '`{ package: string; base?: string; dump?: string }[]`',
-      default: '`[]`',
-      description: 'Packages that the site documents with starlight-pydocs.',
-      page: apiLinks,
-    },
   ],
   nextflow: [
     {

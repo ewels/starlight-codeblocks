@@ -86,3 +86,18 @@ test('says that a plugin listed earlier, such as a theme, can have turned Expres
 test('validates options when the plugin is created', () => {
   expect(() => codeblocks({ fokus: {} } as never)).toThrow('unknown option `fokus`');
 });
+
+// A public contract: starlight-pydocs reads this to decide whether to add `{:py}` to inline code in docstrings.
+test('publishes its registry at Symbol.for("starlight-codeblocks"), with inlineHighlighting truthy only when on', async () => {
+  const read = () =>
+    (globalThis as Record<symbol, { options: { inlineHighlighting: unknown } } | undefined>)[
+      Symbol.for('starlight-codeblocks')
+    ];
+  await setup();
+  expect(read()?.options.inlineHighlighting).toBeTruthy();
+  await setup(undefined, {}, { inlineHighlighting: { defaultLanguage: 'py' } });
+  expect(read()?.options.inlineHighlighting).toBeTruthy();
+  await setup(undefined, {}, { inlineHighlighting: false });
+  expect(read()).toBeDefined();
+  expect(read()?.options.inlineHighlighting).toBe(false);
+});

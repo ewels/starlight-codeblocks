@@ -1,16 +1,13 @@
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 import { afterEach, expect, test, vi } from 'vitest';
-import { type PythonAdapterOptions, python } from '../src/adapters/python.ts';
-import { firstSentence, readInventory } from '../src/adapters/python-index.ts';
+import { type PydocsRegistry, type PydocsSymbol, type PythonAdapterOptions, python } from '../src/adapters/python.ts';
+import { readInventory } from '../src/adapters/python-index.ts';
 import { resolveOptions } from '../src/options.ts';
 import { setRegistry } from '../src/registry.ts';
 import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
-const dump = new URL('./fixtures/myproject-dump.json', import.meta.url).pathname;
 const withPython = (options: PythonAdapterOptions) => ({ apiLinks: { adapters: [python(options)] } });
 
 const decode = (value?: string) =>
@@ -35,6 +32,7 @@ const texts = async (...lines: string[]) => links((await render(block('py', ...l
 
 afterEach(() => {
   setRegistry(undefined);
+  pydocs(undefined);
   vi.unstubAllGlobals();
 });
 
@@ -116,24 +114,55 @@ test('does nothing with apiLinks=false or in other languages', async () => {
   expect((await render(block('js', 'import json'))).html).not.toContain('scb-api-link');
 });
 
-test('links the objects of a starlight-pydocs package, with signatures and summaries', async () => {
+const PYDOCS = Symbol.for('starlight-pydocs');
+const pydocs = (registry: PydocsRegistry | undefined) => {
+  (globalThis as { [PYDOCS]?: PydocsRegistry })[PYDOCS] = registry;
+};
+const report = { href: '/api/myproject/report/#myproject.report.Report', kind: 'class' } as const;
+const myproject = () =>
+  new Map<string, PydocsSymbol>([
+    ['myproject', { href: '/api/myproject/', kind: 'module', summary: 'Tools to summarise runs.' }],
+    [
+      'myproject.summarise',
+      {
+        href: '/api/myproject/#myproject.summarise',
+        kind: 'function',
+        signature: 'myproject.summarise(data: dict, *, top: int = 5) -> str',
+        summary: 'Summarise a run as a short text report.',
+      },
+    ],
+    ['myproject.report.Report', { ...report, signature: 'class myproject.report.Report(title: str)' }],
+    // A documented re-export: `Report` is defined in `myproject._report`, a private module.
+    ['myproject.Report', { ...report, signature: 'class myproject.report.Report(title: str)' }],
+    [
+      'myproject.Report.render',
+      {
+        href: '/api/myproject/report/#myproject.report.Report.render',
+        kind: 'method',
+        signature: 'Report.render(*, width: int | None = None) -> str',
+      },
+    ],
+  ]);
+
+test('links the objects of a starlight-pydocs package through its registry, with the site base', async () => {
+  pydocs({ version: 1, packages: [{ name: 'myproject', base: 'api/myproject', symbols: myproject() }] });
   setRegistry({ options: resolveOptions(), plugins: [], clientAssets: true, base: '/docs' });
   const { html, warnings } = await render(
     block('py', 'from myproject import summarise, Report', 'print(summarise(data))', 'Report("Run").render(width=80)'),
-    withPython({ pydocs: [{ package: 'myproject', dump }] }),
   );
   const source = 'myproject API reference';
-  const report = {
-    href: '/docs/api/myproject/report/#myproject.report.Report',
-    head: 'class myproject.report.Report(title: str)',
-    summary: 'A run report.',
-    source,
-  };
   const summarise = {
     text: 'summarise',
     href: '/docs/api/myproject/#myproject.summarise',
     head: 'myproject.summarise(data: dict, *, top: int = 5) -> str',
     summary: 'Summarise a run as a short text report.',
+    source,
+  };
+  const reportLink = {
+    text: 'Report',
+    href: '/docs/api/myproject/report/#myproject.report.Report',
+    head: 'class myproject.report.Report(title: str)',
+    summary: undefined,
     source,
   };
   expect(links(html)).toEqual([
@@ -145,54 +174,54 @@ test('links the objects of a starlight-pydocs package, with signatures and summa
       source,
     },
     summarise,
-    { text: 'Report', ...report },
+    reportLink,
     summarise,
-    { text: 'Report', ...report },
+    reportLink,
     {
       text: 'render',
       href: '/docs/api/myproject/report/#myproject.report.Report.render',
       head: 'Report.render(*, width: int | None = None) -> str',
-      summary: 'Render the report as text.',
+      summary: undefined,
       source,
     },
   ]);
   expect(warnings).toEqual([]);
 });
 
-test('finds the dump that starlight-pydocs keeps in the cache folder, and uses its base', async () => {
-  const cacheDir = mkdtempSync(join(tmpdir(), 'scb-astro-'));
-  mkdirSync(join(cacheDir, 'starlight-pydocs', 'myproject-1bc6de33edf5'), { recursive: true });
-  cpSync(dump, join(cacheDir, 'starlight-pydocs', 'myproject-1bc6de33edf5', 'dump.json'));
-  setRegistry({ options: resolveOptions(), plugins: [], clientAssets: true, cacheDir });
-  try {
-    const { html } = await render(
-      block('py', 'from myproject import summarise'),
-      withPython({ pydocs: [{ package: 'myproject', base: '/reference/myproject/' }] }),
-    );
-    expect(links(html).map((l) => l.href)).toEqual([
-      '/reference/myproject/',
-      '/reference/myproject/#myproject.summarise',
-    ]);
-  } finally {
-    rmSync(cacheDir, { recursive: true });
-  }
+test('takes the first starlight-pydocs package that has a path, and wins over the inventories', async () => {
+  pydocs({
+    version: 1,
+    packages: [
+      { name: 'myproject', base: 'api/myproject', symbols: myproject() },
+      {
+        name: 'myproject',
+        base: '1x/api/myproject',
+        symbols: new Map([['myproject', { href: '/1x/api/myproject/', kind: 'module' }]]),
+      },
+      { name: 'json', base: 'api/json', symbols: new Map([['json', { href: '/api/json/', kind: 'module' }]]) },
+    ],
+  });
+  const { html } = await render(block('py', 'import json, myproject'));
+  expect(links(html).map((l) => [l.text, l.href])).toEqual([
+    ['json', '/api/json/'],
+    ['myproject', '/api/myproject/'],
+  ]);
 });
 
-test('warns when a starlight-pydocs package has no data, and still links the standard library', async () => {
-  const cacheDir = mkdtempSync(join(tmpdir(), 'scb-astro-'));
-  setRegistry({ options: resolveOptions(), plugins: [], clientAssets: true, cacheDir });
-  try {
-    const { html, warnings } = await render(
-      block('py', 'import json', 'from myproject import summarise'),
-      withPython({ pydocs: [{ package: 'myproject' }] }),
-    );
-    expect(links(html).map((l) => l.text)).toEqual(['json']);
-    expect(warnings).toEqual([
-      `API links, python adapter: found no starlight-pydocs data for \`myproject\` in ${join(cacheDir, 'starlight-pydocs')}. Add starlight-pydocs to the site, or give the dump path in \`dump\`.`,
-    ]);
-  } finally {
-    rmSync(cacheDir, { recursive: true });
-  }
+test('reads the starlight-pydocs registry on each render, so that changes in dev show', async () => {
+  const adapter = { apiLinks: { adapters: [python({ stdlib: false })] } };
+  const code = block('py', 'from myproject import summarise');
+  expect(links((await render(code, adapter)).html)).toEqual([]);
+  const symbols = myproject();
+  pydocs({ version: 1, packages: [{ name: 'myproject', base: 'api/myproject', symbols }] });
+  expect(links((await render(code, adapter)).html).map((l) => l.text)).toEqual(['myproject', 'summarise']);
+  symbols.delete('myproject.summarise');
+  expect(links((await render(code, adapter)).html).map((l) => l.text)).toEqual(['myproject']);
+});
+
+test('ignores a starlight-pydocs registry of another version', async () => {
+  pydocs({ version: 2, packages: [{ name: 'myproject', base: 'api/myproject', symbols: myproject() }] } as never);
+  expect(await texts('import json, myproject')).toEqual(['json']);
 });
 
 test('reads more inventories, can leave out the standard library, and warns about bad ones', async () => {
@@ -250,13 +279,6 @@ test('readInventory keeps Python objects only, and fills in the short URI form',
     source: 'Python 3.14 documentation',
   });
   expect([...index.keys()].some((name) => name.includes('acks'))).toBe(false);
-});
-
-test('firstSentence takes the first sentence of the first paragraph', () => {
-  expect(firstSentence('Say hello.\n\nMore text.')).toBe('Say hello.');
-  expect(firstSentence('Parse the\ntext. Then more.')).toBe('Parse the text.');
-  expect(firstSentence('No full stop')).toBe('No full stop');
-  expect(firstSentence('Use v1.2 here. Next.')).toBe('Use v1.2 here.');
 });
 
 test('the default options have python() and nextflow()', () => {

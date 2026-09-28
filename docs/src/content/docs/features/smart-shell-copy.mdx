@@ -35,6 +35,8 @@ Smart shell copy has no attribute or directive. It applies to every block with a
 
 A prompt is text at the start of a line. The default prompts are `$ ` and `> `, each with a space after it.
 
+A `python`, `py` or `pycon` block with a line that starts with `>>> ` is a Python session. It gets the same button, and keeps the editor frame. See [Python sessions](#python-sessions).
+
 ## Behaviour
 
 - A line that starts with a prompt is a command. The prompt has its own colour, and a manual selection leaves it out.
@@ -45,6 +47,33 @@ A prompt is text at the start of a line. The default prompts are `$ ` and `> `, 
 - Hidden lines that are commands are part of the text that **Copy commands** copies. Hidden output lines are not.
 - A terminal block with no prompt line renders and copies as Expressive Code shows it.
 - The two buttons need JavaScript, as in Expressive Code. Without JavaScript, the **Copy commands** button is hidden, and readers can select the code by hand. The selection leaves out the prompts.
+
+## Python sessions
+
+A Python session in a docstring or a tutorial shows commands after `>>> ` and the values that they print. Smart shell copy reads these blocks with no configuration and no `frame="terminal"`:
+
+export const session = `
+\`\`\`py
+>>> from collections import Counter
+>>> counts = Counter(["ok", "ok", "failed"])
+>>> for status, n in counts.most_common():
+...     print(f"{status:<8} {n}")
+...
+ok       2
+failed   1
+\`\`\`
+`;
+
+<Example code={session} hiddenAttributes="apiLinks=false" />
+
+**Copy commands** copies the three commands without the prompts, and keeps the two continuation lines. The rules follow the Python REPL:
+
+- A line that starts with `>>> ` is a command.
+- A line that starts with `... `, or a bare `...`, continues the command while its statement is open. A statement is open after a line that ends with `:`, `\`, an open bracket or an open triple-quoted string. It stays open until a bare `...` line.
+- After a complete statement, a line that starts with `...` is output, for example the text that `print("...")` shows.
+- Every other line is output.
+
+[API auto-linking](/starlight-codeblocks/features/api-auto-linking/) links names in the commands of a session, and not in its output.
 
 ## Options
 
@@ -93,6 +122,7 @@ Successfully installed example-client-2.1.0
 - A prompt must be the first text on the line. The plugin does not find a prompt after spaces.
 - Output lines lose their syntax colours, so output that contains code shows in one colour.
 - `#` is not a default prompt. A line such as `# apt install curl` is output, unless you add `# ` to the prompts.
+- In a Python session, a line that starts with `>>> ` is always a command, also if it is output that a command printed.
 
 ## Related
 

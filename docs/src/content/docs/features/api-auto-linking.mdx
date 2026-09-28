@@ -72,22 +72,15 @@ The Python adapter runs on `py` and `python` code blocks. It reads `import x`, `
 
 An `objects.inv` file has no signatures and no summaries. For its names, the card shows the kind, the qualified name and the documentation that it comes from.
 
-For packages in `pydocs`, the adapter reads the data that starlight-pydocs makes when the site builds. The card then has the signature and the first sentence of the docstring. Give the same `base` that you give starlight-pydocs. The default is `api/<package>`, the same as the starlight-pydocs default:
+If the site also uses starlight-pydocs, install both plugins. The Python adapter then links the names of every package that starlight-pydocs documents, with no configuration:
 
 ```js title="astro.config.mjs"
 starlight({
-  plugins: [
-    starlightPydocs({ packages: [{ name: 'myproject', base: 'reference/myproject' }] }),
-    codeblocks({
-      apiLinks: {
-        adapters: [python({ pydocs: [{ package: 'myproject', base: 'reference/myproject' }] }), nextflow()],
-      },
-    }),
-  ],
+  plugins: [starlightPydocs({ packages: [{ name: 'myproject' }] }), codeblocks()],
 });
 ```
 
-A name from a `pydocs` package links to the site's own page, also if an inventory has the same name. If the adapter finds no starlight-pydocs data, the build logs a warning. Use `dump` to give the path of a Griffe dump file, relative to the project root.
+For these names, the card has the signature and the first sentence of the docstring, as starlight-pydocs shows them. A name links to the site's own page, also if an inventory has the same name. Names that a package re-exports, such as `myproject.Report` from a private `myproject._report` module, link to the object's page. If starlight-pydocs documents one package at two bases, the first entry in its `packages` list wins.
 
 ## Nextflow adapter
 

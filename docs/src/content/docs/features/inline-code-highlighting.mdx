@@ -5,6 +5,7 @@ description: Give inline code in the prose the same syntax colours as the code b
 
 import { Aside } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
 Starlight shows inline code in the prose in one colour, with no syntax highlighting. A short expression such as a function call is then harder to read than the same code in a block. A `{:lang}` suffix at the end of the inline code gives it the syntax colours of that language.
 
@@ -63,14 +64,32 @@ MDX reads a `{:js}` after the closing backtick as a JavaScript expression, and t
 - The colours change with Starlight's theme menu, the same as the code blocks.
 - The colours have the same contrast correction as the code blocks.
 - The plugin removes the suffix from the page, in both forms.
-- Inline code without a suffix does not change.
+- Inline code without a suffix does not change, unless the site sets a [default language](#a-default-language).
 - If Expressive Code does not know the language, the code shows as normal inline code and the build logs a warning with the file name. The plugin removes the suffix.
 - The highlighting happens at build time, so it works without JavaScript. Pages with no code blocks get the colours too.
 - The highlighted code is a normal `code` element. Screen readers and the copied text get the same characters as before.
 
 ## Options
 
-Inline code highlighting has no options. Turn the feature off for the whole site with `inlineHighlighting: false`:
+<Options />
+
+### A default language
+
+Some sites have one main language, such as the API docs of a Python package. The `defaultLanguage` option highlights inline code with no suffix in that language:
+
+```js title="astro.config.mjs"
+codeblocks({
+  inlineHighlighting: { defaultLanguage: 'py' },
+});
+```
+
+With this configuration, `` `len(items)` `` gets the Python colours. A suffix wins over the default, so `` `fetch(url){:js}` `` is still JavaScript. To keep one piece of inline code plain, such as a file name, add `{:txt}`: `` `pyproject.toml{:txt}` ``. The suffixes `{:text}`, `{:plain}` and `{:plaintext}` do the same.
+
+If Expressive Code does not know the default language, inline code without a suffix stays plain, and the build logs one warning. On this site, the option adds about 900 highlighted pieces of inline code and no measurable build time.
+
+### Turn the feature off
+
+Turn the feature off for the whole site with `inlineHighlighting: false`:
 
 ```js title="astro.config.mjs"
 codeblocks({

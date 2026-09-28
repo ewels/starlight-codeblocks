@@ -82,9 +82,9 @@ export const attributesReference: AttributeDoc[] = [
   },
   {
     name: 'expandable',
-    syntax: ['expandable', 'expandable={N}'],
+    syntax: ['expandable', 'expandable={N}', 'expandable=false'],
     description:
-      'Shows the first lines of the block, with a button to show the rest. The flag shows the number of lines in the `expandable.lines` option. `{N}` shows `N` lines.',
+      'Shows the first lines of the block, with a button to show the rest. The flag shows the number of lines in the `expandable.lines` option. `{N}` shows `N` lines. `false` turns off the `expandable.auto` option for the block.',
     page: 'features/expandable-blocks',
     example: {
       lang: 'yaml',

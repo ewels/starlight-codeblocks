@@ -22,7 +22,7 @@ export interface PlaygroundDefinition {
 export interface AdapterContext {
   /** The project root, as an absolute path. */
   root: string;
-  /** Astro's cache folder, where other integrations, such as starlight-pydocs, keep their data. */
+  /** Astro's cache folder, where integrations keep their data. */
   cacheDir: string;
   /**
    * Gets a URL and keeps the body on disk, so that later builds do not fetch it again.
@@ -72,7 +72,7 @@ export interface CodeblocksOptions {
   brackets?: false | { languages?: string[] };
   tokenLinks?: false;
   apiLinks?: false | { adapters?: ApiLinkAdapter[] };
-  expandable?: false | { lines?: number };
+  expandable?: false | { lines?: number; auto?: number | false };
   playgrounds?: false | Record<string, PlaygroundDefinition>;
   mentions?: false;
   permalinks?: false;
@@ -80,7 +80,7 @@ export interface CodeblocksOptions {
   codeSwitcher?: false;
   transitions?: false;
   scrollycoding?: false;
-  inlineHighlighting?: false;
+  inlineHighlighting?: false | { defaultLanguage?: string | false };
   runnable?: false | { runtimes?: Record<string, string>; timeout?: number };
 }
 
@@ -270,6 +270,13 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         description: 'Lines to show before the block expands.',
         valid: (value) => Number.isInteger(value) && (value as number) > 0,
       },
+      auto: {
+        type: 'number | false',
+        default: false,
+        description:
+          'Makes every block with more lines than this expandable, without the attribute. `expandable=false` turns it off for one block.',
+        valid: (value) => value === false || (Number.isInteger(value) && (value as number) > 0),
+      },
     },
   },
   playgrounds: {
@@ -318,6 +325,14 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   inlineHighlighting: {
     description: 'Adds syntax colours to inline code with a `{:lang}` suffix.',
     page: 'features/inline-code-highlighting',
+    fields: {
+      defaultLanguage: {
+        type: 'string | false',
+        default: false,
+        description: 'The language of inline code with no suffix. `{:txt}` keeps one piece of inline code plain.',
+        valid: (value) => value === false || (isString(value) && /^[\w#+-][\w#+.-]*$/.test(value)),
+      },
+    },
   },
   runnable: {
     description: 'Adds a Run button that runs the code in the browser.',

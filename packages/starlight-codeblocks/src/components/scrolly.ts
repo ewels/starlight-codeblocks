@@ -1,5 +1,6 @@
 import { addClassName, type Element, h, removeClassName, select, selectAll, toHtml } from '@expressive-code/core/hast';
 import { fromHtml } from 'hast-util-from-html';
+import { removeAutoExpandable } from '../expressive-code/expandable.ts';
 import { parseRange, RangeSyntaxError } from '../expressive-code/ranges.ts';
 import { codeLines } from './tokens.ts';
 
@@ -80,6 +81,7 @@ function apply(group: Element, { focus, mark }: StepState, suffix: string) {
  */
 export function scrollycoding(html: string, interactive = true): string {
   const root = fromHtml(html, { fragment: true });
+  removeAutoExpandable(root);
   const groups = selectAll('.expressive-code', root).filter((group) => select('figure', group));
   const steps = selectAll(`.${S}-step`, root);
   if (groups.length !== 1 || steps.length === 0) {

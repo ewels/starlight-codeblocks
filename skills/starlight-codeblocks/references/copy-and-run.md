@@ -32,6 +32,22 @@ $ ruff check src/ \
 - Option: `shellCopy.prompts` (default `['$ ', '> ']`). `#` is not a default, because it also starts a shell comment. Add `'# '` or `'PS> '` if the site uses them. `shellCopy: false` turns the feature off.
 - Limits: a prompt must be the first text on the line.
 
+A `python`, `py` or `pycon` block with a line that starts with `>>> ` is a Python session. It keeps its editor frame, and needs no `frame="terminal"`.
+
+```py
+>>> from pathlib import Path
+>>> for name in ["a", "b"]:
+...     print(Path(name).with_suffix(".txt"))
+...
+a.txt
+b.txt
+```
+
+- `>>> ` starts a command. `... ` or a bare `...` continues it while the statement is open, as in the Python REPL.
+- After a complete statement, a line that starts with `...` is output, such as the text that `print("...")` shows.
+- A line that starts with `>>> ` is always a command, also if a command printed it.
+- API auto-linking links names in the commands only.
+
 ## Open in playground
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/open-in-playground/

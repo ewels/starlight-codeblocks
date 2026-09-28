@@ -3,6 +3,7 @@ import { syncTokenKeys, toKeyedTokens } from '@shikijs/magic-move/core';
 import type { KeyedTokensInfo } from '@shikijs/magic-move/types';
 import { fromHtml } from 'hast-util-from-html';
 import { markDecorations, nameFigure } from '../expressive-code/core.ts';
+import { removeAutoExpandable } from '../expressive-code/expandable.ts';
 import { readTokens } from './tokens.ts';
 
 const S = 'scb-steps';
@@ -28,12 +29,20 @@ function controlsRow(current: number, total: number) {
   ]);
 }
 
+/** The steps as separate blocks, for `<CodeSteps>` with transitions off. */
+export function plainSteps(html: string): string {
+  const root = fromHtml(html, { fragment: true });
+  removeAutoExpandable(root);
+  return toHtml(root);
+}
+
 /**
  * Turns the blocks that Expressive Code rendered inside `<CodeSteps>` into steps: adds the numbered steps
  * to each title bar, a Previous/Next/counter row under each block, and keys the tokens for the animation.
  */
 export function codeSteps(html: string): string {
   const root = fromHtml(html, { fragment: true });
+  removeAutoExpandable(root);
   const groups = selectAll('.expressive-code', root).filter((group) => select('figure', group));
   if (groups.length === 0) return html;
   const labels = groups.map(

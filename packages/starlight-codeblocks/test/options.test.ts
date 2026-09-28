@@ -7,7 +7,8 @@ describe('resolveOptions', () => {
     expect(options.focus).toEqual({ style: 'blur' });
     expect(options.callouts).toBe(true);
     expect(options.shellCopy).toEqual({ prompts: ['$ ', '> '] });
-    expect(options.expandable).toEqual({ lines: 12 });
+    expect(options.expandable).toEqual({ lines: 12, auto: false });
+    expect(options.inlineHighlighting).toEqual({ defaultLanguage: false });
     expect(options.playgrounds).toEqual({});
     expect(options.runnable).toEqual({ runtimes: {}, timeout: 10000 });
   });

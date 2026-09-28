@@ -157,8 +157,10 @@ These features need no attribute. Know them, because they can change a block tha
 
 - Word-level diff applies to every removed line that has an added line below it. Turn it off for a block with `wordDiff=false`.
 - API auto-linking links names in every `py`, `python`, `nextflow` and `nf` block. Turn it off for a block with `apiLinks=false`.
-- Smart shell copy applies to every block with a terminal frame and a line that starts with a prompt (`$ ` or `> ` by default).
+- Smart shell copy applies to every block with a terminal frame and a line that starts with a prompt (`$ ` or `> ` by default). It also applies to every Python block with a line that starts with `>>> `.
 - Colourised brackets apply to every block in the languages in `brackets.languages`, if the site sets that option.
+- Expandable blocks apply to every block longer than `expandable.auto` lines, if the site sets that option. Turn it off for a block with `expandable=false`.
+- Inline code highlighting applies to all inline code, if the site sets `inlineHighlighting.defaultLanguage`. Keep one piece plain with `{:txt}`.
 
 If a page shows one feature, keep the others out of its examples with these attributes.
 

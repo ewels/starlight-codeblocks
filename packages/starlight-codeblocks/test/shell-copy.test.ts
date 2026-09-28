@@ -94,3 +94,64 @@ test('the prompt colour meets 4.5:1 contrast in both themes', async () => {
     expect(getColorContrast(prompt, get('codeBackground')), name).toBeGreaterThanOrEqual(4.5);
   }
 });
+
+const repl = [
+  '>>> from pathlib import Path',
+  '>>> for name in ["a", "b"]:',
+  '...     print(Path(name).with_suffix(".txt"))',
+  '...',
+  'a.txt',
+  'b.txt',
+  '>>> print(">>> not a prompt")',
+  '>>> not a prompt',
+  '>>> print("...")',
+  '...',
+  '>>> print(f"{2 + 2}",',
+  '...       "done")',
+  '4 done',
+];
+
+test.each(['python', 'py', 'pycon'])(
+  'reads a %s block with >>> prompts as a session, in the editor frame',
+  async (lang) => {
+    const { commandsText, copyText, html } = await render(block(lang, ...repl));
+    expect(commandsText).toBe(
+      [
+        'from pathlib import Path',
+        'for name in ["a", "b"]:',
+        '    print(Path(name).with_suffix(".txt"))',
+        '',
+        'print(">>> not a prompt")',
+        'not a prompt',
+        'print("...")',
+        'print(f"{2 + 2}",',
+        '      "done")',
+      ].join('\n'),
+    );
+    expect(copyText).toBe(repl.join('\n'));
+    expect(html).not.toContain('is-terminal');
+    expect(html.match(/<span class="scb-shell-prompt">(?:>|&#x3E;){3} <\/span>/g)).toHaveLength(6);
+    expect(html.match(/<span class="scb-shell-prompt">\.\.\.( )?<\/span>/g)).toHaveLength(3);
+    expect(html.match(/class="ec-line scb-shell-output"/g)).toHaveLength(4);
+  },
+);
+
+test('a line that starts with ... continues a command only while the statement is open', async () => {
+  const text = async (...lines: string[]) => (await render(block('py', ...lines))).commandsText;
+  expect(await text('>>> print("x")', 'x', '... still output')).toBe('print("x")');
+  expect(await text('>>> x = """a', '... b"""', '... output')).toBe('x = """a\nb"""');
+  expect(await text('>>> total = 1 + \\', '...     2', '...')).toBe('total = 1 + \\\n    2');
+  expect(await text('>>> @cache', '... def f(): ...', '...', '...')).toBe('@cache\ndef f(): ...\n');
+});
+
+test('leaves Python blocks without >>> prompts alone', async () => {
+  const md = block('py', 'print(">>> x")', '... = 1');
+  expect((await render(md)).html).toBe((await render(md, { shellCopy: false })).html);
+});
+
+test('links API names in the commands of a Python session, and not in its output', async () => {
+  const { html } = await render(block('py', '>>> import json', '>>> json.loads("[]")', 'json.loads'));
+  expect(
+    [...html.matchAll(/<a class="scb-api-link"[^>]*>(.*?)<\/a>/g)].map((m) => m[1]?.replace(/<[^>]+>/g, '')),
+  ).toEqual(['json', 'json.loads']);
+});

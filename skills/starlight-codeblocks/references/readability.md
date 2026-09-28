@@ -45,11 +45,13 @@ Use when a full file is the clearest example, but a reader who scans the page do
 |---|---|
 | `expandable` | Fence line: caps the block at the site default, 12 lines |
 | `expandable={N}` | Fence line: caps the block at `N` lines |
+| `expandable=false` | Fence line: turns off the `expandable.auto` option for the block |
 
 - A block collapses only if the collapse hides three lines or more.
 - Find in the page still finds text in the collapsed lines, in browsers that support `hidden="until-found"`.
 - Without JavaScript, and when the page prints, the block shows in full.
 - Option: `expandable.lines` (default `12`) sets the count for the bare `expandable` attribute.
+- Option: `expandable.auto` (default `false`) makes every block with more lines than this number expandable, at `expandable.lines`. It skips the variants of a code switcher, blocks with a **Run** button, blocks with Expressive Code's `collapse` and the blocks in `<CodeSteps>` and `<Scrollycoding>`.
 
 ## Visible whitespace
 
@@ -103,4 +105,5 @@ Install the package with `pnpm add starlight-codeblocks{:sh}`, then restart the 
 - An unknown language shows as normal inline code, with a build warning.
 - Inline code that contains a backtick keeps its suffix as text.
 - Option: `inlineHighlighting: false` leaves the suffix in the prose as text.
+- Option: `inlineHighlighting.defaultLanguage`, such as `'py'`, highlights inline code with no suffix in that language. A suffix wins over it. `{:txt}` keeps one piece of inline code plain.
 - Limits: one line of code only. No attributes or directives. No token form, such as `{:.entity.name.function}`. Needs Starlight, and does not work in Markdoc files.

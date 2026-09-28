@@ -268,6 +268,8 @@ The Griffe dump has, per object, `kind`, `path`, `docstring.value` and `paramete
 
 The fallback applies. The Python adapter takes a `pydocs` option (`{ package, base, dump? }`). It reads the Griffe dump from `dump`, or else finds the newest `starlight-pydocs/<package>-*/dump.json` in the cache folder. It builds an in-memory inventory with href, kind, signature and first docstring sentence, using the pydocs URL scheme above. Content renders after every `config:setup`, so the dump exists when the adapter's `setup()` runs. The gap and the proposed upstream fix (a small Node API in starlight-pydocs that returns its symbols with hrefs) are in `DECISIONS.md`.
 
+Superseded on 2026-09-28: starlight-pydocs now publishes its symbols at `globalThis[Symbol.for('starlight-pydocs')]`, and the adapter reads that with no option. The dump reader and the `pydocs` option are gone. See "API auto-linking: the starlight-pydocs registry replaces the Griffe dump" in `DECISIONS.md`.
+
 ## Other findings for later steps
 
 - **Content cache.** Astro 7 caches rendered Markdown in the content layer data store. After a plugin change, a build can serve stale HTML. Use `astro build --force`, or delete `.astro/` and `node_modules/.astro/`, in tests and in the Playwright set-up.

@@ -17,6 +17,7 @@ import type { AdapterContext, ApiLinkAdapter, Resolution } from '../options.ts';
 import { getRegistry } from '../registry.ts';
 import { type CodeblocksPlugin, isSafeUrl } from './core.ts';
 import { getDirectives } from './notation.ts';
+import { isShellOutput } from './shell-copy.ts';
 import { onCode, PREFIX, solidCodeBackground, solidCodeForeground } from './styles.ts';
 import { withBase } from './token-links.ts';
 
@@ -169,13 +170,15 @@ export function pluginApiLinks({ adapters }: { adapters: ApiLinkAdapter[] }): Co
         const root = getRegistry()?.base;
         const lines = codeBlock.getLines();
         const tokenLinked = new Set(getDirectives(codeBlock, 'link').flatMap((d) => d.lines));
+        // Output lines of a shell or Python session are not code.
+        const texts = lines.map((line) => (isShellOutput(codeBlock, line) ? '' : line.text));
         const starts: number[] = [];
         let offset = 0;
-        for (const line of lines) {
+        for (const text of texts) {
           starts.push(offset);
-          offset += line.text.length + 1;
+          offset += text.length + 1;
         }
-        const code = lines.map((line) => line.text).join('\n');
+        const code = texts.join('\n');
         const taken: [number, number][] = [];
         for (const adapter of active) {
           if (!(await ready(adapter, context))) continue;
@@ -185,7 +188,7 @@ export function pluginApiLinks({ adapters }: { adapters: ApiLinkAdapter[] }): Co
             const index = starts.findLastIndex((s) => s <= start);
             const line = lines[index];
             const lineStart = starts[index] ?? 0;
-            if (!line || tokenLinked.has(line) || end > lineStart + line.text.length) continue;
+            if (!line || tokenLinked.has(line) || end > lineStart + (texts[index]?.length ?? 0)) continue;
             const resolution = adapter.resolve(symbol);
             if (!resolution || !isSafeUrl(resolution.href)) continue;
             const head = cardHead(resolution, symbol.name);

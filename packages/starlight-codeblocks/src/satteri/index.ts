@@ -94,6 +94,7 @@ function codeSwitcher(node: ContainerDirective, file: string): MdastNode {
 
 /** The Sätteri plugins for syntax outside code blocks, one instance for each document. */
 export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPluginEntry[] {
+  const defaultLanguage = options.inlineHighlighting ? options.inlineHighlighting.defaultLanguage : false;
   return [
     ({ fileURL }: PluginFactoryContext): MdastPluginDefinition => ({
       name: 'starlight-codeblocks',
@@ -125,14 +126,15 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
           ctx.replaceNode(link, [...link.children]);
         }
         if (options.permalinks) checkIds(codes, fileName(fileURL), logger);
-        if (options.mentions) checkMentions(events, ctx, fileName(fileURL), logger);
+        // A render with no file, such as a starlight-pydocs docstring, is part of a page: the client pairs its links.
+        if (options.mentions && fileURL) checkMentions(events, ctx, fileName(fileURL), logger);
       },
       containerDirective(node) {
         if (options.codeSwitcher && node.name === 'code-switcher') return codeSwitcher(node, fileName(fileURL));
       },
       ...(options.inlineHighlighting && {
         inlineCode: (node, ctx) =>
-          inlineCode(node, ctx, (message) => logger.warn(`${fileName(fileURL)}: ${message}`)) as never,
+          inlineCode(node, ctx, (message) => logger.warn(`${fileName(fileURL)}: ${message}`), defaultLanguage) as never,
       }),
     }),
   ];
