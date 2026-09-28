@@ -241,11 +241,11 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       del: { description: 'The colour that the tint of removed words comes from.' },
       insBackground: {
         description: 'The tint of added words.',
-        derived: '`ins` at 60% opacity on dark themes, 75% on light themes.',
+        derived: '`ins` at 15% opacity on dark themes, 30% on light themes.',
       },
       delBackground: {
         description: 'The tint of removed words.',
-        derived: '`del` at 70% opacity on dark themes, 75% on light themes.',
+        derived: '`del` at 18% opacity on dark themes, 30% on light themes.',
       },
     },
   },

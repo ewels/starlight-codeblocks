@@ -70,3 +70,9 @@ test('the glyphs sit on the middle of the line, like the text', async ({ page })
   });
   expect(Math.abs(offset)).toBeLessThan(1);
 });
+
+test('whitespace="all" shows trailing whitespace', async ({ page }) => {
+  await page.goto('./features/visible-whitespace/');
+  const code = page.locator('.example').nth(1).locator('.pane.output .ec-line .code').first();
+  await expect(code.locator(':scope > :last-child')).toHaveClass('scb-ws');
+});

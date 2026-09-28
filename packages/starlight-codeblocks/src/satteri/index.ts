@@ -11,6 +11,7 @@ import type {
 } from 'satteri';
 import { bundledLanguagesInfo } from 'shiki/langs';
 import { encodeVariant, SWITCHER_META } from '../expressive-code/code-switcher.ts';
+import { withTrailingWhitespace } from '../expressive-code/whitespace.ts';
 import type { ResolvedOptions } from '../options.ts';
 import { getRegistry } from '../registry.ts';
 import { inlineCode } from './inline-code.ts';
@@ -105,6 +106,8 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
           if (node.type === 'heading') section++;
           if (node.type === 'code') {
             codes.push(node);
+            const meta = withTrailingWhitespace(node.value, node.meta ?? '');
+            if (options.whitespace && meta !== (node.meta ?? '')) ctx.setProperty(node, 'meta', meta);
             events.push({ section, names: new Set([...node.value.matchAll(TAG)].map((m) => m[1] as string)) });
           }
           if (node.type === 'link' && node.url.startsWith(MENTION)) {

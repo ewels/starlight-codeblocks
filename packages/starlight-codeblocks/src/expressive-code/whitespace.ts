@@ -1,4 +1,10 @@
-import { type AnnotationRenderOptions, ExpressiveCodeAnnotation } from '@expressive-code/core';
+import {
+  type AnnotationRenderOptions,
+  ExpressiveCodeAnnotation,
+  type ExpressiveCodeBlock,
+  type ExpressiveCodeLine,
+  MetaOptions,
+} from '@expressive-code/core';
 import { h } from '@expressive-code/core/hast';
 import type { CodeblocksPlugin } from './core.ts';
 import { PREFIX } from './styles.ts';
@@ -18,6 +24,30 @@ class WhitespaceAnnotation extends ExpressiveCodeAnnotation {
   }
 }
 
+export const TRAILING_META = 'scbTrailing';
+
+/**
+ * Expressive Code trims the end of every line before any plugin runs. For a `whitespace="all"` block, returns
+ * the fence meta with the trailing whitespace of each line added in a hidden attribute, so that the plugin can
+ * put it back. Line numbers count from the first line that is not blank, as Expressive Code drops the others.
+ */
+export function withTrailingWhitespace(code: string, meta: string): string {
+  if (new MetaOptions(meta).getString('whitespace') !== 'all') return meta;
+  const lines = code.split(/\r?\n/);
+  const first = lines.findIndex((line) => line.trim());
+  const trailing = Object.fromEntries(
+    lines.flatMap((line, i) => {
+      const ws = line.match(/[ \t]+$/)?.[0];
+      return i >= first && ws ? [[i - first, ws]] : [];
+    }),
+  );
+  if (Object.keys(trailing).length === 0) return meta;
+  return `${meta} ${TRAILING_META}="${encodeURIComponent(JSON.stringify(trailing))}"`;
+}
+
+/** The lines of each block before comment notation removes any, since line numbers in the meta count those. */
+const linesAsWritten = new WeakMap<ExpressiveCodeBlock, readonly ExpressiveCodeLine[]>();
+
 /** Shows leading whitespace, or every space and tab with `whitespace="all"`, as faint glyphs. */
 export function pluginWhitespace(): CodeblocksPlugin {
   return {
@@ -33,6 +63,19 @@ export function pluginWhitespace(): CodeblocksPlugin {
 .${PREFIX}-ws > [aria-hidden]::before { content: '\\00b7'; }
 .${PREFIX}-ws-tab > [aria-hidden]::before { content: '\\2192'; text-align: start; }`,
     hooks: {
+      preprocessMetadata({ codeBlock }) {
+        linesAsWritten.set(codeBlock, codeBlock.getLines());
+      },
+      preprocessCode({ codeBlock }) {
+        const raw = codeBlock.metaOptions.getString(TRAILING_META);
+        const lines = linesAsWritten.get(codeBlock);
+        if (!raw || !lines) return;
+        const current = new Set(codeBlock.getLines());
+        for (const [index, ws] of Object.entries(JSON.parse(decodeURIComponent(raw)) as Record<string, string>)) {
+          const line = lines[Number(index)];
+          if (line && current.has(line)) line.editText(line.text.length, line.text.length, ws);
+        }
+      },
       annotateCode({ codeBlock }) {
         const all = codeBlock.metaOptions.getString('whitespace') === 'all';
         const on = all || codeBlock.metaOptions.getBoolean('whitespace') === true;

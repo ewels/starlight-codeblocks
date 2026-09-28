@@ -29,9 +29,9 @@ const styleSettings = new PluginStyleSettings({
       ins: ['#5fcd78', '#1f7a3d'],
       del: ['#ff6464', '#c62828'],
       insBackground: ({ resolveSetting, theme }) =>
-        setAlpha(resolveSetting('codeblocksWordDiff.ins'), theme.type === 'dark' ? 0.36 : 0.3),
+        setAlpha(resolveSetting('codeblocksWordDiff.ins'), theme.type === 'dark' ? 0.15 : 0.3),
       delBackground: ({ resolveSetting, theme }) =>
-        setAlpha(resolveSetting('codeblocksWordDiff.del'), theme.type === 'dark' ? 0.4 : 0.3),
+        setAlpha(resolveSetting('codeblocksWordDiff.del'), theme.type === 'dark' ? 0.18 : 0.3),
     },
   },
 });

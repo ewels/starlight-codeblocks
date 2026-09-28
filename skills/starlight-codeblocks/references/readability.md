@@ -59,8 +59,9 @@ Use when the exact whitespace character changes the meaning: a Makefile recipe n
 | Syntax | Where |
 |---|---|
 | `whitespace` | Fence line: shows the leading whitespace of each line |
-| `whitespace="all"` | Fence line: shows every space and tab, also between words |
+| `whitespace="all"` | Fence line: shows every space and tab, also between words and at the end of a line |
 
+- Trailing whitespace shows only in fenced code blocks in Markdown and MDX. Expressive Code removes it from a block that the `<Code>` component renders.
 - The glyphs are CSS. The copied text has the real spaces and tabs. Screen readers do not hear the glyphs.
 - The plugin sets the Expressive Code `tabWidth` to `0` unless the site sets its own value, so tabs reach the block unchanged.
 - Option: `whitespace: false` turns the feature off.
