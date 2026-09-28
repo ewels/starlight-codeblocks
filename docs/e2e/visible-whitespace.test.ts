@@ -77,6 +77,16 @@ test('whitespace="all" shows trailing whitespace', async ({ page }) => {
   await expect(code.locator(':scope > :last-child')).toHaveClass('scb-ws');
 });
 
+test('the source of the trailing whitespace example keeps its trailing space, on screen and in the copy', async ({
+  page,
+}) => {
+  await page.goto('./features/visible-whitespace/');
+  const source = page.locator('.example').nth(1).locator('.pane.source');
+  expect(await source.locator('.ec-line').nth(1).textContent()).toBe('-  const width = 10; ');
+  const copied = await source.locator('.copy button').getAttribute('data-code');
+  expect(copied).toContain('-  const width = 10; \x7F');
+});
+
 test('the glyphs are faint: about a third of the way from the code background to the code text', async ({ page }) => {
   await page.goto('./features/visible-whitespace/');
   const glyph = page.locator('.example .pane .scb-ws > [aria-hidden]').first();

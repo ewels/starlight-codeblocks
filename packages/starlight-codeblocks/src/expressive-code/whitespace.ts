@@ -53,7 +53,11 @@ export const TRAILING_META = 'scbTrailing';
  * put it back. Line numbers count from the first line that is not blank, as Expressive Code drops the others.
  */
 export function withTrailingWhitespace(code: string, meta: string): string {
-  if (new MetaOptions(meta).getString('whitespace') !== 'all') return meta;
+  return new MetaOptions(meta).getString('whitespace') === 'all' ? keepTrailingWhitespace(code, meta) : meta;
+}
+
+/** `withTrailingWhitespace()` for any block, such as one that shows Markdown source with a trailing space. */
+export function keepTrailingWhitespace(code: string, meta: string): string {
   const lines = code.split(/\r?\n/);
   const first = lines.findIndex((line) => line.trim());
   const trailing = Object.fromEntries(
