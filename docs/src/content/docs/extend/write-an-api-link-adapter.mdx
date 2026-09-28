@@ -5,6 +5,7 @@ description: Add API auto-linking for another language or library, with an adapt
 
 import { Code } from '@astrojs/starlight/components';
 import adapterSource from '../../../adapters/codeblocks-api.mjs?raw';
+import Example from '../../../components/Example.astro';
 
 [API auto-linking](/starlight-codeblocks/features/api-auto-linking/) links names in code blocks through adapters. The plugin has adapters for Python and Nextflow. A site can add its own adapter for another language, or for its own library, in the `apiLinks.adapters` option.
 
@@ -114,3 +115,30 @@ The code block above shows the result: `codeblocks`, `nextflow` and `python` are
 - Use `http` or `https` URLs, or URLs inside the site. The plugin drops a link with any other scheme, such as `javascript:`.
 
 If two adapters return the same name, or names that overlap, the first adapter in the list wins.
+
+## Cards on links outside code blocks
+
+Another plugin can give its own links the same card, for example the type names in the signatures of starlight-pydocs. The plugin writes the text of the card on the link. starlight-codeblocks owns the script and the styles.
+
+export const outside = `
+<p data-scb-api-links="">A mapping is a <a href="https://docs.python.org/3/library/stdtypes.html#dict" target="_blank" rel="noopener" data-scb-api-head="class dict" data-scb-api-summary="Create a new dictionary." data-scb-api-source="Python 3 documentation" data-scb-api-action="Opens docs.python.org in a new tab.">dict</a> of names to values.</p>
+`;
+
+<Example code={outside}>
+
+<p data-scb-api-links="">A mapping is a <a href="https://docs.python.org/3/library/stdtypes.html#dict" target="_blank" rel="noopener" data-scb-api-head="class dict" data-scb-api-summary="Create a new dictionary." data-scb-api-source="Python 3 documentation" data-scb-api-action="Opens docs.python.org in a new tab.">dict</a> of names to values.</p>
+
+</Example>
+
+| Attribute | Where | Description |
+|---|---|---|
+| `data-scb-api-links` | An element that holds the links | Loads the card script on the page. |
+| `data-scb-api-head` | Each `a` element | The first line of the card, such as a signature. The attribute marks the link for the card. |
+| `data-scb-api-summary` | Each `a` element, optional | One sentence under the first line. |
+| `data-scb-api-source` | Each `a` element, optional | Where the link comes from. |
+| `data-scb-api-action` | Each `a` element, optional | What the link does when a reader selects it, such as "Opens docs.python.org in a new tab." |
+
+- The card works on every page, also on a page with no code blocks. It gets the colours of the code block themes.
+- The card is only for sighted readers. Give each link an `aria-description` with the same text for screen readers.
+- The attributes are a public interface. A change to them is a breaking change.
+- The card needs `codeblocks()` in the Starlight plugins. It does not work with the Expressive Code preset alone.

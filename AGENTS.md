@@ -62,7 +62,7 @@ pnpm readme:media [slug...]   docs:build, then regenerate the README images in .
 
 ### Client code
 
-- Each interactive feature has a module in `src/client/<name>.ts`, built to `dist/client/scb-<name>.<hash>.js`. One loader, in every plugin's `jsModules`, imports `scb-<name>` only on pages where an element has `data-scb-<name>`. The integration emits the modules next to `ec.<hash>.js`. On sites that use the preset without `codeblocks()`, the loader carries the sources and imports them from `blob:` URLs.
+- Each interactive feature has a module in `src/client/<name>.ts`, built to `dist/client/scb-<name>.<hash>.js`. One loader, in every plugin's `jsModules`, imports `scb-<name>` only on pages where an element has `data-scb-<name>`. The API card is the exception: other plugins put `data-scb-api-*` links outside code blocks, on pages with no `ec.<hash>.js`, so the integration also injects a page script for it, and serves its styles as page CSS (`src/api-card-page.ts`). The integration emits the modules next to `ec.<hash>.js`. On sites that use the preset without `codeblocks()`, the loader carries the sources and imports them from `blob:` URLs.
 - `test/client-modules.test.ts` fails if a module is over 3 kB gzipped.
 - Modules must work in `cloneNode(true)` copies of a block (full screen plugins): listen on the document and find targets with `closest()`, not by id.
 

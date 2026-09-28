@@ -7,6 +7,7 @@ import {
   type ExpressiveCodeHookContextBase,
   mix,
   PluginStyleSettings,
+  type ResolverContext,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
@@ -134,6 +135,25 @@ function ready(adapter: ApiLinkAdapter, { config }: Pick<ExpressiveCodeHookConte
 /** The line at the top of the card: the signature, or the kind and qualified name. */
 const cardHead = ({ signature, kind, name }: SymbolRef) => signature ?? [kind, name].filter(Boolean).join(' ');
 
+/** The card's own layout, shared with the card outside code blocks (`src/api-card-page.ts`). */
+export const apiCardStyles = (cssVar: ResolverContext['cssVar']) => `.${PREFIX}-api-card {
+  --scb-float-width: calc(${cssVar('codeblocks.popoverMaxWidth')} + 20px);
+}
+.${PREFIX}-api-card > span { display: block; }
+.${PREFIX}-api-card-head {
+  margin-bottom: 0.35rem;
+  font-family: ${cssVar('codeFontFamily')};
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.${PREFIX}-api-card-summary { margin-bottom: 0.25rem; }
+.${PREFIX}-api-card-source {
+  color: ${cssVar('codeblocks.mutedForeground')};
+  font-style: italic;
+}
+.${PREFIX}-api-card-action { color: ${cssVar('codeblocks.mutedForeground')}; }`;
+
 const sentences = (...parts: (string | undefined)[]) =>
   parts
     .filter(Boolean)
@@ -158,22 +178,7 @@ export function pluginApiLinks({ adapters, base }: { adapters: ApiLinkAdapter[];
   text-decoration-color: ${cssVar('codeblocksApiLinks.hoverUnderline')};
   background: ${cssVar('codeblocksApiLinks.hoverBackground')};
 }
-.${PREFIX}-api-card {
-  --scb-float-width: calc(${cssVar('codeblocks.popoverMaxWidth')} + 20px);
-}
-.${PREFIX}-api-card > span { display: block; }
-.${PREFIX}-api-card-head {
-  margin-bottom: 0.35rem;
-  font-family: ${cssVar('codeFontFamily')};
-  font-size: 0.78rem;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-.${PREFIX}-api-card-summary { margin-bottom: 0.25rem; }
-.${PREFIX}-api-card-source {
-  color: ${cssVar('codeblocks.mutedForeground')};
-  font-style: italic;
-}`,
+${apiCardStyles(cssVar)}`,
     hooks: {
       async annotateCode(context) {
         const { codeBlock } = context;

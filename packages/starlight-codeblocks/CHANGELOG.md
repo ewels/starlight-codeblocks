@@ -17,7 +17,7 @@ The first version of the plugin. It adds these features to the code blocks of St
 - Visible whitespace: glyphs for spaces and tabs.
 - Colourised brackets: bracket colours by nesting depth.
 - Token links: links on words in the code.
-- API auto-linking: links and hover cards for API names, with adapters for Python and Nextflow. The Python adapter links the packages of starlight-pydocs with no configuration, and `pydocsBase` links a block to one version of a package.
+- API auto-linking: links and hover cards for API names, with adapters for Python and Nextflow. The Python adapter links the packages of starlight-pydocs with no configuration, and `pydocsBase` links a block to one version of a package. Other plugins can give their own links outside code blocks the same card, with `data-scb-api-*` attributes.
 - Expandable blocks: long blocks that show the first lines until the reader expands them, for one block or for every block over a line count.
 - Open in playground: a button that opens the code in the TypeScript Playground, the Rust Playground or a custom playground.
 - Code mentions: links in the prose that highlight lines of a block.

@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import type { StarlightPlugin } from '@astrojs/starlight/types';
 import type { ExpressiveCodePlugin } from '@expressive-code/core';
 import { AstroError } from 'astro/errors';
+import { CARD_CSS_ID } from './api-card-page.ts';
 import { createPlugins, PLUGIN_PREFIX } from './expressive-code/index.ts';
 import { codeblocksIntegration } from './integration.ts';
 import { type CodeblocksOptions, resolveOptions } from './options.ts';
@@ -38,7 +39,11 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
           expressiveCode: mergeEcOptions(ec, ecConfig, astroConfig.markdown?.shikiConfig),
           blockIds: new Set(),
         });
-        const css = options.inlineHighlighting ? { customCss: [...(config.customCss ?? []), INLINE_CSS_ID] } : {};
+        const pageCss = [
+          ...(options.inlineHighlighting ? [INLINE_CSS_ID] : []),
+          ...(options.apiLinks ? [CARD_CSS_ID] : []),
+        ];
+        const css = pageCss.length > 0 ? { customCss: [...(config.customCss ?? []), ...pageCss] } : {};
         // astro-expressive-code expands tabs to two spaces before any plugin hook runs, which breaks
         // tab-sensitive code such as Makefiles, so keep tabs unless the site chose a `tabWidth`.
         const keepTabs = ec.tabWidth === undefined && ecConfig?.tabWidth === undefined;

@@ -30,23 +30,30 @@ function show(link: HTMLElement) {
   clearTimeout(hideTimer);
   if (link === current) return;
   hide();
-  const { scbApiHead = '', scbApiSummary, scbApiSource = '' } = link.dataset;
+  const { scbApiHead = '', scbApiSummary, scbApiSource, scbApiAction } = link.dataset;
   card.replaceChildren(
     part('head', scbApiHead),
     ...(scbApiSummary ? [part('summary', scbApiSummary)] : []),
-    part('source', scbApiSource),
+    ...(scbApiSource ? [part('source', scbApiSource)] : []),
+    ...(scbApiAction ? [part('action', scbApiAction)] : []),
   );
-  // Inside the link's own block, which can be a copy of a block in a full screen overlay.
-  link.closest('[data-scb-api-links]')?.append(card);
+  // Inside the link's own block, which holds the theme colours and can be a copy of a block in a full
+  // screen overlay. A link outside code blocks gets the page styles' colours instead.
+  const inBlock = link.closest('.expressive-code') !== null;
+  card.classList.toggle('scb-page', !inBlock);
+  (inBlock ? link.closest('[data-scb-api-links]') : document.body)?.append(card);
   current = link;
   card.showPopover();
   stop = place(card, link);
 }
 
 const linkOf = (target: EventTarget | null) =>
-  (target as Element | null)?.closest?.<HTMLElement>('[data-scb-api-links] .scb-api-link') ?? undefined;
+  (target as Element | null)?.closest?.<HTMLElement>('[data-scb-api-links] a[data-scb-api-head]') ?? undefined;
 
-/** Shows a card with the signature, summary and source of an API link on hover and focus. */
+/**
+ * Shows a card with the signature, summary and source of an API link on hover and focus: the links that
+ * code blocks render, and any other `a[data-scb-api-head]` inside a `[data-scb-api-links]` element.
+ */
 export default function initApiLinks() {
   if (card) return;
   // Screen readers get the same text from each link's `aria-description`.

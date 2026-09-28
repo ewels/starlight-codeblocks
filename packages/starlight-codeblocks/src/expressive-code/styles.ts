@@ -135,10 +135,8 @@ export const floatStyles = `.${PREFIX}-float {
 /** Two columns per tab, as astro-expressive-code gives when it expands tabs to spaces, which `codeblocks()` turns off. */
 export const TAB_SIZE = 2;
 
-export function baseStyles({ cssVar }: ResolverContext) {
-  return `${floatStyles}
-pre { tab-size: ${TAB_SIZE}; }
-.${PREFIX}-float {
+/** The look of popovers and hover cards, shared with the API card outside code blocks (`src/api-card-page.ts`). */
+export const floatLook = (cssVar: ResolverContext['cssVar']) => `.${PREFIX}-float {
   box-sizing: border-box;
   width: min(var(--scb-float-width, ${cssVar('codeblocks.popoverMaxWidth')}), calc(100vw - 24px));
   padding: 0.5rem 0.75rem;
@@ -151,7 +149,12 @@ pre { tab-size: ${TAB_SIZE}; }
   font-size: ${cssVar('codeblocks.popoverFontSize')};
   line-height: 1.5;
   white-space: normal;
-}
+}`;
+
+export function baseStyles({ cssVar }: ResolverContext) {
+  return `${floatStyles}
+pre { tab-size: ${TAB_SIZE}; }
+${floatLook(cssVar)}
 /* Callouts and hidden-line markers sit outside the lines, so they read the width of the line numbers plugin's gutter from here. */
 figure:has(.ec-line > .gutter > .ln) { --scb-gutter: calc(var(--lnWidth, 2ch) + 4ch); }
 /* .frame outweighs Expressive Code's square top corners for code in titled blocks. */

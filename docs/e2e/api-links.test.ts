@@ -163,3 +163,54 @@ test.describe('without JavaScript', () => {
     await expect(page.locator('.scb-api-card')).toHaveCount(0);
   });
 });
+
+test.describe('links outside code blocks', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('./extend/write-an-api-link-adapter/');
+  });
+
+  const outside = (page: Page) => page.locator('p[data-scb-api-links] a[data-scb-api-head]');
+
+  test('get the card, with its text and the colours of the code block theme', async ({ page }) => {
+    const link = outside(page);
+    await link.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await link.hover();
+    const card = page.locator('body > .scb-api-card.scb-page');
+    await expect(card).toBeVisible();
+    await expect(card.locator('span')).toHaveText([
+      'class dict',
+      'Create a new dictionary.',
+      'Python 3 documentation',
+      'Opens docs.python.org in a new tab.',
+    ]);
+    const outsideColours = await card.evaluate((el) => [
+      getComputedStyle(el).backgroundColor,
+      getComputedStyle(el).color,
+    ]);
+    expect(outsideColours[0]).not.toBe('rgba(0, 0, 0, 0)');
+    // The same card inside a code block gets its colours from the block's theme variables.
+    await page.locator('.expressive-code a.scb-api-link').first().focus();
+    const inside = page.locator('.expressive-code .scb-api-card');
+    await expect(inside).toBeVisible();
+    expect(await inside.evaluate((el) => [getComputedStyle(el).backgroundColor, getComputedStyle(el).color])).toEqual(
+      outsideColours,
+    );
+  });
+
+  test('open on keyboard focus and close with Escape', async ({ page }) => {
+    await outside(page).focus();
+    const card = page.locator('.scb-api-card');
+    await expect(card).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(card).toBeHidden();
+  });
+
+  test('share one card with the links in code blocks', async ({ page }) => {
+    await outside(page).focus();
+    await expect(page.locator('.scb-api-card.scb-page')).toBeVisible();
+    const inBlock = page.locator('.expressive-code a.scb-api-link').first();
+    await inBlock.focus();
+    await expect(page.locator('.expressive-code .scb-api-card:not(.scb-page)')).toBeVisible();
+    expect(await page.locator('.scb-api-card').count()).toBe(1);
+  });
+});

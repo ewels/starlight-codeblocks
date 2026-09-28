@@ -75,8 +75,9 @@ test('registers the remark plugin only for the unified() processor', () => {
       p: unknown,
     ) => void;
     hook({
-      config: { markdown: { processor }, build: { assets: '_astro' } },
+      config: { markdown: { processor }, base: '/', build: { assets: '_astro' } },
       updateConfig() {},
+      injectScript() {},
       logger: { warn() {} },
     });
     return processor;

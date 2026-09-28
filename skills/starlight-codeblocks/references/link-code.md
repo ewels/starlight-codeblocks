@@ -62,6 +62,7 @@ API auto-linking finds library names in a block and links each one to its refere
 - `pydocsBase="<base>"` on a Python block links its names to the starlight-pydocs package at that base first, for example an older version at `1x/api/myproject`. Names that the package does not have link as usual. starlight-pydocs sets it on its docstring examples.
 - Nextflow adapter option: `modules`, a function of `{ name, path }` that returns a URL, an object with `href`, or `undefined`.
 - Another language needs an adapter of your own: https://ewels.github.io/starlight-codeblocks/extend/write-an-api-link-adapter/
+- Another plugin can give its own links the card. Put `data-scb-api-links` on an element that holds the links. Put `data-scb-api-head` on each `a`, with optional `data-scb-api-summary`, `data-scb-api-source` and `data-scb-api-action`. This works on pages with no code blocks, and needs `codeblocks()`. starlight-pydocs does this for the types in its signatures.
 - Limits: the Python adapter does not follow assignments and does not link built-ins such as `print`. A name that the block binds again does not link.
 
 ## Line permalinks

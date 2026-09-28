@@ -58,12 +58,15 @@ test('keeps a tabWidth the site already chose', async () => {
   expect((updates[0] as { expressiveCode: { tabWidth: number } }).expressiveCode.tabWidth).toBe(4);
 });
 
-test('adds only the inline code stylesheet when ec.config.mjs has the preset', async () => {
+test('adds only the page stylesheets when ec.config.mjs has the preset', async () => {
   const { updates, integrations } = await setup(
     "export default { plugins: [[{ name: 'starlight-codeblocks:core' }]] };",
   );
   expect(updates).toEqual([
-    { customCss: ['virtual:starlight-codeblocks/inline-code.css'], expressiveCode: { tabWidth: 0 } },
+    {
+      customCss: ['virtual:starlight-codeblocks/inline-code.css', 'virtual:starlight-codeblocks/api-card.css'],
+      expressiveCode: { tabWidth: 0 },
+    },
   ]);
   expect(integrations).toHaveLength(1);
 });
@@ -75,8 +78,8 @@ test('keeps a tabWidth from ec.config.mjs', async () => {
   expect(updates[0]).not.toHaveProperty('expressiveCode');
 });
 
-test('adds no stylesheet with inline highlighting off', async () => {
-  const { updates } = await setup(undefined, {}, { inlineHighlighting: false });
+test('adds no stylesheet with inline highlighting and API links off', async () => {
+  const { updates } = await setup(undefined, {}, { inlineHighlighting: false, apiLinks: false });
   expect(updates[0]).not.toHaveProperty('customCss');
 });
 

@@ -26,7 +26,7 @@ const siteOptions = () => (getRegistry()?.expressiveCode ?? {}) as EcOptions;
 
 let fallback: ExpressiveCode | undefined;
 /** The site engine's style variants, or Expressive Code's default themes outside a site. */
-function styleVariants() {
+export function styleVariants() {
   const variants = getRegistry()?.styleVariants;
   if (variants) return variants;
   fallback ??= new ExpressiveCode();
@@ -45,10 +45,31 @@ function themeSelector({ themeCssSelector, useStarlightDarkModeSwitch }: EcOptio
   };
 }
 
-/** The same theme switch as Expressive Code's own theme styles, for inline code outside any block. */
-export function inlineStyles(variants = styleVariants(), ec = siteOptions()) {
+/**
+ * The same theme switch as Expressive Code's own theme styles, for elements outside any block.
+ * `rules(index)` gives the rules for one style variant; each line that starts a rule gets the theme's selector.
+ */
+export function themedCss(rules: (index: number) => string, variants = styleVariants(), ec = siteOptions()) {
   const root = ec.themeCssRoot ?? ':root';
   const selector = themeSelector(ec, variants);
+  const scoped = (prefix: string, css: string) => css.replace(/^(?![\s}@])/gm, `${prefix} `);
+  const base = variants[0]?.theme;
+  const baseSelector = base && selector(base);
+  const notBase = baseSelector ? `:not(${baseSelector})` : '';
+  let css = rules(0);
+  const altIndex = variants.findIndex((v) => v.theme.type !== base?.type);
+  if ((ec.useDarkModeMediaQuery ?? (variants.length === 2 && altIndex === 1)) && altIndex > 0) {
+    css += `\n@media (prefers-color-scheme: ${variants[altIndex]?.theme.type}) {\n${scoped(`${root}${notBase}`, rules(altIndex))}\n}`;
+  }
+  variants.forEach((variant, index) => {
+    const own = index > 0 && selector(variant.theme);
+    if (own) css += `\n${scoped(`${root}${own}`, rules(index))}`;
+  });
+  return css;
+}
+
+/** Theme styles for inline code outside any block. */
+export function inlineStyles(variants = styleVariants(), ec = siteOptions()) {
   const rules = (index: number) => {
     const settings = variants[index]?.resolvedStyleSettings;
     return `code.${CLASS} { background: ${settings?.get('codeBackground')}; color: ${settings?.get('codeForeground')}; }
@@ -60,21 +81,8 @@ code.${CLASS} span[style^='--'] {
   text-decoration: var(--${index}td, inherit);
 }`;
   };
-  const scoped = (prefix: string, css: string) => css.replace(/^code\./gm, `${prefix} code.`);
-  const base = variants[0]?.theme;
-  const baseSelector = base && selector(base);
-  const notBase = baseSelector ? `:not(${baseSelector})` : '';
   // A chip that wraps keeps its padding and corners on each line.
-  let css = `code.${CLASS} { border-radius: 4px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }\n${rules(0)}`;
-  const altIndex = variants.findIndex((v) => v.theme.type !== base?.type);
-  if ((ec.useDarkModeMediaQuery ?? (variants.length === 2 && altIndex === 1)) && altIndex > 0) {
-    css += `\n@media (prefers-color-scheme: ${variants[altIndex]?.theme.type}) {\n${scoped(`${root}${notBase}`, rules(altIndex))}\n}`;
-  }
-  variants.forEach((variant, index) => {
-    const own = index > 0 && selector(variant.theme);
-    if (own) css += `\n${scoped(`${root}${own}`, rules(index))}`;
-  });
-  return css;
+  return `code.${CLASS} { border-radius: 4px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }\n${themedCss(rules, variants, ec)}`;
 }
 
 let engine: { variants: StyleVariant[]; ec: ExpressiveCode } | undefined;
