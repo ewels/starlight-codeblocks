@@ -34,7 +34,7 @@ createServer(handler).listen(port);
 - Hidden lines that show are dimmed to 75% opacity, which puts some syntax colours under 4.5:1 contrast. Set the `codeblocksHiddenLines.openOpacity` style setting to `1` if the site needs full contrast.
 - Without JavaScript, hidden lines stay hidden.
 - Option: `hiddenLines: false` ignores `hidden` and leaves `[!code hide]` in the code.
-- Limits: hidden lines take no space until opened. Expressive Code's `collapse` differs: it keeps a line for its label.
+- Expressive Code's `collapse={range}` comes from `@expressive-code/plugin-collapsible-sections`. It keeps a summary line for each section and works without JavaScript. Hidden lines take only a thin marker, have a directive and a show-all button, and need JavaScript to open. The docs compare them: https://ewels.github.io/starlight-codeblocks/features/hidden-lines/#hidden-lines-or-collapsible-sections
 
 ## Expandable blocks
 

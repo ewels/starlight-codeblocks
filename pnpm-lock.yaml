@@ -23,6 +23,9 @@ importers:
       '@astrojs/starlight':
         specifier: 0.42.4
         version: 0.42.4(@astrojs/markdown-remark@7.3.1(supports-color@10.2.2))(astro@7.3.5(@astrojs/markdown-remark@7.3.1(supports-color@10.2.2))(@types/node@24.13.6)(yaml@2.9.1))(supports-color@10.2.2)(typescript@6.0.3)
+      '@expressive-code/plugin-collapsible-sections':
+        specifier: 0.44.2
+        version: 0.44.2
       astro:
         specifier: 7.3.5
         version: 7.3.5(@astrojs/markdown-remark@7.3.1(supports-color@10.2.2))(@types/node@24.13.6)(yaml@2.9.1)

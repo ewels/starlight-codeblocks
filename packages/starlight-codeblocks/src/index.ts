@@ -40,6 +40,11 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
           blockIds: new Set(),
         });
         const css = options.inlineHighlighting ? { customCss: [...(config.customCss ?? []), INLINE_CSS_ID] } : {};
+        // astro-expressive-code expands every tab to two spaces before any plugin hook runs, in
+        // fenced code and in <Code>, which corrupts tab-sensitive examples such as Makefiles and
+        // defeats visible whitespace's tab glyph. Leave tabs as written unless the site already
+        // chose its own tabWidth. A `tabWidth` in `ec.config.mjs` still wins over this one.
+        const tabWidthDefault = ec.tabWidth === undefined && ecConfig?.tabWidth === undefined ? { tabWidth: 0 } : {};
         if (Array.isArray(ecConfig?.plugins)) {
           if (!ecConfig.plugins.flat(Infinity).some(isOurs)) {
             throw new AstroError(
@@ -47,16 +52,14 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
               "Add `pluginCodeblocks()` to `plugins` in `ec.config.mjs`. Import it from 'starlight-codeblocks/expressive-code'.",
             );
           }
-          updateConfig(css);
+          updateConfig({
+            ...css,
+            ...(tabWidthDefault.tabWidth === 0 ? { expressiveCode: { ...ec, ...tabWidthDefault } } : {}),
+          });
           addIntegration(codeblocksIntegration({ options }));
           return;
         }
 
-        // astro-expressive-code expands every tab to two spaces before any plugin hook runs, in
-        // fenced code and in <Code>, which corrupts tab-sensitive examples such as Makefiles and
-        // defeats visible whitespace's tab glyph. Leave tabs as written unless the site already
-        // chose its own tabWidth. A site with `ec.config.mjs` plugins manages this file itself.
-        const tabWidthDefault = ec.tabWidth === undefined ? { tabWidth: 0 } : {};
         updateConfig({
           ...css,
           expressiveCode: {

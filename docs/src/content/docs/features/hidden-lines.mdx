@@ -87,13 +87,77 @@ console.log(notes.length);
 
 <Example code={noTitle} />
 
+## Hidden lines or collapsible sections
+
+Expressive Code has its own plugin for a similar job, [`@expressive-code/plugin-collapsible-sections`](https://expressive-code.com/plugins/collapsible-sections/). Its `collapse={range}` attribute folds lines into a section with a summary line, such as "3 collapsed lines". The plugin is not part of Starlight, so a site must install it and add it to the `plugins` list of its `ec.config.mjs` file. That list replaces the plugins of Starlight, so add `pluginCodeblocks()` to it too, as in [Sites with an ec.config.mjs file](/starlight-codeblocks/getting-started/#sites-with-an-ecconfigmjs-file):
+
+```js title="ec.config.mjs"
+import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
+import { pluginCodeblocks } from 'starlight-codeblocks/expressive-code';
+
+export default {
+  plugins: [pluginCollapsibleSections(), pluginCodeblocks()],
+};
+```
+
+This site uses the plugin, so the examples below are live. Here is the first example of this page again, with `collapse` in place of `hidden`:
+
+export const collapsed = `
+\`\`\`py title="summary.py" collapse={1-3,6-7}
+import json
+from pathlib import Path
+
+config = json.loads(Path("config.json").read_text())
+for key, value in config.items():
+    if key.startswith("_"):
+        continue
+    print(f"{key} = {value}")
+\`\`\`
+`;
+
+<Example code={collapsed} hiddenAttributes="apiLinks=false" />
+
+Each section keeps a summary line in the block, where hidden lines leave only a thin marker. Select a summary line to open its section.
+
+With `collapseStyle`, an open section keeps a line to close it again. `collapsible-auto` puts that line at the start of the section, or at the end if the section ends the block:
+
+export const collapseStyle = `
+\`\`\`py title="summary.py" collapse={6-7} collapseStyle="collapsible-auto"
+import json
+from pathlib import Path
+
+config = json.loads(Path("config.json").read_text())
+for key, value in config.items():
+    if key.startswith("_"):
+        continue
+    print(f"{key} = {value}")
+\`\`\`
+`;
+
+<Example code={collapseStyle} hiddenAttributes="apiLinks=false" />
+
+The two features compare as follows:
+
+| | Hidden lines | Collapsible sections |
+|---|---|---|
+| Space before a reader opens it | A thin dashed marker | A full summary line for each section |
+| Syntax | `hidden={range}`, `[!code hide]` and `[!code hide:N]` | `collapse={range}` |
+| Show every section at once | A title bar button | No |
+| Open lines look different | Yes: a faint background, and code at 75% opacity | Only with a `collapsible-*` style |
+| Close a section again | The marker, or the title bar button | The summary line, with a `collapsible-*` style |
+| Copy button | Copies every line | Copies every line |
+| Without JavaScript | The lines stay hidden | Works: the sections are HTML `<details>` elements |
+| Needs | This plugin | A separate Expressive Code plugin |
+
+Use hidden lines for lines that most readers never need, such as imports, and when the block must stay compact. The directive keeps the hidden state next to its line, so it moves when you edit the block. Use collapsible sections when readers often open the lines, or when the page must work without JavaScript. Both plugins work on one site, and each block can use either one.
+
 ## Limitations
 
-- Hidden lines take up no space until the reader asks for them. Expressive Code's own `collapse` differs: it reserves a line for "N collapsed lines" even before it opens.
 - A hidden line still runs in the copied code. If a line depends on something the reader must change, such as an API key, keep it visible or use a [fill-in placeholder](/starlight-codeblocks/features/fill-in-placeholders/) instead.
 
 ## Related
 
 - [Focus](/starlight-codeblocks/features/focus/): blur the lines around the ones you explain, and keep them in view.
 - [Expandable blocks](/starlight-codeblocks/features/expandable-blocks/): cap a long block at a line count, instead of a list of lines to hide.
+- [Collapsible sections](https://expressive-code.com/plugins/collapsible-sections/): the Expressive Code plugin that folds lines behind a summary line.
 - [Comment notation](/starlight-codeblocks/features/comment-notation/): the directive syntax that `[!code hide]` uses.

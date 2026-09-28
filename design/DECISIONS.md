@@ -1404,3 +1404,19 @@ Use this format:
 - Decision: The note fades its opacity in and out over 160 ms (`@starting-style`, with `display` and `overlay` as discrete transitions), in place of the clip that grew it out of the marker. The script's wait class keeps it at 0 until it is placed, so the fade starts where the note stays. The note's badge and a hover note have `cursor: pointer`. A note that a click closed does not open again on hover until the pointer leaves its marker and the note.
 - Reason: The user saw the note flicker in, and the cursor change from a hand to an arrow when the hover note's badge covered the marker. With the badge on top, a click that closed the note left the pointer on the marker, and hover opened the note again.
 - Alternatives: Keeping the grow and delaying it until the note is placed (still a clip over a moving box). `pointer-events: none` on the badge (the click would reach the marker, but the badge would no longer close a note placed beside it the same way in a copy of the block).
+
+## Docs: collapsible sections beside hidden lines
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: The docs site loads `@expressive-code/plugin-collapsible-sections` (a docs dependency, not a package one) through a new `docs/ec.config.mjs` with `plugins: [pluginCollapsibleSections(), pluginCodeblocks()]`. The hidden lines page has a section that compares the two, with live `collapse` examples and a table.
+- Reason: The user asked for a comparison with live examples. Plugins in Starlight's `expressiveCode` option in `astro.config.mjs` break `<Code>`, because Expressive Code cannot serialise them, so the plugin must be in `ec.config.mjs`, which the getting-started page already documents.
+- Alternatives: Screenshots of the other plugin (not live, and they go stale).
+
+## tabWidth 0 also on sites whose ec.config.mjs has plugins
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: `codeblocks()` now also sets Starlight's `expressiveCode.tabWidth: 0` when `ec.config.mjs` has a `plugins` list, unless the Starlight config or `ec.config.mjs` sets `tabWidth`. A value in `ec.config.mjs` still wins, through `mergeEcConfigOptions`. This replaces "Sites where `ec.config.mjs` owns the `plugins` list are left alone" in "codeblocks() defaults tabWidth to 0".
+- Reason: The docs site moved to an `ec.config.mjs` with plugins for the collapsible sections comparison, and every tab became two spaces, which broke visible whitespace. Other sites with that file would hit the same problem with no warning. Only `tabWidth`, a plain number, goes into the Starlight options, so `<Code>` can still serialise them.
+- Alternatives: `tabWidth: 0` in the docs site's `ec.config.mjs` only, with a note in the docs (every other site would still need to find the note).

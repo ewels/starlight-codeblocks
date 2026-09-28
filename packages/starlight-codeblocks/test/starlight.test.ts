@@ -59,8 +59,17 @@ test('adds only the inline code stylesheet when ec.config.mjs has the preset', a
   const { updates, integrations } = await setup(
     "export default { plugins: [[{ name: 'starlight-codeblocks:core' }]] };",
   );
-  expect(updates).toEqual([{ customCss: ['virtual:starlight-codeblocks/inline-code.css'] }]);
+  expect(updates).toEqual([
+    { customCss: ['virtual:starlight-codeblocks/inline-code.css'], expressiveCode: { tabWidth: 0 } },
+  ]);
   expect(integrations).toHaveLength(1);
+});
+
+test('keeps a tabWidth from ec.config.mjs', async () => {
+  const { updates } = await setup(
+    "export default { tabWidth: 4, plugins: [[{ name: 'starlight-codeblocks:core' }]] };",
+  );
+  expect(updates[0]).not.toHaveProperty('expressiveCode');
 });
 
 test('adds no stylesheet with inline highlighting off', async () => {
