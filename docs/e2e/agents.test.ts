@@ -65,7 +65,7 @@ test.describe('page actions', () => {
   test('the copy button works with the keyboard and copies the Markdown', async ({ page, request }) => {
     await page.goto('./features/focus/');
     const actions = page.locator('.page-actions');
-    const copy = actions.locator('button');
+    const copy = actions.locator('.split-button-main');
     await copy.focus();
     expect(await copy.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
     await page.keyboard.press('Enter');
@@ -76,13 +76,13 @@ test.describe('page actions', () => {
     await expect(copy).toHaveText('Copy as Markdown', { timeout: 4000 });
   });
 
-  test('Tab reaches every action, and each is at least 24 px high', async ({ page }) => {
+  test('Tab reaches the split button, and each part is at least 24 px', async ({ page }) => {
     await page.goto('./features/focus/');
-    const names = ['Copy as Markdown', 'View as Markdown', 'Open in Claude', 'Open in ChatGPT'];
-    await page.locator('.page-actions button').focus();
+    const names = ['Copy as Markdown', 'More page actions'];
+    await page.locator('.split-button-main').focus();
     for (const name of names) {
       const focused = page.locator(':focus');
-      await expect(focused).toHaveText(name);
+      await expect(focused).toHaveAccessibleName(name);
       const box = await focused.boundingBox();
       expect(box?.height).toBeGreaterThanOrEqual(24);
       expect(box?.width).toBeGreaterThanOrEqual(24);
@@ -90,15 +90,54 @@ test.describe('page actions', () => {
     }
   });
 
-  test('View as Markdown opens the Markdown version, and the assistant links name it', async ({ page }) => {
+  test('the caret opens a menu with the keyboard, arrow keys move between items, Escape closes it', async ({
+    page,
+  }) => {
+    await page.goto('./features/focus/');
+    const caret = page.locator('.split-button-caret');
+    const menu = page.getByRole('menu', { name: 'Page actions' });
+    await caret.focus();
+    await expect(caret).toHaveAttribute('aria-expanded', 'false');
+    await page.keyboard.press('Enter');
+    await expect(caret).toHaveAttribute('aria-expanded', 'true');
+    await expect(menu).toBeVisible();
+    const items = ['View as Markdown', 'Open in Claude', 'Open in ChatGPT'];
+    for (const name of items) {
+      const focused = page.locator(':focus');
+      await expect(focused).toHaveAccessibleName(name);
+      const box = await focused.boundingBox();
+      expect(box?.height).toBeGreaterThanOrEqual(24);
+      expect(box?.width).toBeGreaterThanOrEqual(24);
+      await page.keyboard.press('ArrowDown');
+    }
+    await expect(page.locator(':focus')).toHaveAccessibleName(items[0] ?? '');
+    await page.keyboard.press('ArrowUp');
+    await expect(page.locator(':focus')).toHaveAccessibleName(items[items.length - 1] ?? '');
+    await page.keyboard.press('Escape');
+    await expect(menu).toBeHidden();
+    await expect(caret).toBeFocused();
+    await expect(caret).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  test('clicking outside the open menu closes it', async ({ page }) => {
+    await page.goto('./features/focus/');
+    const caret = page.locator('.split-button-caret');
+    const menu = page.getByRole('menu', { name: 'Page actions' });
+    await caret.click();
+    await expect(menu).toBeVisible();
+    await page.locator('h1').click();
+    await expect(menu).toBeHidden();
+  });
+
+  test('the menu links point at the Markdown page and the assistants, and open the Markdown page', async ({ page }) => {
     await page.goto('./features/focus/');
     const prompt = `Read ${site}features/focus.md.`;
+    await page.locator('.split-button-caret').click();
     for (const name of ['Open in Claude', 'Open in ChatGPT']) {
-      const href = String(await page.getByRole('link', { name }).getAttribute('href'));
+      const href = String(await page.getByRole('menuitem', { name }).getAttribute('href'));
       expect(decodeURIComponent(href)).toContain(prompt);
     }
-    await page.getByRole('link', { name: 'View as Markdown' }).focus();
-    await page.keyboard.press('Enter');
+    await page.getByRole('menuitem', { name: 'View as Markdown' }).click();
     await expect(page).toHaveURL(/\/features\/focus\.md$/);
     expect(await page.locator('body').textContent()).toContain('# Focus');
   });
@@ -106,6 +145,19 @@ test.describe('page actions', () => {
   test('pages that are not docs pages have no actions', async ({ page }) => {
     await page.goto('./does-not-exist/');
     await expect(page.locator('.page-actions')).toHaveCount(0);
+  });
+
+  test.describe('without JavaScript', () => {
+    test.use({ javaScriptEnabled: false });
+
+    test('the actions show as plain links, with no copy button and no menu', async ({ page }) => {
+      await page.goto('./features/focus/');
+      await expect(page.locator('.split-button')).toBeHidden();
+      const fallback = page.locator('.page-actions-fallback');
+      for (const name of ['View as Markdown', 'Open in Claude', 'Open in ChatGPT']) {
+        await expect(fallback.getByRole('link', { name })).toBeVisible();
+      }
+    });
   });
 });
 
