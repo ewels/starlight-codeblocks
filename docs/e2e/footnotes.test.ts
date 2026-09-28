@@ -115,6 +115,29 @@ test('the links in the list are at least 24 by 24 pixels', async ({ page }) => {
   }
 });
 
+test('a list number lines up with the start of the code, and its note follows closely', async ({ page }) => {
+  for (const n of [0, 1]) {
+    const block = example(page, n);
+    const { number, code, note } = await block.evaluate((el) => {
+      const link = el.querySelector('.scb-footnote-num') as HTMLElement;
+      const range = document.createRange();
+      // The digit of "1.", not the full stop.
+      range.setStart(link.firstChild as Text, 0);
+      range.setEnd(link.firstChild as Text, 1);
+      const tokens = el.querySelector('.ec-line .code > span') as HTMLElement;
+      const text = link.nextElementSibling as HTMLElement;
+      return {
+        number: range.getBoundingClientRect().left,
+        code: tokens.getBoundingClientRect().left,
+        note: text.getBoundingClientRect().left - link.getBoundingClientRect().right,
+      };
+    });
+    expect(Math.abs(number - code)).toBeLessThan(1.5);
+    expect(note).toBeGreaterThan(4);
+    expect(note).toBeLessThan(12);
+  }
+});
+
 test('a focused badge does not stay under the sticky list', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 500 });
   const block = example(page, 1);

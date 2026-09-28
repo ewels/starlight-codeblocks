@@ -1,5 +1,6 @@
 import {
   getFirstStaticColor,
+  mix,
   PluginStyleSettings,
   type ResolverContext,
   type StyleResolverFn,
@@ -12,6 +13,8 @@ export const PREFIX = 'scb';
 export interface CodeblocksStyleSettings {
   /** Markers, numbered buttons and active states. Needs 3:1 contrast on the code background. */
   accent: UnresolvedStyleValue;
+  /** Markers and step borders under the pointer: `accent` moved towards the code foreground. */
+  accentHover: UnresolvedStyleValue;
   /** Text on an `accent` background. */
   accentForeground: UnresolvedStyleValue;
   /** Secondary text, such as output and marker labels. Needs 4.5:1 contrast on the code background. */
@@ -39,11 +42,20 @@ declare module '@expressive-code/core' {
 export const solidCodeBackground = ({ resolveSetting, theme }: Parameters<StyleResolverFn>[0]) =>
   getFirstStaticColor(resolveSetting('codeBackground'), theme.bg) ?? (theme.type === 'dark' ? '#202020' : '#ffffff');
 
+/** The code foreground as a colour, for the same reason as `solidCodeBackground`. */
+export const solidCodeForeground = ({ resolveSetting, theme }: Parameters<StyleResolverFn>[0]) =>
+  getFirstStaticColor(resolveSetting('codeForeground'), theme.fg) ?? (theme.type === 'dark' ? '#d6deeb' : '#403f53');
+
+/** A hover colour for `colour`: lighter in dark themes and darker in light themes, as it moves towards the text. */
+export const hoverColour = (colour: string, context: Parameters<StyleResolverFn>[0]) =>
+  mix(colour, solidCodeForeground(context), 0.45);
+
 // The dark values are the mockup colours. The light values give the same contrast on light themes.
 export const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocks: {
       accent: ['#82aaff', '#3b61b0'],
+      accentHover: (context) => hoverColour(context.resolveSetting('codeblocks.accent'), context),
       accentForeground: ['#0e1628', '#ffffff'],
       mutedForeground: ['#95a2b5', '#5b6474'],
       focusRing: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),

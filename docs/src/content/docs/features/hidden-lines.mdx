@@ -37,7 +37,8 @@ The imports and the `if` block are behind their own markers. Select a marker to 
 ## Behaviour
 
 - Each run of hidden lines is replaced by a dashed marker, with the text "N hidden lines".
-- Selecting a marker shows that run only. Its text changes to "Hide N lines", and the lines get a faint background so the reader can tell they asked for them.
+- Selecting a marker shows that run only. Its text changes to "Hide N lines". The lines get a faint background, and their code is dimmed to 75% opacity, so the reader can tell they asked for them.
+- The dashed rule of a marker gets brighter when the pointer is on it, and fainter while its lines show.
 - The title bar has a button, "Show N hidden lines", where N is the total across every run. It shows every run at once. Once every run is open, it reads "Hide N lines".
 - The copy button always includes hidden lines, so the code still runs after a paste. A manual selection includes only the hidden lines that are open, and never the text of a marker.
 - Each marker has `aria-expanded`. The label of the title bar button changes from **Show** to **Hide**. Both have `aria-controls`, so assistive technology reports what they open.

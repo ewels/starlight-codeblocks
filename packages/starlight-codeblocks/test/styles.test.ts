@@ -23,8 +23,11 @@ test('every shared colour meets its contrast target in the dark and the light th
       expect(getColorContrast(v.get('mutedForeground'), bg)).toBeGreaterThanOrEqual(4.5);
       expect(getColorContrast(v.get('accent'), bg)).toBeGreaterThanOrEqual(3);
       expect(getColorContrast(v.get('focusRing'), bg)).toBeGreaterThanOrEqual(3);
+      expect(getColorContrast(v.get('accentHover'), bg)).toBeGreaterThanOrEqual(3);
     }
     expect(getColorContrast(v.get('accentForeground'), v.get('accent'))).toBeGreaterThanOrEqual(4.5);
+    expect(getColorContrast(v.get('accentForeground'), v.get('accentHover'))).toBeGreaterThanOrEqual(4.5);
+    expect(v.get('accentHover')).not.toBe(v.get('accent'));
     expect(getColorContrast(v.get('popoverForeground'), v.get('popoverBackground'))).toBeGreaterThanOrEqual(4.5);
     expect(getColorContrast(v.get('focusRing'), v.get('popoverBackground'))).toBeGreaterThanOrEqual(3);
   }

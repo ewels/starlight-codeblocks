@@ -96,7 +96,8 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
 .ec-line.${cls('-on')} .${cls('-badge')} { background: ${v('accent')}; color: ${v('activeForeground')}; }
 .${cls('s')} {
   margin: 0;
-  padding: 0.6rem 1.1rem 0.75rem;
+  /* Starts a one-digit number, such as "1.", at the right of its 24px target, level with the code. */
+  padding: 0.6rem 1.1rem 0.75rem max(0px, calc(${cssVar('codePaddingInline')} + 2ch - max(2.5ch, 24px)));
   list-style: none;
   border: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
   border-top: 0;
@@ -110,7 +111,7 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
 .${cls('s')} li {
   display: flex;
   align-items: baseline;
-  gap: 0.6ch;
+  gap: 1ch;
   margin: 0;
   padding: 1px 0;
   cursor: pointer;

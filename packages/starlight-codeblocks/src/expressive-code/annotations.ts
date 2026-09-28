@@ -9,11 +9,12 @@ import { clientJsModules } from '../client-modules.ts';
 import { blockUid, type CodeblocksPlugin, lineElement, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
-import { PREFIX } from './styles.ts';
+import { hoverColour, PREFIX } from './styles.ts';
 
 export interface AnnotationsStyleSettings {
   markerBackground: UnresolvedStyleValue;
   markerForeground: UnresolvedStyleValue;
+  markerHoverBackground: UnresolvedStyleValue;
   markerSize: UnresolvedStyleValue;
   lineBackground: UnresolvedStyleValue;
 }
@@ -29,6 +30,8 @@ const styleSettings = new PluginStyleSettings({
     codeblocksAnnotations: {
       markerBackground: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),
       markerForeground: ({ resolveSetting }) => resolveSetting('codeblocks.accentForeground'),
+      markerHoverBackground: (context) =>
+        hoverColour(context.resolveSetting('codeblocksAnnotations.markerBackground'), context),
       markerSize: '1.55em',
       // Light enough for every syntax colour as it is, so that a line keeps its colours when it lights up.
       lineBackground: ({ resolveSetting, theme }) =>
@@ -76,10 +79,9 @@ export function pluginAnnotations(): CodeblocksPlugin {
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
-  transition: background-color 150ms ease;
 }
 .${cls()}:hover, .${cls()}:focus-visible, .${cls()}:has(+ :popover-open) {
-  background: color-mix(in srgb, ${cssVar('codeblocksAnnotations.markerBackground')} 70%, ${cssVar('codeForeground')});
+  background: ${cssVar('codeblocksAnnotations.markerHoverBackground')};
 }
 .${cls('-popover')} { padding: 0.6rem 0.8rem; font-size: 0.875rem; }
 .${cls('-popover')} p { margin: 0; }
@@ -93,7 +95,6 @@ export function pluginAnnotations(): CodeblocksPlugin {
 }
 .${cls('-popover')} a { color: inherit; text-underline-offset: 3px; }
 .${cls('-num')} { cursor: default; }
-.${cls('-num')}:hover { background: ${cssVar('codeblocksAnnotations.markerBackground')}; }
 .ec-line.${cls('-lit')} { background: ${cssVar('codeblocksAnnotations.lineBackground')}; }
 .ec-line.${cls('-lit')} .code { --ecLineBrdCol: ${cssVar('codeblocks.accent')}; --ecGtrBrdWd: 3px; }
 .${PREFIX}-side { container-type: inline-size; }

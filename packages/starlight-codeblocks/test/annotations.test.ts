@@ -1,4 +1,6 @@
+import { getColorContrast, getLuminance } from '@expressive-code/core';
 import { expect, test } from 'vitest';
+import { variants } from './contrast.ts';
 import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
@@ -66,4 +68,19 @@ test('warns about an unknown annotations value and uses popovers', async () => {
   const { html, warnings } = await render(block('py annotations="list"', 'x = 1  # [!annotate] Note'));
   expect(warnings.join('\n')).toContain('`annotations="list"` must be `"side"`');
   expect(html).toContain('popovertarget');
+});
+
+test('the hover colour of a marker comes from the theme and keeps the number readable', async () => {
+  for (const v of await variants()) {
+    const hover = v.get('codeblocksAnnotations.markerHoverBackground');
+    const bg = v.get('codeBackground');
+    expect(hover, v.name).not.toBe(v.get('codeblocksAnnotations.markerBackground'));
+    expect(getColorContrast(v.get('codeblocksAnnotations.markerForeground'), hover), v.name).toBeGreaterThanOrEqual(
+      4.5,
+    );
+    expect(getColorContrast(hover, bg), v.name).toBeGreaterThanOrEqual(3);
+    // Lighter than the marker in dark themes, darker in light themes: towards the code text.
+    const lighter = getLuminance(hover) > getLuminance(v.get('codeblocksAnnotations.markerBackground'));
+    expect(lighter, v.name).toBe(v.type === 'dark');
+  }
 });

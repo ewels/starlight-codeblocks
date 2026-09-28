@@ -2,9 +2,10 @@ const PREFIX = '#mention:';
 const ON = 'scb-mention-on';
 const ACTIVE = 'scb-mentioning';
 
-// Prose links are outside the code blocks, where the Expressive Code styles do not reach.
+// Prose links are outside the code blocks, where the Expressive Code styles do not reach. The hover colour
+// overrides Starlight's, so that only the underline changes.
 const STYLES = `a[href^="${PREFIX}"] { text-decoration-style: dotted; text-underline-offset: 3px; }
-a[href^="${PREFIX}"]:hover, a[href^="${PREFIX}"]:focus-visible { text-decoration-style: solid; }`;
+a[href^="${PREFIX}"]:hover, a[href^="${PREFIX}"]:focus-visible { text-decoration-style: solid; color: var(--sl-color-text-accent, revert-layer); }`;
 
 const before = (a: Node, b: Node) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 

@@ -4,10 +4,31 @@ import {
   type ExpressiveCodeBlock,
   type ExpressiveCodeLine,
   MetaOptions,
+  PluginStyleSettings,
+  setAlpha,
+  type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { h } from '@expressive-code/core/hast';
 import type { CodeblocksPlugin } from './core.ts';
-import { PREFIX } from './styles.ts';
+import { PREFIX, solidCodeForeground } from './styles.ts';
+
+export interface WhitespaceStyleSettings {
+  foreground: UnresolvedStyleValue;
+}
+
+declare module '@expressive-code/core' {
+  export interface StyleSettings {
+    codeblocksWhitespace: WhitespaceStyleSettings;
+  }
+}
+
+const styleSettings = new PluginStyleSettings({
+  defaultValues: {
+    codeblocksWhitespace: {
+      foreground: (context) => setAlpha(solidCodeForeground(context), context.theme.type === 'dark' ? 0.32 : 0.38),
+    },
+  },
+});
 
 class WhitespaceAnnotation extends ExpressiveCodeAnnotation {
   constructor(
@@ -52,13 +73,14 @@ const linesAsWritten = new WeakMap<ExpressiveCodeBlock, readonly ExpressiveCodeL
 export function pluginWhitespace(): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:whitespace',
+    styleSettings,
     baseStyles: ({ cssVar }) => `
 .${PREFIX}-ws, .${PREFIX}-ws-tab { position: relative; }
 /* Centres the glyph's line box on the character, which is shorter than the line height. */
 .${PREFIX}-ws > [aria-hidden], .${PREFIX}-ws-tab > [aria-hidden] { position: absolute; inset: 0; display: grid; align-content: center; }
 .${PREFIX}-ws > [aria-hidden]::before, .${PREFIX}-ws-tab > [aria-hidden]::before {
   text-align: center;
-  color: ${cssVar('codeblocks.mutedForeground')};
+  color: ${cssVar('codeblocksWhitespace.foreground')};
 }
 .${PREFIX}-ws > [aria-hidden]::before { content: '\\00b7'; }
 .${PREFIX}-ws-tab > [aria-hidden]::before { content: '\\2192'; text-align: start; }`,

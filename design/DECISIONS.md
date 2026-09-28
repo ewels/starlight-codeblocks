@@ -1121,3 +1121,59 @@ Use this format:
 - Decision: Expressive Code trims the end of every line in the `ExpressiveCodeBlock` constructor, before any plugin hook runs. For a block with `whitespace="all"`, the Markdown plugin (Sätteri, and remark through the adapter) records the trailing whitespace of each line in a hidden `scbTrailing` fence attribute (URI-encoded JSON, line numbers counted from the first non-blank line, as Expressive Code drops the blank lines before it). The whitespace plugin keeps the block's lines as written in `preprocessMetadata` and appends the whitespace to the same line objects in `preprocessCode`, so the mapping holds after comment notation removes directive lines. The copy button then copies the trailing whitespace too. The default, leading-only mode records nothing. A block that `<Code>` renders gets no Markdown pass, so it shows no trailing whitespace; the docs page says so under Limitations, and its trailing-whitespace example is a live Markdown slot.
 - Reason: The docs promised trailing whitespace with `whitespace="all"`, and it could never show. The fence meta is the only channel from the Markdown tree to Expressive Code that survives the trim, and the code switcher already uses it the same way (`scbSwitcher`).
 - Alternatives: Patch Expressive Code's constructor (patches a dependency). A sentinel character at the end of each line (comment notation parses directives before a plugin can edit the code, so a sentinel breaks directives at the end of a line). Remove the claim from the docs (the user prefers working features over documented limits).
+
+## Visible whitespace: fainter glyphs from the code foreground
+
+- Date: 2026-09-28
+- Step: after the plan (mockup choices, user decision A)
+- Decision: The glyphs use a new style setting, `codeblocksWhitespace.foreground`, which is the code foreground of the theme (`codeForeground`) at 32% opacity in dark themes and 38% in light themes. Before, they used `codeblocks.mutedForeground`, the colour of secondary text. On the Night Owl and GitHub themes the glyphs have about 2:1 to 2.5:1 contrast on the code background (the mockup's `#4f5b73` on `#1b1f2c` is 2.4:1), less than half the contrast of muted text. A unit test checks that range in each theme, and a Playwright test checks that the glyph colour is the code colour with an alpha between 0.25 and 0.45.
+- Reason: The user chose the mockup's fainter glyphs, and asked for colours from the theme instead of fixed hex values, so that other Expressive Code themes and both colour schemes still work. A colour with alpha also stays faint on tinted lines (marked, inserted or focused lines). The glyphs are `aria-hidden` decoration and carry no meaning of their own, so they have no contrast target.
+- Alternatives: Keep `codeblocks.mutedForeground` (the user chose the mockup). The mockup hex values (do not follow other themes). The same alpha in both schemes (light glyphs at 32% look weaker than dark ones at the same alpha).
+
+## Token transitions: new lines flash the theme's green
+
+- Date: 2026-09-28
+- Step: after the plan (mockup choices, user decision A)
+- Decision: A line that is new in a step, compared by text with the step before (a line that appears twice must appear twice before, and blank lines never count), gets a tint that starts at `codeblocksTransitions.newLineBackground` and fades out over `codeblocksTransitions.newLineDuration` (1000 ms, ease-out), through half of the tint at 55%, as in the mockup. The tint is the theme's `terminal.ansiGreen` colour at 30% opacity. During the magic-move animation the tints are absolutely positioned rows (`1lh` high) in the animation box, next to the magic-move container, because magic-move replaces the children of its container. When the animation ends, the real `.ec-line` elements take over the same CSS animation with a negative `animation-delay`, so the fade continues without a jump, and they drop the class on `animationend` or `animationcancel` (hiding a step cancels it, and it would otherwise play again when the step shows). The mockup's fade of the text from 0 to 1 is left out, because magic-move already fades in new tokens. Under reduced motion there is no animation and no tint. `<Scrollycoding>` does not animate tokens, so it gets no tint.
+- Reason: The user chose the mockup's flash and asked for colours from the theme. Every theme defines `terminal.ansiGreen` (Expressive Code fills in a default otherwise), and it is green in every theme checked: Night Owl dark and light, GitHub dark and light, Dracula, One Dark Pro, Solarized Light, Catppuccin Latte, Min Light, Vitesse Dark and Nord. Expressive Code's own `textMarkers.insBorderColor` is one fixed LCH green for every theme, so it does not follow the theme.
+- Alternatives: `editorGutter.addedBackground` (teal in Night Owl Light, and missing in some themes). `diffEditor.insertedTextBackground` (already transparent, and blue in Nord and One Dark Pro). Start the tint only when the real code shows again (a 500 ms delay, and the peak of the tint would be lost).
+
+## Hidden lines: dimmed open lines and rule feedback
+
+- Date: 2026-09-28
+- Step: after the plan (mockup choices, user decision A)
+- Decision: Supersedes the colours in "Hidden lines" above, which used `color-mix()` with no settings. The `codeblocksHiddenLines` group gets five settings. `openBackground` is `codeForeground` at 4% opacity (the tint of lines that show, as before) and `openOpacity` is `0.75`, which the `.code` element of a hidden line that shows gets, as in the mockup. The code, the tint and any decoration on the line dim together. The dashed rule is `rule` (`codeblocks.mutedForeground` at 35%, as before), `ruleHover` under the pointer (the full muted colour, as in the mockup) and `ruleOpen` while its run shows (22%, the mockup's ratio between its open and rest colours). While a run shows, the open colour also wins under the pointer, as in the mockup; the marker text still brightens.
+- Reason: The user chose the mockup for both. The user was told that dimming lowers the contrast of syntax colours and chose it knowingly. Measured at 0.75 opacity on the tint: every theme checked has syntax colours under 4.5:1, because Expressive Code corrects token colours only to 4.5:1 and many sit right at that limit. The lowest are 3.42:1 (Night Owl dark), 3.15:1 (Night Owl Light), 3.44:1 (GitHub dark), 3.10:1 (GitHub light), 3.42:1 (Dracula), 3.17:1 (Solarized Light) and 3.12:1 (Min Light). One Dark Pro's plain code colour falls to 4.16:1. A unit test keeps every colour at 3:1 or more, and the accessibility page says so, with `openOpacity: '1'` to turn the dimming off.
+- Alternatives: Keep full opacity (the user chose the mockup). Dim to a level that keeps 4.5:1 (no such level exists for colours that are already at 4.5:1).
+
+## Hover colour: the accent moved towards the code foreground
+
+- Date: 2026-09-28
+- Step: after the plan (mockup choices, user decision A)
+- Decision: A new shared setting, `codeblocks.accentHover`, is `codeblocks.accent` mixed 45% towards `codeForeground` (`hoverColour()` in `styles.ts`). In dark themes it is lighter than the accent (Night Owl: `#a8c1f6`, close to the mockup's `#a9c3ff`); in light themes it is darker, so it stays visible on a light background. Every numbered step of `<CodeSteps>` takes it as its border under the pointer, including done steps and the current step (before, only steps that were not done changed). Annotation markers get `codeblocksAnnotations.markerHoverBackground`, `markerBackground` mixed the same way, for hover, keyboard focus and an open note, with no 150 ms fade. Side-by-side line markers take the same hover colour (before, they kept their colour). Unit tests check, for each theme, 3:1 on the code background, 4.5:1 for the marker number on the hover colour, and that the colour moves towards the text.
+- Reason: The user chose the mockup and asked that it work with other Expressive Code themes and light mode. A mix towards the theme's own text colour gives the mockup's lighter blue on dark themes and a visible change on light themes, and it follows a site's own `accent` or `markerBackground`.
+- Alternatives: `lighten()` (lightens in light themes too, which lowers contrast with the white number and with a light background). A second hex pair (does not follow other themes).
+
+## Code mentions: links keep their colour on hover
+
+- Date: 2026-09-28
+- Step: after the plan (mockup choices, user decision A)
+- Decision: The style that the mentions module adds to the page gives `a[href^="#mention:"]` the colour `var(--sl-color-text-accent, revert-layer)` on hover and focus, so Starlight's `.sl-markdown-content a:hover` colour (white or black) does not apply. The underline still turns from dotted to solid. Other links on the page keep Starlight's hover colour (Playwright checks both).
+- Reason: The user chose the mockup, where only the underline changes. The module's style is not in a cascade layer, so it wins over Starlight's layered style with no extra specificity. `revert-layer` keeps a site without Starlight's variables on its own layered link colour.
+- Alternatives: `color: inherit` (the prose colour, not the link colour). A higher-specificity selector against Starlight's (fragile, and not needed across layers).
+
+## Footnotes: the numbers line up with the code
+
+- Date: 2026-09-28
+- Step: after the plan (mockup choices, user decision B with a change)
+- Decision: The footnote list keeps its 24 px number links and row spacing, but its start padding is now `max(0px, codePaddingInline + 2ch - max(2.5ch, 24px))`, so the digit of a one-digit number ("1.") starts level with the code text. The gap between the number and its note is `1ch` (was `0.6ch`). On the docs site the note text starts about 39 px from the frame edge (was about 47 px; the mockup has 42 px). A Playwright test checks the alignment and the gap for the static and the sticky list.
+- Reason: The user kept the layout but found the left padding excessive. Lining the numbers up with the code gives the list a reason for its indent, instead of a fixed padding.
+- Alternatives: The mockup's fixed 42 px padding (does not follow `codePaddingInline`). Smaller number links (the user kept the 24 px targets).
+
+## Mockup choices kept as built
+
+- Date: 2026-09-28
+- Step: after the plan (mockup choices, user decision B)
+- Decision: The user compared the build with the mockup and kept the build for the colourised brackets hover outline, the Run button, token link underlines, the line tint strengths, and the look of popovers and API hover cards. Nothing changes for these.
+- Reason: The user's decision.
+- Alternatives: The mockup's versions.

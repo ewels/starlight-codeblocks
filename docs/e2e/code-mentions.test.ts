@@ -90,6 +90,22 @@ test('the links have a dotted underline', async ({ page }) => {
   expect(await link.evaluate((el) => getComputedStyle(el).textDecorationStyle)).toBe('dotted');
 });
 
+test('on hover, a link keeps its colour, and its underline turns solid', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Phones have no hover.');
+  const link = pane(page).getByRole('link', { name: 'base case' });
+  const style = () =>
+    link.evaluate((el) => ({ colour: getComputedStyle(el).color, line: getComputedStyle(el).textDecorationStyle }));
+  await page.mouse.move(0, 0);
+  const rest = await style();
+  await link.hover();
+  expect(await style()).toEqual({ colour: rest.colour, line: 'solid' });
+  // Other prose links still take Starlight's hover colour.
+  const other = page.locator('.sl-markdown-content a[href^="/"]:not(.not-content *)').first();
+  const before = await other.evaluate((el) => getComputedStyle(el).color);
+  await other.hover();
+  expect(await other.evaluate((el) => getComputedStyle(el).color)).not.toBe(before);
+});
+
 test('the fade has no transition under reduced motion', async ({ page }, info) => {
   const duration = await lines(page)
     .nth(0)

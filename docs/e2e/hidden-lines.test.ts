@@ -38,6 +38,32 @@ test('a marker on the first line runs its rule to the end at rest', async ({ pag
   expect(await markers.first().evaluate(end)).toBe(await markers.nth(1).evaluate(end));
 });
 
+test('a hidden line that shows is dimmed, on a faint tint', async ({ page }) => {
+  const block = example(page);
+  await block.locator('.scb-hidden-marker').first().click();
+  const code = block.locator('.scb-hidden-line').first().locator('.code');
+  await expect(code).toHaveCSS('opacity', '0.75');
+  const tint = await code.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(Number(tint.match(/[\d.]+(?=\)$)/)?.[0])).toBeCloseTo(0.04, 2);
+});
+
+test('the dashed rule is brighter under the pointer and fainter while its lines show', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Phones have no hover.');
+  const marker = example(page).locator('.scb-hidden-marker').nth(1);
+  const alpha = () =>
+    marker.evaluate((el) => {
+      const colour = getComputedStyle(el, '::before').borderTopColor;
+      return Number(colour.match(/[\d.]+/g)?.[3] ?? 1);
+    });
+  await page.mouse.move(0, 0);
+  const rest = await alpha();
+  await marker.hover();
+  expect(await alpha()).toBeGreaterThan(rest);
+  await marker.click();
+  await page.mouse.move(0, 0);
+  expect(await alpha()).toBeLessThan(rest);
+});
+
 test('works with the keyboard', async ({ page }) => {
   const marker = example(page).locator('.scb-hidden-marker').first();
   await marker.focus();

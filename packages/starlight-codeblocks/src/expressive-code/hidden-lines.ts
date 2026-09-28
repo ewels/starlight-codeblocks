@@ -18,10 +18,15 @@ import {
   resolveRange,
 } from './core.ts';
 import { getDirectives } from './notation.ts';
-import { PREFIX, solidCodeBackground } from './styles.ts';
+import { PREFIX, solidCodeBackground, solidCodeForeground } from './styles.ts';
 
 export interface HiddenLinesStyleSettings {
   badgeBackground: UnresolvedStyleValue;
+  rule: UnresolvedStyleValue;
+  ruleHover: UnresolvedStyleValue;
+  ruleOpen: UnresolvedStyleValue;
+  openBackground: UnresolvedStyleValue;
+  openOpacity: UnresolvedStyleValue;
 }
 
 declare module '@expressive-code/core' {
@@ -35,6 +40,11 @@ const styleSettings = new PluginStyleSettings({
     codeblocksHiddenLines: {
       badgeBackground: (context: Parameters<StyleResolverFn>[0]) =>
         onBackground(setAlpha(context.resolveSetting('codeblocks.mutedForeground'), 0.1), solidCodeBackground(context)),
+      rule: ({ resolveSetting }) => setAlpha(resolveSetting('codeblocks.mutedForeground'), 0.35),
+      ruleHover: ({ resolveSetting }) => resolveSetting('codeblocks.mutedForeground'),
+      ruleOpen: ({ resolveSetting }) => setAlpha(resolveSetting('codeblocks.mutedForeground'), 0.22),
+      openBackground: (context) => setAlpha(solidCodeForeground(context), 0.04),
+      openOpacity: '0.75',
     },
   },
 });
@@ -66,7 +76,8 @@ export function pluginHiddenLines(): CodeblocksPlugin {
 .${PREFIX}-hidden-line { display: none; }
 .${PREFIX}-hidden-line.${PREFIX}-hidden-open { display: grid; }
 .${PREFIX}-hidden-line.${PREFIX}-hidden-open .code {
-  background: color-mix(in srgb, ${cssVar('codeForeground')} 4%, transparent);
+  background: ${cssVar('codeblocksHiddenLines.openBackground')};
+  opacity: ${cssVar('codeblocksHiddenLines.openOpacity')};
 }
 .${PREFIX}-hidden-marker {
   display: flex;
@@ -89,7 +100,7 @@ export function pluginHiddenLines(): CodeblocksPlugin {
   position: absolute;
   top: 50%;
   inset-inline: calc(var(--scb-gutter, 0px) + ${cssVar('codePaddingInline')}) ${cssVar('codePaddingInline')};
-  border-top: 1px dashed color-mix(in srgb, ${cssVar('codeblocks.mutedForeground')} 35%, transparent);
+  border-top: 1px dashed ${cssVar('codeblocksHiddenLines.rule')};
   transform: translateY(-50%);
 }
 /* Where the copy button always shows, it sits over the end of the first line. */
@@ -112,6 +123,8 @@ export function pluginHiddenLines(): CodeblocksPlugin {
 .${PREFIX}-hidden-marker:hover, .${PREFIX}-hidden-marker:focus-visible {
   color: ${cssVar('codeForeground')};
 }
+.${PREFIX}-hidden-marker:hover::before { border-top-color: ${cssVar('codeblocksHiddenLines.ruleHover')}; }
+.${PREFIX}-hidden-marker[aria-expanded='true']::before { border-top-color: ${cssVar('codeblocksHiddenLines.ruleOpen')}; }
 @media (scripting: none) {
   .${PREFIX}-hidden-toggle { display: none; }
 }

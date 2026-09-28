@@ -111,6 +111,66 @@ test('animates the tokens in the colours of the theme, or changes at once under 
   await expect(current(page).locator('code')).toBeVisible();
 });
 
+test('a new line flashes a green tint that fades out, and not under reduced motion', async ({ page }) => {
+  await current(page).getByRole('button', { name: 'Next' }).click();
+  const tint = current(page).locator('.scb-steps-anim > .scb-steps-new');
+  const line = current(page).locator('.ec-line', { hasText: 'app.use(express.json());' });
+  if (reduced()) {
+    await expect(tint).toHaveCount(0);
+    await expect(line).not.toHaveClass(/scb-steps-new/);
+    return;
+  }
+  // Only the added line of step 2 is new.
+  await expect(tint).toHaveCount(1);
+  const { top, lineHeight, colour, name, duration } = await tint.evaluate((el) => {
+    const style = getComputedStyle(el);
+    return {
+      top: el.getBoundingClientRect().top - (el.parentElement as HTMLElement).getBoundingClientRect().top,
+      lineHeight: el.getBoundingClientRect().height,
+      colour: style.backgroundColor,
+      name: style.animationName,
+      duration: style.animationDuration,
+    };
+  });
+  expect(name).toBe('scb-steps-new');
+  expect(duration).toBe('1s');
+  expect(top).toBeGreaterThan(lineHeight);
+  // Canvas turns any CSS colour syntax, such as color-mix() results, into RGBA.
+  const [r = 0, g = 0, b = 0, a = 255] = await page.evaluate((colour) => {
+    const ctx = document.createElement('canvas').getContext('2d') as CanvasRenderingContext2D;
+    ctx.fillStyle = colour;
+    ctx.fillRect(0, 0, 1, 1);
+    return [...ctx.getImageData(0, 0, 1, 1).data];
+  }, colour);
+  expect(g).toBeGreaterThan(Math.max(r, b));
+  expect(a).toBeGreaterThan(0);
+  expect(a).toBeLessThanOrEqual(0.3 * 255 + 1);
+  // The real line takes over the tint after the tokens move, then drops it.
+  await expect(current(page).locator('.scb-steps-anim')).toHaveCount(0);
+  await expect(line).not.toHaveClass(/scb-steps-new/, { timeout: 2000 });
+});
+
+test('every step, done or not, changes its border under the pointer', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Phones have no hover.');
+  await current(page).getByRole('button', { name: 'Next' }).click();
+  const hoverColour = await current(page).evaluate((el) => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--ec-codeblocks-accentHover)';
+    el.append(probe);
+    const out = getComputedStyle(probe).color;
+    probe.remove();
+    return out;
+  });
+  for (const name of ['Step 1: Create the app', 'Step 2: Parse JSON bodies', 'Step 3: Add a health route']) {
+    const dot = current(page).getByRole('button', { name });
+    const rest = await dot.evaluate((el) => getComputedStyle(el).borderTopColor);
+    await dot.hover();
+    await expect(dot).toHaveCSS('border-top-color', hoverColour);
+    expect(rest, name).not.toBe(hoverColour);
+    await page.mouse.move(0, 0);
+  }
+});
+
 test('the copy button copies the current step', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await current(page).getByRole('button', { name: 'Next' }).click();

@@ -47,7 +47,7 @@ Tag each line that belongs to a name. A name is one word, such as `base` or `par
 - A link pairs with the next code block in the same section that has lines with its name. A section ends at the next heading. If no block follows in the section, the link pairs with the nearest block before it.
 - Hovering over the link, or moving keyboard focus to it, highlights the tagged lines with a tint and a bar. The other lines of the block fade to 42% opacity.
 - Selecting the link keeps the highlight, and scrolls the block into view if it is not fully visible. The address of the page does not change.
-- The links have a dotted underline, which becomes solid on hover and focus.
+- The links have a dotted underline, which becomes solid on hover and focus. On hover, a link keeps its colour.
 - Screen readers read the tagged lines as the description of the link.
 - The fade and the scroll happen without animation when the reader's system asks for reduced motion.
 - A link with no matching block shows as plain text, and the build logs a warning with the file name.

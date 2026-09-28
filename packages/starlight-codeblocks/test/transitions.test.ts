@@ -1,4 +1,4 @@
-import { getColorContrast } from '@expressive-code/core';
+import { getColorContrast, setAlpha } from '@expressive-code/core';
 import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { codeSteps, type StepTokens } from '../src/components/steps.ts';
@@ -128,6 +128,18 @@ test('the step colours meet their contrast targets', async () => {
   expect(ec.styleVariants.map((v) => v.resolvedStyleSettings.get('codeblocksTransitions.themeIndex' as never))).toEqual(
     ['0', '1'],
   );
+});
+
+test("the tint of a new line is the theme's own terminal green", async () => {
+  const ec = new ExpressiveCode({ plugins: pluginCodeblocks() });
+  await ec.getBaseStyles();
+  for (const v of ec.styleVariants) {
+    const green = v.theme.colors['terminal.ansiGreen'] as string;
+    expect(green).toBeTruthy();
+    expect(v.resolvedStyleSettings.get('codeblocksTransitions.newLineBackground' as never)).toBe(setAlpha(green, 0.3));
+  }
+  const css = await ec.getBaseStyles();
+  expect(css).toContain('@keyframes scb-steps-new');
 });
 
 test('with the feature off, the plugin still shows the step label after the title', async () => {

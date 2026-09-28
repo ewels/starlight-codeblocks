@@ -95,6 +95,8 @@ Put two or more code blocks between the tags, with an empty line after `<CodeSte
 - Select a number to go to that step. You cannot select **Previous** on the first step, or **Next** on the last step.
 - When a numbered step has keyboard focus, the left and right arrow keys go to the previous and the next step.
 - The animation takes 500 ms. Code that is in both versions moves. Removed code fades out, and new code fades in.
+- A line that is new in the step gets a green tint, which fades out in 1 second. The green is the terminal green of the theme.
+- When the pointer is on a step, its border changes colour. This is true for earlier steps and the current step too.
 - When the reader's system asks for reduced motion, the steps change without the animation.
 - Screen readers announce the number and the label of the new step.
 - The copy button copies the code of the current step.
@@ -114,7 +116,7 @@ codeblocks({
 
 With `transitions: false`, `<CodeSteps>` shows each step as a separate code block with its label after the title, as it does without JavaScript. The page loads no script for the steps.
 
-The style settings in the `codeblocksTransitions` group change the colours of the steps and the length of the animation. For example, `codeblocksTransitions.duration` sets the length of the animation.
+The style settings in the `codeblocksTransitions` group change the colours of the steps and the length of the animation. For example, `codeblocksTransitions.duration` sets the length of the animation, and `codeblocksTransitions.newLineBackground` sets the tint of new lines.
 
 ## Examples
 

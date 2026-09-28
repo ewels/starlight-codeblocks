@@ -6,6 +6,23 @@ import type { StepTokens } from './steps.ts';
 const S = 'scb-steps';
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 
+const lines = (tokens: StepTokens) =>
+  tokens
+    .map(([, content]) => content)
+    .join('')
+    .split('\n');
+
+/** The indexes of the lines of `to` that are not in `from`, leaving out blank lines. */
+function newLines(from: StepTokens, to: StepTokens) {
+  const left = new Map<string, number>();
+  for (const line of lines(from)) left.set(line, (left.get(line) ?? 0) + 1);
+  return lines(to).flatMap((line, i) => {
+    const n = left.get(line) ?? 0;
+    left.set(line, n - 1);
+    return n > 0 || !line.trim() ? [] : [i];
+  });
+}
+
 /** Animates the tokens from one step to the next inside the `pre` of the new step, then shows its real code again. */
 function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
   const pre = group.querySelector('pre');
@@ -29,16 +46,51 @@ function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
   const box = document.createElement('div');
   box.className = `${S}-anim`;
   box.setAttribute('aria-hidden', 'true');
+  const move = document.createElement('div');
+  move.className = `${S}-move`;
+  const added = newLines(from, to);
+  // magic-move replaces the children of its container, so the tints sit next to it.
+  box.append(
+    move,
+    ...added.map((n) => {
+      const tint = document.createElement('div');
+      tint.className = `${S}-new`;
+      tint.style.setProperty('--scb-steps-line', String(n));
+      return tint;
+    }),
+  );
   code.style.display = 'none';
   pre.append(box);
-  const done = () => {
+  const start = performance.now();
+  let finished = false;
+  const done = (ended = false) => {
+    if (finished) return;
+    finished = true;
     box.remove();
     code.style.display = '';
+    if (!ended) return;
+    // The real lines take over the tint where the animation left it.
+    const real = [...code.querySelectorAll<HTMLElement>('.ec-line')].filter(
+      (l) => !l.parentElement?.matches('summary'),
+    );
+    for (const n of added) {
+      const line = real[n];
+      if (!line) continue;
+      line.style.animationDelay = `${start - performance.now()}ms`;
+      line.classList.add(`${S}-new`);
+      const clear = () => {
+        line.classList.remove(`${S}-new`);
+        line.style.animationDelay = '';
+      };
+      // Hiding the step cancels the animation, which would otherwise play again when the step shows.
+      line.addEventListener('animationend', clear, { once: true });
+      line.addEventListener('animationcancel', clear, { once: true });
+    }
   };
-  const renderer = new MagicMoveRenderer(box, { duration, containerStyle: false });
+  const renderer = new MagicMoveRenderer(move, { duration, containerStyle: false });
   renderer.render(info(from));
-  renderer.render(info(to)).then(done);
-  return done;
+  renderer.render(info(to)).then(() => done(true));
+  return () => done();
 }
 
 const roots: HTMLElement[][] = [];

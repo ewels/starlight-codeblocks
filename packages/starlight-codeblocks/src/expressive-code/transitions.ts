@@ -1,4 +1,4 @@
-import { PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
+import { PluginStyleSettings, setAlpha, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import type { CodeblocksPlugin } from './core.ts';
 import { PREFIX } from './styles.ts';
@@ -8,6 +8,8 @@ export interface TransitionsStyleSettings {
   doneForeground: UnresolvedStyleValue;
   line: UnresolvedStyleValue;
   duration: UnresolvedStyleValue;
+  newLineBackground: UnresolvedStyleValue;
+  newLineDuration: UnresolvedStyleValue;
   /** The index of the theme, so that animated tokens can pick their `--0` or `--1` colour. Do not override it. */
   themeIndex: UnresolvedStyleValue;
 }
@@ -25,6 +27,9 @@ const styleSettings = new PluginStyleSettings({
       doneForeground: ['#cfdcff', '#2c4a8c'],
       line: ['#3f4860', '#c9ced8'],
       duration: '500ms',
+      // The theme's own green, from its terminal colours, which every theme defines.
+      newLineBackground: ({ theme }) => setAlpha(theme.colors['terminal.ansiGreen'] ?? theme.fg, 0.3),
+      newLineDuration: '1000ms',
       themeIndex: ({ styleVariantIndex }) => String(styleVariantIndex),
     },
   },
@@ -64,7 +69,6 @@ export function pluginTransitions(): CodeblocksPlugin {
   font: 600 11px/1 ${cssVar('codeFontFamily')};
   cursor: pointer;
 }
-.${S}-dot:hover { border-color: ${cssVar('codeblocks.accent')}; }
 .${S}-dot.${S}-done {
   border-color: ${cssVar('codeblocks.accent')};
   color: ${cssVar('codeblocksTransitions.doneForeground')};
@@ -73,6 +77,7 @@ export function pluginTransitions(): CodeblocksPlugin {
   background: ${cssVar('codeblocks.accent')};
   color: ${cssVar('codeblocks.accentForeground')};
 }
+.${S}-dot:hover { border-color: ${cssVar('codeblocks.accentHover')}; }
 @media (forced-colors: active) {
   .${S}-dot[aria-current] { forced-color-adjust: none; border-color: Highlight; background: Highlight; color: HighlightText; }
 }
@@ -130,7 +135,21 @@ export function pluginTransitions(): CodeblocksPlugin {
 .${S}-nav:disabled { opacity: 0.45; cursor: default; }
 .${S}-nav-icon { font-size: 1rem; line-height: 1; }
 /* magic-move sets a unitless \`--smm-stagger: 0\` on its container, which makes its phase delays invalid. */
-.${S}-anim > * { --smm-stagger: 0ms; }
+.${S}-move > * { --smm-stagger: 0ms; }
+.${S}-anim { position: relative; }
+.${S}-anim > .${S}-new {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(${cssVar('codePaddingBlock')} + var(--scb-steps-line) * 1lh);
+  height: 1lh;
+  pointer-events: none;
+}
+.${S}-new { animation: scb-steps-new ${cssVar('codeblocksTransitions.newLineDuration')} ease-out; }
+@keyframes scb-steps-new {
+  from { background-color: ${cssVar('codeblocksTransitions.newLineBackground')}; }
+  55% { background-color: color-mix(in srgb, ${cssVar('codeblocksTransitions.newLineBackground')} 47%, transparent); }
+  to { background-color: transparent; }
+}
 @container (max-width: 480px) {
   .${S}-line { width: 10px; }
 }

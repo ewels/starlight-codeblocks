@@ -70,6 +70,7 @@ app.listen(3000);
 - Leave an empty line after `<CodeSteps>` and before `</CodeSteps>`. Each code block is one step, in order. Each keeps its other attributes, such as `title`.
 - The copy button copies the code of the current step.
 - Arrow keys move between steps when a numbered step has focus. Under reduced motion, steps change without the animation.
+- A line that is new in a step flashes the theme's green, then fades out in 1 second. There is no flash under reduced motion.
 - Without JavaScript, and when the page prints, each step shows as a separate block with its label after the title.
 - The page loads the animation library, about 3 kB, only on pages with `<CodeSteps>`.
 - Option: `transitions: false` shows each step as a separate block, with no script. The `codeblocksTransitions` style settings change the colours and `duration`.

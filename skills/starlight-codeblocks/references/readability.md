@@ -30,6 +30,7 @@ createServer(handler).listen(port);
 - The copy button always copies hidden lines, so the code still runs after a paste. Playgrounds and the **Run** button get them too.
 - The title bar gets a "Show N hidden lines" button that opens every run.
 - A line permalink to a hidden line opens its marker.
+- Hidden lines that show are dimmed to 75% opacity, which puts some syntax colours under 4.5:1 contrast. Set the `codeblocksHiddenLines.openOpacity` style setting to `1` if the site needs full contrast.
 - Without JavaScript, hidden lines stay hidden.
 - Option: `hiddenLines: false` ignores `hidden` and leaves `[!code hide]` in the code.
 - Limits: hidden lines take no space until opened. Expressive Code's `collapse` differs: it keeps a line for its label.

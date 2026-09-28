@@ -1,8 +1,10 @@
+import { getColorContrast, onBackground } from '@expressive-code/core';
 import { markdownToHtml } from 'satteri';
 import { expect, test } from 'vitest';
 import { withTrailingWhitespace } from '../src/expressive-code/whitespace.ts';
 import { resolveOptions } from '../src/options.ts';
 import { mdastPlugins } from '../src/satteri/index.ts';
+import { variants } from './contrast.ts';
 import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
@@ -69,4 +71,13 @@ test('the Markdown plugin records trailing whitespace for whitespace="all" block
     fileURL: new URL('file:///site/page.md'),
   });
   expect(metas).toEqual([withTrailingWhitespace('a = 1  ', 'whitespace="all"'), 'whitespace']);
+});
+
+test('the glyphs are fainter than the code, but still visible, in every theme', async () => {
+  for (const v of await variants()) {
+    const bg = v.get('codeBackground');
+    const glyph = getColorContrast(onBackground(v.get('codeblocksWhitespace.foreground'), bg), bg);
+    expect(glyph, v.name).toBeGreaterThan(1.4);
+    expect(glyph, v.name).toBeLessThan(getColorContrast(v.get('codeblocks.mutedForeground'), bg) / 2);
+  }
 });

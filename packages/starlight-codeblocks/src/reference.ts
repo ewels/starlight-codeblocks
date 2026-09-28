@@ -187,6 +187,10 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       accent: {
         description: 'Markers, numbered buttons and active states. Needs 3:1 contrast on the code background.',
       },
+      accentHover: {
+        description: 'Step borders under the pointer.',
+        derived: '`accent` mixed 45% towards `codeForeground`: lighter in dark themes, darker in light themes.',
+      },
       accentForeground: { description: 'Text on an `accent` background.' },
       mutedForeground: {
         description: 'Secondary text, such as output and marker labels. Needs 4.5:1 contrast on the code background.',
@@ -257,6 +261,15 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       colour3: { description: 'Brackets at the third depth, and at every third depth after it.' },
     },
   },
+  codeblocksWhitespace: {
+    page: 'features/visible-whitespace',
+    settings: {
+      foreground: {
+        description: 'The colour of the glyphs.',
+        derived: '`codeForeground` at 32% opacity in dark themes and 38% in light themes.',
+      },
+    },
+  },
   codeblocksShellCopy: {
     page: 'features/smart-shell-copy',
     settings: {
@@ -320,6 +333,23 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
         description: 'The background of the text on a marker.',
         derived: '`codeblocks.mutedForeground` at 10% opacity on the code background.',
       },
+      rule: {
+        description: 'The dashed rule of a marker.',
+        derived: '`codeblocks.mutedForeground` at 35% opacity.',
+      },
+      ruleHover: {
+        description: 'The dashed rule of a marker under the pointer.',
+        derived: 'The value of `codeblocks.mutedForeground`.',
+      },
+      ruleOpen: {
+        description: 'The dashed rule of a marker while its lines show.',
+        derived: '`codeblocks.mutedForeground` at 22% opacity.',
+      },
+      openBackground: {
+        description: 'The tint of a hidden line that shows.',
+        derived: '`codeForeground` at 4% opacity.',
+      },
+      openOpacity: { description: 'The opacity of the code of a hidden line that shows.' },
     },
   },
   codeblocksRunnable: {
@@ -336,6 +366,11 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       doneForeground: { description: 'The number of a step that is done.' },
       line: { description: 'The line between two steps that are not done yet.' },
       duration: { description: 'The time that the animation between two steps takes.' },
+      newLineBackground: {
+        description: 'The tint that flashes on a line that is new in a step, then fades out.',
+        derived: 'The `terminal.ansiGreen` colour of the theme at 30% opacity.',
+      },
+      newLineDuration: { description: 'The time that the tint of a new line takes to fade out.' },
       themeIndex: {
         description: 'The index of the theme, which the animation reads to pick token colours. Do not change it.',
         derived: 'The index of the theme in the Expressive Code `themes` list.',
@@ -365,6 +400,10 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       markerForeground: {
         description: 'The number on a marker.',
         derived: 'The value of `codeblocks.accentForeground`.',
+      },
+      markerHoverBackground: {
+        description: 'The background of a marker under the pointer, with keyboard focus or with its note open.',
+        derived: '`markerBackground` mixed 45% towards `codeForeground`.',
       },
       markerSize: { description: 'The width and height of a marker.' },
       lineBackground: {

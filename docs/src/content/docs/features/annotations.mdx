@@ -45,7 +45,7 @@ The directive goes at the end of the line it explains. The note is the rest of t
 - Each marker is a button with the label "Annotation N", where N is its number. Screen readers read the note directly after its marker.
 - When the page prints, the markers are hidden and the notes print as a numbered list under the block.
 - The browser's `popover` attribute opens and closes the notes, so they work without JavaScript. Without JavaScript, the popover appears where the browser puts it by default, in browsers that do not support CSS anchor positioning.
-- Under reduced motion, the marker changes colour at once.
+- When the pointer is on a marker, or the marker has keyboard focus or an open note, it changes colour at once, with no fade. The colour is the marker colour moved towards the code text: lighter in dark themes and darker in light themes.
 
 ## Options
 

@@ -58,6 +58,29 @@ test('hovering over a note highlights its line, and hovering over a line highlig
   await expect(line).not.toHaveClass(/scb-annotation-lit/);
 });
 
+test('a line marker takes the hover colour of annotation markers', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Phones have no hover.');
+  const marker = example(page).locator('.scb-annotation-num').first();
+  const rest = await marker.evaluate((el) => getComputedStyle(el).backgroundColor);
+  await marker.hover();
+  const { hover, expected, duration } = await marker.evaluate((el) => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--ec-codeblocksAnnotations-markerHoverBg)';
+    el.after(probe);
+    const style = getComputedStyle(el);
+    const out = {
+      hover: style.backgroundColor,
+      expected: getComputedStyle(probe).color,
+      duration: style.transitionDuration,
+    };
+    probe.remove();
+    return out;
+  });
+  expect(duration).toBe('0s');
+  expect(hover).toBe(expected);
+  expect(hover).not.toBe(rest);
+});
+
 test('focusing a note with the keyboard highlights its line', async ({ page }) => {
   const block = example(page);
   await block.locator('.scb-annotation-notes li').first().focus();

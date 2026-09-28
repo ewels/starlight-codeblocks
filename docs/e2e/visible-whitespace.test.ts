@@ -76,3 +76,29 @@ test('whitespace="all" shows trailing whitespace', async ({ page }) => {
   const code = page.locator('.example').nth(1).locator('.pane.output .ec-line .code').first();
   await expect(code.locator(':scope > :last-child')).toHaveClass('scb-ws');
 });
+
+test('the glyphs are faint: about a third of the way from the code background to the code text', async ({ page }) => {
+  await page.goto('./features/visible-whitespace/');
+  const glyph = page.locator('.example .pane .scb-ws > [aria-hidden]').first();
+  await expect(glyph).toBeAttached();
+  const { colour, text } = await glyph.evaluate((el) => ({
+    colour: getComputedStyle(el, '::before').color,
+    text: (() => {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--ec-codeFg)';
+      el.append(probe);
+      const out = getComputedStyle(probe).color;
+      probe.remove();
+      return out;
+    })(),
+  }));
+  const [r, g, b, alpha] = colour.match(/[\d.]+/g)?.map(Number) ?? [];
+  expect([r, g, b]).toEqual(
+    text
+      .match(/[\d.]+/g)
+      ?.slice(0, 3)
+      .map(Number),
+  );
+  expect(alpha).toBeGreaterThan(0.25);
+  expect(alpha).toBeLessThan(0.45);
+});

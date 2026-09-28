@@ -113,7 +113,8 @@ The plugin reads directives at build time and removes them from the page. Reader
 - The numbered steps and the **Previous** and **Next** buttons under the block are buttons. The left and right arrow keys go to the previous and the next step when a numbered step has focus.
 - The row under the block also shows the step count in text, such as "Step 2 of 3".
 - Screen readers announce the number and the label of the new step. The current step has `aria-current`.
-- Under reduced motion, the code changes without the animation.
+- The green tint on new lines is a visual extra only. It fades out, and it gives no information that the code does not give.
+- Under reduced motion, the code changes without the animation, and new lines get no tint.
 
 ## Make code easier to read
 
@@ -121,6 +122,7 @@ The plugin reads directives at build time and removes them from the page. Reader
 
 - Each marker is a button with `aria-expanded`. The label of the title bar button changes from **Show** to **Hide**. Both have `aria-controls`, which names the lines they show.
 - The marker text gives the number of lines, such as "3 hidden lines", so readers know what the button opens.
+- Hidden lines that show are dimmed to 75% opacity. Some syntax colours then have less than 4.5:1 contrast, but at least 3:1. To turn the dimming off, set the `codeblocksHiddenLines.openOpacity` style setting to `1`.
 
 ### Expandable blocks
 

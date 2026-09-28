@@ -85,11 +85,22 @@ test('copying leaves the markers and notes out', async ({ page, context }) => {
   expect(copied).not.toContain('One job');
 });
 
-test('the marker changes colour instantly under reduced motion', async ({ page }) => {
+test('the marker changes to the hover colour at once, without a fade', async ({ page, isMobile }) => {
   const marker = example(page).locator('.scb-annotation').first();
-  const duration = await marker.evaluate((el) => getComputedStyle(el).transitionDuration);
-  const reduced = await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
-  expect(duration).toBe(reduced ? '0s' : '0.15s');
+  expect(await marker.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
+  test.skip(isMobile, 'Phones have no hover.');
+  const rest = await marker.evaluate((el) => getComputedStyle(el).backgroundColor);
+  await marker.hover();
+  const { hover, expected } = await marker.evaluate((el) => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--ec-codeblocksAnnotations-markerHoverBg)';
+    el.after(probe);
+    const out = { hover: getComputedStyle(el).backgroundColor, expected: getComputedStyle(probe).color };
+    probe.remove();
+    return out;
+  });
+  expect(hover).toBe(expected);
+  expect(hover).not.toBe(rest);
 });
 
 test.describe('without JavaScript', () => {

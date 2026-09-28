@@ -1,7 +1,8 @@
-import { getColorContrast } from '@expressive-code/core';
+import { getColorContrast, onBackground, setAlpha } from '@expressive-code/core';
 import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
+import { variants } from './contrast.ts';
 import { render } from './render.ts';
 
 const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
@@ -93,5 +94,26 @@ test('the marker text meets 4.5:1 contrast on its badge background, in both them
     expect(
       getColorContrast(get('codeblocks.mutedForeground'), get('codeblocksHiddenLines.badgeBackground')),
     ).toBeGreaterThanOrEqual(4.5);
+  }
+});
+
+test('the rule is brighter under the pointer and fainter while its lines show', async () => {
+  for (const v of await variants()) {
+    const bg = v.get('codeBackground');
+    const rule = (key: string) => getColorContrast(onBackground(v.get(`codeblocksHiddenLines.${key}`), bg), bg);
+    expect(rule('ruleHover'), v.name).toBeGreaterThan(rule('rule'));
+    expect(rule('ruleOpen'), v.name).toBeLessThan(rule('rule'));
+  }
+});
+
+// The user chose the mockup's dimmed lines knowingly: at 0.75 opacity, syntax colours that Expressive Code
+// corrected to just 4.5:1 fall to about 3.1:1 to 3.5:1. This keeps them from falling further.
+test('the code of a hidden line that shows keeps at least 3:1 contrast', async () => {
+  for (const v of await variants()) {
+    const opacity = Number(v.get('codeblocksHiddenLines.openOpacity'));
+    const bg = onBackground(v.get('codeblocksHiddenLines.openBackground'), v.get('codeBackground'));
+    for (const c of v.text) {
+      expect(getColorContrast(onBackground(setAlpha(c, opacity), bg), bg), `${v.name} ${c}`).toBeGreaterThanOrEqual(3);
+    }
   }
 });
