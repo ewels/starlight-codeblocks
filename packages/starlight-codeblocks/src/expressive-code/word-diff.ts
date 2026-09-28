@@ -145,7 +145,9 @@ export function pluginWordDiff({ minSimilarity = 0.4 }: { minSimilarity?: number
     styleSettings,
     baseStyles: ({ cssVar }) => `
 .${PREFIX}-worddiff-ins { background: ${cssVar('codeblocksWordDiff.insBackground')}; border-radius: 2px; text-decoration: underline 1px; text-underline-offset: 0.2em; }
-.${PREFIX}-worddiff-del { background: ${cssVar('codeblocksWordDiff.delBackground')}; border-radius: 2px; text-decoration: line-through 1px; }`,
+.${PREFIX}-worddiff-del { background: ${cssVar('codeblocksWordDiff.delBackground')}; border-radius: 2px; text-decoration: line-through 1px; }
+/* The spans sit inside each token, so currentColor would draw a change across tokens in several colours. */
+.${PREFIX}-worddiff-ins, .${PREFIX}-worddiff-del { text-decoration-color: ${cssVar('codeForeground')}; }`,
     hooks: {
       postprocessAnnotations(context) {
         for (const line of context.codeBlock.getLines()) {

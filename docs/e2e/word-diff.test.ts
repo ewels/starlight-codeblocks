@@ -38,3 +38,18 @@ test('changed words keep their syntax colours', async ({ page }) => {
   };
   expect(colours.filter((c) => chroma(c) >= 40).length).toBeGreaterThanOrEqual(2);
 });
+
+test('the underline and the line-through have one colour, the code foreground', async ({ page }) => {
+  const colours = await example(page)
+    .locator('.scb-worddiff-ins, .scb-worddiff-del')
+    .evaluateAll((els) => {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--ec-codeFg)';
+      els[0]?.closest('.expressive-code')?.append(probe);
+      const fg = getComputedStyle(probe).color;
+      probe.remove();
+      return [fg, ...new Set(els.map((el) => getComputedStyle(el).textDecorationColor))];
+    });
+  expect(colours.length).toBe(2);
+  expect(colours[1]).toBe(colours[0]);
+});
