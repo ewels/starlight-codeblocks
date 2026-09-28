@@ -73,3 +73,19 @@ test('renders a block without callouts the same as without the feature', async (
   const md = block('js title="a.js"', 'a()', 'b()');
   expect((await render(md)).html).toBe((await render(md, { callouts: false })).html);
 });
+
+test('between two lines with the same highlight, the callout has it too', async () => {
+  const lit = async (...lines: string[]) =>
+    (await render(block(...(lines as [string, ...string[]])))).html.match(
+      /<div class="(scb-callout[^"]*)" role="note"/,
+    )?.[1];
+  expect(await lit('js {1-2}', 'a()', '// [!callout] Note', 'b()')).toBe('scb-callout scb-callout-on mark');
+  expect(await lit('js ins={1-2}', 'a()', '// [!callout] Note', 'b()')).toBe('scb-callout scb-callout-on ins');
+  expect(await lit('js error={1-2}', 'a()', '// [!callout] Note', 'b()')).toBe(
+    'scb-callout scb-callout-on scb-state scb-state-error',
+  );
+  // One side only, or two different highlights.
+  expect(await lit('js {2}', 'a()', '// [!callout] Note', 'b()')).toBe('scb-callout');
+  expect(await lit('js {1} ins={2}', 'a()', '// [!callout] Note', 'b()')).toBe('scb-callout');
+  expect(await lit('js {1}', '// [!callout] Note', 'a()')).toBe('scb-callout');
+});

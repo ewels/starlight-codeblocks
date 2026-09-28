@@ -1356,3 +1356,27 @@ Use this format:
 - Decision: In the wide layout, the versions of the sticky block share one grid cell, and the versions that are not current are `visibility: hidden`, not `display: none`. The sticky block keeps one height for every version.
 - Reason: With a height per version, a new version changed the height of the sticky block. The client then moved the activation line and the padding of the steps, so the previous step became active again, which changed the height back. At some scroll positions this repeated many times a second. A Playwright test scans the scroll positions around a version change and fails if the block changes with no scroll.
 - Alternatives: Hysteresis on the activation line (hides the loop at one threshold but leaves the layout shift). Measuring the height once (wrong after a resize or a font load).
+
+## Annotations: the note shows on hover, and a click keeps it
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: With a mouse (`pointerType` `mouse`), hovering over a marker for 80 ms shows its note with `showPopover({ source })`, marked `data-scb-peek`. The note hides 200 ms after the pointer leaves the marker and the note, so the pointer can move into it. A click on a marker whose note is shown this way removes the mark and cancels the popover toggle, so the note stays, as a clicked note does. While a clicked note is open, hovering over another marker shows nothing.
+- Reason: The user asked for notes on hover, with click to fix them. The delays meet WCAG 1.4.13 (the note is hoverable and stays while hovered; Escape closes it). A `popover="auto"` note closes the other auto popovers when it opens, so a hover preview would close a note that the reader chose to keep open.
+- Alternatives: `popover="hint"` (does not close auto popovers, but Firefox and Safari do not support it yet). Showing notes on keyboard focus too (Tab through a block would open every note; Enter already opens one).
+
+## Footnotes: highlight on hover, and the note gets its line's tint
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: Hovering over a badge or a note with a mouse adds `scb-footnote-peek` to the line and the note until the pointer leaves; it looks the same as `scb-footnote-on`, which a click sets and keeps. Hover does not scroll or move focus. A highlighted note gets the line's `lineBackground` and a 3 px bar in the accent colour, with a negative inline margin that equals its extra padding, so the text does not move.
+- Reason: The user found the lighter text of an active note almost impossible to see, and asked for the same hover behaviour as annotations. A tint and a bar match the line and do not rely on colour alone.
+- Alternatives: Scrolling to the other half of the pair on hover (the page would move under the pointer). One class for hover and click (leaving would clear a clicked highlight).
+
+## Inline callouts: the highlight of the lines around them
+
+- Date: 2026-09-28
+- Step: after the plan
+- Decision: At build time, a callout between two lines with the same highlight classes (Expressive Code's `mark`, `ins` and `del`, and the line state classes) gets those classes and `scb-callout-on`, which draws the line's background and its bar after the gutter (a gradient at `--scb-callout-bar-wd` from `--scb-gutter`). A callout with a highlight on one side only, or two different highlights, stays plain. Highlights that scripts add, such as footnotes or code mentions, are not copied.
+- Reason: The user asked for an unbroken highlight when both sides match. The callout is not an `.ec-line`, so Expressive Code's line rules do not reach it, and giving it `ec-line` would make other features count it as a line.
+- Alternatives: CSS `:has()` sibling selectors (need one selector for each number of stacked callouts). Copying script highlights at run time (JavaScript for a rare case).

@@ -105,9 +105,9 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
   scroll-margin-block: 5rem;
 }
 .${cls('-badge')}:hover { background: color-mix(in srgb, ${v('accent')} 18%, transparent); }
-.ec-line.${cls('-on')} { background: ${v('lineBackground')}; }
-.ec-line.${cls('-on')} .code { --ecLineBrdCol: ${v('accent')}; --ecGtrBrdWd: 3px; }
-.ec-line.${cls('-on')} .${cls('-badge')} { background: ${v('accent')}; color: ${v('activeForeground')}; }
+.ec-line:is(.${cls('-on')}, .${cls('-peek')}) { background: ${v('lineBackground')}; }
+.ec-line:is(.${cls('-on')}, .${cls('-peek')}) .code { --ecLineBrdCol: ${v('accent')}; --ecGtrBrdWd: 3px; }
+.ec-line:is(.${cls('-on')}, .${cls('-peek')}) .${cls('-badge')} { background: ${v('accent')}; color: ${v('activeForeground')}; }
 .${cls('s')} {
   margin: 0;
   /* Starts a one-digit number, such as "1.", at the right of its 24px target, level with the code. */
@@ -131,7 +131,15 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
   cursor: pointer;
   scroll-margin-block: 5rem;
 }
-.${cls('s')} li.${cls('-on')} { color: ${cssVar('codeForeground')}; }
+/* The same tint and bar as its line. The padding reaches past the text by as much as the margin pulls back. */
+.${cls('s')} li:is(.${cls('-on')}, .${cls('-peek')}) {
+  margin-inline: -0.5rem;
+  padding-inline: calc(0.5rem - 3px) 0.5rem;
+  border-inline-start: 3px solid ${v('accent')};
+  border-radius: 0 3px 3px 0;
+  background: ${v('lineBackground')};
+  color: ${cssVar('codeForeground')};
+}
 .${cls('-num')} {
   flex: none;
   display: inline-flex;

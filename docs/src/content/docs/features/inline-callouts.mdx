@@ -36,6 +36,7 @@ The directive goes on its own line, directly above the line it explains. `/text/
 - The bubble is at most 60 characters wide, or 90% of the block. Longer notes wrap inside the bubble, so the block does not get wider.
 - On a narrow screen, the target text can be past the right edge of the block. The bubble and its arrow then stay at the right edge, where the reader can see them.
 - Two callout lines above one line give two bubbles, in the order you wrote them.
+- If the lines above and below the callout have the same highlight, the callout has it too, so the highlight does not break. This works for marked, inserted and deleted lines and for [line states](/starlight-codeblocks/features/line-states/).
 - The copy button leaves callouts out. A manual selection of the code leaves them out too.
 - Screen readers read the bubble before its line. The bubble has the `note` role.
 - Callouts are plain HTML and CSS. They work without JavaScript, and they have no animation.

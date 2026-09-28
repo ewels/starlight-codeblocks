@@ -55,6 +55,7 @@ The plugin reads directives at build time and removes them from the page. Reader
 - Each marker is a button with the label "Annotation N". Screen readers read the note after its marker. The number at the start of the note is hidden from screen readers, so they do not read it twice.
 - The note grows out of its marker. With reduced motion, it opens at once.
 - Escape, or a selection outside the note, closes it.
+- A hover note stays while the pointer is on the marker or the note, and Escape closes it. Touch screens and the keyboard open a note only when the reader selects the marker.
 - When the page prints, the notes print as a numbered list under the block.
 
 ### Footnotes
@@ -63,7 +64,8 @@ The plugin reads directives at build time and removes them from the page. Reader
 - A badge moves keyboard focus to its note, and the number moves focus back to the badge.
 - A badge that gets keyboard focus under a sticky list scrolls into view above the list.
 - The number links are 24 by 24 pixels or more.
-- A selected line gets a bar as well as a tint, so the highlight does not rely on colour.
+- A selected line and its note get a bar as well as a tint, so the highlight does not rely on colour.
+- Hover highlights only. It shows nothing that selection does not show, and touch screens and the keyboard use selection.
 - Under reduced motion, the page jumps to the note or the line.
 
 ### Inline callouts

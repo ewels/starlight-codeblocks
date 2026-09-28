@@ -38,6 +38,7 @@ const res = await fetch(url, { signal: controller.signal });
 
 - The arrow points at the first match of `/text/` on the line below.
 - Two callout lines above one line give two bubbles, in source order.
+- Between two lines with the same highlight (`{}`, `ins`, `del` or a line state), the bubble's row has the highlight too.
 - The bubble is at most 60 characters wide, or 90% of the block. Longer notes wrap.
 - Works without JavaScript. Screen readers read the bubble before its line.
 - Option: `callouts: false` turns the feature off. The directive line then stays in the code.
@@ -59,7 +60,7 @@ matrix:
   python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
 ```
 
-- Markers are numbered from 1 in each block. Selecting a marker opens its note. Escape closes it.
+- Markers are numbered from 1 in each block. Hovering over a marker with a mouse shows its note until the pointer leaves the marker and the note. Selecting a marker keeps its note open. Escape closes it.
 - The note opens out of the marker, to the right of the line, when it fits there without covering code. Otherwise it opens under the marker, 340 px wide at most. Short notes on short lines fit beside the line.
 - The note can hold inline code, links and bold text.
 - Works without JavaScript, through the browser's `popover` attribute.
@@ -84,7 +85,7 @@ Use when every reader needs every note, and the block is short enough that the l
 app = Flask(__name__)
 ```
 
-- Selecting a badge highlights its line and its note. Selecting a note does the same from the list.
+- Hovering over a badge or a note highlights its line and its note. Selecting one keeps the highlight. Selecting a note does the same from the list.
 - Without JavaScript, the badges and the numbers are plain links to each other.
 - Option: `footnotes.sticky` (default `false`) makes every list sticky. `footnotes: false` turns the feature off.
 - Limits: a footnote applies to one line. A sticky list covers the bottom of the block, so keep the notes short.

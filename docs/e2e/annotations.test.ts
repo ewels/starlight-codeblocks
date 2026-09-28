@@ -53,6 +53,55 @@ test('a marker opens its note, and a selection outside closes it', async ({ page
   await expect(note).toBeHidden();
 });
 
+test.describe('hover', () => {
+  test.skip(({ isMobile }) => isMobile, 'Phones have no hover.');
+
+  test('hovering over a marker shows its note, and moving away hides it', async ({ page }) => {
+    const block = example(page);
+    const marker = block.getByRole('button', { name: 'Annotation 1' });
+    const note = block.locator('.scb-annotation-popover').first();
+    await marker.hover();
+    await expect(note).toBeVisible();
+    await page.mouse.move(0, 0);
+    await expect(note).toBeHidden();
+  });
+
+  test('the pointer can move from the marker into the note, which stays', async ({ page }) => {
+    const block = example(page);
+    const note = block.locator('.scb-annotation-popover').first();
+    await block.getByRole('button', { name: 'Annotation 1' }).hover();
+    await expect(note).toBeVisible();
+    await note.locator('p').hover();
+    await page.waitForTimeout(400);
+    await expect(note).toBeVisible();
+  });
+
+  test('a click on a shown note keeps it open after the pointer leaves', async ({ page }) => {
+    const block = example(page);
+    const marker = block.getByRole('button', { name: 'Annotation 1' });
+    const note = block.locator('.scb-annotation-popover').first();
+    await marker.hover();
+    await expect(note).toBeVisible();
+    await marker.click();
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(400);
+    await expect(note).toBeVisible();
+    await marker.click();
+    await expect(note).toBeHidden();
+  });
+
+  test('while a clicked note is open, hovering over another marker leaves it open', async ({ page }) => {
+    const block = example(page);
+    const notes = block.locator('.scb-annotation-popover');
+    await block.getByRole('button', { name: 'Annotation 1' }).click();
+    await expect(notes.first()).toBeVisible();
+    await block.getByRole('button', { name: 'Annotation 2' }).hover();
+    await page.waitForTimeout(300);
+    await expect(notes.first()).toBeVisible();
+    await expect(notes.nth(1)).toBeHidden();
+  });
+});
+
 test('with room after the line, the note opens out of its marker', async ({ page, isMobile }) => {
   test.skip(isMobile, 'A phone has no room beside the line.');
   const { box, badge, text, marker, pre, textRight, note } = await open(example(page), 1);

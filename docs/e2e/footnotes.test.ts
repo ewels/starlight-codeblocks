@@ -39,9 +39,42 @@ test('a badge highlights its line and its note, and a click elsewhere clears it'
   await expect(note).toHaveClass(/scb-footnote-on/);
   const bar = await line.locator('.code').evaluate((el) => getComputedStyle(el).borderInlineStartColor);
   expect(bar).not.toBe('rgba(0, 0, 0, 0)');
+  // The note has the same tint and bar as its line, and its text stays where it was.
+  const style = (el: Element) => [getComputedStyle(el).backgroundColor, getComputedStyle(el).borderInlineStartColor];
+  expect(await note.evaluate(style)).toEqual([await line.evaluate((el) => getComputedStyle(el).backgroundColor), bar]);
+  const other = block.locator('.scb-footnotes li').nth(1);
+  const x = (el: Element) => (el.querySelector('.scb-footnote-num') as Element).getBoundingClientRect().x;
+  expect(await note.evaluate(x)).toBeCloseTo(await other.evaluate(x), 0);
   await page.locator('h1').click();
   await expect(line).not.toHaveClass(/scb-footnote-on/);
   await expect(note).not.toHaveClass(/scb-footnote-on/);
+});
+
+test('hovering over a badge or a note highlights both until the pointer leaves, and a click keeps it', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'Phones have no hover.');
+  const block = example(page);
+  const badge = block.getByRole('link', { name: 'Footnote 1', exact: true });
+  const line = block.locator('.ec-line', { has: page.locator('[data-scb-fn="1"]') });
+  const note = block.locator('.scb-footnotes li').first();
+  const tint = (el: Element) => getComputedStyle(el).backgroundColor;
+  const plain = await note.evaluate(tint);
+  await badge.hover();
+  await expect(line).toHaveClass(/scb-footnote-peek/);
+  await expect(note).toHaveClass(/scb-footnote-peek/);
+  expect(await note.evaluate(tint)).toBe(await line.evaluate(tint));
+  await page.mouse.move(0, 0);
+  await expect(line).not.toHaveClass(/scb-footnote-peek/);
+  expect(await note.evaluate(tint)).toBe(plain);
+  await note.hover();
+  await expect(line).toHaveClass(/scb-footnote-peek/);
+  await badge.click();
+  await page.mouse.move(0, 0);
+  await expect(line).toHaveClass(/scb-footnote-on/);
+  await expect(note).toHaveClass(/scb-footnote-on/);
+  await expect(note).not.toHaveClass(/scb-footnote-peek/);
 });
 
 test('a note highlights its line, with the keyboard', async ({ page }) => {

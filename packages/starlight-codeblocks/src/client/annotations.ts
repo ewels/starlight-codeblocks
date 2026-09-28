@@ -75,6 +75,7 @@ function toggle(event: Event) {
   const popover = event.target as HTMLElement;
   if (!popover.classList?.contains('scb-annotation-popover')) return;
   stops.get(popover)?.();
+  if ((event as ToggleEvent).newState === 'closed') delete popover.dataset.scbPeek;
   const button = popover.previousElementSibling as HTMLElement | null;
   if (button && (event as ToggleEvent).newState === 'open') stops.set(popover, open(popover, button));
 }
@@ -86,9 +87,55 @@ function toggle(event: Event) {
 function click(event: MouseEvent) {
   const button = (event.target as Element).closest<HTMLElement>('button.scb-annotation');
   const popover = button?.nextElementSibling as HTMLElement | null | undefined;
+  // A click on a marker whose note shows on hover keeps the note open.
+  if (popover?.dataset.scbPeek !== undefined) {
+    event.preventDefault();
+    delete popover.dataset.scbPeek;
+    return;
+  }
   if (!button || !popover || document.getElementById(popover.id) === popover) return;
   event.preventDefault();
   popover.togglePopover();
+}
+
+let showing = 0;
+let hiding = 0;
+
+/** The popover of the marker or the popover under the pointer, and whether the pointer is on the marker. */
+function hovered(event: PointerEvent) {
+  if (event.pointerType !== 'mouse') return {};
+  const target = event.target as Element;
+  const button = target.closest?.('button.scb-annotation');
+  const popover = (button?.nextElementSibling ?? target.closest?.('.scb-annotation-popover')) as HTMLElement | null;
+  return { popover, button };
+}
+
+/**
+ * Hovering over a marker shows its note until the pointer leaves the marker and the note. The delay
+ * before it hides lets the pointer move into the note. A note that a click opened stays, and while one
+ * is open, hovering shows no other note, because opening one would close it.
+ */
+function pointerOver(event: PointerEvent) {
+  const { popover, button } = hovered(event);
+  if (!popover) return;
+  clearTimeout(hiding);
+  if (!button || popover.matches(':popover-open')) return;
+  if (document.querySelector('.scb-annotation-popover:popover-open:not([data-scb-peek])')) return;
+  clearTimeout(showing);
+  showing = window.setTimeout(() => {
+    if (popover.matches(':popover-open')) return;
+    popover.dataset.scbPeek = '';
+    // `source` makes the marker the invoker, as a click does, for its expanded state and light dismiss.
+    (popover.showPopover as (options?: { source?: Element }) => void)({ source: button });
+  }, 80);
+}
+
+function pointerOut(event: PointerEvent) {
+  const { popover } = hovered(event);
+  if (!popover) return;
+  clearTimeout(showing);
+  if (popover.dataset.scbPeek === undefined) return;
+  hiding = window.setTimeout(() => popover.dataset.scbPeek !== undefined && popover.hidePopover(), 200);
 }
 
 /** Lights the note and the line number of `n` in the side-by-side block of `el`, and nothing elsewhere. */
@@ -145,6 +192,8 @@ export default function initAnnotations() {
     document.addEventListener('beforetoggle', beforeToggle, true);
     document.addEventListener('toggle', toggle, true);
     document.addEventListener('click', click);
+    document.addEventListener('pointerover', pointerOver);
+    document.addEventListener('pointerout', pointerOut);
     // On the document, so that copies of a block, as full screen plugins show, light up too.
     document.addEventListener('mouseover', over);
     document.addEventListener('focusin', over);

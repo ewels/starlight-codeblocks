@@ -1,4 +1,5 @@
 const ON = 'scb-footnote-on';
+const PEEK = 'scb-footnote-peek';
 
 function reveal(el: Element) {
   const { top, bottom } = el.getBoundingClientRect();
@@ -30,6 +31,25 @@ function select(event: MouseEvent) {
   }
 }
 
+/** The line and the list item of the footnote under a mouse pointer. */
+function pair(event: PointerEvent) {
+  if (event.pointerType !== 'mouse') return [];
+  const target = event.target as Element;
+  const el = target.closest?.<HTMLElement>('.scb-footnote-badge, .scb-footnotes li');
+  const block = el?.closest('[data-scb-footnotes]');
+  const n = el?.dataset.scbFn;
+  if (!block || !n) return [];
+  return [
+    block.querySelector(`.scb-footnote-badge[data-scb-fn="${n}"]`)?.closest('.ec-line'),
+    block.querySelector(`.scb-footnotes li[data-scb-fn="${n}"]`),
+  ];
+}
+
+/** Hovering over a badge or a note highlights both until the pointer leaves. A click keeps the highlight. */
+const peek = (on: boolean) => (event: PointerEvent) => {
+  for (const el of pair(event)) el?.classList.toggle(PEEK, on);
+};
+
 /** Scrolls a focused control in a line out from under the sticky footnote list. */
 function unobscure(event: FocusEvent) {
   const el = event.target as Element;
@@ -46,5 +66,7 @@ export default function initFootnotes() {
   if (ready) return;
   ready = true;
   document.addEventListener('click', select);
+  document.addEventListener('pointerover', peek(true));
+  document.addEventListener('pointerout', peek(false));
   document.addEventListener('focusin', unobscure);
 }

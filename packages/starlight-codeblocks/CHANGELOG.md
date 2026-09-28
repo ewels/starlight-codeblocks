@@ -7,9 +7,9 @@ The first version of the plugin. It adds these features to the code blocks of St
 - Comment notation: `[!code …]` directives in code comments, compatible with VitePress.
 - Focus: blurred or dimmed lines outside a range.
 - Line states: error, warning, info and custom states, with optional messages.
-- Inline callouts: a bubble that points at a word on a line.
-- Annotations: numbered popover notes.
-- Footnotes: numbered notes under the block, with an optional sticky list.
+- Inline callouts: a bubble that points at a word on a line. Between two highlighted lines, it keeps the highlight.
+- Annotations: numbered popover notes, shown on hover and kept open with a click.
+- Footnotes: numbered notes under the block, with an optional sticky list. Hover or select a badge or a note to highlight both.
 - Side-by-side annotations: notes in a column next to the code, when the longest line fits. On a page without a table of contents, wide blocks spread past the content column. `codeSide="right"` puts the code on the right.
 - Hidden lines: lines that readers can show, and that the copy button still copies.
 - Smart shell copy: a Copy commands button in the title bar of terminal blocks, and of Python blocks with `>>>` prompts, copies the commands without prompts or output.

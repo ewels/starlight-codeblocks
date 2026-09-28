@@ -128,3 +128,25 @@ test('code in a bubble uses the code font, with rounded corners', async ({ page 
   expect(font).toBe(codeFont);
   expect(radius).toBe('3px');
 });
+
+test('between two marked lines, the callout has the same background and bar as the lines', async ({ page }) => {
+  for (const meta of ['{1-2}', 'error={1-2}']) {
+    const { html } = await render([`\`\`\`js ${meta}`, 'a()', '// [!callout] Note', 'b()', '```'].join('\n'));
+    await page.evaluate((html) => {
+      document.querySelector('#scb-injected')?.remove();
+      const box = document.createElement('div');
+      box.id = 'scb-injected';
+      box.innerHTML = html;
+      document.querySelector('.sl-markdown-content')?.prepend(box);
+    }, html);
+    const block = page.locator('#scb-injected');
+    const line = block.locator('.ec-line').first();
+    const callout = block.locator('.scb-callout');
+    const colour = (el: Element) => getComputedStyle(el).backgroundColor;
+    expect(await callout.evaluate(colour), meta).toBe(await line.evaluate(colour));
+    expect(await callout.evaluate(colour), meta).not.toBe('rgba(0, 0, 0, 0)');
+    // The bar is the first pixels of the callout's background image, in the line's border colour.
+    const bar = await line.locator('.code').evaluate((el) => getComputedStyle(el).borderInlineStartColor);
+    expect(await callout.evaluate((el) => getComputedStyle(el).backgroundImage), meta).toContain(bar);
+  }
+});

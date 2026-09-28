@@ -1,5 +1,5 @@
 import { type ExpressiveCodeLine, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
-import { type ElementContent, h, select, toText } from '@expressive-code/core/hast';
+import { type Element, type ElementContent, h, select, selectAll, toText } from '@expressive-code/core/hast';
 import { type CodeblocksPlugin, insertBefore, lineElement } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
@@ -48,6 +48,12 @@ export function calloutMiddle(text: string, match?: string) {
 }
 
 const cls = (suffix = '') => `${PREFIX}-callout${suffix}`;
+
+/** The classes that give a line a highlight background: Expressive Code's markers and the line states. */
+function highlight(line: Element | undefined) {
+  const names = (line?.properties.className as string[] | undefined) ?? [];
+  return names.filter((name) => ['mark', 'ins', 'del'].includes(name) || name.startsWith(`${PREFIX}-state`)).sort();
+}
 
 /** Shows the text of `[!callout /text/]` in a bubble above the next line, pointing at `text`. */
 export function pluginCallouts(): CodeblocksPlugin {
@@ -120,6 +126,22 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
 .${cls('-bubble')} a { color: inherit; text-underline-offset: 3px; }
 /* A callout on a hidden line shows with the line. */
 .${cls('-hidden')}:not(.${PREFIX}-hidden-open) { display: none; }
+/* Between two lines with the same highlight, the callout has it too, with the line's bar after the gutter. */
+.${cls('-on')} {
+  --scb-callout-bar-end: calc(var(--scb-gutter, 0px) + var(--scb-callout-bar-wd, 0px));
+  background:
+    linear-gradient(to right, transparent var(--scb-gutter, 0px), var(--scb-callout-bar) 0 var(--scb-callout-bar-end), transparent 0),
+    var(--scb-callout-bg);
+}
+.${cls('-on')}.mark { --scb-callout-bg: var(--ec-tm-markBg); --scb-callout-bar: var(--ec-tm-markBrdCol); }
+.${cls('-on')}.ins { --scb-callout-bg: var(--ec-tm-insBg); --scb-callout-bar: var(--ec-tm-insBrdCol); }
+.${cls('-on')}.del { --scb-callout-bg: var(--ec-tm-delBg); --scb-callout-bar: var(--ec-tm-delBrdCol); }
+.${cls('-on')}:is(.mark, .ins, .del) { --scb-callout-bar-wd: var(--ec-tm-lineMarkerAccentWd); }
+.${cls('-on')}.${PREFIX}-state {
+  --scb-callout-bg: var(--scbStateBg);
+  --scb-callout-bar: var(--scbStateBar);
+  --scb-callout-bar-wd: ${cssVar('codeblocksLineStates.barWidth')};
+}
 @media print {
   .${cls('-hidden')} { display: none !important; }
 }`;
@@ -129,6 +151,7 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
         const callouts = getRenderedDirectives(context, 'callout');
         const code = select('pre > code', context.renderData.blockAst);
         if (callouts.length === 0 || !code) return;
+        const lines = selectAll('.ec-line', code);
         for (const directive of callouts) {
           const line = directive.lines[0] as ExpressiveCodeLine;
           const lineEl = lineElement(line);
@@ -139,10 +162,13 @@ pre:has(> code > .${cls()}) { container-type: inline-size; }
             toText(h('span', text)).length +
             text.filter((node) => node.type === 'element' && node.tagName === 'code').length;
           const hidden = (lineEl.properties.className as string[] | undefined)?.includes(`${PREFIX}-hidden-line`);
+          const below = highlight(lineEl);
+          const above = highlight(lines[lines.indexOf(lineEl) - 1]);
+          const lit = below.length > 0 && below.join(' ') === above.join(' ') ? [cls('-on'), ...below] : [];
           const bubble: ElementContent = h(
             'div',
             {
-              class: hidden ? `${cls()} ${cls('-hidden')}` : cls(),
+              class: [cls(), ...(hidden ? [cls('-hidden')] : []), ...lit].join(' '),
               role: 'note',
               style: `--scb-callout-mid:${calloutMiddle(line.text, directive.match)};--scb-callout-len:${Math.min(60, length)}`,
             },

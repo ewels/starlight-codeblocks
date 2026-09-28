@@ -39,9 +39,10 @@ The directive goes at the end of the line it explains. The note is the rest of t
 ## Behaviour
 
 - Markers are numbered from 1 in each block, in line order.
+- Hovering over a marker with a mouse shows its note. The note hides when the pointer leaves the marker and the note. So the pointer can move into the note, for example to select a link. Selecting the marker keeps the note open, as when it was not shown.
 - Selecting a marker opens its note out of the marker. The note starts with the same number, on top of the marker. The box goes to the right, over the empty space after the line. A long note wraps onto more lines, up to the popover width (340 px by default).
 - If the box does not fit there, the note opens under the marker instead. It is centred and as wide as the popover width, with the number at its start. The box does not fit when it would cover code on its line or the lines next to it. It also does not fit when it would go past the right edge of the block or the window. On a phone, most notes open this way. The note moves between the two places when the window changes size or the page scrolls.
-- If there is no room under the marker, the note opens above it. Opening a note closes any other open note.
+- If there is no room under the marker, the note opens above it. Opening a note closes any other open note. While a selected note is open, hovering over another marker shows nothing.
 - The number in the note is hidden from screen readers, because the marker already has the label.
 - Escape, or a selection outside the note, closes it.
 - The copy button leaves the markers and the notes out. A manual selection leaves the markers out.
