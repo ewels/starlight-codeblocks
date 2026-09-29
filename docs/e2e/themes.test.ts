@@ -7,14 +7,16 @@ test.beforeEach(async ({ page }) => {
 test('each card shows the block in its own theme, whatever the theme of the site', async ({ page }) => {
   const cards = page.locator('.theme-gallery').first().locator('.card');
   await expect(cards).toHaveCount(8);
+  // The markers ease their colours in, so a read during the transition sees a colour in between.
   const read = () =>
-    cards.evaluateAll((els) =>
-      els.map((el) => ({
+    cards.evaluateAll(async (els) => {
+      await Promise.all(document.getAnimations().map((a) => a.finished));
+      return els.map((el) => ({
         bg: getComputedStyle(el.querySelector('pre') as Element).backgroundColor,
         keyword: getComputedStyle(el.querySelector('.ec-line span[style]') as Element).color,
         accent: getComputedStyle(el.querySelector('.scb-annotation') as Element).backgroundColor,
-      })),
-    );
+      }));
+    });
   const first = await read();
   // GitHub Light and Min Light share a white background, so the pair of colours tells them apart.
   expect(new Set(first.map((c) => `${c.bg} ${c.keyword}`)).size).toBe(8);
