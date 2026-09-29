@@ -298,20 +298,20 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
     page: 'features/word-level-diff',
     settings: {
       ins: {
-        description: 'The colour that the tint of added words comes from.',
+        description: 'The colour that the tint and the bar of added words come from.',
         derived: 'The `terminal.ansiGreen` colour of the theme.',
       },
       del: {
-        description: 'The colour that the tint of removed words comes from.',
+        description: 'The colour that the tint and the bar of removed words come from.',
         derived: 'The `terminal.ansiRed` colour of the theme.',
       },
       insBackground: {
         description: 'The tint of added words.',
-        derived: '`ins` at 15% opacity on dark themes, 30% on light themes.',
+        derived: '`ins` at 25% opacity on dark themes, 40% on light themes.',
       },
       delBackground: {
         description: 'The tint of removed words.',
-        derived: '`del` at 18% opacity on dark themes, 30% on light themes.',
+        derived: '`del` at 25% opacity on dark themes, 40% on light themes.',
       },
     },
   },

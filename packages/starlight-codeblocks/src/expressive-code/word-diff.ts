@@ -28,10 +28,11 @@ const styleSettings = new PluginStyleSettings({
     codeblocksWordDiff: {
       ins: (context) => themeColour(context, 'terminal.ansiGreen'),
       del: (context) => themeColour(context, 'terminal.ansiRed'),
+      // Stronger dark tints make the contrast pass wash the words out to plain text.
       insBackground: ({ resolveSetting, theme }) =>
-        setAlpha(resolveSetting('codeblocksWordDiff.ins'), theme.type === 'dark' ? 0.15 : 0.3),
+        setAlpha(resolveSetting('codeblocksWordDiff.ins'), theme.type === 'dark' ? 0.25 : 0.4),
       delBackground: ({ resolveSetting, theme }) =>
-        setAlpha(resolveSetting('codeblocksWordDiff.del'), theme.type === 'dark' ? 0.18 : 0.3),
+        setAlpha(resolveSetting('codeblocksWordDiff.del'), theme.type === 'dark' ? 0.25 : 0.4),
     },
   },
 });
@@ -147,7 +148,9 @@ export function pluginWordDiff({ minSimilarity = 0.4 }: { minSimilarity?: number
 .${PREFIX}-worddiff-ins { background: ${cssVar('codeblocksWordDiff.insBackground')}; border-radius: 2px; text-decoration: underline 1px; text-underline-offset: 0.2em; }
 .${PREFIX}-worddiff-del { background: ${cssVar('codeblocksWordDiff.delBackground')}; border-radius: 2px; text-decoration: line-through 1px; }
 /* The spans sit inside each token, so currentColor would draw a change across tokens in several colours. */
-.${PREFIX}-worddiff-ins, .${PREFIX}-worddiff-del { text-decoration-color: ${cssVar('codeForeground')}; }`,
+.${PREFIX}-worddiff-ins, .${PREFIX}-worddiff-del { text-decoration-color: ${cssVar('codeForeground')}; }
+.${PREFIX}-worddiff-ins { box-shadow: inset 0 -2px 0 ${cssVar('codeblocksWordDiff.ins')}; }
+.${PREFIX}-worddiff-del { box-shadow: inset 0 -2px 0 ${cssVar('codeblocksWordDiff.del')}; }`,
     hooks: {
       postprocessAnnotations(context) {
         for (const line of context.codeBlock.getLines()) {

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { css, example } from './helpers.ts';
 
-test('marks changed words by shape in the code colour, keeps their syntax colours, and pads the markers', async ({
+test('marks changed words by shape in the code colour, keeps some syntax colour, and pads the markers', async ({
   page,
 }) => {
   await page.goto('./features/word-level-diff/');
@@ -27,7 +27,9 @@ test('marks changed words by shape in the code colour, keeps their syntax colour
     const [r = 0, g = 0, b = 0] = (c.match(/\d+/g) ?? []).map(Number);
     return Math.max(r, g, b) - Math.min(r, g, b);
   };
-  expect(colours.filter((c) => chroma(c) >= 40).length).toBeGreaterThanOrEqual(2);
+  // A dark tint strong enough to see makes the contrast pass lighten the words towards pastels.
+  const vivid = (await page.evaluate(() => document.documentElement.dataset.theme)) === 'dark' ? 20 : 40;
+  expect(colours.filter((c) => chroma(c) >= vivid).length).toBeGreaterThanOrEqual(2);
 
   const pad = await block
     .locator('.ec-line.ins .code')
