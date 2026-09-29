@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { css, example } from './helpers.ts';
+import { css, example, reduced } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/expandable-blocks/');
@@ -57,6 +57,32 @@ test('collapses a long block under a fade, and the button or find in page opens 
   await found.dispatchEvent('beforematch');
   await expect(found).toBeVisible();
   await expect(pre).not.toHaveClass(/scb-expandable-collapsed/);
+});
+
+test('eases open and closed, keeps the button in place, and does not animate under reduced motion', async ({
+  page,
+}) => {
+  const pre = example(page).locator('pre');
+  const button = example(page).locator('.scb-expandable-toggle');
+  const animations = () => pre.evaluate((el) => el.getAnimations().length);
+  await button.scrollIntoViewIfNeeded();
+  await button.click();
+  expect(await animations()).toBe(reduced() ? 0 : 1);
+  await expect(pre.locator('.ec-line').nth(20)).toBeVisible();
+  await expect.poll(animations).toBe(0);
+
+  await button.scrollIntoViewIfNeeded();
+  const before = await button.evaluate((el) => {
+    const { top } = el.getBoundingClientRect();
+    (el as HTMLElement).click();
+    return top;
+  });
+  expect(await animations()).toBe(reduced() ? 0 : 1);
+  if (!reduced()) await expect(pre.locator('.ec-line').nth(20)).toBeVisible();
+  await expect.poll(animations).toBe(0);
+  await expect(pre.locator('.ec-line').nth(20)).toBeHidden();
+  const after = await button.evaluate((el) => el.getBoundingClientRect().top);
+  expect(Math.abs(after - before)).toBeLessThan(2);
 });
 
 test('prints in full, and works with the keyboard', async ({ page }) => {

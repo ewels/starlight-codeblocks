@@ -29,6 +29,34 @@ function set(pre: HTMLElement, expanded: boolean) {
 const preOf = (el: Element) =>
   el.closest('.expressive-code')?.querySelector<HTMLElement>('pre[data-scb-expandable]') ?? null;
 
+function toggle(pre: HTMLElement, button: Element, expand: boolean) {
+  for (const animation of pre.getAnimations()) animation.finish();
+  const from = pre.offsetHeight;
+  const { top } = button.getBoundingClientRect();
+  set(pre, expand);
+  const to = pre.offsetHeight;
+  // The button sits under the tail, and scroll anchoring does not follow it when the tail collapses.
+  const hold = () => !expand && scrollBy({ top: button.getBoundingClientRect().top - top, behavior: 'instant' });
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return hold();
+  // The tail stays visible while the block shrinks over it.
+  if (!expand) for (const line of tail(pre)) line.removeAttribute('hidden');
+  const animation = pre.animate(
+    { height: [`${from}px`, `${to}px`], overflow: ['hidden', 'hidden'] },
+    { duration: 200, easing: 'cubic-bezier(0.2, 0, 0, 1)' },
+  );
+  const follow = () => {
+    hold();
+    if (animation.playState === 'running') requestAnimationFrame(follow);
+  };
+  follow();
+  // A click during the animation finishes it, and its finish event comes after the new state.
+  animation.onfinish = () => {
+    if (pre.getAnimations().length > 0) return;
+    if (!expand) set(pre, false);
+    hold();
+  };
+}
+
 let ready = false;
 
 /** Collapses a long block to its `data-scb-expandable` line count, expandable by button or find in page. */
@@ -38,12 +66,7 @@ export default function initExpandable() {
     document.addEventListener('click', (event) => {
       const button = (event.target as Element).closest('.scb-expandable-toggle');
       const pre = button && preOf(button);
-      if (!pre) return;
-      const expand = button.getAttribute('aria-expanded') !== 'true';
-      const { top } = button.getBoundingClientRect();
-      set(pre, expand);
-      // The button sits under the tail, and scroll anchoring does not follow it when the tail collapses.
-      if (!expand) scrollBy({ top: button.getBoundingClientRect().top - top, behavior: 'instant' });
+      if (pre) toggle(pre, button, button.getAttribute('aria-expanded') !== 'true');
     });
     document.addEventListener(
       'beforematch',
