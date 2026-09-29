@@ -70,6 +70,21 @@ Every directive can go at the end of the line it marks, or on its own line above
 
 <LinkCard title="Directives reference" description="See every directive and the feature it belongs to." href="/starlight-codeblocks/reference/directives/" />
 
+### Sharing with ordinary comments
+
+A directive can share a comment with an ordinary comment. The plugin removes only the directive, and the rest of the comment stays in the code:
+
+export const withComment = `
+\`\`\`js
+const host = 'localhost'
+const port = 8080 // Default port [!code focus]
+\`\`\`
+`;
+
+<Example code={withComment} />
+
+Text after a directive that takes text, such as `[!code error]` or `[!callout]`, is the text of that directive. Put your own comment before the directive.
+
 ## Behaviour
 
 The plugin reads the directives when the site builds. It needs no JavaScript in the browser.
