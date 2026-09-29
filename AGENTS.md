@@ -99,7 +99,7 @@ pnpm readme:media [slug...]   docs:build, then regenerate the README images in .
 
 ## Quality gates
 
-Every commit must pass `pnpm lint`, `pnpm test` and `pnpm docs:build` with no warnings. Run `pnpm test:e2e` and `pnpm lint:docs` before each push. For a visual change, compare a Playwright screenshot of the docs example in the dark and the light theme with the same feature in `design/mockups.html`. Put screenshots and experiments in a scratch folder, not in the repository.
+Every commit must pass `pnpm lint`, `pnpm test` and `pnpm docs:build` with no warnings. Run `pnpm lint:docs` before each push. CI runs the full e2e suite, so locally run only the Playwright specs for what you changed. For a visual change, compare a Playwright screenshot of the docs example in the dark and the light theme with the same feature in `design/mockups.html`. Put screenshots and experiments in a scratch folder, not in the repository.
 
 ## Accessibility
 
