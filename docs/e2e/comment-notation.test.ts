@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { copyFromKeyboard, example } from './helpers.ts';
 
 test('directives change their lines and disappear from the code and the copied text', async ({ page }) => {
-  await page.goto('./features/comment-notation/');
+  await page.goto('./guides/comment-notation/');
   const result = example(page);
   await expect(result.locator('.ec-line.del')).toHaveCount(1);
   await expect(result.locator('.ec-line.ins')).toHaveCount(1);

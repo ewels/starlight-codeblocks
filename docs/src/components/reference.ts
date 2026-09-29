@@ -1,9 +1,13 @@
-export { commentSyntaxGroups } from '../../../packages/starlight-codeblocks/src/expressive-code/comments.ts';
-
+import { commentSyntaxGroups as groups } from '../../../packages/starlight-codeblocks/src/expressive-code/comments.ts';
 import type { CodeblocksPlugin } from '../../../packages/starlight-codeblocks/src/expressive-code/core.ts';
 import { createPlugins } from '../../../packages/starlight-codeblocks/src/expressive-code/index.ts';
 import { optionsReference, resolveOptions } from '../../../packages/starlight-codeblocks/src/options.ts';
 import { attributesReference, styleSettingsReference } from '../../../packages/starlight-codeblocks/src/reference.ts';
+
+export const commentSyntaxGroups = groups.map(({ syntax, languages }) => ({
+  syntax,
+  languages: languages.toSorted(),
+}));
 
 const plugins = createPlugins(resolveOptions()) as CodeblocksPlugin[];
 const words: Record<string, string> = { '++': 'insert', '--': 'delete' };

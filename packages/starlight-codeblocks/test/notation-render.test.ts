@@ -39,6 +39,8 @@ test.each([
   ['html', '<p>Hi</p> <!-- [!code ++] -->', '<p>Hi</p>', {}],
   ['json', '{"a": 1} // [!code ++]', '{"a": 1} // [!code ++]', {}],
   ['sh', 'echo "# [!code focus]"', 'echo "# [!code focus]"', {}],
+  ['mdx', '<Card /> {/* [!code ++] */}', '<Card />', {}],
+  ['mdx', '<Card /> <!-- [!code ++] -->', '<Card /> <!-- [!code ++] -->', {}],
   ['cypher', 'MATCH (n) // [!code ++]', 'MATCH (n)', { notation: { comments: { cypher: ['//'] } } }],
 ])('reads directives in the comment syntax of %s', async (lang, line, copy, options) => {
   expect((await render(block(lang, line), options)).copyText).toBe(copy);

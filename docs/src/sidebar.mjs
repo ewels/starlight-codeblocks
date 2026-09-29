@@ -1,11 +1,12 @@
 export const sidebar = [
   {
     label: 'Start here',
-    items: [{ label: 'Introduction', link: '/' }, 'getting-started', 'configuration', 'features/comment-notation'],
+    items: [{ label: 'Introduction', link: '/' }, 'getting-started', 'configuration'],
   },
   {
     label: 'Guides',
     items: [
+      'guides/comment-notation',
       'guides/choose-an-annotation-style',
       'guides/code-switcher-or-tabs',
       'guides/migrate-from-vitepress',
@@ -79,7 +80,7 @@ export const carouselGroups = sidebar
     label,
     ids: items.filter(
       /** @returns {item is string} */
-      (item) => typeof item === 'string' && item.startsWith('features/') && item !== 'features/comment-notation',
+      (item) => typeof item === 'string' && item.startsWith('features/'),
     ),
   }))
   .filter(({ ids }) => ids.length > 0);

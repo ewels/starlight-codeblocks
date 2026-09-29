@@ -348,7 +348,7 @@ export const builtInDirectives: DirectiveSpecs = Object.fromEntries(
       docs: {
         description: `Marks the line as ${change}, like the \`${marker}\` attribute of Expressive Code. With line states on, text after the directive shows as a message.`,
         example: { lang: 'js', code: `const host = 'localhost'\nconst port = 8080 // [!${name}]` },
-        page: 'features/comment-notation',
+        page: 'guides/comment-notation',
       },
     },
   ]),

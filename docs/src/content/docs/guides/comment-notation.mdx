@@ -91,7 +91,7 @@ The plugin reads the directives when the site builds. It needs no JavaScript in 
 
 - The plugin removes every directive from the rendered code and from the copied text.
 - If a comment holds only directives, the plugin removes the whole comment and the whitespace before it. Other text in the comment stays.
-- In JSX and TSX, the plugin also reads comments in braces, `{/* [!code focus] */}`, and removes the braces with the comment.
+- In JSX, TSX and MDX, the plugin also reads comments in braces, `{/* [!code focus] */}`, and removes the braces with the comment.
 - The copy button leaves out messages, annotations, callouts and footnotes.
 - `[!code highlight]`, `[!code ++]` and `[!code --]` give the same result as the `mark`, `ins` and `del` attributes of Expressive Code. Text after them shows as a message, as for [line states](/starlight-codeblocks/features/line-states/).
 - A backslash after the bracket, as in `[\!code focus]`, turns a directive into plain text. The plugin removes the backslash.
@@ -134,12 +134,12 @@ An entry replaces the built-in syntax of that language. A language name or its a
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
-## Examples
+## Comment syntax examples
 
 Python and shell blocks use `#` comments:
 
 export const python = `
-\`\`\`py
+\`\`\`py title="parse.py"
 import json
 
 data = json.loads(text)  # [!code highlight]
@@ -152,7 +152,7 @@ print(data["name"])
 HTML blocks use `<!-- -->` comments. `:2` marks two lines with one directive:
 
 export const html = `
-\`\`\`html
+\`\`\`html title="nav.html"
 <nav>
   <a href="/">Home</a> <!-- [!code ++:2] -->
   <a href="/docs/">Docs</a>
@@ -165,7 +165,7 @@ export const html = `
 To show a directive as text, for example in a page about this plugin, add a backslash:
 
 export const escaped = `
-\`\`\`js
+\`\`\`js title="server.js"
 const port = 8080; // [\\!code highlight]
 \`\`\`
 `;
@@ -177,7 +177,6 @@ const port = 8080; // [\\!code highlight]
 - JSON has no comments, so a `json` block cannot use directives. Use `jsonc`, or use attributes.
 - The plugin skips a comment opener inside a string that opens and closes on the same line, such as `"// [!code ++]"`. A string that continues on the next line, such as a template literal, is not skipped. Escape a directive in it with a backslash.
 - One comment on each line can hold directives. Text such as `[!NOTE]` outside a comment, as in a Markdown alert, stays in the code. The plugin still reads the comment after it.
-- MDX comments in `mdx` blocks, such as `{/* */}`, are not in the built-in map. Add them with `notation.comments`.
 
 ## Related
 
