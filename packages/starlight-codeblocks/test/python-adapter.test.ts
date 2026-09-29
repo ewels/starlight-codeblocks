@@ -349,3 +349,43 @@ test('the default options have python() and nextflow()', () => {
   const options = resolveOptions();
   expect(options.apiLinks ? options.apiLinks.adapters.map((a) => a.name) : []).toEqual(['python', 'nextflow']);
 });
+
+test('fills in a summary from the documentation page, once per page, and quietly leaves it out when the page fails', async () => {
+  const header = '# Sphinx inventory version 2\n# Project: Tally\n# Version: 1.0\n# The rest is compressed.\n';
+  const body = [
+    'tally py:module 1 api.html#module-$ -',
+    'tally.count py:function 1 api.html#$ -',
+    'tally.total py:function 1 api.html#$ -',
+    'tally.gone py:function 1 missing.html#$ -',
+  ].join('\n');
+  const inventory = Buffer.concat([Buffer.from(header), deflateSync(`${body}\n`)]);
+  const page = `<!doctype html><section id="module-tally"><h1><code>tally</code> — Count things fast¶</h1>
+<dl><dt id="tally.count">tally.count(items)</dt><dt id="tally.total">tally.total(items)</dt>
+<dd><p>Counts the <code>items</code> (any iterable) in one pass over them. Slow for generators.</p></dd></dl></section>`;
+  const fetch = vi.fn(async (url: string) => {
+    if (url === 'https://tally.example/objects.inv') return new Response(inventory);
+    if (url === 'https://tally.example/api.html') return new Response(page);
+    throw new TypeError('fetch failed');
+  });
+  vi.stubGlobal('fetch', fetch);
+  const code = block('py', 'import tally', 'tally.count(x)', 'tally.total(x)', 'tally.gone(x)');
+  const run = (summaries?: boolean) =>
+    render(code, {
+      apiLinks: {
+        adapters: [python({ stdlib: false, inventories: ['https://tally.example/objects.inv'], summaries })],
+      },
+    });
+  const { html, warnings } = await run();
+  const summaries = [...html.matchAll(/data-scb-api-summary="([^"]*)"/g)].map((m) => m[1]);
+  expect(summaries).toEqual([
+    'Count things fast',
+    'Counts the items in one pass over them.',
+    'Counts the items in one pass over them.',
+  ]);
+  expect(html).toContain(
+    'aria-description="function tally.count. Counts the items in one pass over them. Tally 1.0 documentation."',
+  );
+  expect(warnings).toEqual([]);
+  expect(fetch.mock.calls.filter(([url]) => url === 'https://tally.example/api.html')).toHaveLength(1);
+  expect((await run(false)).html).not.toContain('data-scb-api-summary');
+});

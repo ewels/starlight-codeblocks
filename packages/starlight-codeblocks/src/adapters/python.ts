@@ -1,5 +1,7 @@
-import type { ApiLinkAdapter, Resolution, SymbolRef } from '../options.ts';
+import type { Root } from '@expressive-code/core/hast';
+import type { AdapterContext, ApiLinkAdapter, Resolution, SymbolRef } from '../options.ts';
 import { type PythonIndex, readInventory } from './python-index.ts';
+import { parsePage, sphinxSummary } from './sphinx-summary.ts';
 import { skipBrackets, stringEnd } from './tokens.ts';
 
 export interface PythonInventory {
@@ -14,6 +16,8 @@ export interface PythonAdapterOptions {
   stdlib?: boolean;
   /** More Sphinx inventories, such as `https://numpy.org/doc/stable/objects.inv`. */
   inventories?: (string | PythonInventory)[];
+  /** Fetch the documentation page of each linked name for a short summary on the card. The default is `true`. */
+  summaries?: boolean;
 }
 
 /** What starlight-pydocs publishes at `globalThis[Symbol.for('starlight-pydocs')]`. */
@@ -224,9 +228,11 @@ function reboundNames(stmts: Token[][]) {
  * and methods called on a new instance, such as `Path(…).read_text`.
  */
 export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
-  const { stdlib = true, inventories = [] } = options;
+  const { stdlib = true, inventories = [], summaries = true } = options;
   const index: PythonIndex = new Map();
   let warn = (_message: string) => {};
+  let fetchPage: AdapterContext['fetch'] | undefined;
+  const pages = new Map<string, Promise<Root | undefined>>();
   // starlight-pydocs pages win over the inventories.
   let base: string | undefined;
   const lookup = (path: string) => pydocsEntry(path, base) ?? index.get(path);
@@ -242,11 +248,27 @@ export function python(options: PythonAdapterOptions = {}): ApiLinkAdapter {
     languages: ['python', 'py', 'pycon'],
     async setup(context) {
       warn = context.warn;
+      fetchPage = context.fetch;
       const all = [...(stdlib ? [STDLIB_INVENTORY] : []), ...inventories];
       for (const item of all) {
         const { url, base = new URL('.', url).href } = typeof item === 'string' ? { url: item } : item;
         await context.fetch(url, (data) => readInventory(data, base, index));
       }
+    },
+    // A summary is extra, so a page that does not load leaves the card without one, with no warning.
+    async describe({ href }) {
+      if (!summaries || !fetchPage || !URL.canParse(href)) return undefined;
+      const url = new URL(href);
+      const id = decodeURIComponent(url.hash.slice(1));
+      if (!id || !url.protocol.startsWith('http')) return undefined;
+      url.hash = '';
+      let page = pages.get(url.href);
+      if (!page) {
+        page = fetchPage(url.href, undefined, { quiet: true }).then((body) => (body ? parsePage(body) : undefined));
+        pages.set(url.href, page);
+      }
+      const tree = await page;
+      return tree && sphinxSummary(tree, id);
     },
     findSymbols(code, _language, attributes = {}) {
       base = attributes.pydocsBase;

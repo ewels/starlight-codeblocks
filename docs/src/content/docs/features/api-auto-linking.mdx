@@ -20,7 +20,7 @@ print(run["status"])
 
 <Example code={basic} />
 
-The Python adapter reads the two imports. It links `json`, `pathlib`, `json.loads`, `Path` and `read_text` to the Python documentation. It knows that `read_text` belongs to `Path`, because the code calls `Path` first. Hover over a link, or move keyboard focus to it, to see a card with the kind, the qualified name and the source.
+The Python adapter reads the two imports. It links `json`, `pathlib`, `json.loads`, `Path` and `read_text` to the Python documentation. It knows that `read_text` belongs to `Path`, because the code calls `Path` first. Hover over a link, or move keyboard focus to it, to see a card with the kind, the name, a short summary and the source.
 
 ## Syntax
 
@@ -71,7 +71,7 @@ The Python adapter runs on `py`, `python` and `pycon` code blocks. It reads `imp
 
 <Options adapter="python" />
 
-An `objects.inv` file has no signatures and no summaries. For its names, the card shows the kind, the qualified name and the documentation that it comes from.
+An `objects.inv` file has no signatures and no summaries. For its names, the card shows the kind, the qualified name and the documentation that it comes from. The adapter also fetches the documentation page of each name when the site builds. It shows the first sentence of the description on the card, cut to 16 words. The page stays on disk with the inventories. If the page does not load, the card has no summary, and the build shows no warning.
 
 If the site also uses starlight-pydocs, install both plugins. The Python adapter then links the names of every package that starlight-pydocs documents, with no configuration:
 

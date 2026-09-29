@@ -28,9 +28,9 @@ export interface AdapterContext {
    * Gets a URL and keeps the body on disk, so that later builds do not fetch it again.
    * Returns `null`, with a build warning, when the request fails and there is no copy on disk.
    * `check` throws for a body that is not usable, such as an HTML error page. That body is not kept, and its
-   * error message completes the warning "<url> is …".
+   * error message completes the warning "<url> is …". With `quiet`, a failed request returns `null` with no warning.
    */
-  fetch(url: string, check?: (body: Uint8Array) => void): Promise<Uint8Array | null>;
+  fetch(url: string, check?: (body: Uint8Array) => void, options?: { quiet?: boolean }): Promise<Uint8Array | null>;
   /** Logs a build warning that names the adapter. */
   warn(message: string): void;
 }
@@ -64,6 +64,8 @@ export interface ApiLinkAdapter {
   setup(context: AdapterContext): Promise<void>;
   /** `attributes` has the string attributes of the fence line, such as `title`. */
   findSymbols(code: string, language: string, attributes: Record<string, string>): SymbolRef[];
+  /** Optional. A short summary for a name that `findSymbols` returned without one, for the card. */
+  describe?(symbol: SymbolRef): Promise<string | undefined>;
 }
 
 export interface CodeblocksOptions {

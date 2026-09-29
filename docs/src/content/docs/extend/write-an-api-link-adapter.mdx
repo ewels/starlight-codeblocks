@@ -11,7 +11,7 @@ import Example from '../../../components/Example.astro';
 
 ## The interface
 
-An adapter is an object with a name, a list of languages and two functions:
+An adapter is an object with a name, a list of languages, two functions and an optional third:
 
 ```ts
 interface ApiLinkAdapter {
@@ -19,6 +19,7 @@ interface ApiLinkAdapter {
   languages: string[];
   setup(context: AdapterContext): Promise<void>;
   findSymbols(code: string, language: string, attributes: Record<string, string>): SymbolRef[];
+  describe?(symbol: SymbolRef): Promise<string | undefined>;
 }
 
 interface SymbolRef {
@@ -40,6 +41,7 @@ interface SymbolRef {
 | `languages` | The languages of the code blocks that the adapter reads, such as `py`. A name also covers the other names of its language: `py` covers `python`. |
 | `setup` | Loads the indexes. The plugin calls it once, before the first code block in one of the languages. |
 | `findSymbols` | Returns the names in the code that are links, with the link and the text of the card. `attributes` has the attributes of the fence line that have a text value, such as `title`. |
+| `describe` | Optional. Returns a summary for a name that `findSymbols` returned with no `summary`. Use it for text that needs a fetch, such as a documentation page. |
 
 A `SymbolRef` is one name in `code`, its link and the text of its card:
 
@@ -63,7 +65,7 @@ A `SymbolRef` is one name in `code`, its link and the text of its card:
 |---|---|
 | `root` | The project root, as an absolute path. |
 | `cacheDir` | Astro's cache folder, where other integrations keep their data. |
-| `fetch(url, check?)` | Gets a URL once, and keeps the body on disk. Returns the body as a `Uint8Array`, or `null`. |
+| `fetch(url, check?, options?)` | Gets a URL once, and keeps the body on disk. Returns the body as a `Uint8Array`, or `null`. With `{ quiet: true }`, a failed request shows no warning. |
 | `warn(message)` | Logs a build warning with the name of the adapter. |
 
 Use `fetch` from the context to load an index from another site. The body stays in `node_modules/.cache/starlight-codeblocks/`, so later builds read it from disk and work without the network. If the request fails and there is no copy on disk, `fetch` logs a warning and returns `null`. Continue without that index:

@@ -59,7 +59,7 @@ API auto-linking finds library names in a block and links each one to its refere
   });
   ```
 
-- Python adapter options: `stdlib` (default `true`) and `inventories` (Sphinx `objects.inv` URLs).
+- Python adapter options: `stdlib` (default `true`), `inventories` (Sphinx `objects.inv` URLs) and `summaries` (default `true`: fetch each documentation page for a short summary on the card).
 - starlight-pydocs: install both plugins. The Python adapter links every package that starlight-pydocs documents, with signatures and summaries, and needs no configuration.
 - `pydocsBase="<base>"` on a Python block links its names to the starlight-pydocs package at that base first, for example an older version at `1x/api/myproject`. Names that the package does not have link as usual. starlight-pydocs sets it on its docstring examples.
 - Nextflow adapter option: `modules`, a function of `{ name, path }` that returns a URL, an object with `href`, or `undefined`.

@@ -34,7 +34,10 @@ test('hovering shows the card under the link, the pointer can move onto it, and 
   expect(after.style).toBe('solid');
   expect(after.underline).not.toBe(before.underline);
   await expect(card(page)).toBeVisible();
-  await expect(card(page)).toHaveText('function json.loadsPython 3.14 documentation');
+  await expect(card(page).locator('.scb-api-card-head')).toHaveText('function json.loads');
+  // The summary comes from the live docs.python.org page, so its words can change.
+  await expect(card(page).locator('.scb-api-card-summary')).not.toBeEmpty();
+  await expect(card(page).locator('.scb-api-card-source')).toHaveText('Python 3.14 documentation');
   const l = await link.boundingBox();
   const c = await card(page).boundingBox();
   expect(c && l && c.y).toBeGreaterThanOrEqual((l?.y ?? 0) + (l?.height ?? 0));
@@ -48,7 +51,7 @@ test('hovering shows the card under the link, the pointer can move onto it, and 
 test('keyboard focus shows the card at once, and Escape hides it', async ({ page }) => {
   const links = example(page).locator('a.scb-api-link');
   await links.nth(4).focus();
-  await expect(card(page)).toHaveText('class pathlib.PathPython 3.14 documentation');
+  await expect(card(page).locator('.scb-api-card-head')).toHaveText('class pathlib.Path');
   await page.keyboard.press('Tab');
   await expect(links.nth(5)).toBeFocused();
   await expect(card(page).locator('.scb-api-card-head')).toHaveText('method pathlib.Path.read_text');

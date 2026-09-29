@@ -112,6 +112,15 @@ export const adapterOptions: Record<'python' | 'nextflow', OptionEntry[]> = {
         'More Sphinx `objects.inv` files. `base` is the URL that relative links start from, if it is not the folder of `url`.',
       page: apiLinks,
     },
+    {
+      id: 'python-summaries',
+      label: 'summaries',
+      type: '`boolean`',
+      default: '`true`',
+      description:
+        'Fetch the documentation page of each name from an inventory, and show the first sentence of its description on the card.',
+      page: apiLinks,
+    },
   ],
   nextflow: [
     {

@@ -114,7 +114,7 @@ function ready(adapter: ApiLinkAdapter, { config }: Pick<ExpressiveCodeHookConte
     const context: AdapterContext = {
       root,
       cacheDir: registry?.cacheDir ?? join(root, 'node_modules', '.astro'),
-      fetch: (url, check) => cachedFetch(url, fetchCacheDir(root), warn, check),
+      fetch: (url, check, options) => cachedFetch(url, fetchCacheDir(root), options?.quiet ? () => {} : warn, check),
       warn,
     };
     setup = Promise.resolve()
@@ -248,14 +248,15 @@ ${apiCardStyles(cssVar)}`,
             if (!line || codeLinked.has(line) || end > lineStart + (texts[index]?.length ?? 0)) continue;
             if (!isSafeUrl(symbol.href)) continue;
             const head = cardHead(symbol);
+            const summary = symbol.summary ?? (await adapter.describe?.(symbol));
             const properties: Record<string, string> = {
               class: cls(),
               href: withBase(symbol.href, root),
-              'aria-description': sentences(head, symbol.summary, symbol.source),
+              'aria-description': sentences(head, summary, symbol.source),
               dataScbApiHead: head,
               dataScbApiSource: symbol.source,
             };
-            if (symbol.summary) properties.dataScbApiSummary = symbol.summary;
+            if (summary) properties.dataScbApiSummary = summary;
             const icon = await iconSlug(symbol);
             if (icon) properties.dataScbApiIcon = icon;
             line.addAnnotation(
