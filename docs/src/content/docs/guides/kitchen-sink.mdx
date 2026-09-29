@@ -1,0 +1,146 @@
+---
+title: The kitchen sink
+description: Combine several features in one code block, with several directives in one comment and attributes on the same fence line.
+---
+
+import Example from '../../../components/Example.astro';
+
+Each feature page shows one feature at a time. In a real site, one code block often needs several: a focus, a changed line with a message, and a note to explain it. The features work together in one block, and each one keeps its own effect.
+
+## Several names in one directive
+
+One `[!code …]` directive can hold several names. Each name applies to the line. The text after the directive goes to the first name that takes text, here `++`.
+
+export const names = `
+\`\`\`js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
+import codeblocks from 'starlight-codeblocks'; // [!code focus ++] Import the plugin
+
+export default defineConfig({
+  integrations: [
+    starlight({
+      title: 'My docs',
+      plugins: [codeblocks()], // [!code focus ++] Load the plugin
+    }),
+  ],
+});
+\`\`\`
+`;
+
+<Example code={names} />
+
+The two new lines are green, show their messages, and stay sharp. The other lines are blurred.
+
+## Several directives in one comment
+
+One comment can hold several directives. Each directive takes the text up to the next directive.
+
+export const directives = `
+\`\`\`py title="retry.py"
+import time
+
+
+def fetch_with_retry(fetch, retries=3):  # [!mention retries]
+    for attempt in range(retries):
+        try:
+            return fetch()
+        except TimeoutError:  # [!code warning] Other errors fail at once [!annotate] Only a timeout is worth a retry.
+            time.sleep(2**attempt)  # [!code ++] Back off [!mention retries]
+    raise TimeoutError("no response")
+\`\`\`
+`;
+
+<Example code={directives} hiddenAttributes="apiLinks=false">
+
+```py title="retry.py" apiLinks=false
+import time
+
+
+def fetch_with_retry(fetch, retries=3):  # [!mention retries]
+    for attempt in range(retries):
+        try:
+            return fetch()
+        except TimeoutError:  # [!code warning] Other errors fail at once [!annotate] Only a timeout is worth a retry.
+            time.sleep(2**attempt)  # [!code ++] Back off [!mention retries]
+    raise TimeoutError("no response")
+```
+
+</Example>
+
+The `except` line has a warning and an annotation. The `sleep` line is new, and it is part of the [retry loop](#mention:retries) with the first line.
+
+## Attributes and directives together
+
+Attributes on the fence line and directives in comments add up. Here the fence line names a placeholder and hides the imports. The comments add a callout, a footnote and an error.
+
+export const together = `
+\`\`\`py title="client.py" placeholder="YOUR_TOKEN" hidden={1-2}
+import os
+import requests
+
+session = requests.Session()
+# [!callout /headers/] Sent with every request
+session.headers["Authorization"] = "Bearer YOUR_TOKEN"
+# [!ref] The service closes idle connections after 30 s.
+session.timeout = 30
+session.verify = False  # [!code error] Never turn off TLS checks
+\`\`\`
+`;
+
+<Example code={together} hiddenAttributes="apiLinks=false" />
+
+Readers can type their token into the field. The copy button copies their token, the hidden imports and none of the notes.
+
+## Everything at once
+
+This block uses focus, line states, annotations, mentions, a callout, a footnote, a placeholder, hidden lines and colourised brackets. It is too busy for a real page. It shows that each feature keeps its own effect.
+
+export const everything = `
+\`\`\`js title="server.js" placeholder="YOUR_API_KEY" hidden={1} focus={4-10}
+import 'dotenv/config';
+import express from 'express';
+
+const app = express();
+app.use(express.json()); // [!code ++] Parse JSON bodies [!annotate] Before any route.
+// [!callout /x-api-key/] Checked on every request
+app.use((req, res, next) => (req.get('x-api-key') === 'YOUR_API_KEY' ? next() : res.sendStatus(401)));
+// [!ref] Load balancers call this route.
+app.get('/health', (req, res) => { // [!mention health]
+  res.json({ ok: true }); // [!code success highlight] Always 200 [!mention health]
+});
+app.listen(3000); // [!code focus warning] Hard-coded port
+\`\`\`
+`;
+
+<Example code={everything} hiddenAttributes="apiLinks=false">
+
+```js title="server.js" placeholder="YOUR_API_KEY" hidden={1} focus={4-10} apiLinks=false
+import 'dotenv/config';
+import express from 'express';
+
+const app = express();
+app.use(express.json()); // [!code ++] Parse JSON bodies [!annotate] Before any route.
+// [!callout /x-api-key/] Checked on every request
+app.use((req, res, next) => (req.get('x-api-key') === 'YOUR_API_KEY' ? next() : res.sendStatus(401)));
+// [!ref] Load balancers call this route.
+app.get('/health', (req, res) => { // [!mention health]
+  res.json({ ok: true }); // [!code success highlight] Always 200 [!mention health]
+});
+app.listen(3000); // [!code focus warning] Hard-coded port
+```
+
+</Example>
+
+Lines 4 to 10 and the last line are sharp. The [health route](#mention:health) is a mention.
+
+## Limitations
+
+- An own-line directive, such as `[!callout]`, `[!ref]` or `[!link]`, needs a line of its own. It cannot share a comment with code.
+- In one `[!code …]` directive, only the first name that takes text gets the text. To give two line states their own messages, use two lines.
+- `md`, `markdown` and `mdx` blocks on this site do not read directives.
+
+## Related
+
+- [Comment notation](/starlight-codeblocks/features/comment-notation/) gives the full syntax of directives.
+- [Choose an annotation style](/starlight-codeblocks/guides/choose-an-annotation-style/) helps you pick one kind of note for a block.

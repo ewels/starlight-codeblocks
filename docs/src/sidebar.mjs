@@ -11,6 +11,7 @@ export const sidebar = [
       'guides/migrate-from-vitepress',
       'guides/use-with-other-plugins',
       'guides/use-with-other-themes',
+      'guides/kitchen-sink',
       'guides/agent-skill',
     ],
   },
