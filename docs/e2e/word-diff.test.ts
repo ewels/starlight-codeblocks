@@ -8,7 +8,7 @@ test('marks changed words with a bar, strikes removed ones in the code colour, k
   const block = example(page);
   const decoration = (selector: string) => css(block.locator(selector).first(), 'textDecorationLine');
   expect(await decoration('.scb-worddiff-ins')).toBe('none');
-  expect(await css(block.locator('.scb-worddiff-ins').first(), 'boxShadow')).toContain('0px -2px 0px 0px inset');
+  expect(await css(block.locator('.scb-worddiff-ins').first(), 'boxShadow')).toContain('0px -1px 0px 0px inset');
   expect(await decoration('.scb-worddiff-del')).toBe('line-through');
 
   const [fg, ...lines] = await block.locator('.scb-worddiff-del').evaluateAll((els) => {

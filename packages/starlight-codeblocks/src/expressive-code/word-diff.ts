@@ -149,8 +149,8 @@ export function pluginWordDiff({ minSimilarity = 0.4 }: { minSimilarity?: number
 .${PREFIX}-worddiff-del { background: ${cssVar('codeblocksWordDiff.delBackground')}; border-radius: 2px; text-decoration: line-through 1px; }
 /* The spans sit inside each token, so currentColor would strike a change across tokens in several colours. */
 .${PREFIX}-worddiff-del { text-decoration-color: ${cssVar('codeForeground')}; }
-.${PREFIX}-worddiff-ins { box-shadow: inset 0 -2px 0 ${cssVar('codeblocksWordDiff.ins')}; }
-.${PREFIX}-worddiff-del { box-shadow: inset 0 -2px 0 ${cssVar('codeblocksWordDiff.del')}; }`,
+.${PREFIX}-worddiff-ins { box-shadow: inset 0 -1px 0 ${cssVar('codeblocksWordDiff.ins')}; }
+.${PREFIX}-worddiff-del { box-shadow: inset 0 -1px 0 ${cssVar('codeblocksWordDiff.del')}; }`,
     hooks: {
       postprocessAnnotations(context) {
         for (const line of context.codeBlock.getLines()) {
