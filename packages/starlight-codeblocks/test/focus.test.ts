@@ -49,7 +49,7 @@ test('blurs by default and only fades with style: dim, unless the block sets foc
     /\.scb-focus-out:not\(\[data-scb-focus-style='dim'\] \*\)\{filter:blur\(var\(--ec-codeblocksFocus-blur\)\)/,
   );
   expect(blur).toMatch(/\.frame:not\(\.scb-scrolly-frame\):hover \.scb-focus-out/);
-  expect(blur).toMatch(/\.frame:focus-within \.scb-focus-out/);
+  expect(blur).toMatch(/\.frame:has\(:focus-visible\) \.scb-focus-out/);
   expect(blur).toMatch(/\.scb-focus-out:is\(\.scb-mention-on, \.scb-permalink-target, \.scb-annotation-lit,/);
   const dim = await baseStyles({ focus: { style: 'dim' } });
   expect(dim).toMatch(/\.scb-focus-out\{opacity:var\(--ec-codeblocksFocus-opa\);transition/);

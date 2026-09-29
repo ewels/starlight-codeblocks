@@ -72,7 +72,7 @@ pre > code[tabindex]:focus-visible {
   outline-offset: -3px;
 }
 /* The sticky block of scrollycoding sits under the pointer while the reader scrolls, so hover must not clear it. */
-.frame:not(.${PREFIX}-scrolly-frame):hover .${OUT}, .frame:focus-within .${OUT} {
+.frame:not(.${PREFIX}-scrolly-frame):hover .${OUT}, .frame:has(:focus-visible) .${OUT} {
   opacity: 1;
   filter: none;
 }
