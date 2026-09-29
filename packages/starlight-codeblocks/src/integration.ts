@@ -35,7 +35,7 @@ export function codeblocksIntegration({ options, ecConfigOverride }: Integration
   return {
     name: 'starlight-codeblocks',
     hooks: {
-      'astro:config:setup'({ config, updateConfig, injectScript, logger }) {
+      'astro:config:setup'({ command, config, updateConfig, injectScript, logger }) {
         // The shapes `isSatteriProcessor()` and `isUnifiedProcessor()` check, without depending on either package.
         const processor = config.markdown.processor as
           | { name?: string; options?: { mdastPlugins?: unknown[]; remarkPlugins?: unknown[] } }
@@ -48,7 +48,9 @@ export function codeblocksIntegration({ options, ecConfigOverride }: Integration
         if (options.inlineHighlighting) plugins.push(cssPlugin(INLINE_CSS_ID, inlineStyles));
         if (options.apiLinks) {
           plugins.push(cssPlugin(CARD_CSS_ID, apiCardPageStyles));
-          const script = apiCardLoader(config.base, config.build.assets);
+          // Astro applies `assetsPrefix` only to the build; dev serves the assets under the base.
+          const prefix = command === 'build' ? jsAssetsPrefix(config.build.assetsPrefix) : undefined;
+          const script = apiCardLoader(prefix ?? config.base, config.build.assets);
           if (script) injectScript('page', script);
         }
         if (options.runnable) {
@@ -84,6 +86,11 @@ function cssPlugin(id: string, css: () => string): VitePlugin {
     resolveId: (source) => (source === id ? `\0${id}` : undefined),
     load: (source) => (source === `\0${id}` ? css() : undefined),
   };
+}
+
+/** The `build.assetsPrefix` for `.js` files, which can be one string or one per file extension. */
+export function jsAssetsPrefix(prefix: string | Record<string, string | undefined> | undefined) {
+  return typeof prefix === 'string' ? prefix : (prefix?.js ?? prefix?.fallback);
 }
 
 /**

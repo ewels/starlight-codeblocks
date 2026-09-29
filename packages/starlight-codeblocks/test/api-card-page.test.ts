@@ -3,7 +3,7 @@ import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { apiCardPageStyles } from '../src/api-card-page.ts';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
-import { apiCardLoader } from '../src/integration.ts';
+import { apiCardLoader, jsAssetsPrefix } from '../src/integration.ts';
 
 const variants = new ExpressiveCode({ plugins: pluginCodeblocks() }).styleVariants;
 const background = getCssVarName('codeblocks.popoverBackground');
@@ -32,4 +32,18 @@ test('the page loader imports the card module from the assets folder, under the 
   expect(script).toContain('import(/* @vite-ignore */ url)');
   expect(script).toContain("document.querySelector('[data-scb-api-links]')");
   expect(apiCardLoader('/', '_astro')).toMatch(/^const url = "\/_astro\/scb-api-links\./m);
+});
+
+test('the page loader uses the assets prefix for .js files when the site sets one', () => {
+  expect(jsAssetsPrefix(undefined)).toBeUndefined();
+  expect(jsAssetsPrefix('https://cdn.example.com')).toBe('https://cdn.example.com');
+  expect(jsAssetsPrefix({ js: 'https://js.example.com', fallback: 'https://cdn.example.com' })).toBe(
+    'https://js.example.com',
+  );
+  expect(jsAssetsPrefix({ css: 'https://css.example.com', fallback: 'https://cdn.example.com' })).toBe(
+    'https://cdn.example.com',
+  );
+  expect(apiCardLoader('https://cdn.example.com/', '_astro')).toMatch(
+    /^const url = "https:\/\/cdn\.example\.com\/_astro\/scb-api-links\./m,
+  );
 });
