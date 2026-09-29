@@ -93,7 +93,7 @@ The choices that the code does not explain, with the options that were rejected.
 
 ### Components
 
-- **`<CodeWalkthrough>` and `<Scrollycoding>` read tokens from the HTML that EC rendered** and animate with magic-move's renderer, so colours match the static blocks and no Shiki reaches the browser.
+- **`<CodeWalkthrough>` and `<Scrollycoding>` read tokens from the HTML that EC rendered** and animate with magic-move's renderer, so colours match the static blocks and no Shiki reaches the browser. The move, the fade-in of new tokens and the tint of new lines all start at once (magic-move's delays at 0), so a step reads as one change. *Rejected:* magic-move's defaults, which move first and fade the new text in after.
 - **Scrollycoding:** build-time copies under each step for the narrow and no-JavaScript layout, and a sticky column from 600 px. A code block between steps is a new version. Versions share one grid cell, so the height does not change and cannot loop the activation line. The active step is the one nearest the middle of the sticky block, from a throttled scroll listener. Hover does not clear the blur. Content other than blocks and steps fails the build.
 - **Walkthrough controls sit under the block**, where the user found them easier to see than in the title bar.
 

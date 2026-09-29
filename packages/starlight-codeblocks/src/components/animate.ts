@@ -3,7 +3,6 @@ import type { KeyedTokensInfo } from '@shikijs/magic-move/types';
 import type { StepTokens } from './steps.ts';
 
 const S = 'scb-steps';
-const DELAY_ENTER = 0.7;
 
 const lines = (tokens: StepTokens) =>
   tokens
@@ -47,8 +46,6 @@ export function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
   const style = getComputedStyle(group.querySelector('figure') ?? group);
   const i = style.getPropertyValue('--ec-codeblocksWalkthrough-themeIndex').trim() || '0';
   const duration = toMs(style.getPropertyValue('--ec-codeblocksWalkthrough-duration'), 480);
-  // New tokens enter at this point of the move, so the tint of a new line starts there too.
-  const enter = duration * DELAY_ENTER;
   // Expressive Code picks the token colour of the theme with a selector that needs `.ec-line`, so each token names its own.
   const theme = `;color:var(--${i},inherit);font-style:var(--${i}fs,inherit);font-weight:var(--${i}fw,inherit)`;
   const info = (tokens: StepTokens) =>
@@ -74,7 +71,6 @@ export function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
       const tint = document.createElement('div');
       tint.className = `${S}-new`;
       tint.style.setProperty('--scb-steps-line', String(n));
-      tint.style.animationDelay = `${enter}ms`;
       return tint;
     }),
   );
@@ -92,7 +88,7 @@ export function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
     for (const n of added) {
       const line = real[n];
       if (!line) continue;
-      line.style.animationDelay = `${start + enter - performance.now()}ms`;
+      line.style.animationDelay = `${start - performance.now()}ms`;
       line.classList.add(`${S}-new`);
       const clear = () => {
         line.classList.remove(`${S}-new`);
@@ -105,7 +101,10 @@ export function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
   };
   const renderer = new MagicMoveRenderer(move, {
     duration,
-    delayEnter: DELAY_ENTER,
+    // New tokens fade in while the others move, and the tint of a new line starts with them.
+    delayMove: 0,
+    delayLeave: 0,
+    delayEnter: 0,
     easing: 'cubic-bezier(.2, .7, .2, 1)',
     containerStyle: false,
     animateContainer: false,
