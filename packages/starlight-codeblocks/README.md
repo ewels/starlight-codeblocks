@@ -271,7 +271,7 @@ Colour matching brackets by nesting depth, so readers can match the pairs on a d
 <details>
 <summary>Inline code highlighting</summary>
 
-Give inline code in the prose the same syntax colours as the code blocks, with a language suffix at the end of the code.
+Give inline code in the prose the syntax colours of the code blocks, from a language suffix or a default language for the site.
 
 ```md
 > `codeblocks(){:js}` in `astro.config.mjs` adds a set of Expressive Code plugins to the site.

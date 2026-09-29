@@ -1,13 +1,13 @@
 ---
 title: Inline code highlighting
-description: Give inline code in the prose the same syntax colours as the code blocks, with a language suffix at the end of the code.
+description: Give inline code in the prose the syntax colours of the code blocks, from a language suffix or a default language for the site.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
-Starlight shows inline code in the prose in one colour, with no syntax highlighting. A short expression such as a function call is then harder to read than the same code in a block. A `{:lang}` suffix at the end of the inline code gives it the syntax colours of that language.
+Starlight shows inline code in the prose in one colour, with no syntax highlighting. A short expression such as a function call is then harder to read than the same code in a block. A `{:lang}` suffix at the end of the inline code gives it the syntax colours of that language. A site can also set a [default language](#a-default-language) for all inline code.
 
 export const basic = `
 > \`codeblocks(){:js}\` in \`astro.config.mjs\` adds a set of Expressive
