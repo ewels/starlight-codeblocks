@@ -36,6 +36,7 @@ Each state has its own colour and a bar on the left edge. The text after the dir
 | `[!code ++] <message>`, `[!code --] <message>`, `[!code highlight] <message>` | Comment | `// [!code ++] Load the plugin` |
 | `[!code <state>:N] <message>` | Comment | `// [!code info:3] Defaults` |
 | `<state>={range}`, `[!code <state>]` | Both | `todo={9}` |
+| `lineStates.prefix=false`, `lineStates.prefix=true` | Fence line | `lineStates.prefix=false` |
 
 `note` is another name for `info`, and `warn` for `warning`.
 
@@ -46,8 +47,9 @@ Inline code, links and bold in a message render as HTML. Other Markdown stays as
 ## Behaviour
 
 - Each state has a background tint and a 3 px bar on the left edge.
-- A message shows after the code, as a small label. The label starts with the name of the state in bold: **Error**, **Warning**, **Note** or **Success**. With `prefix: false`, the label shows only the message.
-- A line with no message shows a label with only the name of the state. In a group of lines with the same state, only the first line shows it. The colour then does not carry the meaning alone.
+- If every line of a block has the same state, the tint covers the whole block, with one bar down its side.
+- A message shows after the code, as a small label. The label starts with the name of the state in bold: **Error**, **Warning**, **Note** or **Success**. With `prefix: false`, or `lineStates.prefix=false` on the fence line, the label shows only the message.
+- A line with no message shows a label with only the name of the state. In a group of lines with the same state, only the first line shows it. The colour then does not carry the meaning alone. With the names off, a line with no message shows only the tint.
 - Screen readers hear the name of the state before the line, for example "Error:". A screen reader reads the message after the code.
 - The copy button leaves out the messages. The names of the states and the messages are also not part of a manual text selection.
 - A message after `[!code ++]`, `[!code --]` or `[!code highlight]` shows in the same label, in the colour of the marker. The label has no name before the message, because Expressive Code already marks the line. With `lineStates: false`, the message stays in the code as a comment.
@@ -110,13 +112,24 @@ export default defineConfig({
 
 <Example code={inserted} hiddenAttributes="apiLinks=false" />
 
-With `prefix: false`, a label shows only the message. A line without a message still shows the name of the state, so that the colour does not carry the meaning alone:
+With `prefix: false`, a label shows only the message, and a line without a message shows only the tint. Screen readers still hear the name of the state:
 
 ```js title="astro.config.mjs"
 codeblocks({
   lineStates: { prefix: false },
 });
 ```
+
+To leave the names out of one block only, add `lineStates.prefix=false` to its fence line. `lineStates.prefix=true` shows them in one block when the option is off:
+
+export const prefix = `
+\`\`\`py title="config.py" lineStates.prefix=false
+retries = -1  # [!code error] Must be 0 or more
+timeout = 0.5  # [!code warning] Less than a second
+\`\`\`
+`;
+
+<Example code={prefix} />
 
 An attribute marks lines without a message. Use it when the text around the block explains the problem:
 

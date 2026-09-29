@@ -43,12 +43,25 @@ test('warns about lines outside the block, and fails the build for a bad range',
   await expect(render(block('js focus={a}', 'a()'))).rejects.toThrow('`focus={a}` is not a valid range');
 });
 
-test('blurs by default and only fades with style: dim', async () => {
+test('blurs by default and only fades with style: dim, unless the block sets focus.style', async () => {
   const blur = await baseStyles();
-  expect(blur).toMatch(/\.scb-focus-out\{[^}]*filter:blur\(var\(--ec-codeblocksFocus-blur\)\)/);
+  expect(blur).toMatch(
+    /\.scb-focus-out:not\(\[data-scb-focus-style='dim'\] \*\)\{filter:blur\(var\(--ec-codeblocksFocus-blur\)\)/,
+  );
   expect(blur).toMatch(/\.frame:not\(\.scb-scrolly-frame\):hover \.scb-focus-out/);
   expect(blur).toMatch(/\.frame:focus-within \.scb-focus-out/);
   expect(blur).toMatch(/\.scb-focus-out:is\(\.scb-mention-on, \.scb-permalink-target, \.scb-annotation-lit,/);
   const dim = await baseStyles({ focus: { style: 'dim' } });
   expect(dim).toMatch(/\.scb-focus-out\{opacity:var\(--ec-codeblocksFocus-opa\);transition/);
+  expect(dim).toMatch(/\[data-scb-focus-style='blur'\] \.scb-focus-out\{filter:blur/);
+  const lines = ['```js focus={1}', 'a()', 'b()', '```'];
+  expect((await render([lines[0].replace('}', '} focus.style="dim"'), ...lines.slice(1)].join('\n'))).html).toContain(
+    'data-scb-focus-style="dim"',
+  );
+  expect((await render(lines.join('\n'))).html).not.toContain('data-scb-focus-style');
+  const bad = await render([lines[0].replace('}', '} focus.style="fade"'), ...lines.slice(1)].join('\n'));
+  expect(bad.html).not.toContain('data-scb-focus-style');
+  expect(bad.warnings.join()).toContain(
+    '`focus.style="fade"` must be `"blur"` or `"dim"`. The block uses the site setting.',
+  );
 });

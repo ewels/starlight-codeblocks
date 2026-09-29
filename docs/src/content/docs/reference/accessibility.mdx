@@ -3,7 +3,7 @@ title: Accessibility
 description: What each feature does for keyboard users, screen reader users and readers who ask for reduced motion, and the contrast that the default styles meet.
 ---
 
-The features meet WCAG 2.2 AA in the light and the dark themes of Starlight, with the default style settings. The known exceptions are the fade of four features and the dimmed open lines of hidden lines, which the [contrast](#contrast) section explains. This page lists what each feature does for readers who use a keyboard or a screen reader, or who ask for reduced motion. It also says where colour is part of the meaning, and what else carries that meaning.
+The features meet WCAG 2.2 AA in the light and the dark themes of Starlight, with the default style settings. The known exceptions are the fade of four features and the dimmed open lines of hidden lines, which the [contrast](#contrast) section explains. Line states with their names turned off are one more. This page lists what each feature does for readers who use a keyboard or a screen reader, or who ask for reduced motion. It also says where colour is part of the meaning, and what else carries that meaning.
 
 ## Rules for every feature
 
@@ -105,6 +105,7 @@ The plugin reads directives at build time and removes them from the page. Reader
 ### Line states
 
 - Each state line has a tint and a bar on the left edge. A message starts with the name of the state in bold, so colour is not the only mark.
+- With `lineStates.prefix` off, or `lineStates.prefix=false` on a block, the names do not show on screen. The tint is then the only visible mark of the state, which is an exception to WCAG 1.4.1. Screen readers still hear the name.
 - Screen readers hear the name of the state before the line, for example "Error:", and then the message after the code.
 
 ### Code mentions

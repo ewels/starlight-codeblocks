@@ -26,6 +26,8 @@ Select **Run in browser**. The first time, the browser downloads Python (Pyodide
 | Syntax | Where | Example |
 |---|---|---|
 | `runnable` | Fence line | ` ```py runnable ` |
+| `runnable.label="<text>"`, `runnable.againLabel="<text>"` | Fence line | `runnable.label="Try it"` |
+| `runnable.timeout=<ms>` | Fence line | `runnable.timeout=30000` |
 
 The language of the block chooses the runtime. The plugin has a runtime for Python, and a site can add runtimes for other languages in the configuration. A language name or its alias works: `py` and `python` both use the Python runtime. Sites without Starlight add the Python runtime themselves, as in [Without Starlight](/starlight-codeblocks/reference/expressive-code-plugins/#without-starlight).
 

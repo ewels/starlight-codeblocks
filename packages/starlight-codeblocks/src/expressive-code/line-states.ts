@@ -11,7 +11,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, type ElementContent, h, select } from '@expressive-code/core/hast';
 import type { LineStateDefinition } from '../options.ts';
-import { type CodeblocksPlugin, ensureTextContrast, resolveRange } from './core.ts';
+import { blockSetting, type CodeblocksPlugin, ensureTextContrast, parseBoolean, resolveRange } from './core.ts';
 import { isHiddenLine } from './hidden-lines.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { builtInDirectives, type DirectiveSpecs, getDirectives } from './notation.ts';
@@ -93,7 +93,8 @@ function stateSettings(name: string, state: LineStateDefinition | (typeof builtI
 const stateData = new AttachedPluginData<{
   states: Map<ExpressiveCodeLine, { name: string; messages: string[] }[]>;
   markers: Map<ExpressiveCodeLine, { marker: string; message: string }[]>;
-}>(() => ({ states: new Map(), markers: new Map() }));
+  prefix: boolean;
+}>(() => ({ states: new Map(), markers: new Map(), prefix: true }));
 
 const cls = (suffix: string) => `${PREFIX}-state${suffix}`;
 
@@ -144,6 +145,13 @@ export function pluginLineStates({
       return `
 .${cls('')} { background: var(--scbStateBg); }
 .ec-line.${cls('')} .code { --ecLineBrdCol: var(--scbStateBar); --ecGtrBrdWd: ${v('barWidth')}; }
+/* A state on every line tints the whole block once, padding included, with one bar down its side. */
+pre.${cls('-all')} {
+  background-image: linear-gradient(var(--scbStateBg) 0 0);
+  box-shadow: inset ${v('barWidth')} 0 0 var(--scbStateBar);
+}
+pre.${cls('-all')} .ec-line.${cls('')} { background: none; }
+pre.${cls('-all')} .ec-line.${cls('')} .code { --ecLineBrdCol: transparent; }
 .${cls('-label')} {
   display: inline-block;
   margin-inline-start: 2.5ch;
@@ -180,7 +188,9 @@ ${Object.values(markers)
     },
     hooks: {
       preprocessCode(context) {
-        const lineStates = stateData.getOrCreateFor(context.codeBlock).states;
+        const data = stateData.getOrCreateFor(context.codeBlock);
+        data.prefix = blockSetting(context, 'lineStates.prefix', parseBoolean, prefix, '`true` or `false`');
+        const lineStates = data.states;
         const add = (line: ExpressiveCodeLine, name: string, message?: string) => {
           const list = lineStates.get(line) ?? [];
           const entry = list.find((state) => state.name === name) ?? { name, messages: [] };
@@ -212,7 +222,7 @@ ${Object.values(markers)
         }
       },
       postprocessRenderedLine({ codeBlock, line, renderData }) {
-        const { states, markers: lineMarkers } = stateData.getOrCreateFor(codeBlock);
+        const { states, markers: lineMarkers, prefix: showPrefix } = stateData.getOrCreateFor(codeBlock);
         const code = select('.code', renderData.lineAst);
         if (!code) return;
         for (const { marker, message } of lineMarkers.get(line) ?? []) {
@@ -234,20 +244,31 @@ ${Object.values(markers)
           for (const message of messages) {
             labelNodes.push(
               h('span', { class: cls('-label') }, [
-                ...(prefix
+                ...(showPrefix
                   ? [h('strong', { ariaHidden: 'true' }, labels[i]), { type: 'text', value: ' ' } as const]
                   : []),
                 ...inlineMarkdown(message),
               ]),
             );
           }
-          // So that the colour does not carry the state alone: the first line of a run shows the name.
-          if (messages.length === 0 && !previous.some((state) => state.name === name)) {
+          // So that the colour does not carry the state alone: the first line of a run shows the name,
+          // unless the author turned the names off.
+          if (showPrefix && messages.length === 0 && !previous.some((state) => state.name === name)) {
             labelNodes.push(h('span', { class: cls('-label') }, [h('strong', { ariaHidden: 'true' }, labels[i])]));
           }
         });
         code.children.unshift(h('span', { class: `${cls('-prefix')} ${PREFIX}-sr-only` }, `${labels.join(', ')}:`));
         code.children.push(...labelNodes);
+      },
+      postprocessRenderedBlock({ codeBlock, renderData }) {
+        const { states } = stateData.getOrCreateFor(codeBlock);
+        const lines = codeBlock.getLines().filter((line) => !isHiddenLine(codeBlock, line));
+        const name = states.get(lines[0] as ExpressiveCodeLine)?.[0]?.name;
+        if (!name || !lines.every((line) => states.get(line)?.some((state) => state.name === name))) return;
+        const pre = select('pre', renderData.blockAst);
+        if (!pre) return;
+        addClassName(pre, cls('-all'));
+        addClassName(pre, cls(`-${name}`));
       },
     },
   };

@@ -25,7 +25,7 @@ The two lines that start with `$ ` are commands, and `--fix` continues the comma
 
 ## Syntax
 
-Smart shell copy has no attribute or directive. It applies to every block with a terminal frame that has at least one prompt line.
+Smart shell copy has no directive. It applies to every block with a terminal frame that has at least one prompt line.
 
 | Block | Terminal frame |
 |---|---|
@@ -33,7 +33,7 @@ Smart shell copy has no attribute or directive. It applies to every block with a
 | Any language with `frame="terminal"` | Yes |
 | A shell language with `frame="code"` or `frame="none"` | No |
 
-A prompt is text at the start of a line. The default prompts are `$ ` and `> `, each with a space after it.
+A prompt is text at the start of a line. The default prompts are `$ ` and `> `, each with a space after it. To use other prompts in one block, add `shellCopy.prompts="<text>"` to the fence line, once for each prompt, such as `shellCopy.prompts="% "`. These prompts replace the defaults for the block.
 
 A `pycon` block with a line that starts with `>>> ` is a Python session. A `python` or `py` block is a session when its first line starts with `>>> `. It gets the same button, and keeps the editor frame. See [Python sessions](#python-sessions).
 

@@ -28,6 +28,13 @@ test('a field takes the colour of the token it is in, and the storage option goe
   });
   expect(html).toMatch(new RegExp(`<span style="--0:[^"]+">${field('YOUR_TOKEN')}</span>`));
   expect(html).toContain('data-scb-placeholders="session"');
+  const own = await render(block('py placeholder="YOUR_TOKEN" placeholders.storage="none"', 'token = "YOUR_TOKEN"'), {
+    placeholders: { storage: 'session' },
+  });
+  expect(own.html).toContain('data-scb-placeholders="none"');
+  const bad = await render(block('py placeholder="YOUR_TOKEN" placeholders.storage="disk"', 'token = "YOUR_TOKEN"'));
+  expect(bad.html).toContain('data-scb-placeholders="local"');
+  expect(bad.warnings).toHaveLength(1);
 });
 
 test('prefers the longer text when two texts overlap', () => {

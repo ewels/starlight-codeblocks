@@ -174,9 +174,91 @@ export const attributesReference: AttributeDoc[] = [
   {
     name: 'runnable',
     syntax: ['runnable'],
-    description: 'Adds a Run button, which runs the code in the browser and shows the output under the block.',
+    description:
+      'Adds a **Run in browser** button, which runs the code in the browser and shows the output under the block.',
     page: 'features/run-in-the-browser',
     example: { lang: 'py', meta: 'runnable', code: 'print(sum([1, 2, 3]))' },
+  },
+  {
+    name: 'runnable.label',
+    syntax: ['runnable.label="<text>"'],
+    description:
+      'The text of the button of a `runnable` block. It overrides the `runnable.label` option for the block.',
+    page: 'features/run-in-the-browser',
+    example: { lang: 'py', meta: 'runnable runnable.label="Try it"', code: 'print(sum([1, 2, 3]))' },
+  },
+  {
+    name: 'runnable.againLabel',
+    syntax: ['runnable.againLabel="<text>"'],
+    description:
+      'The text of the button after the first run. It overrides the `runnable.againLabel` option for the block.',
+    page: 'features/run-in-the-browser',
+  },
+  {
+    name: 'runnable.timeout',
+    syntax: ['runnable.timeout=<ms>'],
+    description: 'Milliseconds before a run stops. It overrides the `runnable.timeout` option for the block.',
+    page: 'features/run-in-the-browser',
+  },
+  {
+    name: 'focus.style',
+    syntax: ['focus.style="blur"', 'focus.style="dim"'],
+    description:
+      'Blurs and fades the lines outside the focus, or only fades them. It overrides the `focus.style` option for the block.',
+    page: 'features/focus',
+    example: {
+      lang: 'js',
+      meta: 'focus={2} focus.style="dim"',
+      code: "const host = 'localhost'\nconst port = 8080\nconst debug = false",
+    },
+  },
+  {
+    name: 'lineStates.prefix',
+    syntax: ['lineStates.prefix=false', 'lineStates.prefix=true'],
+    description:
+      'Shows the name of the state before each message, or not. It overrides the `lineStates.prefix` option for the block.',
+    page: 'features/line-states',
+    example: {
+      lang: 'js',
+      meta: 'lineStates.prefix=false',
+      code: 'const retries = -1 // [!code error] Must be 0 or more',
+    },
+  },
+  {
+    name: 'shellCopy.prompts',
+    syntax: ['shellCopy.prompts="<text>"'],
+    description:
+      'A prompt that starts a command in a terminal block, such as `shellCopy.prompts="% "`. Repeat it for more prompts. It replaces the `shellCopy.prompts` option for the block.',
+    page: 'features/smart-shell-copy',
+    example: { lang: 'sh', meta: 'shellCopy.prompts="% "', code: '% npm run build\nBuilt in 2.1 s' },
+  },
+  {
+    name: 'wordDiff.minSimilarity',
+    syntax: ['wordDiff.minSimilarity=<0-1>'],
+    description:
+      'How similar a removed and an added line must be for word-level diff to compare them. It overrides the `wordDiff.minSimilarity` option for the block.',
+    page: 'features/word-level-diff',
+  },
+  {
+    name: 'footnotes.sticky',
+    syntax: ['footnotes.sticky=false', 'footnotes.sticky=true'],
+    description:
+      'Keeps the list of footnotes in view while the block is on screen, or not. It overrides the `footnotes.sticky` option for the block.',
+    page: 'features/footnotes',
+  },
+  {
+    name: 'expandable.lines',
+    syntax: ['expandable.lines=<N>'],
+    description:
+      'The lines that the block shows before it expands, when it is expandable. It overrides the `expandable.lines` option for the block.',
+    page: 'features/expandable-blocks',
+  },
+  {
+    name: 'placeholders.storage',
+    syntax: ['placeholders.storage="local"', 'placeholders.storage="session"', 'placeholders.storage="none"'],
+    description:
+      'Where the browser keeps the values that readers type into the fields of the block. It overrides the `placeholders.storage` option for the block.',
+    page: 'features/fill-in-placeholders',
   },
 ];
 

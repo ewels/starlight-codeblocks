@@ -29,6 +29,16 @@ test('runnable adds a Run in browser button to the title bar and an empty live o
     runnable: { ...js.runnable, label: 'Ausführen', againLabel: 'Erneut ausführen' },
   });
   expect(labels.html).toContain('data-scb-run-again="Erneut ausführen">Ausführen</button>');
+  const own = await render(
+    block('js runnable runnable.label="Try it" runnable.againLabel="Once more" runnable.timeout=500', 'x'),
+    js,
+  );
+  expect(own.html).toContain('data-scb-run-again="Once more">Try it</button>');
+  expect(own.html).toContain('data-scb-runnable-timeout="500"');
+  const bad = await render(block('js runnable runnable.timeout=0 runnable.label=" "', 'x'), js);
+  expect(bad.html).toContain('data-scb-runnable-timeout="10000"');
+  expect(bad.html).toContain('>Run in browser</button>');
+  expect(bad.warnings).toHaveLength(2);
 });
 
 test('finds the runtime by the language name or its alias, for a pycon session too', async () => {

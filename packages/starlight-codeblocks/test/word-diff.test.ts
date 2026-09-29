@@ -47,6 +47,13 @@ test('keeps whole-line tints when the pair is less similar than minSimilarity', 
   const md = block('diff lang="js"', '-const a = 1;', '+const b = 2;');
   expect(worddiff((await render(md)).html)).not.toBeNull();
   expect(worddiff((await render(md, { wordDiff: { minSimilarity: 0.9 } })).html)).toBeNull();
+  const own = block('diff lang="js" wordDiff.minSimilarity=0.9', '-const a = 1;', '+const b = 2;');
+  expect(worddiff((await render(own)).html)).toBeNull();
+  const bad = await render(block('diff lang="js" wordDiff.minSimilarity=2', '-const a = 1;', '+const b = 2;'));
+  expect(worddiff(bad.html)).not.toBeNull();
+  expect(bad.warnings.join()).toContain(
+    '`wordDiff.minSimilarity=2` must be a number from 0 to 1. The block uses the site setting.',
+  );
 });
 
 test('adds nothing when the feature is off, with wordDiff=false, or with inline ins and del markers', async () => {

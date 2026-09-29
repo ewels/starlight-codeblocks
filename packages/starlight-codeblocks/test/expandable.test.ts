@@ -17,10 +17,12 @@ test.each([
   ['js hidden={1-8} expandable={5}', 20, {}, 5, 12],
   ['js', 11, auto, 6, 11],
   ['js expandable={8}', 20, auto, 8, 20],
+  ['py expandable expandable.lines=4', 20, {}, 4, 20],
+  ['js expandable.lines=7', 11, auto, 7, 11],
 ])('caps %s with %i lines', async (fence, n, options, cap, total) => {
   const { html, copyText, warnings } = await render(block(fence, ...many(n)), options);
   expect(html).toContain(`data-scb-expandable="${cap}"`);
-  expect(html.includes('data-scb-expandable-auto')).toBe(fence === 'js');
+  expect(html.includes('data-scb-expandable-auto')).toBe(fence === 'js' || fence === 'js expandable.lines=7');
   expect(html).toContain('class="scb-expandable-bar scb-no-print"');
   expect(html).toContain(`Show all ${total} lines`);
   expect(copyText.split('\n')).toHaveLength(n);

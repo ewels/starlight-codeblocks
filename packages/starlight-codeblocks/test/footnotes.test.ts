@@ -37,6 +37,10 @@ test('makes the list sticky with footnotes="sticky" or the site option, static w
     'scb-footnotes-sticky',
   );
   expect((await render(md('footnotes="top"'))).warnings.join('\n')).toContain('`footnotes="top"` must be');
+  expect((await render(md('footnotes.sticky=true'))).html).toContain('scb-footnotes-sticky');
+  expect((await render(md('footnotes.sticky=false'), { footnotes: { sticky: true } })).html).not.toContain(
+    'scb-footnotes-sticky',
+  );
 });
 
 test('leaves an escaped [\\!ref], a block without footnotes and a block with the feature off alone', async () => {

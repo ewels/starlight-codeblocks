@@ -42,6 +42,28 @@ codeblocks({
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
 | `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run in browser'`. `againLabel`: default `'Run again'` | Run in the browser |
 
+### Options for one block
+
+Put a setting on the fence line, with its name from `codeblocks()`, to change it for that block only. The forms:
+
+- `focus.style="dim"`
+- `focus.style="blur"`
+- `lineStates.prefix=false`
+- `lineStates.prefix=true`
+- `footnotes.sticky=false`
+- `footnotes.sticky=true`
+- `shellCopy.prompts="<text>"` (repeat it for more prompts)
+- `wordDiff.minSimilarity=<0-1>`
+- `expandable.lines=<N>`
+- `placeholders.storage="local"`
+- `placeholders.storage="session"`
+- `placeholders.storage="none"`
+- `runnable.label="<text>"`
+- `runnable.againLabel="<text>"`
+- `runnable.timeout=<ms>`
+
+A bad value gives a build warning, and the block uses the site setting. Options for the whole site (states, comment syntaxes, adapters, playgrounds, runtimes) have no fence line form.
+
 A directive of a feature that is off stays in the code, with a build warning. With `notation: false`, the plugin reads no directives, and every comment renders as written. Attributes still work.
 
 `notation.comments` adds or replaces the comment syntax of a language. A syntax with a space in it is a block comment: the opener, then the closer. An empty list removes a language.

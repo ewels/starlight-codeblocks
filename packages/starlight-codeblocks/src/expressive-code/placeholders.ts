@@ -1,7 +1,7 @@
 import { type AnnotationRenderOptions, ExpressiveCodeAnnotation } from '@expressive-code/core';
 import { type ElementContent, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { type CodeblocksPlugin, warn } from './core.ts';
+import { blockSetting, type CodeblocksPlugin, warn } from './core.ts';
 import { PREFIX } from './styles.ts';
 
 type Node = AnnotationRenderOptions['nodesToTransform'][number];
@@ -114,9 +114,16 @@ export function pluginPlaceholders({ storage = 'local' }: { storage?: string } =
           );
         }
       },
-      postprocessRenderedBlock({ renderData }) {
-        const figure = select('figure', renderData.blockAst);
-        if (figure && select(`.${PREFIX}-placeholder`, figure)) figure.properties.dataScbPlaceholders = storage;
+      postprocessRenderedBlock(context) {
+        const figure = select('figure', context.renderData.blockAst);
+        if (!figure || !select(`.${PREFIX}-placeholder`, figure)) return;
+        figure.properties.dataScbPlaceholders = blockSetting(
+          context,
+          'placeholders.storage',
+          (raw) => (['local', 'session', 'none'].includes(raw) ? raw : undefined),
+          storage,
+          '`"local"`, `"session"` or `"none"`',
+        );
       },
     },
   };

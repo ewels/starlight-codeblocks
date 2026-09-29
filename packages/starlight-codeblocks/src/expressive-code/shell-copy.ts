@@ -122,6 +122,8 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
     hooks: {
       preprocessCode({ codeBlock }) {
         const lines = codeBlock.getLines();
+        const own = codeBlock.metaOptions.list('shellCopy.prompts', 'string').map((option) => option.value);
+        const blockPrompts = own.length > 0 ? own : prompts;
         const session = pythonSessionPrompts(codeBlock.language, lines);
         if (session.size > 0) {
           const data = shellData.getOrCreateFor(codeBlock);
@@ -136,11 +138,11 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
         const terminal =
           frame === 'terminal' || (frame === 'auto' && LanguageGroups.terminal.includes(codeBlock.language));
         if (!terminal) return;
-        if (!lines.some((line) => prompts.some((p) => line.text.startsWith(p)))) return;
+        if (!lines.some((line) => blockPrompts.some((p) => line.text.startsWith(p)))) return;
         const data = shellData.getOrCreateFor(codeBlock);
         let continued = false;
         for (const line of lines) {
-          const prompt = prompts.find((p) => line.text.startsWith(p));
+          const prompt = blockPrompts.find((p) => line.text.startsWith(p));
           if (prompt) {
             data.prompts.set(line, prompt);
             line.editText(0, prompt.length, '');

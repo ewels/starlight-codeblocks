@@ -65,8 +65,9 @@ count = len(sys.argv)  # [!code warning] Includes the script name
 
 - Use the attribute when the text around the block explains the problem. Use the directive to show a message.
 - The label starts with the name of the state in bold: **Error**, **Warning**, **Note** or **Success**. Screen readers hear the name before the line.
-- `lineStates: { prefix: false }` leaves the name out of labels with a message. A line with no message still shows the name, so that the colour does not carry the state alone.
+- `lineStates: { prefix: false }`, or `lineStates.prefix=false` on one block, hides the name of the state on screen. A line with no message then shows only the tint, so colour alone marks the state. Screen readers still hear the name.
 - Use `[!code ++] message` to say why a line was added, for example in a step of a tutorial. Without line states, the message stays in the code as a comment.
+- A state on every line of a block tints the whole block, for example a one-line error message.
 - The copy button leaves out the messages. Needs no JavaScript.
 - Add a custom state in `lineStates.states`:
 

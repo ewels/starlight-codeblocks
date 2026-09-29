@@ -2,7 +2,7 @@ import type { ExpressiveCodeBlock } from '@expressive-code/core';
 import { h, type Parents, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { SWITCHER_META } from './code-switcher.ts';
-import type { CodeblocksPlugin } from './core.ts';
+import { blockSetting, type CodeblocksPlugin } from './core.ts';
 import { PREFIX } from './styles.ts';
 
 const hasCollapse = (codeBlock: ExpressiveCodeBlock) =>
@@ -80,7 +80,8 @@ export function pluginExpandable({
 }`,
     jsModules: clientJsModules,
     hooks: {
-      postprocessRenderedBlock({ codeBlock, renderData }) {
+      postprocessRenderedBlock(context) {
+        const { codeBlock, renderData } = context;
         const flag = codeBlock.metaOptions.getBoolean('expandable');
         const n = codeBlock.metaOptions.getInteger('expandable');
         // The client cuts at the Nth .ec-line, which cannot reach past a collapsible section's <details>.
@@ -91,7 +92,14 @@ export function pluginExpandable({
         const total = codeBlock.getLines().length - selectAll(`.${PREFIX}-hidden-line`, pre).length;
         const automatic =
           n === undefined && flag === undefined && auto !== false && total > auto && !ownLayout(codeBlock);
-        const lines = n ?? (flag || automatic ? siteDefault : undefined);
+        const blockDefault = blockSetting(
+          context,
+          'expandable.lines',
+          (raw) => (/^[1-9]\d*$/.test(raw) ? Number(raw) : undefined),
+          siteDefault,
+          'a whole number of 1 or more',
+        );
+        const lines = n ?? (flag || automatic ? blockDefault : undefined);
         if (!lines || total - lines < 3) return;
         pre.properties.dataScbExpandable = String(lines);
         if (automatic) pre.properties.dataScbExpandableAuto = '';

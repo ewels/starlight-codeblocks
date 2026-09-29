@@ -5,6 +5,7 @@ import { clientJsModules } from '../client-modules.ts';
 import { getRegistry } from '../registry.ts';
 import {
   addTitleBarControl,
+  blockSetting,
   bundledLanguage,
   type CodeblocksPlugin,
   keepCopiedText,
@@ -60,6 +61,9 @@ export const runtimeFileName = (language: string) => `scb-runtime-${language.rep
 const cls = (suffix: string) => `${PREFIX}-run${suffix}`;
 
 /** Adds a Run button to `runnable` blocks, and an output panel under the code. */
+/** Any text but blank, for `blockSetting()`. */
+const text = (raw: string) => (raw.trim() ? raw : undefined);
+
 export function pluginRunnable({
   runtimes,
   timeout = 10000,
@@ -116,7 +120,15 @@ export function pluginRunnable({
           ? `${(registry.base ?? '/').replace(/\/?$/, '/')}${registry.assets ?? '_astro'}/${runtimeFileName(language)}`
           : modules[language];
         figure.properties.dataScbRunnableName = bundledLanguage(language)?.name ?? language;
-        figure.properties.dataScbRunnableTimeout = String(timeout);
+        figure.properties.dataScbRunnableTimeout = String(
+          blockSetting(
+            context,
+            'runnable.timeout',
+            (raw) => (/^\d+$/.test(raw) && Number(raw) > 0 && Number(raw) <= 2 ** 31 - 1 ? Number(raw) : undefined),
+            timeout,
+            'a whole number of milliseconds, from 1 to 2147483647',
+          ),
+        );
         keepCopiedText(renderData.blockAst, codeBlock.code);
         // With smart shell copy off, nothing else has taken the prompts and output out of a session.
         if (!select('.scb-shell-copy', figure)) {
@@ -133,9 +145,9 @@ export function pluginRunnable({
             {
               type: 'button',
               class: `${PREFIX}-btn ${cls('')} ${PREFIX}-no-print ${PREFIX}-needs-js`,
-              dataScbRunAgain: againLabel,
+              dataScbRunAgain: blockSetting(context, 'runnable.againLabel', text, againLabel, 'some text'),
             },
-            label,
+            blockSetting(context, 'runnable.label', text, label, 'some text'),
           ),
         );
         figure.children.push(h('div', { class: cls('-output'), ariaLive: 'polite' }));

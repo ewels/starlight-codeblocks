@@ -7,7 +7,7 @@ With no options, `codeblocks()` turns on every feature. A feature changes a code
 
 ## The options object
 
-`codeblocks()` takes one object. Each feature has a key in it. Set a key to `false` to turn the feature off, or to an object to change its settings:
+In the astro config file, the plugins `codeblocks()` function takes one object. Each feature has a key in it. Set a key to `false` to turn the feature off, or to an object to change its settings:
 
 ```js title="astro.config.mjs" {4-8}
 starlight({
@@ -24,21 +24,24 @@ starlight({
 
 The [options reference](/starlight-codeblocks/reference/options/) lists every key, its type and its default.
 
-## Turn a feature off
+## Options for one block
 
-Set its key to `false`. The attributes and directives of that feature then have no effect. A directive of a feature that is off stays in the code, and the build logs a warning for it:
+To change a setting for one block only, put the option on the fence line, with the same name as in `codeblocks()`. The rest of the site keeps its setting:
 
-```js title="astro.config.mjs"
-codeblocks({ annotations: false, placeholders: false });
+````md
+```js focus={2} focus.style="dim" lineStates.prefix=false
+const host = 'localhost'
+const port = 8080 // [!code warning] Set in production
 ```
+````
 
-With `notation: false`, the plugin reads no directives at all, and every comment renders as written. Attributes on the fence line still work.
+This works for every setting that applies to one block, such as `wordDiff.minSimilarity=0.6` or `runnable.label="Try it"`. A value of the wrong type gives a build warning, and the block uses the site setting. Options for the whole site, such as custom line states, playgrounds and runtimes, stay in `codeblocks()`.
 
 ## Errors in the options
 
 The plugin checks the options when the site starts. An unknown key or a value of the wrong type stops the build with a message that names the option:
 
-```txt
+```txt error={1} lineStates.prefix=false
 starlight-codeblocks: `focus.style` must be 'blur' | 'dim', got "fade".
 ```
 

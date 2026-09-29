@@ -2,7 +2,7 @@ import { getColorContrast, onBackground } from '@expressive-code/core';
 import { expect, test } from 'vitest';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
 import { variants } from './contrast.ts';
-import { block, lineClasses, render } from './render.ts';
+import { baseStyles, block, lineClasses, render } from './render.ts';
 
 const todo = { todo: { label: 'To do', colour: { dark: '#c792ea', light: '#7c3aed' } } };
 
@@ -90,13 +90,21 @@ test('has a success state, and note and warn as other names for info and warning
   expect(warnings).toEqual([]);
 });
 
-test('with prefix off, a message has no name, and a line with no message still shows the name', async () => {
+test('with prefix off, no label shows a name, and screen readers still hear it', async () => {
   const { html } = await render(block('js error={1}', 'a()', 'b() // [!code warning] Slow'), {
     lineStates: { prefix: false },
   });
   expect(html).toContain('<span class="scb-state-label">Slow</span>');
-  expect(html).toContain('<span class="scb-state-label"><strong aria-hidden="true">Error</strong></span>');
+  expect(html).not.toContain('<strong aria-hidden="true">');
+  expect(html).toContain('<span class="scb-state-prefix scb-sr-only">Error:</span>');
   expect(html).toContain('<span class="scb-state-prefix scb-sr-only">Warning:</span>');
+  const md = (meta: string) => block(`js ${meta}`, 'b() // [!code warning] Slow');
+  expect((await render(md('lineStates.prefix=false'))).html).toContain('<span class="scb-state-label">Slow</span>');
+  const on = await render(md('lineStates.prefix=true'), { lineStates: { prefix: false } });
+  expect(on.html).toContain('<strong aria-hidden="true">Warning</strong> Slow</span>');
+  const bad = await render(md('lineStates.prefix="no"'));
+  expect(bad.html).toContain('<strong aria-hidden="true">Warning</strong> Slow</span>');
+  expect(bad.warnings.join()).toContain('`lineStates.prefix="no"` must be `true` or `false`.');
 });
 
 test('shows a message after ++, -- and highlight directives in a label, and leaves the text in the comment without the feature', async () => {
@@ -161,4 +169,21 @@ test('every state colour meets its contrast target in the dark and the light the
       ).toBeGreaterThanOrEqual(4.5);
     }
   }
+});
+
+test('a state on every line tints the whole block once', async () => {
+  const one = await render(block('txt error={1}', 'starlight-codeblocks: `focus.style` must be one of two values.'));
+  expect(one.html).toMatch(/<pre [^>]*class="[^"]*scb-state-all scb-state-error/);
+  const all = await render(block('js', 'a() // [!code warning]', 'b() // [!code warning] Slow'));
+  expect(all.html).toMatch(/<pre [^>]*class="[^"]*scb-state-all scb-state-warning/);
+  for (const md of [
+    block('js error={1}', 'a()', 'b()'),
+    block('js error={1} warning={2}', 'a()', 'b()'),
+    block('js', 'a()'),
+  ]) {
+    expect((await render(md)).html).not.toContain('scb-state-all');
+  }
+  const css = await baseStyles();
+  expect(css).toMatch(/pre\.scb-state-all\{background-image:linear-gradient\(var\(--scbStateBg\) 0 0\)/);
+  expect(css).toMatch(/pre\.scb-state-all \.ec-line\.scb-state\{background:none\}/);
 });

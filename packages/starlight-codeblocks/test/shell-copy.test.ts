@@ -22,6 +22,20 @@ test('Copy commands copies the commands without prompts or output; the copy butt
   expect(html.match(/class="ec-line scb-shell-output"/g)).toHaveLength(3);
 });
 
+test('shellCopy.prompts="…" replaces the prompts for one block, and can repeat', async () => {
+  const { commandsText, html } = await render(
+    block(
+      'sh frame="terminal" shellCopy.prompts="% " shellCopy.prompts="❯ "',
+      '% npm test',
+      'ok',
+      '❯ npm run build',
+      '$ not a prompt here',
+    ),
+  );
+  expect(commandsText).toBe('npm test\nnpm run build');
+  expect(html.match(/class="scb-shell-prompt"/g)).toHaveLength(2);
+});
+
 test('shows output lines without syntax colours', async () => {
   const { html } = await render(block('sh', '$ echo "hi"', 'echo "not a command"'));
   expect(html.slice(html.indexOf('scb-shell-output'))).not.toMatch(/<span style="--0/);

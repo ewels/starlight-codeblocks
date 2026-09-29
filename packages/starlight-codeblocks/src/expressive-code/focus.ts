@@ -5,7 +5,7 @@ import {
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { addClassName, select } from '@expressive-code/core/hast';
-import type { CodeblocksPlugin } from './core.ts';
+import { blockSetting, type CodeblocksPlugin } from './core.ts';
 import { markedLines } from './notation.ts';
 import { PREFIX } from './styles.ts';
 
@@ -25,7 +25,10 @@ const styleSettings = new PluginStyleSettings({
   defaultValues: { codeblocksFocus: { blur: '1.1px', opacity: '0.48', transitionDuration: '250ms' } },
 });
 
-const focusData = new AttachedPluginData<{ lines: Set<ExpressiveCodeLine> }>(() => ({ lines: new Set() }));
+const focusData = new AttachedPluginData<{ lines: Set<ExpressiveCodeLine>; style: 'blur' | 'dim' }>(() => ({
+  lines: new Set(),
+  style: 'blur',
+}));
 
 const OUT = `${PREFIX}-focus-out`;
 
@@ -59,8 +62,11 @@ export function pluginFocus({
     baseStyles: ({ cssVar }) => `
 .${OUT} {
   opacity: ${cssVar('codeblocksFocus.opacity')};
-  ${style === 'blur' ? `filter: blur(${cssVar('codeblocksFocus.blur')});` : ''}
   transition: filter ${cssVar('codeblocksFocus.transitionDuration')} ease, opacity ${cssVar('codeblocksFocus.transitionDuration')} ease;
+}
+/* A block with \`focus.style\` other than the site's carries it on its code. */
+${style === 'blur' ? `.${OUT}:not([data-scb-focus-style='dim'] *)` : `[data-scb-focus-style='blur'] .${OUT}`} {
+  filter: blur(${cssVar('codeblocksFocus.blur')});
 }
 pre > code[tabindex]:focus-visible {
   outline: 3px solid ${cssVar('codeblocks.focusRing')};
@@ -76,11 +82,20 @@ pre > code[tabindex]:focus-visible {
   filter: none;
 }
 @media print {
-  .${OUT} { opacity: 0.6; filter: none; }
+  /* As specific as the blur rule above, and after it. */
+  .frame .${OUT} { opacity: 0.6; filter: none; }
 }`,
     hooks: {
       preprocessCode(context) {
-        focusData.getOrCreateFor(context.codeBlock).lines = markedLines(context, 'focus', 'code focus');
+        const data = focusData.getOrCreateFor(context.codeBlock);
+        data.lines = markedLines(context, 'focus', 'code focus');
+        data.style = blockSetting(
+          context,
+          'focus.style',
+          (raw) => (raw === 'blur' || raw === 'dim' ? raw : undefined),
+          style,
+          '`"blur"` or `"dim"`',
+        );
       },
       postprocessRenderedLine({ codeBlock, line, renderData }) {
         const { lines } = focusData.getOrCreateFor(codeBlock);
@@ -92,6 +107,8 @@ pre > code[tabindex]:focus-visible {
         const code = select('pre > code', renderData.blockAst);
         if (!code) return;
         code.properties.tabindex = '0';
+        const blockStyle = focusData.getOrCreateFor(codeBlock).style;
+        if (blockStyle !== style) code.properties.dataScbFocusStyle = blockStyle;
         // `code` prohibits a name, so it needs a role that takes one.
         code.properties.role = 'region';
         code.properties.ariaLabel = codeBlock.props.title ? `Code: ${codeBlock.props.title}` : 'Code block';

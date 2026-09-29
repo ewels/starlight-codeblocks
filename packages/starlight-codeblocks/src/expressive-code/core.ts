@@ -197,6 +197,28 @@ export function warn({ codeBlock, config }: Context, message: string, line?: num
   config.logger.warn(`${where(codeBlock, line)}: ${message}`);
 }
 
+/**
+ * The block's own value for a site option, from the attribute `key`, such as `lineStates.prefix=false`. `parse` returns
+ * `undefined` for a bad value, which warns and keeps `fallback`, the site's value. Without the attribute, `fallback`.
+ */
+export function blockSetting<T>(
+  context: Context,
+  key: string,
+  parse: (raw: string) => T | undefined,
+  fallback: T,
+  expected: string,
+): T {
+  const option = context.codeBlock.metaOptions.list(key).at(-1);
+  if (!option) return fallback;
+  const value = parse(String(option.value));
+  if (value !== undefined) return value;
+  warn(context, `\`${option.raw.trim()}\` must be ${expected}. The block uses the site setting.`);
+  return fallback;
+}
+
+/** Parses `true` or `false`, for `blockSetting()`. */
+export const parseBoolean = (raw: string) => (raw === 'true' ? true : raw === 'false' ? false : undefined);
+
 /** Throws a build error that names the file and the code block. */
 function fail({ codeBlock }: Context, message: string): never {
   throw new Error(`${where(codeBlock)}: ${message}`);

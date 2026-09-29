@@ -14,12 +14,16 @@ const sources = (readdirSync(src, { recursive: true }) as string[])
   .map((file) => readFileSync(join(src, file), 'utf8'));
 
 // Expressive Code's own attributes, which its docs cover.
-const ecAttributes = new Set(['title', 'startLineNumber', 'lang', 'useDiffSyntax']);
+const ecAttributes = new Set(['title', 'startLineNumber', 'lang', 'useDiffSyntax', 'collapse']);
 
 test('every attribute that the source reads is in the attributes reference', () => {
   const read = new Set(
     sources.flatMap((code) =>
-      [...code.matchAll(/\.(?:get\w+|list)\('(\w+)'\)|resolveRange\(\w+, '(\w+)'\)/g)].map((m) => m[1] ?? m[2]),
+      [
+        ...code.matchAll(
+          /\.(?:get\w+|list)\('([\w.]+)'(?:, '\w+')?\)|resolveRange\(\w+, '(\w+)'\)|blockSetting\(\s*\w+,\s*'([\w.]+)'/g,
+        ),
+      ].map((m) => m[1] ?? m[2] ?? m[3]),
     ),
   );
   expect(read.size).toBeGreaterThan(10);

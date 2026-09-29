@@ -9,7 +9,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { blockUid, type CodeblocksPlugin, lineElement, lineNumber, warn } from './core.ts';
+import { blockSetting, blockUid, type CodeblocksPlugin, lineElement, lineNumber, parseBoolean, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
 import { litLine, onCode, PREFIX, solidCodeBackground, solidCodeForeground, themeColour } from './styles.ts';
@@ -188,7 +188,13 @@ ${litLine(`.${cls('-on')}, .${cls('-peek')}`, v('lineBackground'), v('accent'))}
         if (attribute !== undefined && attribute !== 'sticky' && attribute !== 'static') {
           warn(context, `\`footnotes="${attribute}"\` must be \`"sticky"\` or \`"static"\`. The plugin ignores it.`);
         }
-        const sticky = attribute === 'sticky' || (attribute !== 'static' && siteSticky);
+        const sticky = blockSetting(
+          context,
+          'footnotes.sticky',
+          parseBoolean,
+          attribute === 'sticky' || (attribute !== 'static' && siteSticky),
+          '`true` or `false`',
+        );
         const uid = blockUid(context);
         const items = refs.map((directive, i) => {
           const n = String(i + 1);

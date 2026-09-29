@@ -7,7 +7,7 @@ import {
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { h } from '@expressive-code/core/hast';
-import { type CodeblocksPlugin, ensureTextContrast } from './core.ts';
+import { blockSetting, type CodeblocksPlugin, ensureTextContrast } from './core.ts';
 import { PREFIX, themeColour } from './styles.ts';
 
 export interface WordDiffStyleSettings {
@@ -170,10 +170,18 @@ export function pluginWordDiff({ minSimilarity = 0.4 }: { minSimilarity?: number
         }
       },
       // Runs after the text-markers plugin has annotated diff-syntax, `ins`/`del` and `[!code ++/--]` lines.
-      annotateCode({ codeBlock }) {
+      annotateCode(context) {
+        const { codeBlock } = context;
         const mark = (line: ExpressiveCodeLine, type: 'ins' | 'del', [columnStart, columnEnd]: [number, number]) =>
           line.addAnnotation(new ChangedTokenAnnotation(type, { columnStart, columnEnd }));
         if (codeBlock.metaOptions.getBoolean('wordDiff') === false) return;
+        const similarity = blockSetting(
+          context,
+          'wordDiff.minSimilarity',
+          (raw) => (/^(0(\.\d+)?|1(\.0+)?)$/.test(raw) ? Number(raw) : undefined),
+          minSimilarity,
+          'a number from 0 to 1',
+        );
         const lines = codeBlock.getLines();
         const types = lines.map(markerType);
         const run = (start: number, type: 'ins' | 'del') => {
@@ -192,7 +200,7 @@ export function pluginWordDiff({ minSimilarity = 0.4 }: { minSimilarity?: number
           for (let pair = 0; pair < Math.min(dels.length, ins.length); pair++) {
             const del = dels[pair] as ExpressiveCodeLine;
             const add = ins[pair] as ExpressiveCodeLine;
-            const diff = wordDiff(del.text, add.text, minSimilarity);
+            const diff = wordDiff(del.text, add.text, similarity);
             if (!diff) continue;
             for (const range of diff.a) mark(del, 'del', range);
             for (const range of diff.b) mark(add, 'ins', range);
