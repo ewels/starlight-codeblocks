@@ -211,7 +211,7 @@ ${SIDE_SIZES.map(
   .${PREFIX}-side-${w} > .${PREFIX}-side-grid {
     ${breakoutMargin(`--${PREFIX}-side-outset`, w)}
     display: grid;
-    grid-template-columns: minmax(0, auto) minmax(12rem, 1fr);
+    grid-template-columns: minmax(50%, auto) minmax(12rem, 1fr);
     gap: 18px;
     align-items: start;
   }
@@ -224,7 +224,7 @@ ${SIDE_SIZES.map(
   }
 }`,
 ).join('\n')}
-.${PREFIX}-side-code-right > .${PREFIX}-side-grid { grid-template-columns: minmax(12rem, 1fr) minmax(0, auto); }
+.${PREFIX}-side-code-right > .${PREFIX}-side-grid { grid-template-columns: minmax(12rem, 1fr) minmax(50%, auto); }
 .${PREFIX}-side-code-right .${cls('-notes')} { order: -1; }
 .${PREFIX}-side-static .${cls('-notes')} { position: static; }
 .${cls('-list')} { display: none; }

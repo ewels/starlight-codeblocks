@@ -219,7 +219,7 @@ export function scrollycoding(html: string, { interactive = true, animate = true
 }
 
 const TEXT = 'minmax(12rem, 1fr)';
-const CODE = 'minmax(0, auto)';
+const CODE = 'minmax(50%, auto)';
 const WIDE = SIDE_SIZES.slice(1).map((w) => `.${S}-${w}`);
 
 const styled = new WeakSet<Request>();
