@@ -428,14 +428,14 @@ Add a title bar button that opens the example in an online playground, with the 
 <details>
 <summary>Run in the browser</summary>
 
-Add a Run button that runs the example in the browser and shows the output under the block. Python runs with Pyodide, which loads only when a reader selects **Run**.
+Add a Run in browser button that runs the example in the browser and shows the output under the block. Python runs with Pyodide, which loads only when a reader selects **Run in browser**.
 
 ````md
 ```py runnable
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/run-in-the-browser.webp" alt="A Python block with a Run button. Selecting it shows the output of the program under the block.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/run-in-the-browser.webp" alt="A Python block with a Run in browser button. Selecting it shows the output of the program under the block.">
 
 [Run in the browser documentation](https://ewels.github.io/starlight-codeblocks/features/run-in-the-browser/)
 

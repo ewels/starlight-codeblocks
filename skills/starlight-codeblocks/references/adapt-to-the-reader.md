@@ -59,7 +59,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 ````
 
 - Every match of each text becomes a field. Choose texts that appear nowhere else in the block.
-- The copy button, playgrounds and the **Run** button get the reader's values. An empty field copies its placeholder text.
+- The copy button, playgrounds and the **Run in browser** button get the reader's values. An empty field copies its placeholder text.
 - A text that is not in the code gives a build warning.
 - Option: `placeholders.storage` is `'local'` (default, kept across visits), `'session'` (until the tab closes) or `'none'`. Use `'session'` on a site where readers type secrets, and tell readers where the values go.
 - Limits: literal text only. Without JavaScript, fields are plain inputs that do not update each other.

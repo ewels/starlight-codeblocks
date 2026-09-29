@@ -26,7 +26,7 @@ test('Run loads no runtime until selected, then shows stdout and stderr, and doe
   const panel = block.locator('.scb-run-output');
   const stdout = panel.locator('.scb-run-stdout');
   const stderr = panel.locator('.scb-run-stderr');
-  await expect(button).toHaveText('Run');
+  await expect(button).toHaveText('Run in browser');
   await expect(panel).toBeEmpty();
   await expect(panel).toHaveAttribute('aria-live', 'polite');
   await button.click();

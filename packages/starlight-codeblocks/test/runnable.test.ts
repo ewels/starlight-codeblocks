@@ -12,10 +12,10 @@ afterEach(() => setRegistry(undefined));
 
 const js = { runnable: { runtimes: { javascript: '/runtimes/js.js' } } };
 
-test('runnable adds a Run button to the title bar and an empty live output panel', async () => {
+test('runnable adds a Run in browser button to the title bar and an empty live output panel', async () => {
   const { html, copyText, warnings } = await render(block('js runnable', 'console.log(1)'), js);
   expect(html).toMatch(
-    /<figcaption class="header"><span class="scb-tools"><button type="button" class="scb-btn scb-run scb-no-print scb-needs-js">Run<\/button><\/span><\/figcaption>/,
+    /<figcaption class="header"><span class="scb-tools"><button type="button" class="scb-btn scb-run scb-no-print scb-needs-js" data-scb-run-again="Run again">Run in browser<\/button><\/span><\/figcaption>/,
   );
   expect(html).toContain('<div class="scb-run-output" aria-live="polite"></div></figure>');
   expect(html).toContain('data-scb-runnable="/runtimes/js.js" data-scb-runnable-name="JavaScript"');
@@ -25,6 +25,10 @@ test('runnable adds a Run button to the title bar and an empty live output panel
   expect(warnings).toEqual([]);
   const timeout = await render(block('js runnable', 'x'), { runnable: { ...js.runnable, timeout: 2500 } });
   expect(timeout.html).toContain('data-scb-runnable-timeout="2500"');
+  const labels = await render(block('js runnable', 'x'), {
+    runnable: { ...js.runnable, label: 'Ausführen', againLabel: 'Erneut ausführen' },
+  });
+  expect(labels.html).toContain('data-scb-run-again="Erneut ausführen">Ausführen</button>');
 });
 
 test('finds the runtime by the language name or its alias, for a pycon session too', async () => {

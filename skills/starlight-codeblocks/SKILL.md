@@ -109,7 +109,7 @@ A code switcher `sync` key and a `<Tabs>` `syncKey` do not switch together. Use 
 |---|---|---|
 | A terminal session with prompts and output | Smart shell copy: start commands with `$ ` | Starts on its own. **Copy commands** copies the commands only. |
 | Readers try the code in an online playground | Open in playground: `playground="typescript"` or `playground="rust"` | A title bar button that opens the playground with the code. |
-| Readers run Python in the page | Run in the browser: `runnable` | A **Run** button and an output panel. Other languages need a runtime. |
+| Readers run Python in the page | Run in the browser: `runnable` | A **Run in browser** button and an output panel. Other languages need a runtime. |
 
 ## Syntax rules
 
@@ -165,7 +165,7 @@ If a page shows one feature, keep the others out of its examples with these attr
 - For inline code highlighting, put the suffix inside the backticks: `` `res.ok{:js}` ``. MDX reads `` `res.ok`{:js} `` as a JavaScript expression and the build fails.
 - A directive with an unknown name, or of a feature that is off, stays in the code and logs a build warning. Read the build warnings after every change: each gives the file, the block and the line.
 - Each `id` for line permalinks must be unique on the page, and must not match a heading id.
-- Hidden lines still run in the copied code, in playgrounds and with `runnable`. Code for a playground or the **Run** button must be complete.
+- Hidden lines still run in the copied code, in playgrounds and with `runnable`. Code for a playground or the **Run in browser** button must be complete.
 - Fill-in placeholder values stay in the browser's `localStorage` by default. For secrets such as API tokens, set `placeholders: { storage: 'session' }`.
 - In Markdoc (`.mdoc`) files, put attributes in a `meta` attribute: `` ```js {% meta="focus={2}" %} ``. The code switcher and inline code highlighting do not work there.
 - The `<Code>` component of Starlight gets every feature inside a block. Give the attributes in its `meta` prop.

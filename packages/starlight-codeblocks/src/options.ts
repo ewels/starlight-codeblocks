@@ -91,7 +91,7 @@ export interface CodeblocksOptions {
   walkthrough?: false;
   scrollycoding?: false;
   inlineHighlighting?: false | { defaultLanguage?: string | false };
-  runnable?: false | { runtimes?: Record<string, string>; timeout?: number };
+  runnable?: false | { runtimes?: Record<string, string>; timeout?: number; label?: string; againLabel?: string };
 }
 
 /** The default export of a runtime module, which runs code for the Run button. */
@@ -363,7 +363,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     },
   },
   runnable: {
-    description: 'Adds a Run button that runs the code in the browser.',
+    description: 'Adds a button that runs the code in the browser.',
     page: 'features/run-in-the-browser',
     off: '`runnable` attributes then have no effect.',
     fields: {
@@ -380,6 +380,18 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         default: 10000,
         description: 'Milliseconds before a run stops, from 1 to 2147483647, the largest delay browsers accept.',
         valid: (value) => typeof value === 'number' && value > 0 && value <= 2 ** 31 - 1,
+      },
+      label: {
+        type: 'string',
+        default: 'Run in browser',
+        description: 'The text of the button.',
+        valid: (value) => isString(value) && value.trim() !== '',
+      },
+      againLabel: {
+        type: 'string',
+        default: 'Run again',
+        description: 'The text of the button after the first run.',
+        valid: (value) => isString(value) && value.trim() !== '',
       },
     },
   },

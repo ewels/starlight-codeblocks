@@ -93,7 +93,7 @@ async function click(event: MouseEvent) {
     await run(figure, panel);
   } finally {
     button.removeAttribute('aria-disabled');
-    button.textContent = 'Run again';
+    button.textContent = button.dataset.scbRunAgain ?? 'Run again';
   }
 }
 

@@ -40,7 +40,7 @@ codeblocks({
 | `walkthrough` | None | Code walkthrough |
 | `scrollycoding` | None | Scrollycoding |
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
-| `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms, at most `2147483647` | Run in the browser |
+| `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run in browser'`. `againLabel`: default `'Run again'` | Run in the browser |
 
 A directive of a feature that is off stays in the code, with a build warning. With `notation: false`, the plugin reads no directives, and every comment renders as written. Attributes still work.
 

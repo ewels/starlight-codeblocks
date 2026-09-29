@@ -41,6 +41,8 @@ const PYODIDE_RUNTIME = 'starlight-codeblocks/runtimes/pyodide';
 interface RunnableSettings {
   runtimes?: Record<string, string>;
   timeout?: number;
+  label?: string;
+  againLabel?: string;
 }
 
 /**
@@ -58,7 +60,12 @@ export const runtimeFileName = (language: string) => `scb-runtime-${language.rep
 const cls = (suffix: string) => `${PREFIX}-run${suffix}`;
 
 /** Adds a Run button to `runnable` blocks, and an output panel under the code. */
-export function pluginRunnable({ runtimes, timeout = 10000 }: RunnableSettings = {}): CodeblocksPlugin {
+export function pluginRunnable({
+  runtimes,
+  timeout = 10000,
+  label = 'Run in browser',
+  againLabel = 'Run again',
+}: RunnableSettings = {}): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:runnable',
     styleSettings,
@@ -123,8 +130,12 @@ export function pluginRunnable({ runtimes, timeout = 10000 }: RunnableSettings =
           renderData.blockAst,
           h(
             'button',
-            { type: 'button', class: `${PREFIX}-btn ${cls('')} ${PREFIX}-no-print ${PREFIX}-needs-js` },
-            'Run',
+            {
+              type: 'button',
+              class: `${PREFIX}-btn ${cls('')} ${PREFIX}-no-print ${PREFIX}-needs-js`,
+              dataScbRunAgain: againLabel,
+            },
+            label,
           ),
         );
         figure.children.push(h('div', { class: cls('-output'), ariaLive: 'polite' }));

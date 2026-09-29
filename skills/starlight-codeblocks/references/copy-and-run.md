@@ -4,7 +4,7 @@ Three features help readers use the code outside the page.
 
 - If a block shows a terminal session with prompts and output, write the prompts. Smart shell copy starts on its own.
 - If the language has an online playground, add a playground button.
-- If the code is Python, or a language with a runtime on the site, add a **Run** button.
+- If the code is Python, or a language with a runtime on the site, add a **Run in browser** button.
 
 All three use the copied text of the block: directives removed, hidden lines kept and placeholder values filled in. The code must be complete.
 
@@ -84,7 +84,7 @@ Use when an online playground can run the language. A title bar button opens the
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/run-in-the-browser/
 
-Use for short Python examples that readers can run in the page. A **Run** button runs the code in the browser and shows the output under the block. Python runs with Pyodide, which loads only when a reader selects **Run**. The Python runtime has no standard input, so `input()` fails.
+Use for short Python examples that readers can run in the page. A **Run in browser** button runs the code in the browser and shows the output under the block. Python runs with Pyodide, which loads only when a reader selects **Run in browser**. The Python runtime has no standard input, so `input()` fails.
 
 | Syntax | Where |
 |---|---|

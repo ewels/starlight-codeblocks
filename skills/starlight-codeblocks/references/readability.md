@@ -28,7 +28,7 @@ const port = Number(process.env.PORT ?? 3000);
 createServer(handler).listen(port);
 ```
 
-- The copy button always copies hidden lines, so the code still runs after a paste. Playgrounds and the **Run** button get them too.
+- The copy button always copies hidden lines, so the code still runs after a paste. Playgrounds and the **Run in browser** button get them too.
 - The title bar gets a "Show N hidden lines" button that opens every run.
 - A line permalink to a hidden line opens its marker.
 - Hidden lines that show are dimmed to 75% opacity, which puts some syntax colours under 4.5:1 contrast. Set the `codeblocksHiddenLines.openOpacity` style setting to `1` if the site needs full contrast.
@@ -54,7 +54,7 @@ Use when a full file is the clearest example, but a reader who scans the page do
 - Find in the page still finds text in the collapsed lines, in browsers that support `hidden="until-found"`.
 - Without JavaScript, and when the page prints, the block shows in full.
 - Option: `expandable.lines` (default `12`) sets the count for the bare `expandable` attribute.
-- Option: `expandable.auto` (default `false`) makes every block with more lines than this number expandable, at `expandable.lines`. It skips the variants of a code switcher, blocks with a **Run** button, blocks with Expressive Code's `collapse` and the blocks in `<CodeWalkthrough>` and `<Scrollycoding>`.
+- Option: `expandable.auto` (default `false`) makes every block with more lines than this number expandable, at `expandable.lines`. It skips the variants of a code switcher, runnable blocks, blocks with Expressive Code's `collapse` and the blocks in `<CodeWalkthrough>` and `<Scrollycoding>`.
 
 ## Visible whitespace
 
