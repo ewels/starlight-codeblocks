@@ -3,6 +3,7 @@ title: Code walkthrough
 description: Step through versions of one code block, and watch the code move from each version to the next, so readers see what changed.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import { CodeWalkthrough } from 'starlight-codeblocks/components';
 import Example from '../../../components/Example.astro';
 
@@ -117,6 +118,8 @@ codeblocks({
 With `walkthrough: false`, `<CodeWalkthrough>` shows each step as a separate code block with its label after the title, as it does without JavaScript. The page loads no script for the steps.
 
 The style settings in the `codeblocksWalkthrough` group change the colours of the steps and the length of the animation. For example, `codeblocksWalkthrough.duration` sets the length of the animation, and `codeblocksWalkthrough.newLineBackground` sets the tint of new lines.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

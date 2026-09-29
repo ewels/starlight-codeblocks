@@ -3,6 +3,7 @@ title: Visible whitespace
 description: Show spaces and tabs as faint glyphs, for the blocks where indentation changes the meaning of the code.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
 A code block usually renders whitespace as empty space. That is fine for most languages, but some depend on the exact character. Make needs a tab at the start of a recipe, and Python needs consistent indentation. The `whitespace` attribute shows spaces and tabs as glyphs, so readers see which character is there.
@@ -48,6 +49,8 @@ codeblocks({
 ```
 
 The style setting `codeblocksWhitespace.foreground` changes the colour of the glyphs.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

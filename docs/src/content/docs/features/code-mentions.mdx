@@ -3,6 +3,7 @@ title: Code mentions
 description: Link a phrase in the prose to lines of the code block below it, so that readers see which lines the text is about.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
 Prose often explains a code block line by line: "the base case stops the recursion". A reader must then find the base case in the block on their own. Code mentions tag the lines in the block with a name, and a link in the prose with that name highlights them.
@@ -79,6 +80,8 @@ starlightLinksValidator({
 ```
 
 The function also skips links to [line permalinks](/starlight-codeblocks/features/line-permalinks/). [Use with other plugins](/starlight-codeblocks/guides/use-with-other-plugins/#starlight-links-validator) has the full set-up.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

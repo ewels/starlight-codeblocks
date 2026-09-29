@@ -3,6 +3,7 @@ title: Hidden lines
 description: Hide the imports and set-up that readers need to run an example but not to understand it.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
 A working example often needs lines that the reader can skip, such as imports, settings or the boilerplate around the part you explain. The `hidden` attribute and `[!code hide]` remove these lines from view, behind a marker the reader can open.
@@ -57,6 +58,8 @@ codeblocks({
 ```
 
 With `hiddenLines: false`, the plugin ignores `hidden={range}`, and `[!code hide]` stays in the code as written.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

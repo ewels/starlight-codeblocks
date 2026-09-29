@@ -190,7 +190,7 @@ export function pageMarkdown(entry: Entry) {
     }
     const [, indent = '', closing, name = '', rest = '', selfClosing] = tag;
     const props = attrs(rest);
-    if (closing || ['Tabs', 'Steps', 'Scrollycoding'].includes(name)) continue;
+    if (closing || ['Tabs', 'Steps', 'Scrollycoding', 'CardGrid'].includes(name)) continue;
     if (name === 'Step') {
       out.push(absoluteLinks(line.replace(/<\/?Step[^>]*>/g, '').trim()), '');
       continue;
@@ -212,6 +212,8 @@ export function pageMarkdown(entry: Entry) {
     } else if (name === 'Aside') {
       const type = props.type ?? 'note';
       out.push(`**${type[0]?.toUpperCase()}${type.slice(1)}:**`);
+    } else if (name === 'LinkCard') {
+      out.push(absoluteLinks(`- [${props.title}](${props.href}): ${props.description}`));
     } else if (component[name]) {
       out.push(absoluteLinks(component[name](props, entry.id)));
     } else {

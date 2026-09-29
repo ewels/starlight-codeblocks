@@ -3,6 +3,7 @@ title: Scrollycoding
 description: Explain a code block in prose steps that scroll past it, while the block stays in view and focuses the lines of each step.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import { Scrollycoding, Step } from 'starlight-codeblocks/components';
 import Example from '../../../components/Example.astro';
 
@@ -107,6 +108,8 @@ codeblocks({
 ```
 
 With `scrollycoding: false`, `<Scrollycoding>` shows the narrow layout at every width, with no script. With `walkthrough: false`, a new version of the code shows without the animation.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

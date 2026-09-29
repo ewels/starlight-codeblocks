@@ -3,6 +3,7 @@ title: Run in the browser
 description: Add a Run in browser button that runs the example in the browser and shows the output under the block.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
@@ -59,6 +60,8 @@ codeblocks({
 ```
 
 The guide to [adding a runtime](/starlight-codeblocks/extend/add-a-runtime/) shows this runtime in full.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

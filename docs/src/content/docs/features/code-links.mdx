@@ -3,6 +3,7 @@ title: Code links
 description: Turn text in code into a link with a card that describes it, from a directive in the comment above.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
 Readers who meet an unfamiliar function in an example often want to know what it does, and where its reference page is. A code block in Starlight has no links, so the reader must search for it. The `[!link]` directive turns text on a line into a link to the page you choose, with a short description in a card.
@@ -57,6 +58,8 @@ codeblocks({
 ```
 
 With `codeLinks: false`, a `[!link]` directive is an unknown directive. The build logs a warning and leaves the comment in the code.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

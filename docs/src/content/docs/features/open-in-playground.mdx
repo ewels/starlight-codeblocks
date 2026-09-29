@@ -3,6 +3,7 @@ title: Open in playground
 description: Add a title bar button that opens the example in an online playground, with the code already filled in.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
@@ -66,6 +67,8 @@ codeblocks({
 ```
 
 The guide to [adding a playground](/starlight-codeblocks/extend/add-a-playground/) describes both functions and the form post.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

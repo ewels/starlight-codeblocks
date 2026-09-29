@@ -3,6 +3,7 @@ title: Side-by-side annotations
 description: Show the notes of an annotated block in a column beside the code, so readers see every note next to its line.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
 [Annotations](/starlight-codeblocks/features/annotations/) hide each note in a popover until a reader opens it. For a walkthrough, where readers need every note, that is one selection too many. Side-by-side annotations use the same `[!annotate]` directive, but show the notes in a column beside the code.
@@ -74,6 +75,8 @@ codeblocks({
   annotations: false,
 });
 ```
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

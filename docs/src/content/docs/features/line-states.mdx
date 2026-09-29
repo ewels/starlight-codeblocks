@@ -3,6 +3,7 @@ title: Line states
 description: Tint lines as errors, warnings, notes or successes, with an optional message after the code, like the diagnostics in a code editor.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
@@ -81,6 +82,8 @@ A custom state works in the same way as a built-in state. Its name is the attrib
 A name uses lower-case letters, digits and hyphens. It cannot be the name of another attribute, such as `title` or `focus`. To change the label or the colour of a built-in state, add a state with its name, for example `info`.
 
 The plugin makes the tint and the label colours from the colour that you give. Each colour must have a contrast of 3:1 or more against the background of the code, so that readers can see the bar.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

@@ -3,6 +3,7 @@ title: Line permalinks
 description: Give a code block line numbers that link to each line, so readers can share a link to the exact lines they mean.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
 A normal code block has no address for its lines. A reader who asks a question about one setting can only link to the page, or to the heading above the block. Line permalinks give a block line numbers, and each number is a link to its line.
@@ -56,6 +57,8 @@ codeblocks({
 ```
 
 With `permalinks: false`, the plugin ignores `id` on the fence line.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

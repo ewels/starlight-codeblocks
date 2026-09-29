@@ -20,6 +20,12 @@ h1#_top,
   overflow-wrap: anywhere;
 }
 
+@media (min-width: 50rem) {
+  .sl-markdown-content td:first-child code {
+    white-space: nowrap;
+  }
+}
+
 /* Starlight's own hero padding-bottom grows up to 10rem on wide screens, leaving a large gap
    before the content below. The hero's own layout and top padding are unchanged. */
 @media (min-width: 50rem) {

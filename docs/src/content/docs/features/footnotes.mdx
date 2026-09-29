@@ -3,6 +3,7 @@ title: Footnotes
 description: Add numbered badges to lines, with the notes in a list under the block, where readers see them all at once.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
@@ -63,6 +64,8 @@ codeblocks({
 ```
 
 With `footnotes: false`, the plugin does not know the `[!ref]` directive. It leaves the comment in the code as written, and logs a build warning.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

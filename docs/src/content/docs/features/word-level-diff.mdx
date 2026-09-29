@@ -3,6 +3,7 @@ title: Word-level diff
 description: Highlight the words that changed inside each line of a diff, so readers find a small edit in a long line.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
@@ -56,6 +57,8 @@ codeblocks({
   wordDiff: { minSimilarity: 0.7 },
 });
 ```
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

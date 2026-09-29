@@ -3,6 +3,7 @@ title: Code switcher
 description: Show one code block with several variants, such as package managers or languages, and a menu in the title bar to switch between them.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
 Install commands and API examples often come in several versions: npm, pnpm and Yarn, or Python and JavaScript. Stacked one after the other, they fill the page with code that most readers skip. The code switcher shows them as one block, with a menu in the title bar that picks the variant.
@@ -75,6 +76,8 @@ codeblocks({
 ```
 
 With `codeSwitcher: false`, each code block in the directive renders on its own, one after the other. The directive lines do not show.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

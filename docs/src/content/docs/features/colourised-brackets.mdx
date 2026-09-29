@@ -3,6 +3,7 @@ title: Colourised brackets
 description: Colour matching brackets by nesting depth, so a dense line of code stays readable.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
@@ -52,6 +53,8 @@ codeblocks({
 Each name also covers the other names of its language, so `js` also turns on the colours in `javascript` and `mjs` blocks.
 
 To turn the colours off for one block of those languages, add `brackets=false` to its fence line.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

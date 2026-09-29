@@ -3,6 +3,7 @@ title: Annotations
 description: Add numbered markers to lines. Each marker opens a note in a popover, so the code stays clean until a reader asks.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
 A comment in a code block explains a line. But it takes space in the code, and readers copy it with the code. An annotation moves the explanation out of the code. The line gets a small numbered marker, and the note opens in a popover when a reader selects the marker.
@@ -64,6 +65,8 @@ codeblocks({
 ```
 
 With `annotations: false`, the plugin does not know the `[!annotate]` directive. It leaves the comment in the code as written, and logs a build warning. Side-by-side annotations are off too.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

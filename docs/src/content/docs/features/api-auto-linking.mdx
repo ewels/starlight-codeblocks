@@ -3,6 +3,7 @@ title: API auto-linking
 description: Link the names in code examples to their reference pages, with a card that shows the signature and a summary.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
@@ -64,6 +65,8 @@ codeblocks({
 ```
 
 To add an adapter for another language or library, see [Write an API link adapter](/starlight-codeblocks/extend/write-an-api-link-adapter/).
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Python adapter
 

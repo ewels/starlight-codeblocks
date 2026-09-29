@@ -3,7 +3,7 @@ title: Fill-in placeholders
 description: Turn placeholders such as YOUR_TOKEN into fields, so readers type their own values into every block and the copied code.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
@@ -63,6 +63,8 @@ codeblocks({
   placeholders: { storage: 'session' },
 });
 ```
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

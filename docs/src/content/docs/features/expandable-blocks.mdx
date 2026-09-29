@@ -3,6 +3,7 @@ title: Expandable blocks
 description: Show the first lines of a long block, with a fade and a button to reveal the rest.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
@@ -92,6 +93,8 @@ With this configuration, a block of 31 lines or more shows its first 12 lines. A
 - Blocks with a [**Run in browser** button](/starlight-codeblocks/features/run-in-the-browser/).
 - Blocks with Expressive Code's `collapse` attribute, from its collapsible sections plugin.
 - Blocks in [`<CodeWalkthrough>`](/starlight-codeblocks/features/code-walkthrough/) and [`<Scrollycoding>`](/starlight-codeblocks/features/scrollycoding/), where each step must show every line.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 

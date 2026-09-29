@@ -3,6 +3,7 @@ title: Inline callouts
 description: Put a short note in a bubble above a line, with an arrow that points at the word it explains.
 ---
 
+import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
 A code block shows the code, and the prose around it explains it. When the explanation is about one name on one line, a reader must find that name themselves. An inline callout puts the note in a bubble directly above the line, with an arrow that points down at the name.
@@ -52,6 +53,8 @@ codeblocks({
 ```
 
 With `callouts: false`, the plugin does not know the `[!callout]` directive. It leaves the directive line in the code as written, and logs a build warning.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Examples
 
