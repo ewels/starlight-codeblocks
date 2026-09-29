@@ -108,4 +108,5 @@ The choices that the code does not explain, with the options that were rejected.
 - **The site serves its own `.md` routes and `llms.txt`.** *Rejected:* starlight-page-actions (its copy strips `import` lines inside examples and leaves JSX) and starlight-llms-txt (builds from HTML and drops fence lines, which are the content here).
 - **Share cards use astro-og-canvas**, with `canvaskit-wasm` as a direct docs dependency because pnpm otherwise breaks it.
 - **Deploy is a job in `ci.yml` after the checks**, so a failing commit never publishes. *Rejected:* a separate workflow (published failed commits); `workflow_run` (zizmor flags it).
+- **npm releases publish from `publish.yml` on a GitHub release**, through trusted publishing (OIDC), so no npm token is stored. The job checks that the tag matches the package version, and turns off the setup-node cache (zizmor: cache poisoning).
 - **The agent skill lives at the repository root** and is copied into the package at pack time, because the `skills` CLI finds a root `skills/` first. *Rejected:* a symlink (npm pack does not follow it reliably).

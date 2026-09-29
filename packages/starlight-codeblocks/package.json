@@ -1,6 +1,6 @@
 {
   "name": "starlight-codeblocks",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A Starlight plugin that adds focus, line states, comment notation, annotations, API auto-linking and more features to code blocks, on top of Expressive Code.",
   "keywords": [
     "withastro",
