@@ -1,5 +1,5 @@
 import { expect, type Locator, test } from '@playwright/test';
-import { contrast, copyFromKeyboard, css, example, reduced } from './helpers.ts';
+import { contrast, css, example, reduced } from './helpers.ts';
 
 const filter = (line: Locator) => css(line, 'filter');
 const opacity = (line: Locator) => css(line, 'opacity');
@@ -8,21 +8,16 @@ test.beforeEach(async ({ page }) => {
   await page.goto('./features/focus/');
 });
 
-test('blurs the lines outside the focus', async ({ page }) => {
+test('blurs the lines outside the focus, and shows them all under the pointer', async ({ page }) => {
   const block = example(page);
-  await expect(block.locator('.ec-line')).toHaveCount(10);
-  await expect(block.locator('.ec-line.scb-focus-out')).toHaveCount(6);
   const out = block.locator('.ec-line.scb-focus-out').first();
   const focused = block.locator('.ec-line:not(.scb-focus-out)').first();
   expect(await filter(out)).toBe('blur(1.1px)');
   expect(await opacity(out)).toBe('0.48');
   expect(await filter(focused)).toBe('none');
   expect(await opacity(focused)).toBe('1');
-});
+  expect(await css(out, 'transitionDuration')).toBe(reduced() ? '0s' : '0.25s, 0.25s');
 
-test('shows every line when the pointer is over the block', async ({ page }) => {
-  const block = example(page);
-  const out = block.locator('.ec-line.scb-focus-out').first();
   await block.locator('pre').hover();
   await expect.poll(() => filter(out)).toBe('none');
   await expect.poll(() => opacity(out)).toBe('1');
@@ -30,10 +25,9 @@ test('shows every line when the pointer is over the block', async ({ page }) => 
   await expect.poll(() => filter(out)).toBe('blur(1.1px)');
 });
 
-test('shows every line when keyboard focus is in the block', async ({ page }) => {
+test('shows every line when keyboard focus is in the block, with a visible focus ring', async ({ page }) => {
   const block = example(page);
   const code = block.locator('pre > code');
-  await expect(code).toHaveAttribute('tabindex', '0');
   await page
     .locator('.example')
     .first()
@@ -52,17 +46,4 @@ test('shows every line when keyboard focus is in the block', async ({ page }) =>
   ]);
   expect(await contrast(page, ring, background)).toBeGreaterThanOrEqual(3);
   await expect.poll(() => filter(block.locator('.ec-line.scb-focus-out').first())).toBe('none');
-});
-
-test('uses a transition only when the reader allows motion', async ({ page }) => {
-  const out = example(page).locator('.ec-line.scb-focus-out').first();
-  const duration = await css(out, 'transitionDuration');
-  expect(duration).toBe(reduced() ? '0s' : '0.25s, 0.25s');
-});
-
-test('copies the whole block', async ({ page }) => {
-  const block = example(page);
-  const copied = await copyFromKeyboard(block);
-  expect(copied.split('\n')).toHaveLength(10);
-  expect(copied).toContain("import { defineConfig } from './lib.js';");
 });

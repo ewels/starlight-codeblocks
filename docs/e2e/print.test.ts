@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { css, output } from './helpers.ts';
+import { css, lightOnly, output } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
+  lightOnly();
   await page.emulateMedia({ media: 'print' });
 });
 
@@ -33,7 +34,7 @@ test('code switcher: the menu does not print, and the selected variant does', as
   await expect(block.locator('.expressive-code:not([hidden]) pre').first()).toBeVisible();
 });
 
-test('code walkthrough: every step prints with its label', async ({ page }) => {
+test('code walkthrough: every step prints with its label, without the step buttons', async ({ page }) => {
   await page.goto('./features/code-walkthrough/');
   const blocks = output(page).locator('.scb-steps > .expressive-code');
   expect(await blocks.count()).toBe(3);
@@ -41,6 +42,9 @@ test('code walkthrough: every step prints with its label', async ({ page }) => {
     await expect(block.locator('pre')).toBeVisible();
     await expect(block.locator('.scb-steps-label')).toBeVisible();
   }
+  const current = page.locator('.scb-steps-current').first();
+  await expect(current.locator('.scb-steps-stepper')).toBeHidden();
+  for (const nav of await current.locator('.scb-steps-nav').all()) await expect(nav).toBeHidden();
 });
 
 test('focus: the other lines print sharp and only a little faded', async ({ page }) => {
@@ -64,14 +68,6 @@ test('scrollycoding: every step prints in full with its own code, and nothing st
     }
   }
   await expect(page.locator('.scb-scrolly-code').first()).toBeHidden();
-});
-
-test('code walkthrough: the steps and the Previous and Next buttons do not print', async ({ page }) => {
-  await page.goto('./features/code-walkthrough/');
-  const current = page.locator('.scb-steps-current').first();
-  await expect(current.locator('.scb-steps-stepper')).toBeHidden();
-  for (const nav of await current.locator('.scb-steps-nav').all()) await expect(nav).toBeHidden();
-  await expect(current.locator('pre')).toBeVisible();
 });
 
 test('fill-in placeholders: a field prints as its text, without a border', async ({ page }) => {

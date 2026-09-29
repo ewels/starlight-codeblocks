@@ -15,11 +15,7 @@ test('tags lines with [!mention <name>] and removes the tags from the code and t
   expect(html).not.toContain('[!mention');
   expect(copyText).toBe('def f(n):\n    return 1\n    return n');
   expect(warnings).toEqual([]);
-});
-
-test('warns about a tag without exactly one name', async () => {
-  const { warnings } = await render(block('js', 'a() // [!mention]'));
-  expect(warnings.join()).toContain('`[!mention]` needs one name');
+  expect((await render(block('js', 'a() // [!mention]'))).warnings.join()).toContain('`[!mention]` needs one name');
 });
 
 test('renders the same with the feature off, for a block without tags', async () => {
@@ -44,31 +40,28 @@ async function page(markdown: string, options = {}) {
 
 const code = (name: string) => ['```py', `x = 1  # [!mention ${name}]`, '```'].join('\n');
 
-test('keeps a link with a tagged block after it in its section, or anywhere before it', async () => {
-  const after = await page(['See [the value](#mention:x).', '', code('x')].join('\n'));
-  expect(after.html).toContain('href="#mention:x"');
-  expect(after.warnings).toEqual([]);
-  const before = await page([code('x'), '', '## Later', '', 'See [the value](#mention:x).'].join('\n'));
-  expect(before.html).toContain('href="#mention:x"');
-  expect(before.warnings).toEqual([]);
+test('keeps a link with a tagged block after it in its section, anywhere before it, or in a diff of that lang', async () => {
+  for (const markdown of [
+    ['See [the value](#mention:x).', '', code('x')],
+    [code('x'), '', '## Later', '', 'See [the value](#mention:x).'],
+    ['See [x](#mention:x).', '', '```diff lang="py"', '+x = 1  # [!mention x]', '```'],
+  ]) {
+    const { html, warnings } = await page(markdown.join('\n'));
+    expect(html).toContain('href="#mention:x"');
+    expect(warnings).toEqual([]);
+  }
 });
 
-test('reads the comments of the `lang` of a diff block', async () => {
-  const diff = await page(
-    ['See [x](#mention:total).', '', '```diff lang="py"', '+total = 1  # [!mention total]', '```'].join('\n'),
-  );
-  expect(diff.html).toContain('href="#mention:total"');
-  expect(diff.warnings).toEqual([]);
-});
-
-test('turns a link with no block into plain text, with a warning', async () => {
+test('turns a link with no block, or with a malformed escape, into plain text, with a warning', async () => {
   const other = await page(['See [the value](#mention:x).', '', '## Next', '', code('x')].join('\n'));
   expect(other.html).not.toContain('href="#mention:x"');
   expect(other.html).toContain('See the value.');
-  expect(other.warnings).toHaveLength(1);
-  expect(other.warnings[0]).toContain('page.md: the link to `#mention:x` has no code block');
+  expect(other.warnings).toEqual([expect.stringContaining('page.md: the link to `#mention:x` has no code block')]);
   const escaped = await page(['See [it](#mention:y).', '', '```py', 'y = 1  # [\\!mention y]', '```'].join('\n'));
   expect(escaped.html).not.toContain('href="#mention:y"');
+  const bad = await page(`${code('a')}\n\nSee [bad](#mention:a%E0%A4%A).`);
+  expect(bad.warnings).toEqual([expect.stringMatching(/page\.md: .*#mention:a%E0%A4%A.*malformed/)]);
+  expect(bad.html).not.toContain('href="#mention:');
 });
 
 test('keeps a link with no block in a render with no file, which is one fragment of a page', async () => {
@@ -83,12 +76,6 @@ test('leaves mention links alone with the feature off', async () => {
   const { html, warnings } = await page('See [it](#mention:z).', { mentions: false });
   expect(html).toContain('href="#mention:z"');
   expect(warnings).toEqual([]);
-});
-
-test('warns about a mention link with a malformed escape, and leaves it as plain text', async () => {
-  const { html, warnings } = await page(`${code('a')}\n\nSee [bad](#mention:a%E0%A4%A).`);
-  expect(warnings).toEqual([expect.stringMatching(/page\.md: .*#mention:a%E0%A4%A.*malformed/)]);
-  expect(html).not.toContain('href="#mention:');
 });
 
 test('pairs links only with tags that the notation parser reads', async () => {

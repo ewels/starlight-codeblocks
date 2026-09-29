@@ -8,8 +8,6 @@ const withNextflow = (options: NextflowAdapterOptions = {}) => ({ apiLinks: { ad
 const texts = async (lines: string[], options?: NextflowAdapterOptions) =>
   links((await render(block('nextflow', ...lines), withNextflow(options))).html).map((l) => l.text);
 
-const modules = ({ name }: { name: string }) => `/reference/modules/${name.toLowerCase()}/`;
-
 test('links channel factories, operators on channels and included processes', async () => {
   const { html, copyText, warnings } = await render(
     block(
@@ -21,7 +19,7 @@ test('links channel factories, operators on channels and included processes', as
       '    FASTQC(reads)',
       '}',
     ),
-    withNextflow({ modules }),
+    withNextflow({ modules: ({ name }) => `/reference/modules/${name.toLowerCase()}/` }),
   );
   expect(links(html)).toEqual([
     { text: 'FASTQC', href: '/reference/modules/fastqc/', head: 'FASTQC', source: 'Module reference' },
@@ -55,75 +53,75 @@ test('links operators in a chain after a factory, across lines', async () => {
   ]);
 });
 
-test('links operators on variables that only ever hold a channel', async () => {
-  expect(await texts(['ch = Channel.of(1)', 'ch.map { it }.collect()'])).toEqual(['Channel.of', 'map', 'collect']);
-  expect(await texts(['channel.of(1).set { nums }', 'nums.view()'])).toEqual(['channel.of', 'set', 'view']);
-  expect(await texts(['ch = channel.of(1)', 'ch = [1, 2]', 'ch.collect()'])).toEqual(['channel.of']);
-  expect(await texts(['list = [1, 2]', 'list.collect { it * 2 }'])).toEqual([]);
+test('links operators only on channels, and never in strings, comments or Object.prototype names', async () => {
+  const cases: [string[], string[]][] = [
+    [
+      ['ch = Channel.of(1)', 'ch.map { it }.collect()'],
+      ['Channel.of', 'map', 'collect'],
+    ],
+    [
+      ['channel.of(1).set { nums }', 'nums.view()'],
+      ['channel.of', 'set', 'view'],
+    ],
+    [['ch = channel.of(1)', 'ch = [1, 2]', 'ch.collect()'], ['channel.of']],
+    [['list = [1, 2]', 'list.collect { it * 2 }'], []],
+    [['channel.of(1).map { it }.foo().view()'], ['channel.of', 'map']],
+    [
+      ["channel.of('a').map { it.split('(') }.view()", 'channel.of(1).view()'],
+      ['channel.of', 'map', 'view', 'channel.of', 'view'],
+    ],
+    [
+      [
+        '// channel.of(1)',
+        '/* channel.of(1) */',
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: Nextflow string interpolation, not JavaScript.
+        'println "channel.of(1) ${channel.of(2)}"',
+        "x = 'channel.of'",
+        'y = """',
+        'channel.of(3)',
+        '"""',
+      ],
+      [],
+    ],
+    [['ch = channel.of(1)', 'ch.toString()', 'channel.constructor', 'ch.hasOwnProperty("a")'], ['channel.of']],
+  ];
+  for (const [lines, expected] of cases) expect(await texts(lines), lines.join('\n')).toEqual(expected);
 });
 
-test('stops a chain at a name that is not an operator', async () => {
-  expect(await texts(['channel.of(1).map { it }.foo().view()'])).toEqual(['channel.of', 'map']);
-});
-
-test('follows aliases in include, and leaves modules plain without the modules option', async () => {
+test('follows aliases in include, uses what the modules option gives, and leaves modules plain without it', async () => {
   const lines = ["include { FASTQC as QC; MULTIQC } from '../modules/qc'", 'QC(reads)', 'MULTIQC.out.report'];
   const seen: unknown[] = [];
-  const names = await texts(lines, {
-    modules: (input) => {
-      seen.push(input);
-      return input.name === 'FASTQC' ? { href: '/m/fastqc/', kind: 'process', summary: 'Runs FastQC.' } : undefined;
-    },
+  const { html } = await render(
+    block('nextflow', ...lines),
+    withNextflow({
+      modules: (input) => {
+        seen.push(input);
+        return input.name === 'FASTQC'
+          ? { href: '/m/fastqc/', kind: 'process', summary: 'Runs FastQC.', source: 'nf-core' }
+          : undefined;
+      },
+    }),
+  );
+  expect(links(html)[0]).toEqual({
+    text: 'FASTQC',
+    href: '/m/fastqc/',
+    head: 'process FASTQC',
+    summary: 'Runs FastQC.',
+    source: 'nf-core',
   });
-  expect(names).toEqual(['FASTQC', 'QC']);
+  expect(links(html).map((l) => l.text)).toEqual(['FASTQC', 'QC']);
   expect(seen).toEqual([
     { name: 'FASTQC', path: '../modules/qc' },
     { name: 'MULTIQC', path: '../modules/qc' },
   ]);
-  const { html } = await render(block('nextflow', ...lines), withNextflow({ modules: () => '/m/' }));
-  expect(links(html).map((l) => l.head)).toEqual(['FASTQC', 'MULTIQC', 'FASTQC', 'MULTIQC']);
-  expect(await texts(lines)).toEqual([]);
-});
-
-test('never counts a string as a bracket', async () => {
-  expect(await texts(["channel.of('a').map { it.split('(') }.view()", 'channel.of(1).view()'])).toEqual([
-    'channel.of',
-    'map',
-    'view',
-    'channel.of',
-    'view',
-  ]);
-});
-
-test('uses the kind and summary that the modules option gives', async () => {
-  const { html } = await render(
-    block('nextflow', "include { FASTQC } from './fastqc'"),
-    withNextflow({ modules: () => ({ href: '/m/', kind: 'process', summary: 'Runs FastQC.', source: 'nf-core' }) }),
-  );
-  expect(links(html)).toEqual([
-    { text: 'FASTQC', href: '/m/', head: 'process FASTQC', summary: 'Runs FastQC.', source: 'nf-core' },
-  ]);
-});
-
-test('never links names in strings or comments', async () => {
-  const lines = [
-    '// channel.of(1)',
-    '/* channel.of(1) */',
-    // biome-ignore lint/suspicious/noTemplateCurlyInString: Nextflow string interpolation, not JavaScript.
-    'println "channel.of(1) ${channel.of(2)}"',
-    "x = 'channel.of'",
-    'y = """',
-    'channel.of(3)',
-    '"""',
-  ];
+  const plain = await render(block('nextflow', ...lines), withNextflow({ modules: () => '/m/' }));
+  expect(links(plain.html).map((l) => l.head)).toEqual(['FASTQC', 'MULTIQC', 'FASTQC', 'MULTIQC']);
   expect(await texts(lines)).toEqual([]);
 });
 
 test('runs for nextflow and nf blocks only', async () => {
-  const nf = await render(block('nf', 'channel.of(1)'), withNextflow());
-  const groovy = await render(block('groovy', 'channel.of(1)'), withNextflow());
-  expect(links(nf.html)).toHaveLength(1);
-  expect(links(groovy.html)).toHaveLength(0);
+  expect(links((await render(block('nf', 'channel.of(1)'), withNextflow())).html)).toHaveLength(1);
+  expect(links((await render(block('groovy', 'channel.of(1)'), withNextflow())).html)).toHaveLength(0);
 });
 
 test('the bundled map has every channel factory and operator of the reference', () => {
@@ -140,10 +138,4 @@ test('the bundled map has every channel factory and operator of the reference', 
     'watchPath',
   ]);
   expect(Object.keys(operators)).toHaveLength(47);
-});
-
-test('does not treat Object.prototype names as factories or operators', async () => {
-  expect(await texts(['ch = channel.of(1)', 'ch.toString()', 'channel.constructor', 'ch.hasOwnProperty("a")'])).toEqual(
-    ['channel.of'],
-  );
 });

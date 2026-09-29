@@ -8,33 +8,25 @@ import { apiCardLoader, jsAssetsPrefix } from '../src/integration.ts';
 const variants = new ExpressiveCode({ plugins: pluginCodeblocks() }).styleVariants;
 const background = getCssVarName('codeblocks.popoverBackground');
 
-test('gives the card outside code blocks the theme variables of each theme, with the site theme switch', () => {
+test('gives the card outside code blocks the variables of each theme, with every rule in its own scope', () => {
   const css = apiCardPageStyles(variants);
   const [dark, light] = variants.map((v) => v.cssVarDeclarations.get(background));
   expect(dark).not.toBe(light);
   expect(css).toContain(`.scb-page {\n  ${background}: ${dark};`);
   expect(css).toContain(`:root[data-theme='light'] .scb-page {\n  ${background}: ${light};`);
-});
-
-test('scopes the float and card rules to the card outside code blocks', () => {
-  const css = apiCardPageStyles(variants);
-  expect(css).toContain(':where(.scb-page, .scb-page *).scb-float {\n  position: fixed;');
   expect(css).toContain(':where(.scb-page, .scb-page *).scb-api-card-head {');
-  expect(css).toContain(`background: var(${background});`);
-  expect(css).toContain(':where(.scb-page, .scb-page *).scb-api-card-action {');
-  // Every rule starts with the scope, so nothing reaches cards inside code blocks.
+  // Nothing may reach the cards inside code blocks.
   expect(css.split('\n').filter((line) => /^\.scb-(?!page)/.test(line))).toEqual([]);
 });
 
-test('the page loader imports the card module from the assets folder, under the site base', () => {
+test('the page loader imports the card module from the assets folder, under the site base or the assets prefix', () => {
   const script = apiCardLoader('/docs/', '_astro') ?? '';
   expect(script).toMatch(/^const url = "\/docs\/_astro\/scb-api-links\.[\w-]+\.js";$/m);
   expect(script).toContain('import(/* @vite-ignore */ url)');
   expect(script).toContain("document.querySelector('[data-scb-api-links]')");
-  expect(apiCardLoader('/', '_astro')).toMatch(/^const url = "\/_astro\/scb-api-links\./m);
-});
-
-test('the page loader uses the assets prefix for .js files when the site sets one', () => {
+  expect(apiCardLoader('https://cdn.example.com/', '_astro')).toMatch(
+    /^const url = "https:\/\/cdn\.example\.com\/_astro\/scb-api-links\./m,
+  );
   expect(jsAssetsPrefix(undefined)).toBeUndefined();
   expect(jsAssetsPrefix('https://cdn.example.com')).toBe('https://cdn.example.com');
   expect(jsAssetsPrefix({ js: 'https://js.example.com', fallback: 'https://cdn.example.com' })).toBe(
@@ -42,8 +34,5 @@ test('the page loader uses the assets prefix for .js files when the site sets on
   );
   expect(jsAssetsPrefix({ css: 'https://css.example.com', fallback: 'https://cdn.example.com' })).toBe(
     'https://cdn.example.com',
-  );
-  expect(apiCardLoader('https://cdn.example.com/', '_astro')).toMatch(
-    /^const url = "https:\/\/cdn\.example\.com\/_astro\/scb-api-links\./m,
   );
 });

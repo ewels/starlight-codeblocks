@@ -10,36 +10,49 @@ const local = (url: string) => `./${url.slice(site.length)}`;
 const oneProject = () =>
   test.skip(test.info().project.name !== 'desktop-light', 'The output is the same in every project.');
 
-for (const path of sitePages) {
-  test(`/${path} links to a Markdown version that exists`, async ({ page, request }) => {
-    oneProject();
-    await page.goto(`./${path}`);
-    const alternate = page.locator('link[rel="alternate"][type="text/markdown"]');
-    await expect(alternate).toHaveCount(1);
-    const href = String(await alternate.getAttribute('href'));
-    expect(href).toBe(`${site}${path ? path.replace(/\/$/, '') : 'index'}.md`);
-    const response = await request.get(local(href));
-    expect(response.status()).toBe(200);
-    expect(response.headers()['content-type']).toContain('text/markdown');
+const md = (path: string) => `${site}${path ? path.replace(/\/$/, '') : 'index'}.md`;
+const attribute = (html: string, tag: RegExp, name: string) =>
+  html.match(tag)?.[0].match(new RegExp(`${name}="([^"]*)"`))?.[1];
+
+test('every page links to its Markdown version and its share card, and llms.txt lists them', async ({ request }) => {
+  oneProject();
+  const llms = await (await request.get('./llms.txt')).text();
+  const full = await (await request.get('./llms-full.txt')).text();
+  for (const path of listed) {
+    expect.soft(llms).toContain(`(${md(path)})`);
+    expect.soft(full).toContain(`<!-- ${site}${path} -->`);
+  }
+  // An example keeps its fence line in the Markdown.
+  expect(await (await request.get('./features/focus.md')).text()).toContain(
+    '````md\n```js title="src/config.js" focus={4-7}\n',
+  );
+  // Pages that are not docs pages have no actions.
+  expect(await (await request.get('./does-not-exist/')).text()).not.toMatch(/class="[^"]*\bpage-actions\b/);
+
+  for (const path of sitePages) {
+    const html = await (await request.get(`./${path}`)).text();
+    const alternates = html.match(/<link[^>]*rel="alternate"[^>]*type="text\/markdown"[^>]*>/g) ?? [];
+    expect.soft(alternates, `/${path}`).toHaveLength(1);
+    const href = attribute(html, /<link[^>]*rel="alternate"[^>]*type="text\/markdown"[^>]*>/, 'href');
+    expect.soft(href, `/${path}`).toBe(md(path));
+    const response = await request.get(local(String(href)));
+    expect.soft(response.status(), String(href)).toBe(200);
+    expect.soft(response.headers()['content-type']).toContain('text/markdown');
     const markdown = await response.text();
-    expect(markdown).toMatch(/^# \S/);
+    expect.soft(markdown, String(href)).toMatch(/^# \S/);
     const prose = markdown.replace(/^\s*(`{3,})[^\n]*\n[\s\S]*?^\s*\1$/gm, '');
-    expect(prose).not.toMatch(/^(import|export) |^\s*<\/?(Example|Tabs|TabItem|Aside|Steps)\b/m);
-  });
-}
+    expect.soft(prose, String(href)).not.toMatch(/^(import|export) |^\s*<\/?(Example|Tabs|TabItem|Aside|Steps)\b/m);
 
-test('llms.txt lists the Markdown version of every page', async ({ request }) => {
-  oneProject();
-  const response = await request.get('./llms.txt');
-  expect(response.status()).toBe(200);
-  const text = await response.text();
-  for (const path of listed) expect(text).toContain(`(${site}${path ? path.replace(/\/$/, '') : 'index'}.md)`);
-});
-
-test('llms-full.txt has every page', async ({ request }) => {
-  oneProject();
-  const text = await (await request.get('./llms-full.txt')).text();
-  for (const path of listed) expect(text).toContain(`<!-- ${site}${path} -->`);
+    const image = String(attribute(html, /<meta[^>]*property="og:image"[^>]*>/, 'content'));
+    expect.soft(image, `/${path}`).toBe(`${site}og/${path ? path.replace(/\/$/, '') : 'index'}.png`);
+    expect.soft(attribute(html, /<meta[^>]*name="twitter:image"[^>]*>/, 'content'), `/${path}`).toBe(image);
+    const png = await request.get(local(image));
+    expect.soft(png.status(), image).toBe(200);
+    expect.soft(png.headers()['content-type']).toBe('image/png');
+    const body = await png.body();
+    expect.soft(body.subarray(1, 4).toString(), image).toBe('PNG');
+    expect.soft([body.readUInt32BE(16), body.readUInt32BE(20)], image).toEqual([1200, 630]);
+  }
 });
 
 test('the agent skill page has every skill file, on the page and in its Markdown', async ({ page, request }) => {
@@ -54,71 +67,54 @@ test('the agent skill page has every skill file, on the page and in its Markdown
   }
 });
 
-test('an example keeps its fence line in the Markdown', async ({ request }) => {
-  oneProject();
-  const markdown = await (await request.get('./features/focus.md')).text();
-  expect(markdown).toContain('````md\n```js title="src/config.js" focus={4-7}\n');
-});
-
 test.describe('page actions', () => {
-  test('the copy button works with the keyboard and copies the Markdown', async ({ page, request }) => {
+  test('the split button and its menu work with the keyboard, and the copy button copies the Markdown', async ({
+    page,
+    request,
+  }) => {
     await page.goto('./features/focus/');
     const actions = page.locator('.page-actions');
     const copy = actions.locator('.split-button-main');
+    const caret = page.locator('.split-button-caret');
+    const menu = page.getByRole('menu', { name: 'Page actions' });
+    const focused = page.locator(':focus');
+    const expectTarget = async (name: string) => {
+      await expect(focused).toHaveAccessibleName(name);
+      const box = await focused.boundingBox();
+      expect(box?.height).toBeGreaterThanOrEqual(24);
+      expect(box?.width).toBeGreaterThanOrEqual(24);
+    };
     await copy.focus();
     expect(await css(copy, 'outlineStyle')).toBe('solid');
+    await expectTarget('Copy as Markdown');
     await page.keyboard.press('Enter');
     await expect(copy).toHaveText('Copied');
     await expect(actions.getByRole('status')).toHaveText('Copied the page as Markdown');
     const expected = await (await request.get('./features/focus.md')).text();
     expect(await clipboard(page)).toBe(expected);
-    await expect(copy).toHaveText('Copy as Markdown', { timeout: 4000 });
-  });
 
-  test('Tab reaches the split button, and each part is at least 24 px', async ({ page }) => {
-    await page.goto('./features/focus/');
-    const names = ['Copy as Markdown', 'More page actions'];
-    await page.locator('.split-button-main').focus();
-    for (const name of names) {
-      const focused = page.locator(':focus');
-      await expect(focused).toHaveAccessibleName(name);
-      const box = await focused.boundingBox();
-      expect(box?.height).toBeGreaterThanOrEqual(24);
-      expect(box?.width).toBeGreaterThanOrEqual(24);
-      await page.keyboard.press('Tab');
-    }
-  });
-
-  test('the caret opens a menu with the keyboard, arrow keys move between items, Escape closes it', async ({
-    page,
-  }) => {
-    await page.goto('./features/focus/');
-    const caret = page.locator('.split-button-caret');
-    const menu = page.getByRole('menu', { name: 'Page actions' });
-    await caret.focus();
+    await page.keyboard.press('Tab');
+    await expectTarget('More page actions');
     await expect(caret).toHaveAttribute('aria-expanded', 'false');
     await page.keyboard.press('Enter');
     await expect(caret).toHaveAttribute('aria-expanded', 'true');
     await expect(menu).toBeVisible();
     const items = ['View as Markdown', 'Open in Claude', 'Open in ChatGPT'];
     for (const name of items) {
-      const focused = page.locator(':focus');
-      await expect(focused).toHaveAccessibleName(name);
-      const box = await focused.boundingBox();
-      expect(box?.height).toBeGreaterThanOrEqual(24);
-      expect(box?.width).toBeGreaterThanOrEqual(24);
+      await expectTarget(name);
       await page.keyboard.press('ArrowDown');
     }
-    await expect(page.locator(':focus')).toHaveAccessibleName(items[0] ?? '');
+    await expect(focused).toHaveAccessibleName(items[0] ?? '');
     await page.keyboard.press('ArrowUp');
-    await expect(page.locator(':focus')).toHaveAccessibleName(items[items.length - 1] ?? '');
+    await expect(focused).toHaveAccessibleName(items.at(-1) ?? '');
     await page.keyboard.press('Escape');
     await expect(menu).toBeHidden();
     await expect(caret).toBeFocused();
     await expect(caret).toHaveAttribute('aria-expanded', 'false');
+    await expect(copy).toHaveText('Copy as Markdown', { timeout: 4000 });
   });
 
-  test('clicking outside the open menu closes it', async ({ page }) => {
+  test('the menu closes on a click outside, links to the assistants and opens the Markdown page', async ({ page }) => {
     await page.goto('./features/focus/');
     const caret = page.locator('.split-button-caret');
     const menu = page.getByRole('menu', { name: 'Page actions' });
@@ -126,12 +122,8 @@ test.describe('page actions', () => {
     await expect(menu).toBeVisible();
     await page.locator('h1').click();
     await expect(menu).toBeHidden();
-  });
-
-  test('the menu links point at the Markdown page and the assistants, and open the Markdown page', async ({ page }) => {
-    await page.goto('./features/focus/');
+    await caret.click();
     const prompt = `Read ${site}features/focus.md.`;
-    await page.locator('.split-button-caret').click();
     for (const name of ['Open in Claude', 'Open in ChatGPT']) {
       const href = String(await page.getByRole('menuitem', { name }).getAttribute('href'));
       expect(decodeURIComponent(href)).toContain(prompt);
@@ -139,11 +131,6 @@ test.describe('page actions', () => {
     await page.getByRole('menuitem', { name: 'View as Markdown' }).click();
     await expect(page).toHaveURL(/\/features\/focus\.md$/);
     expect(await page.locator('body').textContent()).toContain('# Focus');
-  });
-
-  test('pages that are not docs pages have no actions', async ({ page }) => {
-    await page.goto('./does-not-exist/');
-    await expect(page.locator('.page-actions')).toHaveCount(0);
   });
 
   test.describe('without JavaScript', () => {
@@ -159,19 +146,3 @@ test.describe('page actions', () => {
     });
   });
 });
-
-for (const path of sitePages) {
-  test(`/${path} has a share card of 1200 × 630 px`, async ({ page, request }) => {
-    oneProject();
-    await page.goto(`./${path}`);
-    const image = String(await page.locator('meta[property="og:image"]').getAttribute('content'));
-    expect(image).toBe(`${site}og/${path ? path.replace(/\/$/, '') : 'index'}.png`);
-    await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute('content', image);
-    const response = await request.get(local(image));
-    expect(response.status()).toBe(200);
-    expect(response.headers()['content-type']).toBe('image/png');
-    const png = await response.body();
-    expect(png.subarray(1, 4).toString()).toBe('PNG');
-    expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1200, 630]);
-  });
-}

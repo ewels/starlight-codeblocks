@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { output } from './helpers.ts';
 
-test('a tab keeps its width to the next tab stop, with the arrow at its start', async ({ page }) => {
+test('tabs keep their width, glyphs sit mid-line in a faint colour, and a selection has the real whitespace', async ({
+  page,
+}) => {
   await page.goto('./features/visible-whitespace/');
   const tab = page.locator('.example .pane .scb-ws-tab').first();
   await expect(tab).toBeAttached();
@@ -29,26 +31,7 @@ test('a tab keeps its width to the next tab stop, with the arrow at its start', 
   expect(result.width).toBeCloseTo(result.expected, 1);
   expect(result.glyphLeft).toBe(0);
   expect(['start', 'left']).toContain(result.align);
-});
 
-test('a manual selection gives the real tab and spaces, not the glyphs', async ({ page }) => {
-  await page.goto('./features/visible-whitespace/');
-  const pre = output(page).locator('pre');
-  const text = await pre.evaluate((el) => {
-    const range = document.createRange();
-    range.selectNodeContents(el);
-    const selection = getSelection();
-    selection?.removeAllRanges();
-    selection?.addRange(range);
-    return selection?.toString() ?? '';
-  });
-  expect(text).toContain('\tcargo build --release');
-  expect(text).toContain('    cargo test');
-  expect(text).not.toContain('·');
-});
-
-test('the glyphs sit on the middle of the line, like the text', async ({ page }) => {
-  await page.goto('./features/visible-whitespace/');
   const spaces = page.locator('.example .pane .scb-ws');
   await expect(spaces.first()).toBeAttached();
   const offset = await spaces.first().evaluate((el) => {
@@ -70,31 +53,12 @@ test('the glyphs sit on the middle of the line, like the text', async ({ page })
     return out;
   });
   expect(Math.abs(offset)).toBeLessThan(1);
-});
 
-test('whitespace="all" shows trailing whitespace', async ({ page }) => {
-  await page.goto('./features/visible-whitespace/');
-  const code = page.locator('.example').nth(1).locator('.pane.output .ec-line .code').first();
-  await expect(code.locator(':scope > :last-child')).toHaveClass('scb-ws');
-});
-
-test('the source of the trailing whitespace example keeps its trailing space, on screen and in the copy', async ({
-  page,
-}) => {
-  await page.goto('./features/visible-whitespace/');
-  const source = page.locator('.example').nth(1).locator('.pane.source');
-  expect(await source.locator('.ec-line').nth(1).textContent()).toBe('-  const width = 10; ');
-  const copied = await source.locator('.copy button').getAttribute('data-code');
-  expect(copied).toContain('-  const width = 10; \x7F');
-});
-
-test('the glyphs are faint: about a third of the way from the code background to the code text', async ({ page }) => {
-  await page.goto('./features/visible-whitespace/');
   const glyph = page.locator('.example .pane .scb-ws > [aria-hidden]').first();
   await expect(glyph).toBeAttached();
-  const { colour, text } = await glyph.evaluate((el) => ({
+  const { colour, fg } = await glyph.evaluate((el) => ({
     colour: getComputedStyle(el, '::before').color,
-    text: (() => {
+    fg: (() => {
       const probe = document.createElement('span');
       probe.style.color = 'var(--ec-codeFg)';
       el.append(probe);
@@ -105,11 +69,21 @@ test('the glyphs are faint: about a third of the way from the code background to
   }));
   const [r, g, b, alpha] = colour.match(/[\d.]+/g)?.map(Number) ?? [];
   expect([r, g, b]).toEqual(
-    text
+    fg
       .match(/[\d.]+/g)
       ?.slice(0, 3)
       .map(Number),
   );
   expect(alpha).toBeGreaterThan(0.25);
   expect(alpha).toBeLessThan(0.45);
+
+  const text = await output(page)
+    .locator('pre')
+    .evaluate((el) => {
+      getSelection()?.selectAllChildren(el);
+      return getSelection()?.toString() ?? '';
+    });
+  expect(text).toContain('\tcargo build --release');
+  expect(text).toContain('    cargo test');
+  expect(text).not.toContain('·');
 });

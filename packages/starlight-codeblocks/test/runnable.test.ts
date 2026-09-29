@@ -13,32 +13,30 @@ afterEach(() => setRegistry(undefined));
 const js = { runnable: { runtimes: { javascript: '/runtimes/js.js' } } };
 
 test('runnable adds a Run button to the title bar and an empty live output panel', async () => {
-  const { html, warnings } = await render(block('js runnable', 'console.log(1)'), js);
+  const { html, copyText, warnings } = await render(block('js runnable', 'console.log(1)'), js);
   expect(html).toMatch(
     /<figcaption class="header"><span class="scb-tools"><button type="button" class="scb-btn scb-run scb-no-print scb-needs-js">Run<\/button><\/span><\/figcaption>/,
   );
   expect(html).toContain('<div class="scb-run-output" aria-live="polite"></div></figure>');
   expect(html).toContain('data-scb-runnable="/runtimes/js.js" data-scb-runnable-name="JavaScript"');
   expect(html).toContain('data-scb-runnable-timeout="10000"');
+  expect(html).not.toContain('data-scb-code');
+  expect(copyText).toBe('console.log(1)');
   expect(warnings).toEqual([]);
+  const timeout = await render(block('js runnable', 'x'), { runnable: { ...js.runnable, timeout: 2500 } });
+  expect(timeout.html).toContain('data-scb-runnable-timeout="2500"');
 });
 
-test('finds the runtime by the language name or its alias, and shows the display name', async () => {
-  const options = { runnable: { runtimes: { python: '/py.js' } } };
-  expect((await render(block('py runnable', 'print(1)'), options)).html).toContain(
-    'data-scb-runnable="/py.js" data-scb-runnable-name="Python"',
-  );
+test('finds the runtime by the language name or its alias, for a pycon session too', async () => {
+  const python = { runnable: { runtimes: { python: '/py.js' } } };
+  for (const lang of ['py', 'pycon']) {
+    const { html, warnings } = await render(block(`${lang} runnable`, '>>> 1 + 1'), python);
+    expect(html).toContain('data-scb-runnable="/py.js" data-scb-runnable-name="Python"');
+    expect(warnings.filter((w) => w.includes('runnable'))).toEqual([]);
+  }
   const byAlias = { runnable: { runtimes: { py: '/alias.js' } } };
   expect((await render(block('python runnable', 'print(1)'), byAlias)).html).toContain('data-scb-runnable="/alias.js"');
   expect((await render(block('py runnable', 'print(1)'), byAlias)).html).toContain('data-scb-runnable="/alias.js"');
-});
-
-test('a pycon session runs on the Python runtime', async () => {
-  const { html, warnings } = await render(block('pycon runnable', '>>> 1 + 1'), {
-    runnable: { runtimes: { python: '/py.js' } },
-  });
-  expect(html).toContain('data-scb-runnable="/py.js" data-scb-runnable-name="Python"');
-  expect(warnings.filter((w) => w.includes('runnable'))).toEqual([]);
 });
 
 test('with shell copy off, a session still runs its commands only', async () => {
@@ -52,17 +50,13 @@ test('with shell copy off, a session still runs its commands only', async () => 
   expect(on.html).not.toContain('data-scb-runnable-session');
 });
 
-test('the timeout option reaches the block', async () => {
-  const { html } = await render(block('js runnable', 'x'), { runnable: { ...js.runnable, timeout: 2500 } });
-  expect(html).toContain('data-scb-runnable-timeout="2500"');
-});
-
-test('a language without a runtime warns and gets no button', async () => {
+test('a language without a runtime warns and gets no button, and Object.prototype names are not runtimes', async () => {
   const { html, warnings } = await render(block('rust runnable', 'fn main() {}'), js);
   expect(html).not.toContain('scb-run');
   expect(warnings).toEqual([
     'src/content/docs/example.md, rust code block: `runnable` needs a runtime for rust. Add one to `runnable.runtimes`.',
   ]);
+  expect((await render(block('constructor runnable', 'a'), js)).warnings.join('\n')).toContain('needs a runtime');
 });
 
 test('with codeblocks(), the block points at the bundled module in the assets folder', async () => {
@@ -111,12 +105,10 @@ test('the Vite plugin emits each runtime as a chunk in the client build, and ser
   expect(await serve?.resolveId?.call({ resolve }, '/_astro/other.js')).toBeUndefined();
 });
 
-test('copied text is unchanged, and blocks without runnable render the same with the feature off', async () => {
-  const md = block('js runnable', 'console.log(1)');
-  expect((await render(md, js)).copyText).toBe('console.log(1)');
+test('blocks without runnable render the same with the feature off', async () => {
   const plain = block('js title="a.js"', 'console.log(1)');
   expect((await render(plain, js)).html).toBe((await render(plain, { runnable: false })).html);
-  expect((await render(md, { runnable: false })).html).not.toContain('scb-run');
+  expect((await render(block('js runnable', 'x'), { runnable: false })).html).not.toContain('scb-run');
 });
 
 test('output and error colours meet 4.5:1 in the dark and the light theme', async () => {
@@ -128,13 +120,7 @@ test('output and error colours meet 4.5:1 in the dark and the light theme', asyn
   }
 });
 
-test('does not treat Object.prototype names as runtimes', async () => {
-  const { warnings } = await render(block('constructor runnable', 'a'), js);
-  expect(warnings.join('\n')).toContain('needs a runtime');
-});
-
-test('the code goes on the figure only when the block has no copy button', async () => {
-  expect((await render(block('js runnable', 'x'), js)).html).not.toContain('data-scb-code');
+test('the code goes on the figure only when the block has no copy button', () => {
   const withoutButton = h('div', [h('figure', [h('pre', 'a')])]);
   keepCopiedText(withoutButton, 'a\nb');
   expect(toHtml(withoutButton)).toContain('<figure data-scb-code="a\x7Fb">');

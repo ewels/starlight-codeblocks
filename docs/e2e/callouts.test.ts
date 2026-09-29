@@ -1,27 +1,63 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { render } from '../../packages/starlight-codeblocks/test/render.ts';
-import { copyFromKeyboard, css, example } from './helpers.ts';
+import { css, example } from './helpers.ts';
+
+/** The bubble's box, and the x of the middle of its arrow. */
+const arrow = (el: Element) => {
+  const box = el.getBoundingClientRect();
+  const after = getComputedStyle(el, '::after');
+  const x = box.left + el.clientLeft + Number.parseFloat(after.left) + Number.parseFloat(after.width) / 2;
+  return { x, left: box.left, right: box.right };
+};
+
+async function inject(page: Page, markdown: string[]) {
+  const { html } = await render(markdown.join('\n'));
+  await page.evaluate((html) => {
+    document.querySelector('#scb-injected')?.remove();
+    const box = document.createElement('div');
+    box.id = 'scb-injected';
+    box.innerHTML = html;
+    document.querySelector('.sl-markdown-content')?.prepend(box);
+  }, html);
+  return page.locator('#scb-injected');
+}
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/inline-callouts/');
 });
 
-test('shows the note in a bubble above its line, with the note role', async ({ page }) => {
-  const note = example(page).getByRole('note');
+test('shows the note in a bubble above its line, inside the block, with its arrow on the bubble', async ({ page }) => {
+  const block = example(page);
+  const note = block.getByRole('note');
   await expect(note).toHaveText('Lets controller.abort() cancel the request.');
-  const line = example(page).locator('.ec-line').nth(1);
+  const line = block.locator('.ec-line').nth(1);
   await expect(line).toContainText('const res');
   expect((await note.boundingBox())?.y).toBeLessThan((await line.boundingBox())?.y ?? 0);
+
+  const bubble = await block.locator('.scb-callout-bubble').boundingBox();
+  const pre = await block.locator('pre').boundingBox();
+  expect(bubble && pre && bubble.x + bubble.width).toBeLessThanOrEqual((pre?.x ?? 0) + (pre?.width ?? 0));
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await css(block.locator('.scb-callout'), 'userSelect')).toBe('none');
+
+  for (const bubble of await page.locator('.scb-callout-bubble').all()) {
+    const { x, left, right } = await bubble.evaluate(arrow);
+    const text = (await bubble.textContent()) ?? '';
+    expect(x - left, text).toBeGreaterThanOrEqual(10);
+    expect(right - x, text).toBeGreaterThanOrEqual(10);
+  }
+
+  const chip = block.locator('.scb-callout-bubble code').first();
+  expect(await css(chip, 'fontFamily')).toBe(await css(block.locator('.ec-line').first(), 'fontFamily'));
+  expect(await css(chip, 'borderTopLeftRadius')).toBe('3px');
 });
 
-test('the arrow points at the middle of the matched text', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'On a phone the token is past the right edge, so the arrow stays inside the block.');
+test('on a desktop, the arrow points at its text, and a bubble moves left instead of wrapping', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'A phone block is too narrow: the token is past the right edge, and bubbles wrap.');
   const block = example(page);
-  const arrow = await block.locator('.scb-callout-bubble').evaluate((el) => {
-    const box = el.getBoundingClientRect();
-    const after = getComputedStyle(el, '::after');
-    return box.left + el.clientLeft + Number.parseFloat(after.left) + Number.parseFloat(after.width) / 2;
-  });
   const token = await block
     .locator('.ec-line')
     .nth(1)
@@ -39,102 +75,30 @@ test('the arrow points at the middle of the matched text', async ({ page, isMobi
       }
       return Number.NaN;
     });
-  expect(Math.abs(arrow - token)).toBeLessThan(2);
-});
+  expect(Math.abs((await block.locator('.scb-callout-bubble').evaluate(arrow)).x - token)).toBeLessThan(2);
 
-test('the bubble stays inside the block and the page does not scroll sideways', async ({ page }) => {
-  const block = example(page);
-  const bubble = await block.locator('.scb-callout-bubble').boundingBox();
-  const pre = await block.locator('pre').boundingBox();
-  expect(bubble && pre && bubble.x + bubble.width).toBeLessThanOrEqual((pre?.x ?? 0) + (pre?.width ?? 0));
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-});
-
-test('copying leaves the callout out, with the keyboard', async ({ page }) => {
-  const copied = await copyFromKeyboard(example(page));
-  expect(copied).not.toContain('cancel the request');
-  expect(copied).not.toContain('[!callout');
-  expect(copied).toContain('const res = await fetch(url, { signal: controller.signal });');
-});
-
-test('a manual selection leaves the callout out', async ({ page }) => {
-  const style = await css(example(page).locator('.scb-callout'), 'userSelect');
-  expect(style).toBe('none');
-});
-
-test('the arrow always sits on its bubble, also when the matched text is past the right edge', async ({ page }) => {
   for (const bubble of await page.locator('.scb-callout-bubble').all()) {
-    const { arrow, left, right } = await bubble.evaluate((el) => {
-      const box = el.getBoundingClientRect();
-      const after = getComputedStyle(el, '::after');
-      const arrow = box.left + el.clientLeft + Number.parseFloat(after.left) + Number.parseFloat(after.width) / 2;
-      return { arrow, left: box.left, right: box.right };
-    });
-    const text = (await bubble.textContent()) ?? '';
-    expect(arrow - left, text).toBeGreaterThanOrEqual(10);
-    expect(right - arrow, text).toBeGreaterThanOrEqual(10);
+    expect((await bubble.boundingBox())?.height, (await bubble.textContent()) ?? '').toBeLessThan(40);
   }
-});
 
-test('a short bubble near the right edge moves left instead of wrapping on a desktop', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'A phone block is too narrow for every bubble on one line.');
-  await page.setViewportSize({ width: 1280, height: 900 });
-  for (const bubble of await page.locator('.scb-callout-bubble').all()) {
-    const box = await bubble.boundingBox();
-    expect(box?.height, (await bubble.textContent()) ?? '').toBeLessThan(40);
-  }
-});
-
-test('the bubble starts 40px left of the arrow when it fits', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'A phone block is too narrow for the line.');
-  const { html } = await render(
-    ['```js', '// [!callout /options/] Short note.', 'const value = compute(input, options);', '```'].join('\n'),
-  );
-  await page.evaluate((html) => {
-    const box = document.createElement('div');
-    box.id = 'fit';
-    box.innerHTML = html;
-    document.querySelector('.sl-markdown-content')?.prepend(box);
-  }, html);
-  const { arrow, left } = await page.locator('#fit .scb-callout-bubble').evaluate((el) => {
-    const box = el.getBoundingClientRect();
-    const after = getComputedStyle(el, '::after');
-    return {
-      arrow: box.left + el.clientLeft + Number.parseFloat(after.left) + Number.parseFloat(after.width) / 2,
-      left: box.left,
-    };
-  });
-  expect(arrow - left).toBeCloseTo(40, 0);
-});
-
-test('code in a bubble uses the code font, with rounded corners', async ({ page }) => {
-  const block = example(page);
-  const chip = block.locator('.scb-callout-bubble code').first();
-  const [font, codeFont, radius] = await Promise.all([
-    css(chip, 'fontFamily'),
-    css(block.locator('.ec-line').first(), 'fontFamily'),
-    css(chip, 'borderTopLeftRadius'),
+  const fit = await inject(page, [
+    '```js',
+    '// [!callout /options/] Short note.',
+    'const value = compute(input, options);',
+    '```',
   ]);
-  expect(font).toBe(codeFont);
-  expect(radius).toBe('3px');
+  const { x, left } = await fit.locator('.scb-callout-bubble').evaluate(arrow);
+  expect(x - left).toBeCloseTo(40, 0);
 });
 
 test('between two marked lines, the callout has the same background and bar as the lines', async ({ page }) => {
   for (const meta of ['{1-2}', 'error={1-2}']) {
-    const { html } = await render([`\`\`\`js ${meta}`, 'a()', '// [!callout] Note', 'b()', '```'].join('\n'));
-    await page.evaluate((html) => {
-      document.querySelector('#scb-injected')?.remove();
-      const box = document.createElement('div');
-      box.id = 'scb-injected';
-      box.innerHTML = html;
-      document.querySelector('.sl-markdown-content')?.prepend(box);
-    }, html);
-    const block = page.locator('#scb-injected');
+    const block = await inject(page, [`\`\`\`js ${meta}`, 'a()', '// [!callout] Note', 'b()', '```']);
     const line = block.locator('.ec-line').first();
     const callout = block.locator('.scb-callout');
-    const colour = (el: Element) => getComputedStyle(el).backgroundColor;
-    expect(await callout.evaluate(colour), meta).toBe(await line.evaluate(colour));
-    expect(await callout.evaluate(colour), meta).not.toBe('rgba(0, 0, 0, 0)');
+    const background = await css(callout, 'backgroundColor');
+    expect(background, meta).toBe(await css(line, 'backgroundColor'));
+    expect(background, meta).not.toBe('rgba(0, 0, 0, 0)');
     // The bar is the first pixels of the callout's background image, in the line's border colour.
     const bar = await css(line.locator('.code'), 'borderInlineStartColor');
     expect(await css(callout, 'backgroundImage'), meta).toContain(bar);

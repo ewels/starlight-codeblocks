@@ -11,22 +11,17 @@ const url = 'https://numpy.org/doc/stable/reference/generated/numpy.linspace.htm
 
 afterEach(() => setRegistry(undefined));
 
-test('links the first match of the text on the next line, and removes the directive', async () => {
+test('links the first match of the text on the next line, keeps its colours, and removes the directive', async () => {
   const { html, copyText, warnings } = await render(
     block('py', 'import numpy as np', `# [!link /linspace/ ${url}]`, 'x = np.linspace(0, 1, 50)'),
   );
-  expect(html).toMatch(new RegExp(`<a class="scb-link" href="${url}"><span[^>]*>linspace</span></a>`));
+  expect(html).toMatch(new RegExp(`<a class="scb-link" href="${url}"><span style="--0:[^>]*>linspace</span></a>`));
   expect(html).not.toContain('[!link');
   expect(copyText).toBe('import numpy as np\nx = np.linspace(0, 1, 50)');
   expect(warnings).toEqual([]);
-});
-
-test('links only the first match', async () => {
-  const { html } = await render(block('js', '// [!link /a/ https://example.com/]', 'a + a'));
-  expect(html.match(/class="scb-link"/g)).toHaveLength(1);
-  expect(html).toMatch(
-    /<a class="scb-link" href="https:\/\/example.com\/"><span[^>]*>a<\/span><\/a><span[^>]*> <\/span><span[^>]*>\+<\/span><span[^>]*> a</,
-  );
+  const twice = await render(block('js', '// [!link /a/ https://example.com/]', 'a + a'));
+  expect(twice.html.match(/class="scb-link"/g)).toHaveLength(1);
+  expect(twice.html).toMatch(/<\/a><span[^>]*> <\/span><span[^>]*>\+<\/span><span[^>]*> a</);
 });
 
 test('stacks several link lines above one line', async () => {
@@ -42,20 +37,11 @@ test('stacks several link lines above one line', async () => {
   expect(html).toContain('href="https://docs.python.org/3/library/pathlib.html#pathlib.Path.read_text"');
 });
 
-test('keeps the syntax colours of the linked text', async () => {
-  const { html } = await render(block('js', '// [!link /fetch/ https://example.com/]', 'await fetch(url)'));
-  expect(html).toMatch(/<a class="scb-link" href="https:\/\/example.com\/"><span style="--0:/);
-});
-
-test('reads a site-relative URL as one word', async () => {
-  const { html } = await render(block('js', '// [!link /createClient/ /reference/client/]', 'createClient()'));
-  expect(html).toContain('href="/reference/client/"');
-});
-
-test('adds Astro base to site-relative URLs', async () => {
+test('reads a site-relative URL as one word, and adds Astro base to it', async () => {
+  const md = block('js', '// [!link /createClient/ /reference/client/]', 'createClient()');
+  expect((await render(md)).html).toContain('href="/reference/client/"');
   setRegistry({ options: resolveOptions(), plugins: [], base: '/docs' });
-  const { html } = await render(block('js', '// [!link /createClient/ /reference/client/]', 'createClient()'));
-  expect(html).toContain('href="/docs/reference/client/"');
+  expect((await render(md)).html).toContain('href="/docs/reference/client/"');
 });
 
 test('withBase leaves other URLs alone, and does not add the base twice', () => {
@@ -90,13 +76,10 @@ test('the underline meets 3:1 contrast in both themes', async () => {
   }
 });
 
-test('does not link a javascript: URL', async () => {
+test('does not link a javascript: URL, however it is hidden', async () => {
   const { html, warnings } = await render(block('js', '// [!link /alert/ javascript:alert(1)]', 'alert(1)'));
   expect(html).not.toContain('javascript:');
   expect(warnings.join('\n')).toContain('http');
-});
-
-test('does not link a javascript: URL hidden by leading space, control characters or tabs', async () => {
   for (const url of [
     ' javascript:alert(1)',
     '\x01javascript:alert(1)',

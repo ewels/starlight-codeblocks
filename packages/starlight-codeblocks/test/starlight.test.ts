@@ -37,28 +37,22 @@ test('adds its plugins with only the name visible, and fills the registry', asyn
   expect(integrations.map((i) => i.name)).toEqual(['starlight-codeblocks']);
 });
 
-test('adds its plugins when ec.config.mjs has no plugins list', async () => {
-  const { updates } = await setup('export default { styleOverrides: {} };');
-  expect(updates).toHaveLength(1);
-});
-
-test('fails when ec.config.mjs has a plugins list without the preset', async () => {
+test('adds its plugins when ec.config.mjs has no plugins list, and fails when it has one without the preset', async () => {
+  expect((await setup('export default { styleOverrides: {} };')).updates).toHaveLength(1);
   await expect(setup("export default { plugins: [{ name: 'other' }] };")).rejects.toThrow(
     '`ec.config.mjs` has its own `plugins` list',
   );
 });
 
-test('defaults tabWidth to 0, so a real tab is not expanded to spaces', async () => {
-  const { updates } = await setup();
-  expect((updates[0] as { expressiveCode: { tabWidth: number } }).expressiveCode.tabWidth).toBe(0);
+test('defaults tabWidth to 0, so a real tab is not expanded to spaces, and keeps one the site chose', async () => {
+  const tabWidth = async (expressiveCode = {}) =>
+    ((await setup(undefined, expressiveCode)).updates[0] as { expressiveCode: { tabWidth: number } }).expressiveCode
+      .tabWidth;
+  expect(await tabWidth()).toBe(0);
+  expect(await tabWidth({ tabWidth: 4 })).toBe(4);
 });
 
-test('keeps a tabWidth the site already chose', async () => {
-  const { updates } = await setup(undefined, { tabWidth: 4 });
-  expect((updates[0] as { expressiveCode: { tabWidth: number } }).expressiveCode.tabWidth).toBe(4);
-});
-
-test('adds only the page stylesheets when ec.config.mjs has the preset', async () => {
+test('adds only the page stylesheets when ec.config.mjs has the preset, and keeps its tabWidth', async () => {
   const { updates, integrations } = await setup(
     "export default { plugins: [[{ name: 'starlight-codeblocks:core' }]] };",
   );
@@ -69,13 +63,10 @@ test('adds only the page stylesheets when ec.config.mjs has the preset', async (
     },
   ]);
   expect(integrations).toHaveLength(1);
-});
-
-test('keeps a tabWidth from ec.config.mjs', async () => {
-  const { updates } = await setup(
+  const withTabWidth = await setup(
     "export default { tabWidth: 4, plugins: [[{ name: 'starlight-codeblocks:core' }]] };",
   );
-  expect(updates[0]).not.toHaveProperty('expressiveCode');
+  expect(withTabWidth.updates[0]).not.toHaveProperty('expressiveCode');
 });
 
 test('adds no stylesheet with inline highlighting and API links off', async () => {
@@ -83,32 +74,21 @@ test('adds no stylesheet with inline highlighting and API links off', async () =
   expect(updates[0]).not.toHaveProperty('customCss');
 });
 
-test('keeps the site Expressive Code options for inline highlighting', async () => {
+test('keeps the site Expressive Code options for inline highlighting, merging shiki as astro-expressive-code does', async () => {
   await setup('export default { themeCssRoot: "html" };', { useStarlightDarkModeSwitch: false });
   expect(getRegistry()?.expressiveCode).toEqual({
     themeCssRoot: 'html',
     useStarlightDarkModeSwitch: false,
     shiki: {},
   });
-});
-
-test('merges shiki options from both configs for inline highlighting, as astro-expressive-code does', async () => {
-  await setup('export default { shiki: { engine: "javascript", langs: ["b"] } };', {
-    shiki: { langs: ['a'], langAlias: { x: 'y' } },
+  await setup('export default { shiki: { engine: "javascript", langs: ["b"], langAlias: { b: "c" } } };', {
+    shiki: { langs: ['a'], langAlias: { a: 'c' } },
   });
   expect(getRegistry()?.expressiveCode?.shiki).toEqual({
     engine: 'javascript',
     langs: ['a', 'b'],
-    langAlias: { x: 'y' },
+    langAlias: { a: 'c', b: 'c' },
   });
-});
-
-test('deep-merges shiki.langAlias from both configs', async () => {
-  await setup('export default { shiki: { langAlias: { b: "c" } } };', { shiki: { langAlias: { a: 'c' } } });
-  expect(getRegistry()?.expressiveCode?.shiki).toEqual({ langAlias: { a: 'c', b: 'c' } });
-});
-
-test("falls back to Astro's markdown.shikiConfig langs and langAlias, as astro-expressive-code does", async () => {
   const shikiConfig = { langs: ['m'], langAlias: { nf: 'groovy' } };
   await setup(undefined, {}, {}, { shikiConfig });
   expect(getRegistry()?.expressiveCode?.shiki).toEqual(shikiConfig);
@@ -116,12 +96,9 @@ test("falls back to Astro's markdown.shikiConfig langs and langAlias, as astro-e
   expect(getRegistry()?.expressiveCode?.shiki).toEqual({ langs: ['own'], langAlias: { nf: 'groovy' } });
 });
 
-test('fails when Expressive Code is off', async () => {
-  await expect(setup(undefined, false)).rejects.toThrow('needs Expressive Code');
-});
-
-test('says that a plugin listed earlier, such as a theme, can have turned Expressive Code off', async () => {
+test('fails when Expressive Code is off, with a hint that an earlier plugin can have turned it off', async () => {
   await expect(setup(undefined, false)).rejects.toMatchObject({
+    message: expect.stringContaining('needs Expressive Code'),
     hint: expect.stringContaining('A plugin listed before starlight-codeblocks'),
   });
 });
@@ -137,19 +114,13 @@ const read = () =>
     Symbol.for('starlight-codeblocks')
   ];
 
-test('publishes its registry at Symbol.for("starlight-codeblocks"), with inlineHighlighting truthy only when on', async () => {
+test('publishes its registry at Symbol.for("starlight-codeblocks"), with inlineHighlighting and apiLinks truthy only when on', async () => {
   await setup();
   expect(read()?.options.inlineHighlighting).toBeTruthy();
+  expect(read()?.options.apiLinks).toBeTruthy();
   await setup(undefined, {}, { inlineHighlighting: { defaultLanguage: 'py' } });
   expect(read()?.options.inlineHighlighting).toBeTruthy();
-  await setup(undefined, {}, { inlineHighlighting: false });
-  expect(read()).toBeDefined();
+  await setup(undefined, {}, { inlineHighlighting: false, apiLinks: false });
   expect(read()?.options.inlineHighlighting).toBe(false);
-});
-
-test('publishes apiLinks in its registry, truthy only when on', async () => {
-  await setup();
-  expect(read()?.options.apiLinks).toBeTruthy();
-  await setup(undefined, {}, { apiLinks: false });
   expect(read()?.options.apiLinks).toBe(false);
 });

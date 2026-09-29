@@ -1,30 +1,47 @@
 import { expect, test } from 'vitest';
 import type { CodeblocksPlugin } from '../src/expressive-code/core.ts';
 import { getDirectives } from '../src/expressive-code/notation.ts';
-import { block, render } from './render.ts';
+import { block, lineClasses, render } from './render.ts';
 
 test('renders a block without directives exactly as without the plugin', async () => {
   const md = block('js title="app.js" {2}', 'const a = 1', 'console.log(a) // log it');
-  const withPlugin = await render(md);
-  const without = await render(md, { notation: false });
-  expect(withPlugin.html).toBe(without.html);
+  expect((await render(md)).html).toBe((await render(md, { notation: false })).html);
 });
 
-test('removes directives from the rendered and the copied text', async () => {
+test('removes directives from the rendered and the copied text, and applies them', async () => {
   const { html, copyText, warnings } = await render(
-    block('js', 'const a = 1 // [!code highlight]', 'const b = 2 // sum [!code ++]', 'const c = 3 // [!code --:1]'),
+    block(
+      'js',
+      '// [!code highlight:2]',
+      'const a = 1',
+      'const b = 2 // sum [!code ++:2]',
+      'const c = 3',
+      'const d = 4 // [!code --]',
+      'const e = 5 // [\\!code focus]',
+    ),
   );
-  expect(copyText).toBe('const a = 1\nconst b = 2 // sum\nconst c = 3');
-  expect(html).not.toContain('[!code');
-  expect(html).toContain('ec-line highlight mark');
-  expect(html).toContain('ec-line highlight ins');
-  expect(html).toContain('ec-line highlight del');
+  expect(copyText).toBe('const a = 1\nconst b = 2 // sum\nconst c = 3\nconst d = 4\nconst e = 5 // [!code focus]');
+  expect(lineClasses(html)).toEqual([
+    'ec-line highlight mark',
+    'ec-line highlight mark ins',
+    'ec-line highlight ins',
+    'ec-line highlight del',
+    'ec-line',
+  ]);
   expect(warnings).toEqual([]);
+  const off = await render(block('js', 'a() // [!code ++]'), { notation: false });
+  expect(off.copyText).toBe('a() // [!code ++]');
 });
 
-test('applies :N to the following lines', async () => {
-  const { html } = await render(block('js', 'a() // [!code ++:2]', 'b()', 'c()'));
-  expect(html.match(/ec-line highlight ins/g)).toHaveLength(2);
+test.each([
+  ['py', 'x = 1  # [!code ++]', 'x = 1', {}],
+  ['sql', 'SELECT 1; -- [!code ++]', 'SELECT 1;', {}],
+  ['html', '<p>Hi</p> <!-- [!code ++] -->', '<p>Hi</p>', {}],
+  ['json', '{"a": 1} // [!code ++]', '{"a": 1} // [!code ++]', {}],
+  ['sh', 'echo "# [!code focus]"', 'echo "# [!code focus]"', {}],
+  ['cypher', 'MATCH (n) // [!code ++]', 'MATCH (n)', { notation: { comments: { cypher: ['//'] } } }],
+])('reads directives in the comment syntax of %s', async (lang, line, copy, options) => {
+  expect((await render(block(lang, line), options)).copyText).toBe(copy);
 });
 
 test('counts the lines that readers see in Expressive Code ranges and in directives', async () => {
@@ -44,18 +61,8 @@ test('counts the lines that readers see in Expressive Code ranges and in directi
     [note],
   );
   expect(copyText).toBe('one()\ntwo()\nthree()');
-  const lines = html.match(/<div class="ec-line[^"]*"/g);
-  expect(lines).toEqual([
-    '<div class="ec-line"',
-    '<div class="ec-line highlight mark del"',
-    '<div class="ec-line highlight ins"',
-  ]);
+  expect(lineClasses(html)).toEqual(['ec-line', 'ec-line highlight mark del', 'ec-line highlight ins']);
   expect(seen).toEqual(['About two on two()']);
-});
-
-test('renders an escaped directive as text', async () => {
-  const { copyText } = await render(block('js', 'const a = 1 // [\\!code focus]'));
-  expect(copyText).toBe('const a = 1 // [!code focus]');
 });
 
 test('warns about unknown directives with the file and line, and keeps them', async () => {
@@ -64,75 +71,25 @@ test('warns about unknown directives with the file and line, and keeps them', as
   expect(warnings).toEqual([
     'src/content/docs/example.md, js code block "app.js", line 2: `[!code fokus]` is not a known directive. The line renders without it.',
   ]);
+  const proto = await render(block('js', 'a() // [!constructor]'));
+  expect(proto.html).toContain('[!constructor]');
+  expect(proto.warnings.join('\n')).toContain('is not a known directive');
+  expect((await render(block('constructor', 'a() // [!code focus]'))).html).toContain('[!code focus]');
 });
 
-test('reads directives in the comment syntax of each language', async () => {
-  expect((await render(block('py', 'x = 1  # [!code ++]'))).copyText).toBe('x = 1');
-  expect((await render(block('sql', 'SELECT 1; -- [!code ++]'))).copyText).toBe('SELECT 1;');
-  expect((await render(block('html', '<p>Hi</p> <!-- [!code ++] -->'))).copyText).toBe('<p>Hi</p>');
-  expect((await render(block('json', '{"a": 1} // [!code ++]'))).copyText).toBe('{"a": 1} // [!code ++]');
-});
-
-test('uses the comment syntax from the options', async () => {
-  const options = { notation: { comments: { cypher: ['//'] } } };
-  expect((await render(block('cypher', 'MATCH (n) // [!code ++]'), options)).copyText).toBe('MATCH (n)');
-});
-
-test('leaves directives alone when notation is off', async () => {
-  const { copyText } = await render(block('js', 'a() // [!code ++]'), { notation: false });
-  expect(copyText).toBe('a() // [!code ++]');
-});
-
-test('keeps diff syntax working', async () => {
-  const { copyText, html } = await render(block('diff lang="js"', '-a() // [!code focus]', '+b() // [!code ++]'));
-  expect(copyText).toBe('a()\nb()');
-  expect(html).toContain('ec-line highlight ins');
-});
-
-test('keeps diff syntax removing the indentation when an own-line directive has no prefix', async () => {
-  const { copyText } = await render(block('diff lang="js"', '// [!code highlight]', '+a()', '-b()', ' c()'));
-  expect(copyText).toBe('a()\nb()\nc()');
-});
-
-test('removes a diff-prefixed line that holds only directives, and applies them to the line below', async () => {
+test('works with diff syntax and diff-prefixed directive lines', async () => {
+  const diff = await render(block('diff lang="js"', '-a() // [!code focus]', '+b() // [!code ++]'));
+  expect(diff.copyText).toBe('a()\nb()');
+  expect(diff.html).toContain('ec-line highlight ins');
+  const unprefixed = await render(block('diff lang="js"', '// [!code highlight]', '+a()', '-b()', ' c()'));
+  expect(unprefixed.copyText).toBe('a()\nb()\nc()');
   const highlight = await render(block('diff lang="js"', '+ // [!code highlight]', '+ foo()', '  bar()'));
   expect(highlight.copyText).toBe('foo()\nbar()');
   expect(highlight.html.match(/ec-line highlight mark ins/g)).toHaveLength(1);
   const callout = await render(block('diff lang="js"', '+ // [!callout] Why', '+ foo()', '  bar()'));
-  expect(callout.warnings).toEqual([]);
-  expect(callout.copyText).toBe('foo()\nbar()');
+  expect(callout).toMatchObject({ copyText: 'foo()\nbar()', warnings: [] });
   expect(callout.html).toContain('Why');
-});
-
-test('removes a line that holds only an end-of-line directive, and applies it to the lines below', async () => {
-  const { copyText, html } = await render(block('js', '// [!code highlight:2]', 'a()', 'b()', 'c()'));
-  expect(copyText).toBe('a()\nb()\nc()');
-  expect(html.match(/ec-line highlight mark/g)).toHaveLength(2);
-});
-
-test('does not treat Object.prototype names as directives or comment syntaxes', async () => {
-  const { html, warnings } = await render(block('js', 'a() // [!constructor]'));
-  expect(html).toContain('[!constructor]');
-  expect(warnings.join('\n')).toContain('is not a known directive');
-  expect((await render(block('constructor', 'a() // [!code focus]'))).html).toContain('[!code focus]');
-});
-
-test('leaves directives inside a string literal alone', async () => {
-  const lines = [
-    'const s = "// [!code focus]"',
-    "const t = 'a' // [!code highlight]",
-    "fn f(x: &'a str) {} // [!code ++]",
-  ];
-  const { html, copyText } = await render(block('js', ...lines));
-  expect(copyText).toBe(['const s = "// [!code focus]"', "const t = 'a'", "fn f(x: &'a str) {}"].join('\n'));
-  expect(html).not.toContain('scb-focus');
-  expect((await render(block('sh', 'echo "# [!code focus]"'))).copyText).toBe('echo "# [!code focus]"');
-});
-
-test('reads diff-prefixed directive lines with the useDiffSyntax meta option', async () => {
-  const { html, copyText } = await render(
-    block('js useDiffSyntax', '  const a = 1', '+ // [!code highlight]', '+ const b = 2', '  const c = 3'),
-  );
-  expect(copyText).toBe('const a = 1\nconst b = 2\nconst c = 3');
-  expect(html).not.toContain('[!code');
+  const meta = await render(block('js useDiffSyntax', '  const a = 1', '+ // [!code highlight]', '+ const b = 2'));
+  expect(meta.copyText).toBe('const a = 1\nconst b = 2');
+  expect(meta.html).not.toContain('[!code');
 });

@@ -3,6 +3,7 @@ import { expect, type Page, test } from '@playwright/test';
 import ts from 'typescript';
 import { loaderSource } from '../../packages/starlight-codeblocks/src/client-modules.ts';
 import { floatStyles } from '../../packages/starlight-codeblocks/src/expressive-code/styles.ts';
+import { once } from './helpers.ts';
 
 // A page on its own origin, so that the tests control every file the browser loads.
 const origin = 'http://codeblocks.test';
@@ -27,6 +28,8 @@ test.describe('client module loader', () => {
     { feature: 'beta', fileName: 'scb-beta.b2.js', source: counter('beta') },
   ];
   const html = '<body><div data-scb-alpha></div><script type="module" src="/_astro/ec.js"></script></body>';
+
+  test.beforeEach(once);
 
   test('imports only the modules that the page uses, and runs them again on page load', async ({ page }) => {
     const requested = await serve(page, {
@@ -79,33 +82,29 @@ test.describe('positioning helper', () => {
         await page.waitForFunction(() => 'place' in window);
       });
 
-      async function open(page: Page, anchor: { top: string; left: string }) {
-        return page.evaluate((style) => {
-          const button = document.getElementById('anchor') as HTMLElement;
-          const card = document.getElementById('card') as HTMLElement;
-          Object.assign(button.style, style);
-          card.showPopover();
-          (window as unknown as { place: (f: HTMLElement, a: HTMLElement) => void }).place(card, button);
-          const rect = (el: Element) => el.getBoundingClientRect().toJSON();
-          return { anchor: rect(button), card: rect(card), width: innerWidth, height: innerHeight };
-        }, anchor);
-      }
+      test('opens below the anchor, above it when there is no room below, and inside the viewport', async ({
+        page,
+      }) => {
+        const open = (anchor: { top: string; left: string }) =>
+          page.evaluate((style) => {
+            const button = document.getElementById('anchor') as HTMLElement;
+            const card = document.getElementById('card') as HTMLElement;
+            Object.assign(button.style, style);
+            if (card.matches(':popover-open')) card.hidePopover();
+            card.showPopover();
+            (window as unknown as { place: (f: HTMLElement, a: HTMLElement) => void }).place(card, button);
+            const rect = (el: Element) => el.getBoundingClientRect().toJSON();
+            return { anchor: rect(button), card: rect(card), width: innerWidth };
+          }, anchor);
 
-      test('opens below the anchor', async ({ page }) => {
-        const { anchor, card } = await open(page, { top: '20px', left: '20px' });
-        expect(card.top).toBeGreaterThanOrEqual(anchor.bottom);
-        expect(card.top - anchor.bottom).toBeLessThanOrEqual(8);
-      });
-
-      test('opens above the anchor when there is no room below', async ({ page }) => {
-        const { anchor, card } = await open(page, { top: 'calc(100vh - 40px)', left: '20px' });
-        expect(card.bottom).toBeLessThanOrEqual(anchor.top);
-      });
-
-      test('stays inside the viewport at the right edge', async ({ page }) => {
-        const { card, width } = await open(page, { top: '20px', left: 'calc(100vw - 30px)' });
-        expect(card.right).toBeLessThanOrEqual(width);
-        expect(card.left).toBeGreaterThanOrEqual(0);
+        const below = await open({ top: '20px', left: '20px' });
+        expect(below.card.top).toBeGreaterThanOrEqual(below.anchor.bottom);
+        expect(below.card.top - below.anchor.bottom).toBeLessThanOrEqual(8);
+        const above = await open({ top: 'calc(100vh - 40px)', left: '20px' });
+        expect(above.card.bottom).toBeLessThanOrEqual(above.anchor.top);
+        const edge = await open({ top: '20px', left: 'calc(100vw - 30px)' });
+        expect(edge.card.right).toBeLessThanOrEqual(edge.width);
+        expect(edge.card.left).toBeGreaterThanOrEqual(0);
       });
     });
   }

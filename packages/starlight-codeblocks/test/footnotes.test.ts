@@ -21,20 +21,14 @@ test('turns [!ref] into a badge on the next line, described by an item in the li
   expect(warnings).toEqual([]);
 });
 
-test('an escaped [\\!ref] stays as a plain comment', async () => {
-  const { html, warnings } = await render(block('py', '# [\\!ref] Note', 'a = 1'));
-  expect(html).toContain('[!ref] Note');
-  expect(html).not.toContain('scb-footnote-badge');
-  expect(warnings).toEqual([]);
-});
-
-test('numbers footnotes from 1 in line order', async () => {
-  const { html } = await render(block('py', '# [!ref] First', 'a = 1', '# [!ref] Second', 'b = 2'));
+test('numbers footnotes from 1 in line order, and labels them with the line from startLineNumber', async () => {
+  const { html } = await render(block('py startLineNumber=10', '# [!ref] First', 'a = 1', '# [!ref] Second', 'b = 2'));
   expect(html.match(/aria-label="Footnote \d"/g)).toEqual(['aria-label="Footnote 1"', 'aria-label="Footnote 2"']);
-  expect(html).toContain('aria-label="Footnote 2, for line 2"');
+  expect(html).toContain('aria-label="Footnote 1, for line 10"');
+  expect(html).toContain('aria-label="Footnote 2, for line 11"');
 });
 
-test('makes the list sticky with footnotes="sticky" or the site option, and static with footnotes="static"', async () => {
+test('makes the list sticky with footnotes="sticky" or the site option, static with footnotes="static", and warns about other values', async () => {
   const md = (attr: string) => block(`py ${attr}`, '# [!ref] Note', 'a = 1');
   expect((await render(md(''))).html).not.toContain('scb-footnotes-sticky');
   expect((await render(md('footnotes="sticky"'))).html).toContain('scb-footnotes-sticky');
@@ -42,22 +36,19 @@ test('makes the list sticky with footnotes="sticky" or the site option, and stat
   expect((await render(md('footnotes="static"'), { footnotes: { sticky: true } })).html).not.toContain(
     'scb-footnotes-sticky',
   );
+  expect((await render(md('footnotes="top"'))).warnings.join('\n')).toContain('`footnotes="top"` must be');
 });
 
-test('warns about an unknown footnotes value', async () => {
-  const { warnings } = await render(block('py footnotes="top"', '# [!ref] Note', 'a = 1'));
-  expect(warnings.join('\n')).toContain('`footnotes="top"` must be');
-});
-
-test('keeps the directive with a warning when footnotes are off', async () => {
-  const { html, warnings } = await render(block('py', '# [!ref] Note', 'a = 1'), { footnotes: false });
-  expect(html).not.toContain('scb-footnote');
-  expect(warnings.join('\n')).toContain('is not a known directive');
-});
-
-test('renders a block without footnotes the same as without the feature', async () => {
+test('leaves an escaped [\\!ref], a block without footnotes and a block with the feature off alone', async () => {
+  const escaped = await render(block('py', '# [\\!ref] Note', 'a = 1'));
+  expect(escaped.html).toContain('[!ref] Note');
+  expect(escaped.html).not.toContain('scb-footnote-badge');
+  expect(escaped.warnings).toEqual([]);
   const md = block('js title="a.js"', 'a()', 'b()');
   expect((await render(md)).html).toBe((await render(md, { footnotes: false })).html);
+  const off = await render(block('py', '# [!ref] Note', 'a = 1'), { footnotes: false });
+  expect(off.html).not.toContain('scb-footnote');
+  expect(off.warnings.join('\n')).toContain('is not a known directive');
 });
 
 test('footnote colours meet their contrast targets in both themes', async () => {
@@ -69,11 +60,6 @@ test('footnote colours meet their contrast targets in both themes', async () => 
     expect(getColorContrast(get('activeForeground'), get('accent')), v.name).toBeGreaterThanOrEqual(4.5);
     expect(getColorContrast(get('numberForeground'), get('lineBackground')), v.name).toBeGreaterThanOrEqual(4.5);
   }
-});
-
-test('the footnote label counts from startLineNumber', async () => {
-  const { html } = await render(block('py startLineNumber=10', 'import os', '# [!ref] Creates `app`.', 'app = 1'));
-  expect(html).toContain('aria-label="Footnote 1, for line 11"');
 });
 
 test('the list goes below the expandable bar, so that the bar stays under the code', async () => {

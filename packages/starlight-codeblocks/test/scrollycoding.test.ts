@@ -28,10 +28,9 @@ const steps = [
   step(' data-focus="3-4" data-mark="4"', '<p>Create and <code>listen</code>.</p>'),
 ];
 
-test('puts a copy of the block, focused for the step, after each step', async () => {
-  const { tree, outLines } = await build(steps);
-  const copies = selectAll('.scb-scrolly-step', tree);
-  expect(copies).toHaveLength(2);
+test('puts the Markdown of each step and a copy of the block, focused for the step, after each step', async () => {
+  const { out, tree, outLines } = await build(steps);
+  expect(selectAll('.scb-scrolly-step', tree)).toHaveLength(2);
   expect(outLines('.scb-scrolly-step:nth-child(1)')).toEqual([
     'ec-line',
     'ec-line scb-focus-out',
@@ -44,13 +43,13 @@ test('puts a copy of the block, focused for the step, after each step', async ()
     'ec-line',
     'ec-line mark',
   ]);
-});
-
-test('keeps the Markdown of each step before its copy', async () => {
-  const { out } = await build(steps);
   expect(out).toContain(
     '<div class="scb-scrolly-step" data-scb-focus="2,3" data-scb-mark="3"><div class="scb-scrolly-text"><p>Create and <code>listen</code>.</p></div><div class="expressive-code">',
   );
+  const texts = [...out.matchAll(/data-code="([^"]*)"/g)].map((m) => m[1]);
+  expect(texts).toHaveLength(3);
+  expect(new Set(texts).size).toBe(1);
+  expect(texts[0]).toContain('app.listen(3000);');
 });
 
 test('adds a sticky copy in the state of the first step, and marks the first step as active', async () => {
@@ -60,28 +59,15 @@ test('adds a sticky copy in the state of the first step, and marks the first ste
   expect(outLines('.scb-scrolly-code')).toEqual(outLines('.scb-scrolly-step:nth-child(1)'));
   expect(out).toContain('<figure class="frame has-title scb-scrolly-frame">');
   expect(out.match(/<code tabindex="0" role="region" aria-label="Code block">/g)).toHaveLength(3);
+  expect(out).not.toContain('<script');
+  expect(out).not.toContain('data-scb-version');
 });
 
-test('each copy keeps the copy text of the whole block', async () => {
-  const { out } = await build(steps);
-  const texts = [...out.matchAll(/data-code="([^"]*)"/g)].map((m) => m[1]);
-  expect(texts).toHaveLength(3);
-  expect(new Set(texts).size).toBe(1);
-  expect(texts[0]).toContain('app.listen(3000);');
-});
-
-test('replaces a focus from the fence line', async () => {
-  const { outLines } = await build(steps, 'focus={4}');
-  expect(outLines('.scb-scrolly-step:nth-child(1)')[0]).toBe('ec-line');
-});
-
-test('the sticky copy lists the marks from the fence line, which the client keeps', async () => {
+test('a step replaces a focus from the fence line, keeps its marks, and with no focus leaves every line clear', async () => {
+  expect((await build(steps, 'focus={4}')).outLines('.scb-scrolly-step:nth-child(1)')[0]).toBe('ec-line');
   const { tree } = await build(steps, '{2}');
   const [sticky] = selectAll('.scb-scrolly-code > .expressive-code', tree);
   expect(sticky.properties.dataScbMarked).toBe('1');
-});
-
-test('a step with no focus leaves every line clear', async () => {
   const { outLines } = await build([step('', 'All of it.')]);
   expect(outLines('.scb-scrolly-step')).toEqual(['ec-line', 'ec-line', 'ec-line', 'ec-line']);
 });
@@ -186,12 +172,6 @@ test('a block between steps is the code from the next step on, with a sticky cop
     pre.children.map((c) => ('value' in c ? c.value : '')).join(''),
   );
   expect(spoken).toEqual([code.slice(1, -1).join('\n'), version2.slice(1, -1).join('\n')]);
-});
-
-test('a block with one version has no token data', async () => {
-  const { out } = await build(steps);
-  expect(out).not.toContain('<script');
-  expect(out).not.toContain('data-scb-version');
 });
 
 test('needs a wider container for the columns when the lines are longer, and can put the code on the left', async () => {

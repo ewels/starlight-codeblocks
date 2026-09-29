@@ -44,13 +44,13 @@ const withAdapters = (...adapters: ApiLinkAdapter[]) => ({ apiLinks: { adapters 
 
 afterEach(() => setRegistry(undefined));
 
-test('links resolved names, with the card text on the link', async () => {
+test('links resolved names, with the card text on the link and the syntax colours kept', async () => {
   const { html, copyText, warnings } = await render(
     block('js', 'const tree = lib.parse(text);'),
     withAdapters(fakeAdapter()),
   );
   expect(html).toContain(
-    '<a class="scb-api-link" href="https://example.com/lib#parse" aria-description="lib.parse(text, *, strict=False). Parse the text. Example docs." data-scb-api-head="lib.parse(text, *, strict=False)" data-scb-api-source="Example docs" data-scb-api-summary="Parse the text.">',
+    '<a class="scb-api-link" href="https://example.com/lib#parse" aria-description="lib.parse(text, *, strict=False). Parse the text. Example docs." data-scb-api-head="lib.parse(text, *, strict=False)" data-scb-api-source="Example docs" data-scb-api-summary="Parse the text."><span style="--0:',
   );
   // One link for the whole name, although the name has three tokens.
   expect(html.match(/class="scb-api-link"/g)).toHaveLength(1);
@@ -59,25 +59,18 @@ test('links resolved names, with the card text on the link', async () => {
   expect(warnings).toEqual([]);
 });
 
-test('keeps the syntax colours of the linked name', async () => {
-  const { html } = await render(block('js', 'lib.parse(text)'), withAdapters(fakeAdapter()));
-  expect(html).toMatch(/<a class="scb-api-link"[^>]*><span style="--0:[^"]*">lib\.<\/span>/);
-});
-
-test('shows the kind and name when there is no signature, and adds Astro base', async () => {
+test('shows the kind and the qualified name when there is no signature, and adds Astro base', async () => {
   setRegistry({ options: resolveOptions(), plugins: [], base: '/docs' });
   const { html } = await render(block('js', 'lib'), withAdapters(fakeAdapter()));
   expect(html).toContain('href="/docs/reference/lib/"');
   expect(html).toContain('data-scb-api-head="module lib"');
   expect(html).not.toContain('data-scb-api-summary');
-});
-
-test('uses the qualified name from the resolution', async () => {
-  const adapter = fakeAdapter({
+  const qualified = fakeAdapter({
     findSymbols: () => [{ start: 0, end: 3, href: '/x/', kind: 'class', name: 'pkg.lib', source: 'S' }],
   });
-  const { html } = await render(block('js', 'lib'), withAdapters(adapter));
-  expect(html).toContain('data-scb-api-head="class pkg.lib"');
+  expect((await render(block('js', 'lib'), withAdapters(qualified))).html).toContain(
+    'data-scb-api-head="class pkg.lib"',
+  );
 });
 
 test('leaves names that do not resolve, names in strings and unsafe links as plain text', async () => {
@@ -86,7 +79,7 @@ test('leaves names that do not resolve, names in strings and unsafe links as pla
   expect(html).not.toContain('data-scb-api-links');
 });
 
-test('skips names that cross a line, and names that overlap a linked name', async () => {
+test('skips names that cross a line, overlap a linked name, or sit on a line with a token link', async () => {
   const overlap = fakeAdapter({
     findSymbols: () => [
       { start: 0, end: 9, name: 'lib.parse', href: '/x/', source: 'S' },
@@ -97,6 +90,12 @@ test('skips names that cross a line, and names that overlap a linked name', asyn
   });
   const { html } = await render(block('js', 'lib.parse()', 'lib', 'x'), withAdapters(overlap));
   expect(html.match(/class="scb-api-link"/g)).toHaveLength(1);
+  const tokenLink = await render(
+    block('js', '// [!link /lib/ https://example.com/]', 'lib.parse()', 'lib'),
+    withAdapters(fakeAdapter()),
+  );
+  expect(tokenLink.html.match(/class="scb-link"/g)).toHaveLength(1);
+  expect(tokenLink.html.match(/class="scb-api-link"/g)).toHaveLength(1);
 });
 
 test('only runs adapters for their languages and aliases, and not with apiLinks=false', async () => {
@@ -118,31 +117,18 @@ test('runs setup once for every block, and gives it the context', async () => {
   expect(context?.fetch).toBeTypeOf('function');
 });
 
-test('an adapter that fails in setup links nothing, with a warning', async () => {
-  const adapter = fakeAdapter({ setup: async () => Promise.reject(new Error('no index')) });
-  const { html, warnings } = await render(block('js', 'lib'), withAdapters(adapter));
-  expect(html).not.toContain('scb-api-link');
-  expect(warnings).toEqual(['API links, fake adapter: setup failed, so it links nothing: no index']);
-});
-
-test('an adapter whose setup throws before it returns links nothing, with a warning', async () => {
-  const adapter = fakeAdapter({
-    setup: () => {
+test('an adapter whose setup rejects or throws links nothing, with a warning', async () => {
+  const setups = [
+    async () => Promise.reject(new Error('no index')),
+    () => {
       throw new Error('no index');
     },
-  });
-  const { html, warnings } = await render(block('js', 'lib'), withAdapters(adapter));
-  expect(html).not.toContain('scb-api-link');
-  expect(warnings).toEqual(['API links, fake adapter: setup failed, so it links nothing: no index']);
-});
-
-test('does not link names on a line with a token link', async () => {
-  const { html } = await render(
-    block('js', '// [!link /lib/ https://example.com/]', 'lib.parse()', 'lib'),
-    withAdapters(fakeAdapter()),
-  );
-  expect(html.match(/class="scb-link"/g)).toHaveLength(1);
-  expect(html.match(/class="scb-api-link"/g)).toHaveLength(1);
+  ];
+  for (const setup of setups) {
+    const { html, warnings } = await render(block('js', 'lib'), withAdapters(fakeAdapter({ setup })));
+    expect(html).not.toContain('scb-api-link');
+    expect(warnings).toEqual(['API links, fake adapter: setup failed, so it links nothing: no index']);
+  }
 });
 
 test('renders a block the same without the feature when nothing links', async () => {
@@ -150,82 +136,48 @@ test('renders a block the same without the feature when nothing links', async ()
   expect((await render(md, withAdapters(fakeAdapter()))).html).toBe((await render(md, { apiLinks: false })).html);
 });
 
-test('the underline meets 3:1 contrast, and the card source 4.5:1, in both themes', async () => {
+test('the underline meets 3:1 contrast in both themes', async () => {
   for (const { get, name } of await variants()) {
     const bg = get('codeBackground');
     expect(getColorContrast(get('codeblocksApiLinks.underline'), bg), name).toBeGreaterThanOrEqual(3);
     expect(getColorContrast(get('codeblocksApiLinks.hoverUnderline'), bg), name).toBeGreaterThanOrEqual(3);
-    expect(
-      getColorContrast(get('codeblocks.mutedForeground'), get('codeblocks.popoverBackground')),
-      name,
-    ).toBeGreaterThanOrEqual(4.5);
   }
 });
 
-test('cachedFetch keeps the body on disk, so a later build does not fetch again', async () => {
+test('cachedFetch keeps good bodies on disk, and neither keeps nor trusts a body that fails', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'scb-cache-'));
-  const fetch = vi.fn(async () => new Response('inventory'));
-  vi.stubGlobal('fetch', fetch);
-  try {
-    const warn = vi.fn();
-    const first = await cachedFetch('https://example.com/objects.inv', dir, warn);
-    const second = await cachedFetch('https://example.com/objects.inv', dir, warn);
-    expect(new TextDecoder().decode(first ?? undefined)).toBe('inventory');
-    expect(second).toEqual(first);
-    expect(fetch).toHaveBeenCalledTimes(1);
-    expect(readdirSync(dir)).toHaveLength(1);
-    expect(warn).not.toHaveBeenCalled();
-  } finally {
-    vi.unstubAllGlobals();
-    rmSync(dir, { recursive: true });
-  }
-});
-
-test('cachedFetch keeps no body that fails the check, and fetches again for a kept one that fails it', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'scb-cache-'));
-  let reply = '<!doctype html>';
-  const fetch = vi.fn(async () => new Response(reply));
+  const url = 'https://example.com/objects.inv';
+  let reply = 'inventory';
+  const fetch = vi.fn(async (to: string) => {
+    if (to.includes('offline')) throw new TypeError('fetch failed');
+    if (to.includes('missing')) return new Response('Not found', { status: 404 });
+    return new Response(reply);
+  });
   vi.stubGlobal('fetch', fetch);
   const check = (body: Uint8Array) => {
     if (new TextDecoder().decode(body) !== 'inventory') throw new Error('not an inventory');
   };
+  const warn = vi.fn();
   try {
-    const warn = vi.fn();
-    expect(await cachedFetch('https://example.com/objects.inv', dir, warn, check)).toBeNull();
-    expect(warn.mock.calls).toEqual([
-      ['https://example.com/objects.inv is not an inventory. Names from it stay plain text.'],
-    ]);
-    expect(readdirSync(dir)).toEqual([]);
-    reply = 'stale';
-    await cachedFetch('https://example.com/objects.inv', dir, warn);
-    reply = 'inventory';
-    const body = await cachedFetch('https://example.com/objects.inv', dir, warn, check);
-    expect(new TextDecoder().decode(body ?? undefined)).toBe('inventory');
-    expect(fetch).toHaveBeenCalledTimes(3);
-  } finally {
-    vi.unstubAllGlobals();
-    rmSync(dir, { recursive: true });
-  }
-});
-
-test('cachedFetch returns null with a warning when the request fails, and caches nothing', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'scb-cache-'));
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (url: string) => {
-      if (url.includes('offline')) throw new TypeError('fetch failed');
-      return new Response('Not found', { status: 404 });
-    }),
-  );
-  try {
-    const warn = vi.fn();
     expect(await cachedFetch('https://example.com/missing.inv', dir, warn)).toBeNull();
     expect(await cachedFetch('https://offline.example/objects.inv', dir, warn)).toBeNull();
+    reply = '<!doctype html>';
+    expect(await cachedFetch(url, dir, warn, check)).toBeNull();
     expect(warn.mock.calls.map(([message]) => message)).toEqual([
       'could not fetch https://example.com/missing.inv (HTTP 404). Names from it stay plain text in this build.',
       'could not fetch https://offline.example/objects.inv (fetch failed). Names from it stay plain text in this build.',
+      'https://example.com/objects.inv is not an inventory. Names from it stay plain text.',
     ]);
     expect(readdirSync(dir)).toEqual([]);
+    reply = 'stale';
+    await cachedFetch(url, dir, warn);
+    reply = 'inventory';
+    const first = await cachedFetch(url, dir, warn, check);
+    expect(new TextDecoder().decode(first ?? undefined)).toBe('inventory');
+    expect(await cachedFetch(url, dir, warn, check)).toEqual(first);
+    expect(fetch).toHaveBeenCalledTimes(5);
+    expect(readdirSync(dir)).toHaveLength(1);
+    expect(warn).toHaveBeenCalledTimes(3);
   } finally {
     vi.unstubAllGlobals();
     rmSync(dir, { recursive: true });

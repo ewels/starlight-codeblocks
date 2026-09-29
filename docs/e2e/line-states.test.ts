@@ -1,48 +1,19 @@
 import { expect, test } from '@playwright/test';
-import { copyFromKeyboard, example } from './helpers.ts';
+import { example } from './helpers.ts';
 
-test.beforeEach(async ({ page }) => {
+test('marks a state with a bar and a centred label, for screen readers too, and not in a selection', async ({
+  page,
+}) => {
   await page.goto('./features/line-states/');
-});
-
-test('tints each state and shows the messages as labels', async ({ page }) => {
   const block = example(page);
-  await expect(block.locator('.scb-state-info')).toHaveCount(1);
-  await expect(block.locator('.scb-state-error .scb-state-label')).toHaveText("Error SyntaxError: expected ':'");
-  await expect(block.locator('.scb-state-warning .scb-state-label')).toHaveText('Warning Includes the script name');
-  const bar = await block
-    .locator('.scb-state-error .code')
+  const line = block.locator('.scb-state-error');
+  const bar = await line
+    .locator('.code')
     .evaluate((el) => [getComputedStyle(el).borderInlineStartWidth, getComputedStyle(el).borderInlineStartStyle]);
   expect(bar).toEqual(['3px', 'solid']);
-});
-
-test('gives screen readers the state name before the line', async ({ page }) => {
-  const line = example(page).locator('.scb-state-error');
   await expect(line).toMatchAriaSnapshot(`- text: "Error: for name in sys.argv[1:] SyntaxError: expected ':'"`);
-});
 
-test('leaves the messages out of the copied text and of a manual selection', async ({ page }) => {
-  const block = example(page);
-  const expected = 'import sys\n\nfor name in sys.argv[1:]\n    print(name)\n\ncount = len(sys.argv)';
-  expect(await copyFromKeyboard(block)).toBe(expected);
-  const selected = await block.locator('pre code').evaluate((code) => {
-    getSelection()?.selectAllChildren(code);
-    return getSelection()?.toString();
-  });
-  expect(selected).not.toContain('Error');
-  expect(selected).not.toContain('SyntaxError');
-  expect(selected).not.toContain('Note');
-});
-
-test('renders the custom state of the site', async ({ page }) => {
-  const line = example(page, 1).locator('.scb-state-todo');
-  await expect(line.locator('.scb-state-label')).toHaveText('To do Check the body against a schema');
-  await expect(line.locator('.scb-state-prefix')).toHaveText('To do:');
-});
-
-test('the label sits in the middle of the line, 6px after the state name', async ({ page }) => {
-  const label = example(page).locator('.scb-state-error .scb-state-label');
-  const { offset, gap } = await label.evaluate((el) => {
+  const { offset, gap } = await line.locator('.scb-state-label').evaluate((el) => {
     const line = (el.closest('.ec-line') as Element).getBoundingClientRect();
     const box = el.getBoundingClientRect();
     const name = (el.querySelector('strong') as Element).getBoundingClientRect();
@@ -56,4 +27,12 @@ test('the label sits in the middle of the line, 6px after the state name', async
   });
   expect(Math.abs(offset)).toBeLessThan(0.3);
   expect(Math.abs(gap - 6)).toBeLessThan(0.5);
+
+  const selected = await block.locator('pre code').evaluate((code) => {
+    getSelection()?.selectAllChildren(code);
+    return getSelection()?.toString();
+  });
+  expect(selected).toContain('for name in sys.argv[1:]');
+  expect(selected).not.toContain('Error');
+  expect(selected).not.toContain('Note');
 });

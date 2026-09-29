@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
-import { example, output } from './helpers.ts';
+import { example, once, output } from './helpers.ts';
 
 // These tests copy the markup that other Starlight plugins add, so that the docs site needs no such plugin.
 
@@ -16,103 +16,107 @@ async function copyToOverlay(page: Page, block: Locator) {
   return page.locator('.test-overlay > .expressive-code');
 }
 
-test('hidden lines open in a copy of the block, not in the original', async ({ page }) => {
-  await page.goto('./features/hidden-lines/');
-  const copy = await copyToOverlay(page, example(page));
-  await copy.locator('.scb-hidden-marker').first().click();
-  await expect(copy.locator('.scb-hidden-line').first()).toBeVisible();
-  await expect(example(page).locator('.scb-hidden-line').first()).toBeHidden();
-  await copy.locator('.scb-hidden-toggle').click();
-  await expect(copy.locator('.scb-hidden-line').last()).toBeVisible();
-});
+test.describe('in a copy of the block', () => {
+  test.beforeEach(once);
 
-test('an annotation in a copy of the block opens its own popover', async ({ page }) => {
-  await page.goto('./features/annotations/');
-  const copy = await copyToOverlay(page, example(page));
-  await copy.locator('button.scb-annotation').first().click();
-  await expect(copy.locator('.scb-annotation-popover:popover-open')).toHaveCount(1);
-  await expect(example(page).locator('.scb-annotation-popover:popover-open')).toHaveCount(0);
-});
+  test('hidden lines open in a copy of the block, not in the original', async ({ page }) => {
+    await page.goto('./features/hidden-lines/');
+    const copy = await copyToOverlay(page, example(page));
+    await copy.locator('.scb-hidden-marker').first().click();
+    await expect(copy.locator('.scb-hidden-line').first()).toBeVisible();
+    await expect(example(page).locator('.scb-hidden-line').first()).toBeHidden();
+    await copy.locator('.scb-hidden-toggle').click();
+    await expect(copy.locator('.scb-hidden-line').last()).toBeVisible();
+  });
 
-test('a line number in a copy of the block selects the line in the copy', async ({ page }) => {
-  await page.goto('./features/line-permalinks/');
-  const copy = await copyToOverlay(page, example(page));
-  await copy.locator('a.scb-permalink', { hasText: '2' }).click();
-  await expect(copy.locator('[id="cfg-L2"]')).toHaveClass(/scb-permalink-target/);
-  await expect(example(page).locator('[id="cfg-L2"]')).not.toHaveClass(/scb-permalink-target/);
-});
+  test('an annotation in a copy of the block opens its own popover', async ({ page }) => {
+    await page.goto('./features/annotations/');
+    const copy = await copyToOverlay(page, example(page));
+    await copy.locator('button.scb-annotation').first().click();
+    await expect(copy.locator('.scb-annotation-popover:popover-open')).toHaveCount(1);
+    await expect(example(page).locator('.scb-annotation-popover:popover-open')).toHaveCount(0);
+  });
 
-test('an expandable block expands in a copy of the block', async ({ page }) => {
-  await page.goto('./features/expandable-blocks/');
-  const copy = await copyToOverlay(page, example(page));
-  const toggle = copy.locator('.scb-expandable-toggle');
-  await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  await expect(example(page).locator('.scb-expandable-toggle')).toHaveAttribute('aria-expanded', 'false');
-});
+  test('a line number in a copy of the block selects the line in the copy', async ({ page }) => {
+    await page.goto('./features/line-permalinks/');
+    const copy = await copyToOverlay(page, example(page));
+    await copy.locator('a.scb-permalink', { hasText: '2' }).click();
+    await expect(copy.locator('[id="cfg-L2"]')).toHaveClass(/scb-permalink-target/);
+    await expect(example(page).locator('[id="cfg-L2"]')).not.toHaveClass(/scb-permalink-target/);
+  });
 
-test('the Run button runs a copy of the block', async ({ page }) => {
-  await page.goto('./features/run-in-the-browser/');
-  const copy = await copyToOverlay(page, example(page, 1));
-  await copy.locator('.scb-run').click();
-  await expect(copy.locator('.scb-run-stdout')).toBeVisible();
-  await expect(example(page, 1).locator('.scb-run-output')).toBeEmpty();
-});
+  test('an expandable block expands in a copy of the block', async ({ page }) => {
+    await page.goto('./features/expandable-blocks/');
+    const copy = await copyToOverlay(page, example(page));
+    const toggle = copy.locator('.scb-expandable-toggle');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(example(page).locator('.scb-expandable-toggle')).toHaveAttribute('aria-expanded', 'false');
+  });
 
-test('a bracket pair lights up in a copy of the block', async ({ page }) => {
-  await page.goto('./features/colourised-brackets/');
-  const copy = await copyToOverlay(page, example(page));
-  const open = copy.locator('.scb-brackets-1').first();
-  await open.hover();
-  await expect(open).toHaveClass(/scb-brackets-on/);
-  await expect(copy.locator('.scb-brackets-1').last()).toHaveClass(/scb-brackets-on/);
-  await expect(example(page).locator('.scb-brackets-on')).toHaveCount(0);
-});
+  test('the Run button runs a copy of the block', async ({ page }) => {
+    await page.goto('./features/run-in-the-browser/');
+    const copy = await copyToOverlay(page, example(page, 1));
+    await copy.locator('.scb-run').click();
+    await expect(copy.locator('.scb-run-stdout')).toBeVisible();
+    await expect(example(page, 1).locator('.scb-run-output')).toBeEmpty();
+  });
 
-test('an API link in a copy of the block shows its card in the copy', async ({ page }) => {
-  await page.goto('./features/api-auto-linking/');
-  const copy = await copyToOverlay(page, example(page));
-  await copy.locator('a.scb-api-link').first().hover();
-  await expect(copy.locator('.scb-api-card')).toBeVisible();
-  await expect(copy.locator('.scb-api-card-head')).not.toBeEmpty();
-});
+  test('a bracket pair lights up in a copy of the block', async ({ page }) => {
+    await page.goto('./features/colourised-brackets/');
+    const copy = await copyToOverlay(page, example(page));
+    const open = copy.locator('.scb-brackets-1').first();
+    await open.hover();
+    await expect(open).toHaveClass(/scb-brackets-on/);
+    await expect(copy.locator('.scb-brackets-1').last()).toHaveClass(/scb-brackets-on/);
+    await expect(example(page).locator('.scb-brackets-on')).toHaveCount(0);
+  });
 
-test('a side-by-side note lights its line in a copy of the block', async ({ page }) => {
-  await page.goto('./features/side-by-side-annotations/');
-  const copy = await copyToOverlay(page, example(page));
-  await copy.locator('.scb-annotation-notes li').nth(1).hover();
-  await expect(copy.locator('.ec-line[data-scb-anno="2"]')).toHaveClass(/scb-annotation-lit/);
-  await expect(example(page).locator('.scb-annotation-lit')).toHaveCount(0);
-});
+  test('an API link in a copy of the block shows its card in the copy', async ({ page }) => {
+    await page.goto('./features/api-auto-linking/');
+    const copy = await copyToOverlay(page, example(page));
+    await copy.locator('a.scb-api-link').first().hover();
+    await expect(copy.locator('.scb-api-card')).toBeVisible();
+    await expect(copy.locator('.scb-api-card-head')).not.toBeEmpty();
+  });
 
-test('a field in a copy of the block fills its own copied code', async ({ page }) => {
-  await page.goto('./features/fill-in-placeholders/');
-  const copy = await copyToOverlay(page, example(page).first());
-  await copy.getByRole('textbox', { name: 'YOUR_TOKEN' }).fill('tok_123');
-  await expect(copy.locator('.copy button')).toHaveAttribute('data-code', /Bearer tok_123/);
-  await expect(example(page).first().locator('.copy button')).toHaveAttribute('data-code', /Bearer tok_123/);
-});
+  test('a side-by-side note lights its line in a copy of the block', async ({ page }) => {
+    await page.goto('./features/side-by-side-annotations/');
+    const copy = await copyToOverlay(page, example(page));
+    await copy.locator('.scb-annotation-notes li').nth(1).hover();
+    await expect(copy.locator('.ec-line[data-scb-anno="2"]')).toHaveClass(/scb-annotation-lit/);
+    await expect(example(page).locator('.scb-annotation-lit')).toHaveCount(0);
+  });
 
-test('the step buttons move between steps in a copy of the block', async ({ page }) => {
-  await page.goto('./features/code-walkthrough/');
-  const steps = page.locator('.example').first().locator('[data-scb-steps]');
-  const copy = await copyToOverlay(page, steps.locator('> .expressive-code:visible'));
-  await copy.getByRole('button', { name: 'Next' }).click();
-  await expect(copy.locator('[aria-current="step"]')).toHaveAttribute('aria-label', /^Step 2/);
-  await expect(copy.getByRole('button', { name: 'Next' })).toBeFocused();
-  await copy.getByRole('button', { name: /^Step 1/ }).click();
-  await expect(copy.locator('[aria-current="step"]')).toHaveAttribute('aria-label', /^Step 1/);
-  await expect(steps.locator('[aria-current="step"]:visible')).toHaveAttribute('aria-label', /^Step 1/);
-});
+  test('a field in a copy of the block fills its own copied code', async ({ page }) => {
+    await page.goto('./features/fill-in-placeholders/');
+    const copy = await copyToOverlay(page, example(page).first());
+    await copy.getByRole('textbox', { name: 'YOUR_TOKEN' }).fill('tok_123');
+    await expect(copy.locator('.copy button')).toHaveAttribute('data-code', /Bearer tok_123/);
+    await expect(example(page).first().locator('.copy button')).toHaveAttribute('data-code', /Bearer tok_123/);
+  });
 
-test('the menu of a code switcher picks a variant in a copy of the block', async ({ page }) => {
-  await page.goto('./features/code-switcher/');
-  const group = output(page).locator('.scb-switcher');
-  const copy = await copyToOverlay(page, group.locator('> .expressive-code:visible'));
-  await copy.getByRole('combobox').selectOption({ label: 'pnpm' });
-  await expect(copy.locator('pre')).toContainText('pnpm');
-  await expect(copy.getByRole('combobox')).toHaveValue('1');
-  await expect(group.locator('> .expressive-code:visible pre')).toContainText('pnpm');
+  test('the step buttons move between steps in a copy of the block', async ({ page }) => {
+    await page.goto('./features/code-walkthrough/');
+    const steps = page.locator('.example').first().locator('[data-scb-steps]');
+    const copy = await copyToOverlay(page, steps.locator('> .expressive-code:visible'));
+    await copy.getByRole('button', { name: 'Next' }).click();
+    await expect(copy.locator('[aria-current="step"]')).toHaveAttribute('aria-label', /^Step 2/);
+    await expect(copy.getByRole('button', { name: 'Next' })).toBeFocused();
+    await copy.getByRole('button', { name: /^Step 1/ }).click();
+    await expect(copy.locator('[aria-current="step"]')).toHaveAttribute('aria-label', /^Step 1/);
+    await expect(steps.locator('[aria-current="step"]:visible')).toHaveAttribute('aria-label', /^Step 1/);
+  });
+
+  test('the menu of a code switcher picks a variant in a copy of the block', async ({ page }) => {
+    await page.goto('./features/code-switcher/');
+    const group = output(page).locator('.scb-switcher');
+    const copy = await copyToOverlay(page, group.locator('> .expressive-code:visible'));
+    await copy.getByRole('combobox').selectOption({ label: 'pnpm' });
+    await expect(copy.locator('pre')).toContainText('pnpm');
+    await expect(copy.getByRole('combobox')).toHaveValue('1');
+    await expect(group.locator('> .expressive-code:visible pre')).toContainText('pnpm');
+  });
 });
 
 test('a full screen button in the title bar leaves the step buttons free', async ({ page }) => {

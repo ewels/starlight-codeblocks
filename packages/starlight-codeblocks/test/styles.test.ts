@@ -2,16 +2,7 @@ import { getColorContrast, getFirstStaticColor, mix } from '@expressive-code/cor
 import { ExpressiveCode } from 'expressive-code';
 import { expect, test } from 'vitest';
 import { pluginCore } from '../src/expressive-code/core.ts';
-import { variants } from './contrast.ts';
-
-async function settings(overrides = {}) {
-  const ec = new ExpressiveCode({ plugins: [pluginCore()], styleOverrides: overrides });
-  await ec.getBaseStyles();
-  return ec.styleVariants.map((variant) => ({
-    type: variant.theme.type,
-    get: (key: string) => variant.resolvedStyleSettings.get(`codeblocks.${key}` as never) as string,
-  }));
-}
+import { toVariants, variants } from './contrast.ts';
 
 test('every shared colour meets its contrast target in each theme', async () => {
   const all = await variants([pluginCore()]);
@@ -56,9 +47,11 @@ test('the shared colours come from the theme, and keep the Night Owl look of the
 });
 
 test('sites can override shared settings with styleOverrides', async () => {
-  const variants = await settings({ codeblocks: { accent: '#ff00ff' } });
-  expect(variants.map((v) => v.get('accent'))).toEqual(['#ff00ff', '#ff00ff']);
-  expect(variants.map((v) => v.get('focusRing'))).toEqual(['#ff00ff', '#ff00ff']);
+  const ec = new ExpressiveCode({ plugins: [pluginCore()], styleOverrides: { codeblocks: { accent: '#ff00ff' } } });
+  await ec.getBaseStyles();
+  for (const v of toVariants(ec)) {
+    expect([v.get('codeblocks.accent'), v.get('codeblocks.focusRing')]).toEqual(['#ff00ff', '#ff00ff']);
+  }
 });
 
 test('base styles use the shared settings and scope to Expressive Code', async () => {

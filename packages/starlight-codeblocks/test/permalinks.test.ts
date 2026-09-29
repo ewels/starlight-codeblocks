@@ -1,4 +1,5 @@
 import { getColorContrast } from '@expressive-code/core';
+import { toHtml } from '@expressive-code/core/hast';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
 import { ExpressiveCode } from 'expressive-code';
 import { markdownToHtml } from 'satteri';
@@ -23,24 +24,16 @@ test('turns line numbers into links to each line, and gives the block and each l
   expect(warnings).toEqual([]);
 });
 
-test('counts the lines that readers see, from startLineNumber', async () => {
+test('counts the lines that readers see, from startLineNumber, and widens the gutter to fit', async () => {
   const { html } = await render(block('js id="app" startLineNumber=9', 'a()', '// [!callout /b/] Note.', 'b()'));
   expect(html).toContain('id="app-L9"');
   expect(html).toContain('href="#app-L10"');
   expect(html).not.toContain('app-L11');
   expect(html).toContain('--scb-gutter:6ch');
-});
-
-test('does not count a file name comment that the frames plugin removes', async () => {
-  const { html } = await render(block('js id="q"', '// src/a.js', 'a1(); // [!code focus]', 'a2();'));
-  expect(html).toContain('id="q-L1"');
-  expect(html).toContain('id="q-L2"');
-  expect(html).not.toContain('q-L3');
-});
-
-test('widens the gutter for three-digit line numbers', async () => {
-  const { html } = await render(block('js id="big" startLineNumber=99', 'a()', 'b()'));
-  expect(html).toContain('--scb-gutter:7ch');
+  const named = (await render(block('js id="q"', '// src/a.js', 'a1();', 'a2();'))).html;
+  expect(named).toContain('id="q-L2"');
+  expect(named).not.toContain('q-L3');
+  expect((await render(block('js id="big" startLineNumber=99', 'a()', 'b()'))).html).toContain('--scb-gutter:7ch');
 });
 
 test('keeps the line ids on hidden lines, so that the hidden lines script opens them', async () => {
@@ -52,7 +45,6 @@ test('keeps the line ids on hidden lines, so that the hidden lines script opens 
 test('removes the numbers of the line numbers plugin from blocks with an id', async () => {
   const ec = new ExpressiveCode({ plugins: [pluginLineNumbers(), pluginCodeblocks()] });
   const { renderedGroupAst } = await ec.render({ code: 'a()\nb()', language: 'js', meta: 'id="x"' });
-  const { toHtml } = await import('@expressive-code/core/hast');
   const html = toHtml(renderedGroupAst);
   expect(html).not.toContain('<div class="ln"');
   expect(html.match(/class="scb-permalink scb-deco"/g)).toHaveLength(2);

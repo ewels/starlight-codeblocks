@@ -19,52 +19,47 @@ async function md(markdown: string, options = {}, directive = true) {
 test.each([true, false])(
   'highlights inline code with a {:lang} suffix and removes it (directives %s)',
   async (directive) => {
-    const { html, warnings } = await md('Call `await fetch(url)`{:js} now.', {}, directive);
+    const { html, warnings } = await md(
+      'Call `await fetch(url)`{:js}, `int x`{:c++}, `var x{:c#}` and `a < b`{:py}',
+      {},
+      directive,
+    );
     expect(html).toMatch(
       /^<p>Call <code class="scb-inline" data-lang="js"><span style="--0:#[0-9A-F]+;--1:#[0-9A-F]+">await<\/span>/,
     );
-    expect(html).toContain('fetch</span>');
-    expect(html).toMatch(/<\/code> now\.<\/p>$/);
+    expect(html).toContain('data-lang="c++"');
+    expect(html).toContain('data-lang="c#"');
+    expect(html).toMatch(/<\/code>, <code/);
+    expect(html).toMatch(/<\/code><\/p>$/);
+    expect(html).toContain('&lt;');
     expect(html).not.toContain('{');
     expect(warnings).toEqual([]);
   },
 );
 
-test.each([true, false])('takes a suffix language with + or # (directives %s)', async (directive) => {
-  const { html, warnings } = await md('`int x`{:c++} and `var x`{:c#}.', {}, directive);
-  expect(html).toContain('data-lang="c++"');
-  expect(html).toContain('data-lang="c#"');
-  expect(html).toMatch(/<\/code> and <code/);
-  expect(html).toMatch(/<\/code>\.<\/p>$/);
-  expect(html).not.toContain('{');
-  expect(warnings).toEqual([]);
+test.each([
+  'Use `fetch(url)` and `x` {:js} here.',
+  '`{:js}`',
+  '`` `x`{:js} ``',
+  '`` `x{:js}` ``',
+  '`name{:.entity.name}`',
+])('leaves %s unchanged', async (source) => {
+  expect((await md(source)).html).toBe((await md(source, { inlineHighlighting: false })).html);
 });
 
-test('escapes the code', async () => {
-  const { html } = await md('`a < b && c`{:js}');
-  expect(html).toContain('&lt;');
-  expect(html).not.toContain('< b');
-});
-
-test('keeps text right after the suffix, and handles a suffix that ends the paragraph', async () => {
-  expect((await md('`x`{:js}, then `y`{:py}')).html).toMatch(
-    /<\/code>, then <code class="scb-inline" data-lang="py">.*<\/code><\/p>$/,
-  );
-});
-
-test('leaves code without a suffix, or with a space before it, unchanged', async () => {
-  const plain = 'Use `fetch(url)` and `x` {:js} here.';
-  expect((await md(plain)).html).toBe((await md(plain, { inlineHighlighting: false })).html);
-  expect((await md(plain)).html).toContain('<code>fetch(url)</code>');
+test('with the feature off, the suffix stays as written', async () => {
+  const { html } = await md('Call `f()`{:js}.', { inlineHighlighting: false }, false);
+  expect(html).toBe('<p>Call <code>f()</code>{:js}.</p>');
 });
 
 test('renders an unknown language as plain inline code, with a warning', async () => {
-  const { html, warnings } = await md('Run `x`{:nope}.');
-  expect(html).toBe('<p>Run <code>x</code>.</p>');
+  const { html, warnings } = await md('Run `x`{:nope} and `y{:nope}`.');
+  expect(html).toBe('<p>Run <code>x</code> and <code>y</code>.</p>');
   expect(warnings).toEqual([
     expect.stringMatching(
       /site\/page\.md: inline code `x` has the unknown language `nope`. It shows as plain inline code\.$/,
     ),
+    expect.stringContaining('`y`'),
   ]);
 });
 
@@ -96,20 +91,12 @@ test('warns once about an unknown default language, and keeps the inline code pl
   ]);
 });
 
-test('with the feature off, the suffix stays as written', async () => {
-  const { html } = await md('Call `f()`{:js}.', { inlineHighlighting: false }, false);
-  expect(html).toBe('<p>Call <code>f()</code>{:js}.</p>');
-});
-
 const variants = new ExpressiveCode().styleVariants;
 
 test('styles switch themes the way Starlight switches Expressive Code themes', () => {
   const css = inlineStyles(variants, {});
   expect(css).toContain('code.scb-inline { background: #24292e; color: #e1e4e8; }');
   expect(css).toContain('color: var(--0, inherit)');
-  expect(css).toContain(
-    'code.scb-inline { border-radius: 4px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }',
-  );
   expect(css).toContain(":root:not([data-theme='dark']) code.scb-inline { background: #fff;");
   expect(css).toContain(":root[data-theme='light'] code.scb-inline span[style^='--'] {\n  color: var(--1, inherit)");
 });
@@ -133,27 +120,6 @@ test('styles use the site engine style variants from the registry', () => {
   } finally {
     setRegistry(undefined);
   }
-});
-
-test('also takes the suffix inside the backticks, as rehype-pretty-code does', async () => {
-  const { html, warnings } = await md('Call `await fetch(url){:js}` now.', {}, false);
-  expect(html).toMatch(
-    /^<p>Call <code class="scb-inline" data-lang="js"><span style="--0:#[0-9A-F]+;--1:#[0-9A-F]+">await<\/span>/,
-  );
-  expect(html).not.toContain('{');
-  expect(warnings).toEqual([]);
-});
-
-test('leaves an inner suffix alone in code that is only a suffix, has a backtick, or uses the token form', async () => {
-  for (const source of ['`{:js}`', '`` `x`{:js} ``', '`` `x{:js}` ``', '`name{:.entity.name}`']) {
-    expect((await md(source)).html).toBe((await md(source, { inlineHighlighting: false })).html);
-  }
-});
-
-test('removes an inner suffix with an unknown language, with a warning', async () => {
-  const { html, warnings } = await md('Run `x{:nope}`.');
-  expect(html).toBe('<p>Run <code>x</code>.</p>');
-  expect(warnings).toHaveLength(1);
 });
 
 test('keeps highlighted inline code in the text of a heading, for its id and the table of contents', async () => {

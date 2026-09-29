@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { render } from '../../packages/starlight-codeblocks/test/render.ts';
-import { copyFromKeyboard, css, example, reduced } from './helpers.ts';
+import { css, example, reduced } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/footnotes/');
@@ -27,7 +27,7 @@ async function longBlock(page: Page) {
   return page.locator('#long');
 }
 
-test('a badge highlights its line and its note, and a click elsewhere clears it', async ({ page }) => {
+test('a badge highlights its line and its note, a click elsewhere or a second click clears it', async ({ page }) => {
   const block = example(page);
   const badge = block.getByRole('link', { name: 'Footnote 1', exact: true });
   const line = block.locator('.ec-line', { has: page.locator('[data-scb-fn="1"]') });
@@ -49,6 +49,18 @@ test('a badge highlights its line and its note, and a click elsewhere clears it'
   await page.locator('h1').click();
   await expect(line).not.toHaveClass(/scb-footnote-on/);
   await expect(note).not.toHaveClass(/scb-footnote-on/);
+
+  // A second click on a badge or a note clears its highlight, and several can stay on.
+  await badge.click();
+  await block.getByRole('link', { name: 'Footnote 2', exact: true }).click();
+  await expect(note).toHaveClass(/scb-footnote-on/);
+  await expect(other).toHaveClass(/scb-footnote-on/);
+  await badge.click();
+  await expect(note).not.toHaveClass(/scb-footnote-on/);
+  await expect(other).toHaveClass(/scb-footnote-on/);
+  await other.click();
+  await expect(other).not.toHaveClass(/scb-footnote-on/);
+  await expect(block.locator('.ec-line.scb-footnote-on')).toHaveCount(0);
 });
 
 test('hovering over a badge or a note highlights both until the pointer leaves, and a click keeps it', async ({
@@ -78,8 +90,10 @@ test('hovering over a badge or a note highlights both until the pointer leaves, 
   await expect(note).not.toHaveClass(/scb-footnote-peek/);
 });
 
-test('a hover highlight fades in after a short delay, and a click highlight at once', async ({ page }) => {
+test('a hover highlight fades in after a short delay, a click highlight and the badge at once', async ({ page }) => {
   const note = example(page).locator('.scb-footnotes li').first();
+  const badge = example(page).locator('.scb-footnote-badge').first();
+  expect(await css(badge, 'transitionDuration')).toBe(reduced() ? '0s' : '0.16s, 0.16s, 0.16s');
   const timing = () =>
     note.evaluate((el) => [getComputedStyle(el).transitionDuration, getComputedStyle(el).transitionDelay]);
   if (reduced()) {
@@ -93,41 +107,17 @@ test('a hover highlight fades in after a short delay, and a click highlight at o
   expect((await timing())[1]).toBe('0s, 0s, 0s');
 });
 
-test('a second click on a badge or a note clears its highlight, and several can stay on', async ({ page }) => {
-  const block = example(page);
-  const notes = block.locator('.scb-footnotes li');
-  const first = block.getByRole('link', { name: 'Footnote 1', exact: true });
-  await first.click();
-  await block.getByRole('link', { name: 'Footnote 2', exact: true }).click();
-  await expect(notes.nth(0)).toHaveClass(/scb-footnote-on/);
-  await expect(notes.nth(1)).toHaveClass(/scb-footnote-on/);
-  await first.click();
-  await expect(notes.nth(0)).not.toHaveClass(/scb-footnote-on/);
-  await expect(notes.nth(1)).toHaveClass(/scb-footnote-on/);
-  await notes.nth(1).click();
-  await expect(notes.nth(1)).not.toHaveClass(/scb-footnote-on/);
-  await expect(block.locator('.ec-line.scb-footnote-on')).toHaveCount(0);
-});
-
-test('a note highlights its line, with the keyboard', async ({ page }) => {
-  const block = example(page);
-  await block.getByRole('link', { name: 'Footnote 2, for line 5' }).focus();
-  await page.keyboard.press('Enter');
-  await expect(block.locator('.ec-line.scb-footnote-on')).toContainText('@app.get("/health")');
-  await expect(block.locator('.scb-footnotes li').nth(1)).toHaveClass(/scb-footnote-on/);
-});
-
-test('selecting a note scrolls its line into view', async ({ page }) => {
+test('a sticky list stays at the bottom of the window, above a focused badge, and its notes scroll to their lines', async ({
+  page,
+}) => {
   const block = example(page, 1);
   const line = block.locator('.ec-line').filter({ hasText: 'log = logging' });
   await block.locator('.scb-footnotes').scrollIntoViewIfNeeded();
   await page.evaluate(() => scrollBy(0, 400));
   await block.locator('.scb-footnotes li').first().click();
-  await expect(line).toBeInViewport();
-});
+  // Under reduced motion the page jumps instead of scrolling smoothly.
+  await expect(line).toBeInViewport(reduced() ? { timeout: 50 } : {});
 
-test('the sticky list stays at the bottom of the window while the block is on screen', async ({ page }) => {
-  const block = example(page, 1);
   await block.locator('.ec-line').first().scrollIntoViewIfNeeded();
   await page.evaluate(() => scrollBy(0, 100));
   const list = block.locator('.scb-footnotes');
@@ -138,9 +128,21 @@ test('the sticky list stays at the bottom of the window while the block is on sc
   expect(await css(list, 'borderTopWidth')).toBe('1px');
   const first = await css(example(page, 0).locator('.scb-footnotes'), 'position');
   expect(first).toBe('static');
+  // A focused badge does not stay under the sticky list.
+  await page.setViewportSize({ width: 1280, height: 500 });
+  for (const badge of await block.locator('.scb-footnote-badge').all()) {
+    const top = await badge.evaluate((el) => el.getBoundingClientRect().bottom + scrollY - innerHeight + 10);
+    await page.evaluate((y) => scrollTo(0, y), top);
+    await badge.focus();
+    const [badgeBottom, listTop] = await Promise.all([
+      badge.evaluate((el) => el.getBoundingClientRect().bottom),
+      list.evaluate((el) => el.getBoundingClientRect().top),
+    ]);
+    expect(badgeBottom).toBeLessThanOrEqual(listTop);
+  }
 });
 
-test('inline code in the list uses the code font, with round corners in a titled block', async ({ page }) => {
+test('the list uses the code font, 24px links, and lines its numbers up with the code', async ({ page }) => {
   const code = example(page).locator('.scb-footnotes code').first();
   const style = await code.evaluate((el) => {
     const s = getComputedStyle(el);
@@ -154,31 +156,11 @@ test('inline code in the list uses the code font, with round corners in a titled
     };
   });
   expect(style).toEqual({ font: style.codeFont, codeFont: style.codeFont, top: '3px', bottom: '3px', clone: 'clone' });
-});
-
-test('a badge describes itself with its note, and moves focus to the note and back', async ({ page }) => {
-  const block = example(page);
-  const badge = block.getByRole('link', { name: 'Footnote 1', exact: true });
-  const note = block.locator('.scb-footnotes li').first();
-  await expect(badge).toHaveAccessibleDescription(((await note.locator('span').textContent()) ?? '').trim());
-  await badge.focus();
-  await page.keyboard.press('Enter');
-  await expect(note).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(note.locator('.scb-footnote-num')).toBeFocused();
-  await page.keyboard.press('Enter');
-  await expect(badge).toBeFocused();
-});
-
-test('the links in the list are at least 24 by 24 pixels', async ({ page }) => {
   for (const link of await example(page).locator('.scb-footnote-num').all()) {
     const box = await link.boundingBox();
     expect(box?.width).toBeGreaterThanOrEqual(24);
     expect(box?.height).toBeGreaterThanOrEqual(24);
   }
-});
-
-test('a list number lines up with the start of the code, and its note follows closely', async ({ page }) => {
   for (const n of [0, 1]) {
     const block = example(page, n);
     const { number, code, note } = await block.evaluate((el) => {
@@ -201,27 +183,24 @@ test('a list number lines up with the start of the code, and its note follows cl
   }
 });
 
-test('a focused badge does not stay under the sticky list', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 500 });
-  const block = example(page, 1);
-  const list = block.locator('.scb-footnotes');
-  for (const badge of await block.locator('.scb-footnote-badge').all()) {
-    const top = await badge.evaluate((el) => el.getBoundingClientRect().bottom + scrollY - innerHeight + 10);
-    await page.evaluate((y) => scrollTo(0, y), top);
-    await badge.focus();
-    const [badgeBottom, listTop] = await Promise.all([
-      badge.evaluate((el) => el.getBoundingClientRect().bottom),
-      list.evaluate((el) => el.getBoundingClientRect().top),
-    ]);
-    expect(badgeBottom).toBeLessThanOrEqual(listTop);
-  }
-});
-
-test('copying leaves the badges and notes out', async ({ page }) => {
-  const copied = await copyFromKeyboard(example(page));
-  expect(copied).toBe(
-    'from flask import Flask\n\napp = Flask(__name__)\n\n@app.get("/health")\ndef health():\n    return {"ok": True}',
-  );
+test('with the keyboard, a badge moves focus to its note and back, and a note highlights its line', async ({
+  page,
+}) => {
+  const block = example(page);
+  const badge = block.getByRole('link', { name: 'Footnote 1', exact: true });
+  const note = block.locator('.scb-footnotes li').first();
+  await expect(badge).toHaveAccessibleDescription(((await note.locator('span').textContent()) ?? '').trim());
+  await badge.focus();
+  await page.keyboard.press('Enter');
+  await expect(note).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(note.locator('.scb-footnote-num')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(badge).toBeFocused();
+  await block.getByRole('link', { name: 'Footnote 2, for line 5' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(block.locator('.ec-line', { hasText: '@app.get("/health")' })).toHaveClass(/scb-footnote-on/);
+  await expect(block.locator('.scb-footnotes li').nth(1)).toHaveClass(/scb-footnote-on/);
 });
 
 test('selecting a badge scrolls its note into view when the list is off screen', async ({ page }) => {
@@ -235,15 +214,6 @@ test('selecting a badge scrolls its note into view when the list is off screen',
   await expect(note).toHaveClass(/scb-footnote-on/);
 });
 
-test('the page jumps instead of scrolling smoothly under reduced motion', async ({ page }) => {
-  test.skip(!reduced(), 'Only for the reduced-motion project.');
-  const block = example(page, 1);
-  await block.locator('.scb-footnotes').scrollIntoViewIfNeeded();
-  await page.evaluate(() => scrollBy(0, 400));
-  await block.locator('.scb-footnotes li').first().click();
-  await expect(block.locator('.ec-line').filter({ hasText: 'log = logging' })).toBeInViewport({ timeout: 50 });
-});
-
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
   test('a badge is a link to its note', async ({ page }) => {
@@ -252,12 +222,6 @@ test.describe('without JavaScript', () => {
     const id = await block.locator('.scb-footnotes li').first().getAttribute('id');
     expect(page.url()).toContain(`#${id}`);
   });
-});
-
-test('a badge fades with its line, and at once under reduced motion', async ({ page }) => {
-  const badge = page.locator('.example .pane.output .scb-footnote-badge').first();
-  const duration = await css(badge, 'transitionDuration');
-  expect(duration).toBe(reduced() ? '0s' : '0.16s, 0.16s, 0.16s');
 });
 
 test('a line with two footnotes stays lit while either is on, and Enter on a badge always reaches its note', async ({

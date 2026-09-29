@@ -27,18 +27,17 @@ async function renderSteps(blocks = steps, plugins: ExpressiveCodePlugin[] = [])
   return { html, data, rendered };
 }
 
-test('the plugin shows the step label after the title', async () => {
+test('the plugin shows the step label after the title, or first without one, even with the feature off', async () => {
   const { html, copyText } = await render(steps[0]);
   expect(html).toContain(
     '<span class="title">server.js</span><span class="scb-steps-head"><span class="scb-steps-label">Create the app</span></span>',
   );
   expect(copyText).toBe('const app = express();\n\napp.listen(3000);');
-});
-
-test('the plugin puts the label first in a block with no title', async () => {
-  const { html } = await render(block('step="Start"', 'a()'));
-  expect(html).toContain(
+  expect((await render(block('step="Start"', 'a()'))).html).toContain(
     '<figcaption class="header"><span class="scb-steps-head"><span class="scb-steps-label">Start</span>',
+  );
+  expect((await render(steps[0], { walkthrough: false })).html).toContain(
+    '<span class="scb-steps-label">Create the app</span>',
   );
 });
 
@@ -47,10 +46,11 @@ test('a block without step renders the same with the feature off', async () => {
   expect((await render(md)).html).toBe((await render(md, { walkthrough: false })).html);
 });
 
-test('adds numbered steps, with the current step marked, to each title bar', async () => {
-  const { html } = await renderSteps();
+test('adds numbered steps and Previous and Next to each title bar, with the first step current', async () => {
+  const { html, rendered } = await renderSteps();
   const bars = html.split('<figcaption').slice(1);
   expect(bars).toHaveLength(3);
+  expect(bars[0]).toContain('role="group" aria-label="Steps"');
   expect(bars[0]).toContain('aria-label="Step 1: Create the app" aria-current="step">1</button>');
   expect(bars[1]).toContain(
     '<button type="button" class="scb-steps-dot scb-steps-done" data-scb-steps-go="0" aria-label="Step 1: Create the app">1</button><span class="scb-steps-line scb-steps-done" aria-hidden="true"></span>',
@@ -59,12 +59,6 @@ test('adds numbered steps, with the current step marked, to each title bar', asy
   expect(bars[1]).toContain(
     '<span class="scb-steps-line" aria-hidden="true"></span><button type="button" class="scb-steps-dot" data-scb-steps-go="2" aria-label="Step 3">3</button>',
   );
-  expect(bars[0]).toContain('role="group" aria-label="Steps"');
-});
-
-test('adds Previous and Next, off on the first and the last step', async () => {
-  const { html } = await renderSteps();
-  const bars = html.split('<figcaption').slice(1);
   const nav = (bar: string, go: string) =>
     bar.match(new RegExp(`<button[^>]*data-scb-steps-go="${go}"[^>]*>`))?.[0] ?? '';
   expect(nav(bars[0], 'prev')).toContain('disabled');
@@ -73,10 +67,6 @@ test('adds Previous and Next, off on the first and the last step', async () => {
   expect(nav(bars[2], 'next')).toContain('disabled');
   expect(nav(bars[0], 'next')).toContain('aria-label="Next"');
   expect(bars[0]).toContain('<span class="scb-steps-nav-text">Previous</span>');
-});
-
-test('marks the first step as current, and keeps each copy button', async () => {
-  const { html, rendered } = await renderSteps();
   expect(html).toMatch(/^<div class="scb-steps" data-scb-steps><div class="expressive-code scb-steps-current">/);
   expect(html.match(/scb-steps-current/g)).toHaveLength(1);
   expect(html).toContain('aria-live="polite"');
@@ -87,7 +77,7 @@ test('marks the first step as current, and keeps each copy button', async () => 
   ]);
 });
 
-test('serialises the tokens of each step, with the colours of both themes', async () => {
+test('serialises the tokens of each step with the colours of both themes, and unchanged tokens keep their keys', async () => {
   const { data } = await renderSteps();
   expect(data).toHaveLength(3);
   const text = (step: StepTokens) => step.map(([, content]) => content).join('');
@@ -95,10 +85,6 @@ test('serialises the tokens of each step, with the colours of both themes', asyn
   expect(text(data[1])).toBe('const app = express();\napp.use(express.json());\n\napp.listen(3000);\n');
   const listen = data[0].find(([, content]) => content === 'listen');
   expect(listen?.[2]).toMatch(/^--0:#[0-9A-F]{6};--1:#[0-9A-F]{6}$/i);
-});
-
-test('unchanged tokens keep their keys from step to step', async () => {
-  const { data } = await renderSteps();
   const key = (step: StepTokens, content: string) => step.filter(([, c]) => c === content).map(([k]) => k);
   expect(key(data[1], 'listen')).toEqual(key(data[0], 'listen'));
   expect(key(data[2], 'listen')).toEqual(key(data[0], 'listen'));
@@ -119,53 +105,42 @@ test('a step that repeats an earlier step has no duplicate keys', async () => {
   }
 });
 
-test('leaves out decorations, such as line state labels', async () => {
-  const { data } = await renderSteps([block('', 'a() // [!code error] Fails'), block('', 'b()')]);
-  expect(data[0].map(([, c]) => c).join('')).toBe('a()\n');
-});
-
-test('leaves out hidden lines and the lines of a closed section, which the block does not show', async () => {
+test('leaves out decorations, hidden lines and the lines of a closed section', async () => {
   const { data } = await renderSteps(
-    [block('hidden={1}', 'a()\nb()'), block('collapse={2-3}', 'a()\nb()\nc()\nd()')],
+    [
+      block('', 'a() // [!code error] Fails'),
+      block('hidden={1}', 'a()\nb()'),
+      block('collapse={2-3}', 'a()\nb()\nc()\nd()'),
+    ],
     [pluginCollapsibleSections()],
   );
-  expect(data[0].map(([, c]) => c).join('')).toBe('b()\n');
-  expect(data[1].map(([, c]) => c).join('')).toBe('a()\nd()\n');
+  expect(data.map((step) => step.map(([, c]) => c).join(''))).toEqual(['a()\n', 'b()\n', 'a()\nd()\n']);
 });
 
-test('a block nested in other markup is not a step', async () => {
+test('a block nested in other markup is not a step, and HTML without a code block stays as it is', async () => {
   const rendered = await Promise.all(steps.slice(0, 2).map((b) => render(b)));
   const html = codeWalkthrough(`${rendered[0].rawHtml}<div>${rendered[1].rawHtml}</div>`);
   expect(html.match(/scb-steps-dot/g)).toHaveLength(1);
-});
-
-test('returns the HTML as it is when there is no code block', () => {
   expect(codeWalkthrough('<p>Text</p>')).toBe('<p>Text</p>');
 });
 
-test('the step colours meet their contrast targets', async () => {
+test("the step colours meet their contrast targets, and a new line takes the theme's terminal green", async () => {
   for (const { get, name } of await variants()) {
     const bg = get('codeBackground');
     expect(getColorContrast(get('codeblocksWalkthrough.stepBorder'), bg), name).toBeGreaterThanOrEqual(3);
     expect(getColorContrast(get('codeblocksWalkthrough.doneForeground'), bg), name).toBeGreaterThanOrEqual(4.5);
   }
-  expect(
-    (await styleVariants()).map((v) => v.resolvedStyleSettings.get('codeblocksWalkthrough.themeIndex' as never)),
-  ).toEqual(['0', '1']);
-});
-
-test("the tint of a new line is the theme's own terminal green", async () => {
-  for (const v of await styleVariants()) {
+  const resolved = await styleVariants();
+  expect(resolved.map((v) => v.resolvedStyleSettings.get('codeblocksWalkthrough.themeIndex' as never))).toEqual([
+    '0',
+    '1',
+  ]);
+  for (const v of resolved) {
     const green = v.theme.colors['terminal.ansiGreen'] as string;
     expect(green).toBeTruthy();
     expect(v.resolvedStyleSettings.get('codeblocksWalkthrough.newLineBackground' as never)).toBe(setAlpha(green, 0.3));
   }
   expect(await baseStyles()).toContain('@keyframes scb-steps-new');
-});
-
-test('with the feature off, the plugin still shows the step label after the title', async () => {
-  const { html } = await render(steps[0], { walkthrough: false });
-  expect(html).toContain('<span class="scb-steps-label">Create the app</span>');
 });
 
 test('the label hides next to the stepper in a narrow container, not in a narrow window', () => {

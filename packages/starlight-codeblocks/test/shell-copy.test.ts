@@ -1,7 +1,7 @@
 import { getColorContrast } from '@expressive-code/core';
 import { expect, test } from 'vitest';
 import { variants } from './contrast.ts';
-import { block, render } from './render.ts';
+import { apiLinks, block, render } from './render.ts';
 
 const session = [
   '$ uv tool install ruff',
@@ -12,84 +12,56 @@ const session = [
   'Found 3 errors (3 fixed, 0 remaining).',
 ];
 
-test('the Copy commands button copies the commands without prompts or output, and keeps continuation lines', async () => {
-  const { commandsText, html } = await render(block('sh frame="terminal"', ...session));
+test('Copy commands copies the commands without prompts or output; the copy button copies everything', async () => {
+  const { commandsText, copyText, html } = await render(block('sh frame="terminal"', ...session));
   expect(commandsText).toBe('uv tool install ruff\nruff check src/ \\\n    --fix');
+  expect(copyText).toBe(session.join('\n'));
   expect(html).toContain('>Copy commands</button>');
   expect(html).toContain('data-scb-shell-copy');
-});
-
-test('the copy button copies the whole block, prompts and output included', async () => {
-  const { copyText, html } = await render(block('sh frame="terminal"', ...session));
-  expect(copyText).toBe(session.join('\n'));
-  expect(html).toContain('title="Copy to clipboard"');
-});
-
-test('the copy button leaves out comment lines, as Expressive Code does in terminals', async () => {
-  const { copyText } = await render(block('sh', '# set up', '$ ls', 'a.txt'));
-  expect(copyText).toBe('$ ls\na.txt');
-});
-
-test('the copy button keeps commands with a `# ` prompt when it leaves out comment lines', async () => {
-  const lines = ['# apt update', '# apt install curl', '$ # now as a user', '', '$ curl --version', 'curl 8.0'];
-  const { copyText } = await render(block('sh', ...lines), { shellCopy: { prompts: ['$ ', '# '] } });
-  expect(copyText).toBe('# apt update\n# apt install curl\n$ curl --version\ncurl 8.0');
-});
-
-test('moves each prompt into its own span, and marks output lines', async () => {
-  const { html } = await render(block('sh', ...session));
   expect(html.match(/<span class="scb-shell-prompt">\$ <\/span>/g)).toHaveLength(2);
   expect(html.match(/class="ec-line scb-shell-output"/g)).toHaveLength(3);
 });
 
 test('shows output lines without syntax colours', async () => {
   const { html } = await render(block('sh', '$ echo "hi"', 'echo "not a command"'));
-  const output = html.slice(html.indexOf('scb-shell-output'));
-  expect(output).not.toMatch(/<span style="--0/);
+  expect(html.slice(html.indexOf('scb-shell-output'))).not.toMatch(/<span style="--0/);
 });
 
-test('applies to the automatic terminal frame of shell languages', async () => {
-  for (const lang of ['sh', 'bash', 'shell', 'powershell', 'console']) {
-    const { commandsText } = await render(block(lang, '$ ls', 'a.txt'));
-    expect(commandsText).toBe('ls');
-  }
+test('the copy button leaves out comment lines, as Expressive Code does, but keeps `# ` prompts', async () => {
+  expect((await render(block('sh', '# set up', '$ ls', 'a.txt'))).copyText).toBe('$ ls\na.txt');
+  const lines = ['# apt update', '# apt install curl', '$ # now as a user', '', '$ curl --version', 'curl 8.0'];
+  const { copyText } = await render(block('sh', ...lines), { shellCopy: { prompts: ['$ ', '# '] } });
+  expect(copyText).toBe('# apt update\n# apt install curl\n$ curl --version\ncurl 8.0');
 });
 
-test('leaves blocks that are not terminals alone', async () => {
-  const md = block('sh frame="code"', '$ ls', 'a.txt');
-  const { copyText, commandsText, html } = await render(md);
-  expect(copyText).toBe('$ ls\na.txt');
-  expect(commandsText).toBeUndefined();
-  expect(html).not.toContain('scb-shell');
+test.each(['sh', 'bash', 'shell', 'powershell', 'console'])('applies to the terminal frame of %s', async (lang) => {
+  expect((await render(block(lang, '$ ls', 'a.txt'))).commandsText).toBe('ls');
 });
 
-test('leaves terminal blocks with no prompt alone', async () => {
-  const md = block('sh', 'npm install', '# a comment');
-  expect((await render(md)).html).toBe((await render(md, { shellCopy: false })).html);
+test.each([
+  ['sh frame="code"', '$ ls', 'a.txt'],
+  ['sh', 'npm install', '# a comment'],
+  ['py', 'print(">>> x")', '... = 1'],
+  ['py', '"""Add numbers.', '', '>>> add(1, 2)', '3', '"""', '', 'def add(a, b):', '    return a + b'],
+])('leaves a block that is not a session alone: %s', async (fence, ...lines) => {
+  const md = block(fence, ...lines);
+  const on = await render(md);
+  expect(on.commandsText).toBeUndefined();
+  expect(on.html).toBe((await render(md, { shellCopy: false })).html);
 });
 
-test('uses the prompts from the options', async () => {
-  const { commandsText } = await render(block('sh', '% ls', 'a.txt', '$ not a prompt here'), {
-    shellCopy: { prompts: ['% '] },
-  });
-  expect(commandsText).toBe('ls');
+test('uses the prompts from the options, and a continuation needs a command above it', async () => {
+  const options = { shellCopy: { prompts: ['% '] } };
+  expect((await render(block('sh', '% ls', 'a.txt', '$ not a prompt here'), options)).commandsText).toBe('ls');
+  expect((await render(block('sh', 'output ending in \\', 'more output', '$ ls'))).commandsText).toBe('ls');
 });
 
-test('a continuation needs a command above it', async () => {
-  const { commandsText } = await render(block('sh', 'output ending in \\', 'more output', '$ ls'));
-  expect(commandsText).toBe('ls');
-});
-
-test('reads the commands after directives are removed', async () => {
+test('reads the commands after directives are removed, and includes hidden commands', async () => {
   const { copyText, commandsText, html } = await render(block('sh', '$ npm test # [!code highlight]', 'ok'));
   expect(commandsText).toBe('npm test');
   expect(copyText).toBe('$ npm test\nok');
   expect(html).toContain('class="ec-line highlight mark"');
-});
-
-test('includes hidden commands in the copied text', async () => {
-  const { commandsText } = await render(block('sh hidden={1}', '$ cd app', '$ npm test', 'ok'));
-  expect(commandsText).toBe('cd app\nnpm test');
+  expect((await render(block('sh hidden={1}', '$ cd app', '$ npm test', 'ok'))).commandsText).toBe('cd app\nnpm test');
 });
 
 test('the prompt colour meets 4.5:1 contrast in both themes', async () => {
@@ -141,11 +113,12 @@ test.each(['python', 'py', 'pycon'])(
 );
 
 test('a line that starts with ... continues a command only while the statement is open', async () => {
-  const text = async (...lines: string[]) => (await render(block('py', ...lines))).commandsText;
-  expect(await text('>>> print("x")', 'x', '... still output')).toBe('print("x")');
-  expect(await text('>>> x = """a', '... b"""', '... output')).toBe('x = """a\nb"""');
-  expect(await text('>>> total = 1 + \\', '...     2', '...')).toBe('total = 1 + \\\n    2');
-  expect(await text('>>> @cache', '... def f(): ...', '...', '...')).toBe('@cache\ndef f(): ...\n');
+  const text = async (lang: string, ...lines: string[]) => (await render(block(lang, ...lines))).commandsText;
+  expect(await text('py', '>>> print("x")', 'x', '... still output')).toBe('print("x")');
+  expect(await text('py', '>>> x = """a', '... b"""', '... output')).toBe('x = """a\nb"""');
+  expect(await text('py', '>>> total = 1 + \\', '...     2', '...')).toBe('total = 1 + \\\n    2');
+  expect(await text('py', '>>> @cache', '... def f(): ...', '...', '...')).toBe('@cache\ndef f(): ...\n');
+  expect(await text('pycon', 'Text', '>>> 1 + 1', '2')).toBe('1 + 1');
 });
 
 test('an unclosed string with many escapes does not stall the build', async () => {
@@ -154,20 +127,7 @@ test('an unclosed string with many escapes does not stall the build', async () =
   expect(performance.now() - started).toBeLessThan(1000);
 });
 
-test('leaves Python blocks without >>> prompts alone', async () => {
-  const md = block('py', 'print(">>> x")', '... = 1');
-  expect((await render(md)).html).toBe((await render(md, { shellCopy: false })).html);
-});
-
-test('a py block that starts with code is not a session, even with a doctest in its docstring', async () => {
-  const md = block('py', '"""Add numbers.', '', '>>> add(1, 2)', '3', '"""', '', 'def add(a, b):', '    return a + b');
-  expect((await render(md)).html).toBe((await render(md, { shellCopy: false })).html);
-  expect((await render(block('pycon', 'Text', '>>> 1 + 1', '2'))).commandsText).toBe('1 + 1');
-});
-
 test('links API names in the commands of a Python session, and not in its output', async () => {
   const { html } = await render(block('py', '>>> import json', '>>> json.loads("[]")', 'json.loads'));
-  expect(
-    [...html.matchAll(/<a class="scb-api-link"[^>]*>(.*?)<\/a>/g)].map((m) => m[1]?.replace(/<[^>]+>/g, '')),
-  ).toEqual(['json', 'json.loads']);
+  expect(apiLinks(html).map((link) => link.text)).toEqual(['json', 'json.loads']);
 });

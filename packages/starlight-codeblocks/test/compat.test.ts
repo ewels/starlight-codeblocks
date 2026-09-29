@@ -39,20 +39,14 @@ const code = [
   'secret(); // [!code hide]',
 ];
 
-test('line features find their line after collapsible sections moved lines', async () => {
+test('line features find their line, and hidden lines keep the markup, after collapsible sections moved lines', async () => {
   const root = await renderAfter([pluginCollapsibleSections()], 'collapse={1-3}', ...code);
   expect(text(lineWith(root, '.scb-annotation'))).toMatch(/^run\(a, b\);/);
   expect(text(lineWith(root, '.scb-footnote-badge'))).toMatch(/^done\(\);/);
   const callout = select('.scb-callout', root) as Element;
   const calledLine = selectAll('.ec-line', root).find((line) => text(line) === 'call(c);') as Element;
   expect(previous(root, calledLine)).toBe(callout);
-});
-
-test('hidden lines keep the other plugin’s markup and put the marker before the run', async () => {
-  const root = await renderAfter([pluginCollapsibleSections()], 'collapse={1-3}', ...code);
-  const details = select('details', root) as Element;
-  expect(details).toBeTruthy();
-  expect(selectAll('.ec-line', details).map(text)).toContain("import b from 'b';");
+  expect(selectAll('.ec-line', select('details', root) as Element).map(text)).toContain("import b from 'b';");
   const hidden = select('.scb-hidden-line', root) as Element;
   expect(text(hidden)).toBe('secret();');
   expect(previous(root, hidden)?.properties.className).toContain('scb-hidden-marker');
@@ -68,7 +62,7 @@ test('callouts and hidden-line markers offset by the line numbers plugin’s gut
   expect(css).toContain('figure:has(.ec-line>.gutter>.ln){--scb-gutter:calc(var(--lnWidth,2ch)+4ch)');
 });
 
-test('collapse counts the lines that readers see, like the other range attributes', async () => {
+test('collapse counts the lines that readers see, and components count code lines without its summary', async () => {
   const root = await renderAfter(
     [pluginCollapsibleSections()],
     'collapse={2-3}',
@@ -78,16 +72,11 @@ test('collapse counts the lines that readers see, like the other range attribute
     'c()',
     'd()',
   );
-  expect(selectAll('.ec-line', select('details', root) as Element).map(text)).toEqual(
-    expect.arrayContaining(['b()', 'c()']),
-  );
+  expect(selectAll('details .ec-line', root).map(text)).toEqual(expect.arrayContaining(['b()', 'c()']));
   expect(selectAll('details .ec-line', root).map(text)).not.toContain('a()');
-});
-
-test('components count code lines without a collapsed section’s summary', async () => {
-  const root = await renderAfter([pluginCollapsibleSections()], 'collapse={1-2}', 'a()', 'b()', 'c()');
-  expect(selectAll('.ec-line', root)).toHaveLength(4);
-  expect(codeLines(root).map(text)).toEqual(['a()', 'b()', 'c()']);
+  const plain = await renderAfter([pluginCollapsibleSections()], 'collapse={1-2}', 'a()', 'b()', 'c()');
+  expect(selectAll('.ec-line', plain)).toHaveLength(4);
+  expect(codeLines(plain).map(text)).toEqual(['a()', 'b()', 'c()']);
 });
 
 test('colours keep their contrast when a theme sets the code background to a CSS variable', async () => {

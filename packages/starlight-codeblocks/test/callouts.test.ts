@@ -15,18 +15,12 @@ test('renders a callout above its line, pointing at the middle of the match', as
   expect(warnings).toEqual([]);
 });
 
-test('without /text/, points at the first character that is not whitespace', () => {
+test('calloutMiddle points at the first character that is not whitespace, counting tabs and the shell prompt', async () => {
   expect(calloutMiddle('    run()')).toBe(4.5);
   expect(calloutMiddle('run()')).toBe(0.5);
-});
-
-test('counts a tab to the next multiple of 2 columns', () => {
   expect(calloutMiddle('\tab', 'ab')).toBe(3);
   expect(calloutMiddle('x\tab', 'ab')).toBe(3);
   expect(calloutMiddle('xx\tab', 'ab')).toBe(5);
-});
-
-test('counts the shell prompt that is drawn before the line', async () => {
   expect(calloutMiddle('run()', undefined, '>>> ')).toBe(4.5);
   const { html } = await render(
     block('sh', '# [!callout /install/] Installs it.', '$ npm install foo', 'added 1 package'),
@@ -34,27 +28,23 @@ test('counts the shell prompt that is drawn before the line', async () => {
   expect(html).toContain('--scb-callout-mid:9.5');
 });
 
-test('stacks two callouts above one line in source order', async () => {
-  const { html } = await render(block('py', '# [!callout /a/] First', '# [!callout /b/] Second', 'a = b'));
+test('stacks callouts above the line directly below in source order, also with hidden lines', async () => {
+  const { html } = await render(
+    block('py', 'x = 1', '# [!callout /a/] First', '# [!callout /y/] Second', 'y = a', 'z = 3'),
+  );
   expect(html.indexOf('First')).toBeLessThan(html.indexOf('Second'));
   expect(html.match(/role="note"/g)).toHaveLength(2);
-});
-
-test('applies only to the line directly below', async () => {
-  const { html } = await render(block('py', 'x = 1', '# [!callout] Note', 'y = 2', 'z = 3'));
-  expect(html.match(/role="note"/g)).toHaveLength(1);
   const next = html.match(/role="note".*?<\/div><div class="ec-line"><div class="code">(.*?)<\/div><\/div>/)?.[1];
-  expect(next?.replace(/<[^>]+>/g, '')).toBe('y = 2');
+  expect(next?.replace(/<[^>]+>/g, '')).toBe('y = a');
+  const hidden = (await render(block('js hidden={1}', 'a()', '// [!callout] Note', 'b()'))).html;
+  expect(hidden).toContain('scb-hidden-marker');
+  expect(hidden).toContain('role="note"');
 });
 
-test('renders inline code, bold and links in the note', async () => {
+test('renders inline code and links in the note, and counts the text readers see for the bubble length', async () => {
   const { html } = await render(block('js', '// [!callout] Uses `fetch`, see [MDN](https://example.com).', 'go()'));
   expect(html).toContain('<code>fetch</code>');
   expect(html).toContain('<a href="https://example.com">MDN</a>');
-});
-
-test('counts the text readers see for the bubble length, with room for each code chip', async () => {
-  const { html } = await render(block('js', '// [!callout] Uses `fetch`, see [MDN](https://example.com).', 'go()'));
   expect(html).toContain('--scb-callout-len:21"');
 });
 
@@ -64,21 +54,12 @@ test('warns when /text/ does not match the line below', async () => {
   expect(warnings.join('\n')).toContain('does not match');
 });
 
-test('keeps the directive with a warning when callouts are off', async () => {
+test('renders as without the feature when a block has no callouts, and keeps the directive with a warning when it is off', async () => {
+  const md = block('js title="a.js"', 'a()', 'b()');
+  expect((await render(md)).html).toBe((await render(md, { callouts: false })).html);
   const { html, warnings } = await render(block('js', '// [!callout] Note', 'go()'), { callouts: false });
   expect(html).not.toContain('class="scb-callout"');
   expect(warnings.join('\n')).toContain('is not a known directive');
-});
-
-test('keeps callouts in place with hidden lines in the block', async () => {
-  const { html } = await render(block('js hidden={1}', 'a()', '// [!callout] Note', 'b()'));
-  expect(html).toContain('scb-hidden-marker');
-  expect(html).toContain('role="note"');
-});
-
-test('renders a block without callouts the same as without the feature', async () => {
-  const md = block('js title="a.js"', 'a()', 'b()');
-  expect((await render(md)).html).toBe((await render(md, { callouts: false })).html);
 });
 
 test('between two lines with the same highlight, the callout has it too', async () => {

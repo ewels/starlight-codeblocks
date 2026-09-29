@@ -24,32 +24,30 @@ test('tints lines from error, warning and info ranges, with a hidden prefix and 
   expect(warnings).toEqual([]);
 });
 
-test('renders a directive message as a label and leaves it out of the copied text', async () => {
+test('renders directive messages as labels, with inline code, links and bold only, and leaves them out of the copied text', async () => {
   const { html, copyText } = await render(
-    block('py', 'for x in y  # [!code error] SyntaxError: expected `:`', '    print(x)  # [!code warning]'),
+    block(
+      'js',
+      'a() // [!code error] SyntaxError: expected `:`',
+      'b() // keep [!code warning] **Slow** <b>x</b>',
+      'c() // [!code info:2] Two lines',
+      'd()',
+      'e()',
+    ),
   );
   expect(html).toContain(
     '<span class="scb-state-label"><strong aria-hidden="true">Error</strong> SyntaxError: expected <code>:</code></span></div>',
   );
-  expect(html.match(/scb-state-label/g)).toHaveLength(2);
-  expect(lineClasses(html)).toEqual(['ec-line scb-state scb-state-error', 'ec-line scb-state scb-state-warning']);
-  expect(copyText).toBe('for x in y\n    print(x)');
-});
-
-test('applies [!code info:N] to N lines, with the message on the first and no name on the others', async () => {
-  const { html } = await render(block('js', 'a() // [!code info:2] Two lines', 'b()', 'c()'));
+  expect(html).toContain('<strong>Slow</strong> &#x3C;b>x&#x3C;/b>');
+  expect(html.match(/scb-state-label/g)).toHaveLength(3);
   expect(lineClasses(html)).toEqual([
+    'ec-line scb-state scb-state-error',
+    'ec-line scb-state scb-state-warning',
     'ec-line scb-state scb-state-info',
     'ec-line scb-state scb-state-info',
     'ec-line',
   ]);
-  expect(html.match(/scb-state-label/g)).toHaveLength(1);
-});
-
-test('keeps the rest of a comment and renders only inline code, links and bold', async () => {
-  const { html, copyText } = await render(block('js', 'a() // keep [!code warning] **Slow** <b>x</b>'));
-  expect(copyText).toBe('a() // keep');
-  expect(html).toContain('<strong>Slow</strong> &#x3C;b>x&#x3C;/b>');
+  expect(copyText).toBe('a()\nb() // keep\nc()\nd()\ne()');
 });
 
 test('shows the name on the first visible line of a run that starts on a hidden line', async () => {
@@ -66,19 +64,15 @@ test('combines states on one line', async () => {
   expect(html).toContain('<span class="scb-state-prefix scb-sr-only">Error, Warning:</span>');
 });
 
-test('supports custom states by attribute and directive', async () => {
+test('supports custom states by attribute and directive, and new labels for built-in ones', async () => {
   const options = { lineStates: { states: todo } };
   const { html, copyText } = await render(block('js todo={1}', 'a()', 'b() // [!code todo] Add retries'), options);
   expect(lineClasses(html)).toEqual(['ec-line scb-state scb-state-todo', 'ec-line scb-state scb-state-todo']);
   expect(html).toContain('<span class="scb-state-prefix scb-sr-only">To do:</span>');
   expect(html).toContain('<strong aria-hidden="true">To do</strong> Add retries');
   expect(copyText).toBe('a()\nb()');
-});
-
-test('lets sites change the label of a built-in state', async () => {
-  const options = { lineStates: { states: { info: { label: 'Tip', colour: { dark: '#6cb8ff', light: '#2369c0' } } } } };
-  const { html } = await render(block('js info={1}', 'a()'), options);
-  expect(html).toContain('>Tip:</span>');
+  const tip = { lineStates: { states: { info: { label: 'Tip', colour: { dark: '#6cb8ff', light: '#2369c0' } } } } };
+  expect((await render(block('js info={1}', 'a()'), tip)).html).toContain('>Tip:</span>');
 });
 
 test('warns about unknown states and lines outside the block', async () => {
@@ -89,12 +83,9 @@ test('warns about unknown states and lines outside the block', async () => {
   ]);
 });
 
-test('renders a block without states as without the feature', async () => {
+test('renders as without the feature when a block has no states, and leaves directives when it is off', async () => {
   const md = block('js title="app.js" {2}', 'a()', 'b() // [!code ++]');
   expect((await render(md)).html).toBe((await render(md, { lineStates: false })).html);
-});
-
-test('leaves state directives in the code when the feature is off', async () => {
   const { copyText } = await render(block('js', 'a() // [!code error] Oops'), { lineStates: false });
   expect(copyText).toBe('a() // [!code error] Oops');
 });

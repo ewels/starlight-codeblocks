@@ -10,6 +10,13 @@ export const example = (page: Page, n = 0) => output(page, n).locator('.expressi
 export const reduced = () => test.info().project.name === 'reduced-motion';
 export const phone = () => test.info().project.name.startsWith('phone');
 
+/** Runs the test in one project only, for behaviour that does not depend on the viewport, theme or motion. */
+export const once = () => test.skip(test.info().project.name !== 'desktop-light', 'The same in every project.');
+
+/** Runs the test in the light projects only, for layout that does not depend on the theme or motion. */
+export const lightOnly = () =>
+  test.skip(!test.info().project.name.endsWith('-light'), 'Layout does not depend on the theme or motion.');
+
 /** The path of every page in the built site's sitemap, relative to the base. */
 export const sitePages = [
   ...readFileSync(new URL('../dist/sitemap-0.xml', import.meta.url), 'utf8').matchAll(

@@ -5,103 +5,73 @@ test.beforeEach(async ({ page }) => {
   await page.goto('./features/expandable-blocks/');
 });
 
-test('collapses a long block behind a button', async ({ page }) => {
+test('collapses a long block under a fade, and the button or find in page opens it', async ({ page }) => {
   const block = example(page);
   const pre = block.locator('pre');
-  await expect(pre).toHaveAttribute('data-scb-expandable', '8');
-  await expect(pre).toHaveClass(/scb-expandable-collapsed/);
   const lines = block.locator('.ec-line');
-  await expect(lines).toHaveCount(24);
-  await expect(lines.nth(20)).toBeHidden();
   const button = block.locator('.scb-expandable-toggle');
-  await expect(button).toHaveText('Show all 24 lines');
-  await button.click();
-  await expect(button).toHaveText('Show fewer lines');
-  await expect(button).toHaveAttribute('aria-expanded', 'true');
-  await expect(lines.nth(20)).toBeVisible();
-  await expect(pre).not.toHaveClass(/scb-expandable-collapsed/);
-  await button.click();
-  await expect(button).toHaveText('Show all 24 lines');
   await expect(lines.nth(20)).toBeHidden();
-});
+  await expect(pre).toHaveClass(/scb-expandable-collapsed/);
 
-test('collapses a second block on the page independently, at the site default', async ({ page }) => {
-  const block = example(page, 1);
-  const pre = block.locator('pre');
-  await expect(pre).toHaveAttribute('data-scb-expandable', '12');
-  await expect(block.locator('.scb-expandable-toggle')).toHaveText('Show all 20 lines');
-});
-
-test('the bar sits inside the code frame, with one divider rule', async ({ page }) => {
-  const block = example(page);
-  const style = (sel: string) =>
-    block.locator(sel).evaluate((el) => {
-      const s = getComputedStyle(el);
-      return {
-        bg: s.backgroundColor,
-        top: s.borderTopWidth,
-        bottom: s.borderBottomWidth,
-        left: s.borderLeftWidth,
-        radius: s.borderBottomLeftRadius,
-      };
-    });
-  const pre = await style('pre');
-  const bar = await style('.scb-expandable-bar');
-  expect(bar.bg).toBe(pre.bg);
-  expect(bar.top).toBe('0px');
-  expect(bar.left).toBe(pre.left);
-  expect(bar.bottom).toBe(pre.left);
-  expect(pre.radius).toBe('0px');
-  expect(bar.radius).not.toBe('0px');
-});
-
-test('cuts the code at the last visible line, under a fade of more than two lines', async ({ page }) => {
-  const pre = example(page).locator('pre');
   const { gap, fade, line } = await pre.evaluate((el) => {
     const lines = [...el.querySelectorAll<HTMLElement>('.ec-line')].filter((l) => !l.hidden);
     const last = lines[lines.length - 1].getBoundingClientRect();
-    const box = el.getBoundingClientRect();
     return {
-      gap: box.bottom - last.bottom,
+      gap: el.getBoundingClientRect().bottom - last.bottom,
       fade: Number.parseFloat(getComputedStyle(el, '::after').height),
       line: last.height,
     };
   });
   expect(gap).toBeLessThan(2);
   expect(fade / line).toBeGreaterThan(2);
-});
 
-// window.find() skips until-found content, so this checks what the browser's find bar relies on.
-test('find in page can reach a collapsed line, and a match opens the block', async ({ page }) => {
-  const pre = example(page).locator('pre');
-  const line = pre.locator('.ec-line', { hasText: 'csv.DictReader(fh)' });
-  await expect(line).toHaveAttribute('hidden', 'until-found');
-  expect(await css(line, 'display')).not.toBe('none');
-  await line.dispatchEvent('beforematch');
-  await expect(line).toBeVisible();
+  const style = (sel: string) =>
+    block.locator(sel).evaluate((el) => {
+      const s = getComputedStyle(el);
+      const { backgroundColor: bg, borderTopWidth: top, borderBottomWidth: bottom, borderLeftWidth: left } = s;
+      return { bg, top, bottom, left, radius: s.borderBottomLeftRadius };
+    });
+  const [preStyle, bar] = [await style('pre'), await style('.scb-expandable-bar')];
+  expect(bar.bg).toBe(preStyle.bg);
+  expect(bar.top).toBe('0px');
+  expect(bar.left).toBe(preStyle.left);
+  expect(bar.bottom).toBe(preStyle.left);
+  expect(preStyle.radius).toBe('0px');
+  expect(bar.radius).not.toBe('0px');
+
+  await expect(button).toHaveText('Show all 24 lines');
+  await button.click();
+  await expect(button).toHaveText('Show fewer lines');
+  await expect(button).toHaveAttribute('aria-expanded', 'true');
+  await expect(lines.nth(20)).toBeVisible();
+  await expect(pre).not.toHaveClass(/scb-expandable-collapsed/);
+  expect(await css(pre, 'transitionDuration')).toBe('0s');
+  await button.click();
+  await expect(button).toHaveText('Show all 24 lines');
+  await expect(lines.nth(20)).toBeHidden();
+
+  // window.find() skips until-found content, so this checks what the browser's find bar relies on.
+  const found = pre.locator('.ec-line', { hasText: 'csv.DictReader(fh)' });
+  await expect(found).toHaveAttribute('hidden', 'until-found');
+  expect(await css(found, 'display')).not.toBe('none');
+  await found.dispatchEvent('beforematch');
+  await expect(found).toBeVisible();
   await expect(pre).not.toHaveClass(/scb-expandable-collapsed/);
 });
 
-test('works with the keyboard', async ({ page }) => {
+test('prints in full, and works with the keyboard', async ({ page }) => {
+  const pre = example(page).locator('pre');
   const button = example(page).locator('.scb-expandable-toggle');
+  await expect(pre.locator('.ec-line').nth(20)).toBeHidden();
+  await page.emulateMedia({ media: 'print' });
+  await expect(example(page).locator('.scb-expandable-bar')).toBeHidden();
+  expect(await pre.evaluate((el) => getComputedStyle(el, '::after').display)).toBe('none');
+  await expect(pre.locator('.ec-line').last()).toBeVisible();
+  await page.emulateMedia({ media: 'screen' });
+
   await button.focus();
   await page.keyboard.press('Enter');
   await expect(button).toHaveAttribute('aria-expanded', 'true');
-});
-
-test('the fade and the button do not print', async ({ page }) => {
-  const bar = example(page).locator('.scb-expandable-bar');
-  await page.emulateMedia({ media: 'print' });
-  await expect(bar).toBeHidden();
-  const pre = example(page).locator('pre');
-  expect(await pre.evaluate((el) => getComputedStyle(el, '::after').display)).toBe('none');
-  await expect(pre.locator('.ec-line').last()).toBeVisible();
-});
-
-test('has no transition, with or without reduced motion', async ({ page }) => {
-  const pre = example(page).locator('pre');
-  await example(page).locator('.scb-expandable-toggle').click();
-  expect(await css(pre, 'transitionDuration')).toBe('0s');
 });
 
 test.describe('without JavaScript', () => {

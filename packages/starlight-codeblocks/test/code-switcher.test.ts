@@ -7,13 +7,15 @@ import { render } from './render.ts';
 
 const variant = (index: number, labels: string[]) => `scbSwitcher="${encodeVariant({ index, labels })}"`;
 
-test('renders the menu in the title bar, with the variant selected', async () => {
+test('renders the menu in the title bar, with the variant selected, and hides every variant after the first', async () => {
   const { html, copyText } = await render([`\`\`\`sh ${variant(1, ['npm', 'pnpm'])}`, 'pnpm add x', '```'].join('\n'));
   expect(html).toContain('<span class="scb-switcher-field scb-no-print scb-needs-js">');
   expect(html).toContain('<select class="scb-btn scb-switcher-menu" aria-label="Variant">');
   expect(html).toContain('<option value="0">npm</option><option value="1" selected>pnpm</option>');
   expect(html).toContain('class="scb-tools"');
+  expect(html).toMatch(/^<div class="expressive-code" hidden>/);
   expect(copyText).toBe('pnpm add x');
+  expect((await render([`\`\`\`sh ${variant(0, ['a', 'b'])}`, 'x', '```'].join('\n'))).html).not.toContain(' hidden>');
 });
 
 test('shows a decorative icon for the language of the variant, and a code icon for other languages', async () => {
@@ -27,13 +29,6 @@ test('shows a decorative icon for the language of the variant, and a code icon f
   expect(await icon('python')).toBe(python);
   expect(await icon('js')).not.toBe(python);
   expect(await icon('nextflow')).toContain('stroke="currentColor"');
-});
-
-test('hides every variant after the first, for readers without JavaScript', async () => {
-  expect((await render([`\`\`\`sh ${variant(1, ['a', 'b'])}`, 'x', '```'].join('\n'))).html).toMatch(
-    /^<div class="expressive-code" hidden>/,
-  );
-  expect((await render([`\`\`\`sh ${variant(0, ['a', 'b'])}`, 'x', '```'].join('\n'))).html).not.toContain(' hidden>');
 });
 
 test('renders the same with the feature off, for a block outside a switcher', async () => {
@@ -75,27 +70,17 @@ test('wraps the code blocks, and gives each its index and every label', async ()
     { index: 1, labels: ['npm', 'Python'] },
   ]);
   expect(metas[1]).toMatch(/^title="a.py" scbSwitcher=/);
-});
-
-test('labels a diff variant with its lang', async () => {
-  const { decoded } = await directive(
+  const diff = await directive(
     [':::code-switcher', '```diff lang="py"', '+x = 1', '```', '```diff lang="js"', '+x = 1', '```', ':::'].join('\n'),
   );
-  expect(decoded[0]).toEqual({ index: 0, labels: ['Python', 'JavaScript'] });
+  expect(diff.decoded[0]).toEqual({ index: 0, labels: ['Python', 'JavaScript'] });
+  expect(diff.html).toContain('data-scb-code-switcher=""');
 });
 
-test('a switcher without sync gets an empty key', async () => {
-  const { html } = await directive([':::code-switcher', '```js', 'a()', '```', ':::'].join('\n'));
-  expect(html).toContain('data-scb-code-switcher=""');
-});
-
-test('fails the build for anything but code blocks inside the directive', async () => {
+test('fails the build for anything but code blocks inside the directive, or for two variants with one label', async () => {
   await expect(
     directive([':::code-switcher', 'Some text.', '', '```js', 'a()', '```', ':::'].join('\n')),
   ).rejects.toThrow('page.md: `:::code-switcher` can contain only fenced code blocks');
-});
-
-test('fails the build when two variants have the same label', async () => {
   await expect(
     directive([':::code-switcher', '```sh', 'npm i x', '```', '```bash', 'pnpm add x', '```', ':::'].join('\n')),
   ).rejects.toThrow('page.md: two variants in a `:::code-switcher` have the label "Shell"');

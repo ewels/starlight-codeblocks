@@ -39,18 +39,12 @@ test('links only to reference files that exist', () => {
   }
 });
 
-test.each([...pages])('links to the %s page', (page) => {
-  expect(skill).toContain(`${docs}${page}/`);
-});
-
-test.each(attributesReference.flatMap((attribute) => attribute.syntax))('describes the %s attribute', (syntax) => {
-  expect(skill).toContain(`\`${syntax}\``);
-});
-
-test.each(directives.map(([name]) => name))('describes the [!%s] directive', (name) => {
-  expect(skill).toContain(`[!${name}`);
-});
-
-test.each(Object.keys(optionsReference))('describes the %s option', (key) => {
-  expect(skill).toContain(`\`${key}\``);
+test('links to every feature page, and describes every attribute, directive and option', () => {
+  const missing = [
+    ...[...pages].map((page) => `${docs}${page}/`),
+    ...attributesReference.flatMap((attribute) => attribute.syntax).map((syntax) => `\`${syntax}\``),
+    ...directives.map(([name]) => `[!${name}`),
+    ...Object.keys(optionsReference).map((key) => `\`${key}\``),
+  ].filter((text) => !skill.includes(text));
+  expect(missing, 'add these to skills/starlight-codeblocks').toEqual([]);
 });

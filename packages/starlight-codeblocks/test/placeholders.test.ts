@@ -22,13 +22,11 @@ test('turns every match of each text into a field, named by its text', async () 
   expect(warnings).toEqual([]);
 });
 
-test('a field takes the colour of the token it is in', async () => {
-  const { html } = await render(block('py placeholder="YOUR_TOKEN"', 'client = Client(token="YOUR_TOKEN")'));
+test('a field takes the colour of the token it is in, and the storage option goes on the block', async () => {
+  const { html } = await render(block('py placeholder="YOUR_TOKEN"', 'client = Client(token="YOUR_TOKEN")'), {
+    placeholders: { storage: 'session' },
+  });
   expect(html).toMatch(new RegExp(`<span style="--0:[^"]+">${field('YOUR_TOKEN')}</span>`));
-});
-
-test('the storage option goes on the block for the script', async () => {
-  const { html } = await render(block('py placeholder="KEY"', 'key = "KEY"'), { placeholders: { storage: 'session' } });
   expect(html).toContain('data-scb-placeholders="session"');
 });
 
@@ -47,17 +45,12 @@ test('warns about a text that the code does not contain', async () => {
   ]);
 });
 
-test('a TS Playground link in a block with fields loads the playground script', async () => {
-  const { html } = await render(
-    block('ts placeholder="YOUR_TOKEN" playground="typescript"', 'const token = "YOUR_TOKEN";'),
-  );
-  expect(html).toContain('data-scb-playground=""');
-});
-
-test('other playground links need no playground script', async () => {
-  const { html } = await render(block('rust placeholder="YOUR_TOKEN" playground="rust"', 'let t = "YOUR_TOKEN";'));
-  expect(html).toContain('class="scb-btn scb-playground scb-no-print"');
-  expect(html).not.toContain('data-scb-playground');
+test('only a TS Playground link in a block with fields loads the playground script', async () => {
+  const ts = await render(block('ts placeholder="YOUR_TOKEN" playground="typescript"', 'const token = "YOUR_TOKEN";'));
+  expect(ts.html).toContain('data-scb-playground=""');
+  const rust = await render(block('rust placeholder="YOUR_TOKEN" playground="rust"', 'let t = "YOUR_TOKEN";'));
+  expect(rust.html).toContain('class="scb-btn scb-playground scb-no-print"');
+  expect(rust.html).not.toContain('data-scb-playground');
 });
 
 test('renders a block without placeholder= the same as without the feature', async () => {

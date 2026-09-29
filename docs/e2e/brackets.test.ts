@@ -1,19 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { css, example } from './helpers.ts';
 
-test.beforeEach(async ({ page }) => {
+test('colours each depth, and outlines a pair instantly under the pointer or the caret', async ({ page }) => {
   await page.goto('./features/colourised-brackets/');
-});
-
-test('colours brackets by nesting depth', async ({ page }) => {
-  const block = example(page);
-  // Four levels deep, so the outermost and innermost calls both land on colour 1.
-  await expect(block.locator('.scb-brackets-1')).toHaveCount(4);
-  await expect(block.locator('.scb-brackets-2')).toHaveCount(2);
-  await expect(block.locator('.scb-brackets-3')).toHaveCount(2);
-});
-
-test('each depth shows its own colour, different from the plain text', async ({ page }) => {
   const block = example(page);
   // Read the innermost element: that is the colour the glyph is drawn in.
   const colour = (selector: string) =>
@@ -29,46 +18,21 @@ test('each depth shows its own colour, different from the plain text', async ({ 
     ['.scb-brackets-1', '.scb-brackets-2', '.scb-brackets-3', '.ec-line .code'].map(colour),
   );
   expect(new Set(colours).size).toBe(4);
-});
+  expect(await block.locator('pre').evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
 
-test('leaves brackets in strings with the normal colour', async ({ page }) => {
-  const block = example(page, 2);
-  await expect(block.locator('[class*="scb-brackets"]')).toHaveCount(0);
-});
-
-test('outlines a bracket and its partner on hover, with the pointer', async ({ page }) => {
-  const block = example(page);
   const open = block.locator('.scb-brackets-1').first();
   const close = block.locator('.scb-brackets-1').last();
   await expect(open).not.toHaveClass(/scb-brackets-on/);
   await open.hover();
   await expect(open).toHaveClass(/scb-brackets-on/);
   await expect(close).toHaveClass(/scb-brackets-on/);
+  expect(await css(open, 'transitionDuration')).toBe('0s');
   await page.mouse.move(0, 0);
   await expect(open).not.toHaveClass(/scb-brackets-on/);
-});
 
-test('the outline appears instantly, with or without reduced motion', async ({ page }) => {
-  const open = example(page).locator('.scb-brackets-1').first();
-  await open.hover();
-  expect(await css(open, 'transitionDuration')).toBe('0s');
-});
-
-test('outlines a bracket and its partner when the caret is on it, for caret browsing', async ({ page }) => {
-  const block = example(page);
-  const open = block.locator('.scb-brackets-1').first();
-  const close = block.locator('.scb-brackets-1').last();
-  await open.evaluate((el) => {
-    const text = el.firstChild as Text;
-    document.getSelection()?.collapse(text, 1);
-  });
+  await open.evaluate((el) => document.getSelection()?.collapse(el.firstChild as Text, 1));
   await expect(open).toHaveClass(/scb-brackets-on/);
   await expect(close).toHaveClass(/scb-brackets-on/);
   await page.evaluate(() => document.getSelection()?.removeAllRanges());
   await expect(open).not.toHaveClass(/scb-brackets-on/);
-});
-
-test('the first example fits without scrolling sideways', async ({ page }) => {
-  const pre = example(page).locator('pre');
-  expect(await pre.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
 });

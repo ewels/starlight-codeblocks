@@ -36,8 +36,3 @@ test('marks each decoration for Pagefind too, and leaves the code unmarked', asy
   expect(marked.every((element) => element.properties.dataPagefindIgnore === '')).toBe(true);
   expect(selectAll('.ec-line, .code', root).some((element) => matches('.scb-deco', element))).toBe(false);
 });
-
-test('keeps the text of a placeholder next to its field', async () => {
-  const { rawHtml } = await render(blocks[5] as string);
-  expect(rawHtml).toContain('<span class="scb-placeholder-text">TOKEN</span>');
-});

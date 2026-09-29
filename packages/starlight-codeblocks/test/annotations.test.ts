@@ -18,32 +18,22 @@ test('turns [!annotate] into a numbered button with a popover after it', async (
   expect(warnings).toEqual([]);
 });
 
-test('numbers annotations from 1 in line order', async () => {
-  const { html } = await render(block('js', 'a() // [!annotate] First', 'b()', 'c() // [!annotate] Second'));
+test('numbers annotations from 1 in line order, keeps the rest of a comment, and adds a list for print', async () => {
+  const { html, copyText } = await render(
+    block('js', 'a() // keep [!annotate] First', 'b()', 'c() // [!annotate] Second'),
+  );
   expect(html.match(/aria-label="Annotation \d"/g)).toEqual(['aria-label="Annotation 1"', 'aria-label="Annotation 2"']);
-  expect(html.indexOf('First')).toBeLessThan(html.indexOf('Second'));
-});
-
-test('marks the block for the client module and adds a list for print', async () => {
-  const { html } = await render(block('js', 'a() // [!annotate] First', 'b() // [!annotate] Second'));
   expect(html).toContain('data-scb-annotations=""');
   expect(html).toContain('<ol class="scb-annotation-list"><li>First</li><li>Second</li></ol>');
+  expect(copyText).toBe('a() // keep\nb()\nc()');
 });
 
-test('keeps the rest of a comment that has other text', async () => {
-  const { copyText } = await render(block('js', 'a() // keep [!annotate] Note'));
-  expect(copyText).toBe('a() // keep');
-});
-
-test('keeps the directive with a warning when annotations are off', async () => {
+test('renders as without the feature when a block has no annotations, and keeps the directive with a warning when it is off', async () => {
+  const md = block('js title="a.js"', 'a()', 'b()');
+  expect((await render(md)).html).toBe((await render(md, { annotations: false })).html);
   const { html, warnings } = await render(block('js', 'a() // [!annotate] Note'), { annotations: false });
   expect(html).not.toContain('scb-annotation');
   expect(warnings.join('\n')).toContain('is not a known directive');
-});
-
-test('renders a block without annotations the same as without the feature', async () => {
-  const md = block('js title="a.js"', 'a()', 'b()');
-  expect((await render(md)).html).toBe((await render(md, { annotations: false })).html);
 });
 
 test('annotations="side" puts the notes in a column beside the block, with numbers on the lines', async () => {
@@ -78,22 +68,20 @@ test('annotations="side" needs a wider container for the columns when the lines 
   expect(await size(200)).toBe('1000');
 });
 
-test('warns about an unknown annotations value and uses popovers', async () => {
-  const { html, warnings } = await render(block('py annotations="list"', 'x = 1  # [!annotate] Note'));
-  expect(warnings.join('\n')).toContain('`annotations="list"` must be `"side"`');
-  expect(html).toContain('popovertarget');
-});
-
-test('codeSide="right" puts the code in the right column, and warns about other values', async () => {
-  const right = await render(block('py annotations="side" codeSide="right"', 'x = 1  # [!annotate] Note'));
+test('codeSide="right" puts the code in the right column, and bad annotations or codeSide values warn', async () => {
+  const note = 'x = 1  # [!annotate] Note';
+  const right = await render(block('py annotations="side" codeSide="right"', note));
   expect(right.html).toContain('class="scb-side scb-side-600 scb-side-code-right not-content"');
   expect(right.warnings).toEqual([]);
-  const left = await render(block('py annotations="side" codeSide="left"', 'x = 1  # [!annotate] Note'));
+  const left = await render(block('py annotations="side" codeSide="left"', note));
   expect(left.html).not.toContain('scb-side-code-right');
   expect(left.warnings).toEqual([]);
-  const bad = await render(block('py annotations="side" codeSide="top"', 'x = 1  # [!annotate] Note'));
+  const bad = await render(block('py annotations="side" codeSide="top"', note));
   expect(bad.warnings.join('\n')).toContain('`codeSide="top"`');
   expect(bad.html).not.toContain('scb-side-code-right');
+  const list = await render(block('py annotations="list"', note));
+  expect(list.warnings.join('\n')).toContain('`annotations="list"` must be `"side"`');
+  expect(list.html).toContain('popovertarget');
 });
 
 test('the hover colour of a marker comes from the theme and keeps the number readable', async () => {

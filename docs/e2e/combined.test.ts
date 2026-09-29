@@ -24,22 +24,22 @@ async function inject(page: Page, lines: string[], hash = '', options: Codeblock
 
 const eight = ['a()', 'b()', 'c()', 'd()', 'e()', 'f()', 'g()', 'h()'];
 
-test('a permalink to a collapsed line expands the block', async ({ page }) => {
+test('a permalink to a collapsed line expands the block, even past a heading with the same id or a malformed address', async ({
+  page,
+}) => {
+  const errors: Error[] = [];
+  page.on('pageerror', (error) => errors.push(error));
+  await page.goto('./features/line-permalinks/#%E0%A4%A');
+  await page.evaluate(() => {
+    location.hash = '#cfg-L%E0';
+  });
+  await page.waitForTimeout(200);
+  expect(errors).toEqual([]);
   const block = await inject(page, ['```js id="combo" expandable={3}', ...eight, '```'], '#combo-L7');
   await expect(page.locator('#combo-L7')).toBeVisible();
   await expect(page.locator('#combo-L7')).toHaveClass(/scb-permalink-target/);
   await expect(block.locator('.scb-expandable-toggle')).toHaveAttribute('aria-expanded', 'true');
-});
-
-test('the title bar toggle expands the block to show hidden lines in the collapsed lines', async ({ page }) => {
-  const block = await inject(page, ['```js title="a.js" hidden={6-7} expandable={3}', ...eight, '```']);
-  await block.locator('.scb-hidden-toggle').click();
-  await expect(block.locator('.scb-hidden-line').first()).toBeVisible();
-  await expect(block.locator('.scb-expandable-toggle')).toHaveAttribute('aria-expanded', 'true');
-});
-
-test('a permalink finds its block when a heading before it has the same id', async ({ page }) => {
-  const block = await inject(page, ['```js id="combo" expandable={3}', ...eight, '```']);
+  const again = await inject(page, ['```js id="combo" expandable={3}', ...eight, '```']);
   await page.evaluate(() => {
     const heading = document.createElement('h2');
     heading.id = 'combo';
@@ -47,11 +47,17 @@ test('a permalink finds its block when a heading before it has the same id', asy
     location.hash = '#combo-L8';
   });
   await expect(page.locator('#combo-L8')).toHaveClass(/scb-permalink-target/);
-  await expect(block.locator('.scb-expandable-toggle')).toHaveAttribute('aria-expanded', 'true');
+  await expect(again.locator('.scb-expandable-toggle')).toHaveAttribute('aria-expanded', 'true');
 });
 
-test('collapsing hides the hidden-lines markers and callouts of the collapsed lines', async ({ page }) => {
-  const block = await inject(page, [
+test('expanding shows the hidden lines, their markers and callouts, and a callout on a hidden line shows with it', async ({
+  page,
+}) => {
+  const block = await inject(page, ['```js title="a.js" hidden={6-7} expandable={3}', ...eight, '```']);
+  await block.locator('.scb-hidden-toggle').click();
+  await expect(block.locator('.scb-hidden-line').first()).toBeVisible();
+  await expect(block.locator('.scb-expandable-toggle')).toHaveAttribute('aria-expanded', 'true');
+  const collapsed = await inject(page, [
     '```js expandable={3}',
     ...eight.slice(0, 5),
     'f() // [!code hide]',
@@ -59,21 +65,25 @@ test('collapsing hides the hidden-lines markers and callouts of the collapsed li
     ...eight.slice(6),
     '```',
   ]);
-  await expect(block.locator('.scb-expandable-toggle')).toHaveAttribute('aria-expanded', 'false');
-  await expect(block.locator('.scb-hidden-marker')).toBeHidden();
-  await expect(block.locator('.scb-callout')).toBeHidden();
-  await block.locator('.scb-expandable-toggle').click();
-  await expect(block.locator('.scb-hidden-marker')).toBeVisible();
-  await expect(block.locator('.scb-callout')).toBeVisible();
-});
-
-test('a callout on a hidden line shows only with the line', async ({ page }) => {
-  const block = await inject(page, ['```js', 'a()', '// [!callout /b/] Calls b.', 'b() // [!code hide]', 'c()', '```']);
-  await expect(block.locator('.scb-callout')).toBeHidden();
-  await block.locator('.scb-hidden-marker').click();
-  await expect(block.locator('.scb-callout')).toBeVisible();
-  await block.locator('.scb-hidden-marker').click();
-  await expect(block.locator('.scb-callout')).toBeHidden();
+  await expect(collapsed.locator('.scb-expandable-toggle')).toHaveAttribute('aria-expanded', 'false');
+  await expect(collapsed.locator('.scb-hidden-marker')).toBeHidden();
+  await expect(collapsed.locator('.scb-callout')).toBeHidden();
+  await collapsed.locator('.scb-expandable-toggle').click();
+  await expect(collapsed.locator('.scb-hidden-marker')).toBeVisible();
+  await expect(collapsed.locator('.scb-callout')).toBeVisible();
+  const hiddenLine = await inject(page, [
+    '```js',
+    'a()',
+    '// [!callout /b/] Calls b.',
+    'b() // [!code hide]',
+    'c()',
+    '```',
+  ]);
+  await expect(hiddenLine.locator('.scb-callout')).toBeHidden();
+  await hiddenLine.locator('.scb-hidden-marker').click();
+  await expect(hiddenLine.locator('.scb-callout')).toBeVisible();
+  await hiddenLine.locator('.scb-hidden-marker').click();
+  await expect(hiddenLine.locator('.scb-callout')).toBeHidden();
 });
 
 test('a new page adds no second document or window listener', async ({ page }) => {
@@ -109,18 +119,7 @@ test('a new page adds no second document or window listener', async ({ page }) =
   expect(added.filter((type) => ['click', 'hashchange', 'resize'].includes(type))).toEqual([]);
 });
 
-test('a malformed address does not throw', async ({ page }) => {
-  const errors: Error[] = [];
-  page.on('pageerror', (error) => errors.push(error));
-  await page.goto('./features/line-permalinks/#%E0%A4%A');
-  await page.evaluate(() => {
-    location.hash = '#cfg-L%E0';
-  });
-  await page.waitForTimeout(200);
-  expect(errors).toEqual([]);
-});
-
-test("a Run button runs the code with the reader's placeholder values", async ({ page }) => {
+test("a Run button and Copy commands use the reader's placeholder values", async ({ page }) => {
   await page.route('**/scb-test-runtime.js', (route) =>
     route.fulfill({
       contentType: 'text/javascript',
@@ -133,13 +132,10 @@ test("a Run button runs the code with the reader's placeholder values", async ({
   await block.getByRole('textbox', { name: 'TOKEN' }).fill('abc123');
   await block.locator('.scb-run').click();
   await expect(block.locator('.scb-run-stdout')).toHaveText('abc123');
-});
-
-test('Copy commands copies the reader value of a placeholder', async ({ page }) => {
-  const block = await inject(page, ['```sh placeholder="MY_APP"', '$ cd MY_APP', 'ok', '```']);
-  await block.getByRole('textbox', { name: 'MY_APP' }).fill('shop');
-  await block.getByRole('button', { name: 'Copy commands' }).click();
+  const shell = await inject(page, ['```sh placeholder="MY_APP"', '$ cd MY_APP', 'ok', '```']);
+  await shell.getByRole('textbox', { name: 'MY_APP' }).fill('shop');
+  await shell.getByRole('button', { name: 'Copy commands' }).click();
   await expect.poll(() => clipboard(page)).toBe('cd shop');
-  await block.locator('.copy button').click();
+  await shell.locator('.copy button').click();
   await expect.poll(() => clipboard(page)).toBe('$ cd shop\nok');
 });

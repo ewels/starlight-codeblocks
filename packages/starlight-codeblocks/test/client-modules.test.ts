@@ -14,18 +14,15 @@ test('finds the package from a site bundle, as with plugins in ec.config.mjs', (
   expect(realpathSync(packageRoot(chunk.href))).toBe(realpathSync(new URL('..', import.meta.url)));
 });
 
-test('the asset loader imports files next to itself', () => {
-  const source = loaderSource(modules, false);
-  expect(source).toContain('{"annotations":"scb-annotations.abc.js"}');
-  expect(source).toContain('import.meta.url');
-  expect(source).toContain("document.addEventListener('astro:page-load', load)");
-});
-
-test('the inline loader carries the sources, safe for a script element', () => {
-  const source = loaderSource([{ ...modules[0], source: 'const s = "</script>";' } as never], true);
-  expect(source).toContain('\\u003c/script>');
-  expect(source).not.toContain('</script>');
-  expect(source).toContain('URL.createObjectURL');
+test('the asset loader imports files next to itself, and the inline loader carries the sources safely', () => {
+  const asset = loaderSource(modules, false);
+  expect(asset).toContain('{"annotations":"scb-annotations.abc.js"}');
+  expect(asset).toContain('import.meta.url');
+  expect(asset).toContain("document.addEventListener('astro:page-load', load)");
+  const inline = loaderSource([{ ...modules[0], source: 'const s = "</script>";' } as never], true);
+  expect(inline).toContain('\\u003c/script>');
+  expect(inline).not.toContain('</script>');
+  expect(inline).toContain('URL.createObjectURL');
 });
 
 test('features use the inline loader unless codeblocks() emits the modules', () => {
@@ -47,9 +44,9 @@ test('the Vite plugins serve the modules in dev and emit them in the build', () 
 });
 
 // Code walkthrough (its animation library) and runtimes are outside the budget.
-test.each(readClientModules().filter((m) => !['walkthrough', 'runnable'].includes(m.feature)))(
-  '$feature is 3 kB or less, minified and gzipped',
-  ({ source }) => {
-    expect(gzipSync(source).length).toBeLessThanOrEqual(3072);
-  },
-);
+test('each client module is 3 kB or less, minified and gzipped', () => {
+  const budgeted = readClientModules().filter((m) => !['walkthrough', 'runnable'].includes(m.feature));
+  expect(budgeted.length).toBeGreaterThan(5);
+  const over = budgeted.map((m) => [m.feature, gzipSync(m.source).length] as const).filter(([, size]) => size > 3072);
+  expect(over).toEqual([]);
+});

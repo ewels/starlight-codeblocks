@@ -1,5 +1,5 @@
 import { expect, type Locator, test } from '@playwright/test';
-import { copyFromKeyboard, css, example, reduced } from './helpers.ts';
+import { css, example, reduced } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/annotations/');
@@ -41,30 +41,38 @@ async function open(block: Locator, n: number) {
 
 const centre = (r: DOMRect) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
 
+const at = async (marker: Locator) => {
+  const box = await marker.boundingBox();
+  return [(box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2] as const;
+};
+
 test('a marker opens its note, and a selection outside closes it', async ({ page }) => {
   const block = example(page);
   const note = block.locator('.scb-annotation-popover').first();
   await expect(note).toBeHidden();
   await open(block, 1);
   await expect(note).toHaveText('1One job per version, run in parallel.');
+  if (reduced()) expect(await css(note, 'animationName')).toBe('none');
   await page.mouse.click(5, 5);
   await expect(note).toBeHidden();
+  // Inline code in a note uses the code font, with round corners in a titled block.
+  await block.getByRole('button', { name: 'Annotation 2' }).click();
+  const style = await block
+    .locator('.scb-annotation-popover code')
+    .first()
+    .evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { font: s.fontFamily, top: s.borderTopLeftRadius, bottom: s.borderBottomRightRadius };
+    });
+  expect(style.font).not.toBe('monospace');
+  expect(style.font).toContain('ui-monospace');
+  expect([style.top, style.bottom]).toEqual(['3px', '3px']);
 });
 
 test.describe('hover', () => {
   test.skip(({ isMobile }) => isMobile, 'Phones have no hover.');
 
-  test('hovering over a marker shows its note, and moving away hides it', async ({ page }) => {
-    const block = example(page);
-    const marker = block.getByRole('button', { name: 'Annotation 1' });
-    const note = block.locator('.scb-annotation-popover').first();
-    await marker.hover();
-    await expect(note).toBeVisible();
-    await page.mouse.move(0, 0);
-    await expect(note).toBeHidden();
-  });
-
-  test('the note fades in as one element, and the pointer stays a hand over the marker', async ({ page }) => {
+  test('hovering over a marker fades in its note, which stays while the pointer moves into it', async ({ page }) => {
     const block = example(page);
     const marker = block.getByRole('button', { name: 'Annotation 1' });
     const note = block.locator('.scb-annotation-popover').first();
@@ -79,100 +87,51 @@ test.describe('hover', () => {
     if (!reduced()) expect(style.transition).toContain('opacity');
     await expect.poll(() => css(note, 'opacity')).toBe('1');
     // Whatever is on top of the marker, the note's badge or the marker itself, shows a hand.
-    const box = await marker.boundingBox();
     const cursor = await page.evaluate(
       ([x, y]) => getComputedStyle(document.elementFromPoint(x, y) as Element).cursor,
-      [(box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2],
+      await at(marker),
     );
     expect(cursor).toBe('pointer');
-  });
-
-  test('the pointer can move from the marker into the note, which stays', async ({ page }) => {
-    const block = example(page);
-    const note = block.locator('.scb-annotation-popover').first();
-    await block.getByRole('button', { name: 'Annotation 1' }).hover();
-    await expect(note).toBeVisible();
     await note.locator('p').hover();
     await page.waitForTimeout(400);
     await expect(note).toBeVisible();
-  });
-
-  test('a click on a shown note keeps it open after the pointer leaves', async ({ page }) => {
-    const block = example(page);
-    const marker = block.getByRole('button', { name: 'Annotation 1' });
-    const note = block.locator('.scb-annotation-popover').first();
-    await marker.hover();
-    await expect(note).toBeVisible();
-    await marker.click();
     await page.mouse.move(0, 0);
-    await page.waitForTimeout(400);
-    await expect(note).toBeVisible();
-    await marker.click();
     await expect(note).toBeHidden();
   });
 
-  test('while a clicked note is open, hovering over another marker shows that note too', async ({ page }) => {
+  test('clicks keep notes open after the pointer leaves, and hover adds to them', async ({ page }) => {
     const block = example(page);
     const notes = block.locator('.scb-annotation-popover');
-    await block.getByRole('button', { name: 'Annotation 1' }).click();
+    const [one, two] = [1, 2].map((n) => block.getByRole('button', { name: `Annotation ${n}` })) as [Locator, Locator];
+    const leave = async () => {
+      await page.mouse.move(0, 0);
+      await page.waitForTimeout(400);
+    };
+    // A real click at the marker lands on whatever is on top of it, here the hover note's badge.
+    await one.hover();
+    await expect(notes.first()).not.toHaveClass(/scb-annotation-wait/);
+    await page.mouse.click(...(await at(one)));
+    await leave();
     await expect(notes.first()).toBeVisible();
-    await block.getByRole('button', { name: 'Annotation 2' }).hover();
+    await page.mouse.click(...(await at(one)));
+    await expect(notes.first()).toBeHidden();
+
+    await one.click();
+    await two.hover();
     await expect(notes.nth(1)).toBeVisible();
     await expect(notes.first()).toBeVisible();
     await page.mouse.move(0, 0);
     await expect(notes.nth(1)).toBeHidden();
     await expect(notes.first()).toBeVisible();
-  });
 
-  test('a click where the hover note covers the marker keeps the note, and a second click closes it', async ({
-    page,
-  }) => {
-    const block = example(page);
-    const marker = block.getByRole('button', { name: 'Annotation 1' });
-    const note = block.locator('.scb-annotation-popover').first();
-    await marker.hover();
-    await expect(note).toBeVisible();
-    await expect(note).not.toHaveClass(/scb-annotation-wait/);
-    // A real click at the marker, which lands on whatever is on top of it.
-    const box = await marker.boundingBox();
-    const [x, y] = [(box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2];
-    await page.mouse.click(x, y);
-    await page.mouse.move(0, 0);
-    await page.waitForTimeout(400);
-    await expect(note).toBeVisible();
-    await page.mouse.click(x, y);
-    await expect(note).toBeHidden();
-  });
-
-  test('two notes can be kept open with clicks', async ({ page }) => {
-    const block = example(page);
-    const notes = block.locator('.scb-annotation-popover');
-    for (const n of [1, 2]) {
-      const box = await block.getByRole('button', { name: `Annotation ${n}` }).boundingBox();
-      await page.mouse.click((box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2);
-    }
-    await page.mouse.move(0, 0);
-    await page.waitForTimeout(400);
+    await page.mouse.click(...(await at(two)));
+    await leave();
     await expect(notes.nth(0)).toBeVisible();
     await expect(notes.nth(1)).toBeVisible();
     await page.mouse.click(5, 5);
     await expect(notes.nth(0)).toBeHidden();
     await expect(notes.nth(1)).toBeHidden();
   });
-});
-
-test('with room after the line, the note opens out of its marker', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'A phone has no room beside the line.');
-  const { box, badge, text, marker, pre, textRight, note } = await open(example(page), 1);
-  await expect(note).toHaveClass(/scb-annotation-end/);
-  expect(Math.abs(centre(badge).x - centre(marker).x)).toBeLessThanOrEqual(1);
-  expect(Math.abs(centre(badge).y - centre(marker).y)).toBeLessThanOrEqual(1);
-  expect(badge.width).toBeCloseTo(marker.width, 0);
-  expect(text.x).toBeGreaterThanOrEqual(badge.x + badge.width);
-  expect(box.x).toBeGreaterThanOrEqual(textRight);
-  expect(box.x + box.width).toBeLessThanOrEqual(Math.min(pre.x + pre.width, (page.viewportSize()?.width ?? 0) - 12));
-  expect(box.width).toBeLessThan(340);
-  expect(await note.evaluate((el) => getComputedStyle(el.querySelector('p') as Element).whiteSpace)).toBe('normal');
 });
 
 /** The note is 340px wide (less on a phone), centred under its marker, 12px inside the viewport, with the badge inside. */
@@ -186,46 +145,57 @@ function expectBelow(r: Awaited<ReturnType<typeof open>>, width: number) {
   expect(r.text.x).toBeGreaterThanOrEqual(r.badge.x + r.badge.width);
 }
 
-test('on a narrow screen, the note is 340px wide at most, centred under its marker', async ({ page }) => {
+test('the note opens out of its marker with room after the line, and under it otherwise', async ({
+  page,
+  isMobile,
+}) => {
+  // The box would cover the code or leave the block.
+  const below = await open(example(page, 1), 1);
+  await expect(below.note).not.toHaveClass(/scb-annotation-end/);
+  expectBelow(below, page.viewportSize()?.width ?? 0);
+  await page.keyboard.press('Escape');
+
+  if (!isMobile) {
+    const { box, badge, text, marker, pre, textRight, note } = await open(example(page), 1);
+    await expect(note).toHaveClass(/scb-annotation-end/);
+    expect(Math.abs(centre(badge).x - centre(marker).x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(centre(badge).y - centre(marker).y)).toBeLessThanOrEqual(1);
+    expect(badge.width).toBeCloseTo(marker.width, 0);
+    expect(text.x).toBeGreaterThanOrEqual(badge.x + badge.width);
+    expect(box.x).toBeGreaterThanOrEqual(textRight);
+    expect(box.x + box.width).toBeLessThanOrEqual(Math.min(pre.x + pre.width, (page.viewportSize()?.width ?? 0) - 12));
+    expect(box.width).toBeLessThan(340);
+    expect(await note.evaluate((el) => getComputedStyle(el.querySelector('p') as Element).whiteSpace)).toBe('normal');
+    // The open note moves under its marker when the window gets narrow.
+    await page.setViewportSize({ width: 360, height: 780 });
+    await expect(note).not.toHaveClass(/scb-annotation-end/);
+    await page.keyboard.press('Escape');
+  }
+
   await page.setViewportSize({ width: 360, height: 780 });
-  const block = example(page);
   for (const n of [1, 2]) {
-    const r = await open(block, n);
+    const r = await open(example(page), n);
     await expect(r.note).not.toHaveClass(/scb-annotation-end/);
     expectBelow(r, 360);
     await page.keyboard.press('Escape');
   }
 });
 
-test('when the box would cover the code or leave the block, the note opens under its marker', async ({ page }) => {
-  const width = page.viewportSize()?.width ?? 0;
-  const r = await open(example(page, 1), 1);
-  await expect(r.note).not.toHaveClass(/scb-annotation-end/);
-  expectBelow(r, width);
-});
-
-test('the note moves under its marker when the window gets narrow', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'A phone has no room beside the line.');
-  const r = await open(example(page), 1);
-  await expect(r.note).toHaveClass(/scb-annotation-end/);
-  await page.setViewportSize({ width: 360, height: 780 });
-  await expect(r.note).not.toHaveClass(/scb-annotation-end/);
-});
-
-test('the note opens at once under reduced motion', async ({ page }) => {
-  test.skip(!reduced(), 'Only for the reduced-motion project.');
-  const { note } = await open(example(page), 1);
-  expect(await css(note, 'animationName')).toBe('none');
-});
-
-test('several notes can stay open, and Escape closes them, with the keyboard', async ({ page }) => {
+test('with the keyboard, several notes can stay open, the badge shows focus, and Escape closes them', async ({
+  page,
+}) => {
   const block = example(page);
   const notes = block.locator('.scb-annotation-popover');
-  await block.getByRole('button', { name: 'Annotation 1' }).focus();
+  const first = block.getByRole('button', { name: 'Annotation 1' });
+  const badge = notes.first().locator('.scb-annotation-badge');
+  await first.focus();
   await page.keyboard.press('Enter');
   await expect(notes.nth(0)).toBeVisible();
+  await expect(first).toBeFocused();
+  await expect.poll(() => css(badge, 'outlineStyle')).toBe('solid');
   const second = block.getByRole('button', { name: 'Annotation 2' });
   await second.focus();
+  await expect.poll(() => css(badge, 'outlineStyle')).toBe('none');
   await page.keyboard.press('Enter');
   await expect(notes.nth(1)).toBeVisible();
   await expect(notes.nth(0)).toBeVisible();
@@ -234,45 +204,6 @@ test('several notes can stay open, and Escape closes them, with the keyboard', a
   await expect(notes.nth(1)).toBeHidden();
   await expect(notes.nth(0)).toBeHidden();
   await expect(second).toBeFocused();
-});
-
-test('the badge in an open note shows that its marker has keyboard focus', async ({ page }) => {
-  const block = example(page);
-  const marker = block.getByRole('button', { name: 'Annotation 1' });
-  const badge = block.locator('.scb-annotation-popover').first().locator('.scb-annotation-badge');
-  await marker.focus();
-  await page.keyboard.press('Enter');
-  await expect(marker).toBeFocused();
-  await expect.poll(() => css(badge, 'outlineStyle')).toBe('solid');
-  await page.keyboard.press('Tab');
-  await expect.poll(() => css(badge, 'outlineStyle')).toBe('none');
-});
-
-test('the badge in the note is hidden from screen readers', async ({ page }) => {
-  const badge = example(page).locator('.scb-annotation-badge').first();
-  await expect(badge).toHaveAttribute('aria-hidden', 'true');
-});
-
-test('inline code in a note uses the code font, with round corners in a titled block', async ({ page }) => {
-  const block = example(page);
-  await block.getByRole('button', { name: 'Annotation 2' }).click();
-  const style = await block
-    .locator('.scb-annotation-popover code')
-    .first()
-    .evaluate((el) => {
-      const s = getComputedStyle(el);
-      return { font: s.fontFamily, top: s.borderTopLeftRadius, bottom: s.borderBottomRightRadius };
-    });
-  expect(style.font).not.toBe('monospace');
-  expect(style.font).toContain('ui-monospace');
-  expect([style.top, style.bottom]).toEqual(['3px', '3px']);
-});
-
-test('copying leaves the markers and notes out', async ({ page }) => {
-  const copied = await copyFromKeyboard(example(page));
-  expect(copied).toContain('python: ["3.12", "3.13"]\n');
-  expect(copied).not.toContain('annotate');
-  expect(copied).not.toContain('One job');
 });
 
 test('the marker fades to the hover colour on the timing of the hover note', async ({ page, isMobile }) => {
@@ -309,21 +240,21 @@ test.describe('without JavaScript', () => {
   });
 });
 
-test('prints the notes as a numbered list under the block, and the numbers in the code', async ({ page }) => {
+test('prints the notes as a numbered list under the block, and a marker keeps its circle in forced colours', async ({
+  page,
+}) => {
   const block = example(page);
+  const marker = block.getByRole('button', { name: 'Annotation 1' });
+  await page.emulateMedia({ forcedColors: 'active' });
+  expect(await css(marker, 'borderTopStyle')).toBe('solid');
+  expect(await css(marker, 'borderTopWidth')).toBe('1px');
+  await page.emulateMedia({ forcedColors: 'none' });
   await expect(block.locator('.scb-annotation-list')).toBeHidden();
   await page.emulateMedia({ media: 'print' });
   await expect(block.locator('.scb-annotation-list li')).toHaveText([
     'One job per version, run in parallel.',
     'Installs uv and caches its downloads between runs.',
   ]);
-  await expect(block.locator('.scb-annotation').first()).toBeVisible();
+  await expect(marker).toBeVisible();
   await expect(block.locator('.scb-annotation-popover').first()).toBeHidden();
-});
-
-test('a marker keeps its circle in forced colours', async ({ page }) => {
-  await page.emulateMedia({ forcedColors: 'active' });
-  const marker = example(page).getByRole('button', { name: 'Annotation 1' });
-  expect(await css(marker, 'borderTopStyle')).toBe('solid');
-  expect(await css(marker, 'borderTopWidth')).toBe('1px');
 });

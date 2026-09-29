@@ -25,25 +25,19 @@ test('turns a code switcher into a wrapper whose blocks carry the menu', async (
   expect(html).not.toContain(':::');
 });
 
-test('highlights inline code with a {:lang} suffix, with and without directives', async () => {
-  const { html, warnings } = await md('Call `await fetch(url)`{:js} now.');
+test('highlights inline code with a {:lang} suffix, outside or inside the backticks, with + or #', async () => {
+  const { html, warnings } = await md(
+    'Call `await fetch(url)`{:js} now, `fetch(url){:js}`, `int x`{:c++} and `var x`{:c#}.',
+  );
   expect(html).toMatch(/<p>Call <code class="scb-inline" data-lang="js"><span style="--0:#[0-9A-F]+/);
-  expect(html).toMatch(/<\/code> now\.<\/p>/);
-  expect(html).not.toContain('{');
-  expect(warnings).toEqual([]);
-});
-
-test('takes a suffix language with + or #', async () => {
-  const { html } = await md('`int x`{:c++} and `var x`{:c#}.');
+  expect(html.match(/data-lang="js"/g)).toHaveLength(2);
   expect(html).toContain('data-lang="c++"');
   expect(html).toContain('data-lang="c#"');
+  expect(html).toMatch(/<\/code> now, <code/);
   expect(html).not.toContain('{');
-});
-
-test('keeps text after the suffix and leaves code without one alone', async () => {
-  const { html } = await md('`x`{:js}, then `y` {:py}');
+  expect(warnings).toEqual([]);
   // Starlight restores the unused `:py` directive as text on a real site.
-  expect(html).toMatch(/<\/code>, then <code>y<\/code> \{/);
+  expect((await md('`x`{:js}, then `y` {:py}')).html).toMatch(/<\/code>, then <code>y<\/code> \{/);
 });
 
 test('turns a mention link with no block into plain text, with a warning', async () => {
@@ -90,10 +84,4 @@ test('registers the remark plugin only for the unified() processor', () => {
     options: { mdastPlugins: unknown[] };
   };
   expect(satteri.options.mdastPlugins).toHaveLength(1);
-});
-
-test('takes the suffix inside the backticks too', async () => {
-  const { html } = await md('Call `fetch(url){:js}` now.');
-  expect(html).toMatch(/<p>Call <code class="scb-inline" data-lang="js"><span/);
-  expect(html).not.toContain('{:js}');
 });

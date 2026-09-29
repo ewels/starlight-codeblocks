@@ -1,32 +1,36 @@
-import { describe, expect, test } from 'vitest';
+import { expect, test } from 'vitest';
 import { OptionsError, resolveOptions } from '../src/options.ts';
 
-describe('resolveOptions', () => {
-  test('turns every feature on with defaults when there are no options', () => {
-    const options = resolveOptions();
-    expect(options.focus).toEqual({ style: 'blur' });
-    expect(options.callouts).toBe(true);
-    expect(options.shellCopy).toEqual({ prompts: ['$ ', '> '] });
-    expect(options.expandable).toEqual({ lines: 12, auto: false });
-    expect(options.inlineHighlighting).toEqual({ defaultLanguage: false });
-    expect(options.playgrounds).toEqual({});
-    expect(options.runnable).toEqual({ runtimes: {}, timeout: 10000 });
-  });
+test('turns every feature on with defaults, in new objects on each call', () => {
+  const options = resolveOptions();
+  expect(options.focus).toEqual({ style: 'blur' });
+  expect(options.callouts).toBe(true);
+  expect(options.shellCopy).toEqual({ prompts: ['$ ', '> '] });
+  expect(options.expandable).toEqual({ lines: 12, auto: false });
+  expect(options.inlineHighlighting).toEqual({ defaultLanguage: false });
+  expect(options.playgrounds).toEqual({});
+  expect(options.runnable).toEqual({ runtimes: {}, timeout: 10000 });
+  if (options.shellCopy) options.shellCopy.prompts.push('% ');
+  expect(resolveOptions().shellCopy).toEqual({ prompts: ['$ ', '> '] });
+});
 
-  test('keeps given values and turns features off with false', () => {
-    const options = resolveOptions({ focus: { style: 'dim' }, callouts: false, playgrounds: false });
-    expect(options.focus).toEqual({ style: 'dim' });
-    expect(options.callouts).toBe(false);
-    expect(options.playgrounds).toBe(false);
+test('keeps given values and turns features off with false', () => {
+  const url = () => 'https://example.com';
+  const options = resolveOptions({
+    focus: { style: 'dim' },
+    callouts: false,
+    playgrounds: { demo: { label: 'Open in Demo', url } },
+    runnable: false,
   });
+  expect(options.focus).toEqual({ style: 'dim' });
+  expect(options.callouts).toBe(false);
+  expect(options.playgrounds).toEqual({ demo: { label: 'Open in Demo', url } });
+  expect(options.runnable).toBe(false);
+});
 
-  test('does not share default objects between calls', () => {
-    const a = resolveOptions();
-    if (a.shellCopy) a.shellCopy.prompts.push('% ');
-    expect(resolveOptions().shellCopy).toEqual({ prompts: ['$ ', '> '] });
-  });
-
-  test.each([
+test('rejects options that are not valid, with an OptionsError that names the option', () => {
+  const colour = { dark: '#fff', light: '#000' };
+  const cases: [unknown, string][] = [
     [{ fokus: {} }, 'unknown option `fokus`'],
     [{ focus: { style: 'fade' } }, '`focus.style` must be'],
     [{ focus: { blur: 2 } }, 'unknown option `focus.blur`'],
@@ -35,32 +39,19 @@ describe('resolveOptions', () => {
     [{ expandable: { lines: 0 } }, '`expandable.lines` must be number, got 0'],
     [{ wordDiff: { minSimilarity: 2 } }, '`wordDiff.minSimilarity`'],
     [{ lineStates: { states: { todo: { label: 'To do', colour: '#fff' } } } }, '`lineStates.states` must be'],
-    [
-      { lineStates: { states: { focus: { label: 'F', colour: { dark: '#fff', light: '#000' } } } } },
-      '`lineStates.states`',
-    ],
-    [
-      { lineStates: { states: { prefix: { label: 'P', colour: { dark: '#fff', light: '#000' } } } } },
-      '`lineStates.states`',
-    ],
-    [
-      { lineStates: { states: { 'To do': { label: 'F', colour: { dark: '#fff', light: '#000' } } } } },
-      '`lineStates.states`',
-    ],
+    [{ lineStates: { states: { focus: { label: 'F', colour } } } }, '`lineStates.states`'],
+    [{ lineStates: { states: { prefix: { label: 'P', colour } } } }, '`lineStates.states`'],
+    [{ lineStates: { states: { 'To do': { label: 'F', colour } } } }, '`lineStates.states`'],
     [{ notation: { comments: { nextflow: '//' } } }, '`notation.comments` must be'],
     [{ playgrounds: { go: { label: 'Go' } } }, '`playgrounds.go` must be'],
     [{ runnable: { timeout: '10s' } }, '`runnable.timeout`'],
     [{ runnable: { timeout: Infinity } }, '`runnable.timeout`'],
     [{ runnable: { timeout: 2 ** 31 } }, '`runnable.timeout`'],
     [{ apiLinks: { adapters: [{ name: 'x', languages: ['js'] }] } }, '`apiLinks.adapters`'],
-  ])('rejects %j', (options, message) => {
-    expect(() => resolveOptions(options as never)).toThrow(OptionsError);
-    expect(() => resolveOptions(options as never)).toThrow(message);
-  });
-
-  test('accepts a custom playground with url or post', () => {
-    const url = () => 'https://example.com';
-    const options = resolveOptions({ playgrounds: { demo: { label: 'Open in Demo', url } } });
-    expect(options.playgrounds).toEqual({ demo: { label: 'Open in Demo', url } });
-  });
+  ];
+  for (const [options, message] of cases) {
+    const resolve = () => resolveOptions(options as never);
+    expect(resolve, JSON.stringify(options)).toThrow(OptionsError);
+    expect(resolve, JSON.stringify(options)).toThrow(message);
+  }
 });

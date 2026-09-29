@@ -1,15 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 import { afterEach, expect, test, vi } from 'vitest';
-import { type PydocsRegistry, type PydocsSymbol, type PythonAdapterOptions, python } from '../src/adapters/python.ts';
+import { type PydocsRegistry, type PydocsSymbol, python } from '../src/adapters/python.ts';
 import { readInventory } from '../src/adapters/python-index.ts';
 import { type CodeblocksOptions, resolveOptions } from '../src/options.ts';
 import { setRegistry } from '../src/registry.ts';
 import { block, apiLinks as links, render } from './render.ts';
 
-const withPython = (options: PythonAdapterOptions) => ({ apiLinks: { adapters: [python(options)] } });
-
 const texts = async (...lines: string[]) => links((await render(block('py', ...lines))).html).map((l) => l.text);
+const hrefs = async (fence: string, ...lines: string[]) =>
+  links((await render(block(fence, ...lines))).html).map((l) => l.href);
 
 afterEach(() => {
   setRegistry(undefined);
@@ -23,12 +23,13 @@ test('links imports, attribute chains and a method on a new instance, from the s
   );
   const docs = 'https://docs.python.org/3/library';
   const source = 'Python 3.14 documentation';
+  const path = { text: 'Path', href: `${docs}/pathlib.html#pathlib.Path`, head: 'class pathlib.Path', source };
   expect(links(html)).toEqual([
     { text: 'json', href: `${docs}/json.html#module-json`, head: 'module json', source },
     { text: 'pathlib', href: `${docs}/pathlib.html#module-pathlib`, head: 'module pathlib', source },
-    { text: 'Path', href: `${docs}/pathlib.html#pathlib.Path`, head: 'class pathlib.Path', source },
+    path,
     { text: 'json.loads', href: `${docs}/json.html#json.loads`, head: 'function json.loads', source },
-    { text: 'Path', href: `${docs}/pathlib.html#pathlib.Path`, head: 'class pathlib.Path', source },
+    path,
     {
       text: 'read_text',
       href: `${docs}/pathlib.html#pathlib.Path.read_text`,
@@ -40,12 +41,99 @@ test('links imports, attribute chains and a method on a new instance, from the s
   expect(warnings).toEqual([]);
 });
 
-test('follows aliases and dotted imports', async () => {
-  expect(await texts('import json as j', 'j.loads(s)')).toEqual(['json', 'j.loads']);
-  expect(await texts('from json import loads as parse', 'parse(s)')).toEqual(['json', 'loads', 'parse']);
-  expect(await texts('import os.path', 'os.path.join(a, b)')).toEqual(['os.path', 'os.path.join']);
-  expect(await texts('import os', 'os.path.join(a, b)')).toEqual(['os', 'os.path.join']);
-  expect(await texts('from os import (', '    path,', ')', 'path.join(a)')).toEqual(['os', 'path', 'path.join']);
+const cases: [string[], string[]][] = [
+  // Aliases and dotted imports.
+  [
+    ['import json as j', 'j.loads(s)'],
+    ['json', 'j.loads'],
+  ],
+  [
+    ['from json import loads as parse', 'parse(s)'],
+    ['json', 'loads', 'parse'],
+  ],
+  [
+    ['import os.path', 'os.path.join(a, b)'],
+    ['os.path', 'os.path.join'],
+  ],
+  [
+    ['import os', 'os.path.join(a, b)'],
+    ['os', 'os.path.join'],
+  ],
+  [
+    ['from os import (', '    path,', ')', 'path.join(a)'],
+    ['os', 'path', 'path.join'],
+  ],
+  // The longest known part of a chain; a type only after a call to a class.
+  [
+    ['import json', 'json.missing.loads(s)'],
+    ['json', 'json'],
+  ],
+  [
+    ['import json', 'json.loads(s).read_text()'],
+    ['json', 'json.loads'],
+  ],
+  [
+    ['from pathlib import Path', 'Path.missing().read_text()'],
+    ['pathlib', 'Path', 'Path'],
+  ],
+  // Strings and comments.
+  [['import json', '"json.loads"', "f'{json.loads(s)}'", '# json.loads(s)', '"""', 'json.loads(s)', '"""'], ['json']],
+  [['import json', "b'json' + r'\\'json.loads'"], ['json']],
+  [
+    ['x = "open', 'import json', 'json.loads(s)'],
+    ['json', 'json.loads'],
+  ],
+  // Names not imported, or bound again.
+  [['loads(s)', 'self.json.loads(s)'], []],
+  [['import json', 'json = {}', 'json.loads(s)'], ['json']],
+  [
+    ['from pathlib import Path', 'def read(Path):', '    Path.read_text()'],
+    ['pathlib', 'Path'],
+  ],
+  [['import json', 'for json in items:', '    json.loads(s)'], ['json']],
+  [['import json', 'with open(p) as json:', '    json.loads(s)'], ['json']],
+  [['import json', 'async def f(json):', '    json.dumps(1)'], ['json']],
+  [['import json', 'f = lambda k, json: json.dumps(k)'], ['json']],
+  [['import json', 'f = lambda *json: json.dumps(1)'], ['json']],
+  [['import json', 'json: dict = {}', 'json.loads(s)'], ['json']],
+  [['import json', 'if ok: json = {}', 'json.loads(s)'], ['json']],
+  // Comparisons, keyword arguments, annotations and defaults are not bindings.
+  [
+    ['import json', 'json == other', 'json.loads(s)'],
+    ['json', 'json', 'json.loads'],
+  ],
+  [
+    ['import json', 'post(url, json=json.dumps(x))'],
+    ['json', 'json.dumps'],
+  ],
+  [
+    ['from pathlib import Path', 'p: Path = Path("x")'],
+    ['pathlib', 'Path', 'Path', 'Path'],
+  ],
+  [
+    ['from pathlib import Path', 'def f(p: Path = Path("x")):', '    pass'],
+    ['pathlib', 'Path', 'Path', 'Path'],
+  ],
+  [
+    ['from pathlib import Path', 'def read(p: dict[str, Path]) -> Path:', '    return Path(p)'],
+    ['pathlib', 'Path', 'Path', 'Path', 'Path'],
+  ],
+  [
+    ['import json', 'def f(a, b=g(1, json)):', '    json.loads(a)'],
+    ['json', 'json', 'json.loads'],
+  ],
+  [
+    ['import json', 'f = lambda k: json.dumps(k)'],
+    ['json', 'json.dumps'],
+  ],
+  [
+    ['import json', 'def main(): print(json, 1)', 'json.loads(s)'],
+    ['json', 'json', 'json.loads'],
+  ],
+];
+
+test('follows imports, aliases and bindings, and skips strings and comments', async () => {
+  for (const [lines, expected] of cases) expect(await texts(...lines), lines.join('\n')).toEqual(expected);
 });
 
 test.each<CodeblocksOptions>([{}, { shellCopy: false }])(
@@ -55,81 +143,6 @@ test.each<CodeblocksOptions>([{}, { shellCopy: false }])(
     expect(links(html).map((l) => l.text)).toEqual(['json', 'json.dumps']);
   },
 );
-
-test('links the longest part of a chain that it knows', async () => {
-  expect(await texts('import json', 'json.missing.loads(s)')).toEqual(['json', 'json']);
-});
-
-test('never links names in strings or comments', async () => {
-  const lines = [
-    'import json',
-    '"json.loads"',
-    "f'{json.loads(s)}'",
-    '# json.loads(s)',
-    '"""',
-    'json.loads(s)',
-    '"""',
-    "b'json' + r'\\'json.loads'",
-  ];
-  expect(await texts(...lines)).toEqual(['json']);
-});
-
-test('ends an unclosed one-line string at the end of its line', async () => {
-  expect(await texts('x = "open', 'import json', 'json.loads(s)')).toEqual(['json', 'json.loads']);
-});
-
-test('leaves names that are not imported, or that the block binds again, as plain text', async () => {
-  expect(await texts('loads(s)', 'self.json.loads(s)')).toEqual([]);
-  expect(await texts('import json', 'json = {}', 'json.loads(s)')).toEqual(['json']);
-  expect(await texts('from pathlib import Path', 'def read(Path):', '    Path.read_text()')).toEqual([
-    'pathlib',
-    'Path',
-  ]);
-  expect(await texts('import json', 'for json in items:', '    json.loads(s)')).toEqual(['json']);
-  expect(await texts('import json', 'with open(p) as json:', '    json.loads(s)')).toEqual(['json']);
-  expect(await texts('import json', 'async def f(json):', '    json.dumps(1)')).toEqual(['json']);
-  expect(await texts('import json', 'f = lambda k, json: json.dumps(k)')).toEqual(['json']);
-  expect(await texts('import json', 'f = lambda *json: json.dumps(1)')).toEqual(['json']);
-  expect(await texts('import json', 'json: dict = {}', 'json.loads(s)')).toEqual(['json']);
-  expect(await texts('import json', 'if ok: json = {}', 'json.loads(s)')).toEqual(['json']);
-});
-
-test('keeps a comparison or a keyword argument from counting as a new binding only where it must', async () => {
-  expect(await texts('import json', 'json == other', 'json.loads(s)')).toEqual(['json', 'json', 'json.loads']);
-  expect(await texts('import json', 'post(url, json=json.dumps(x))')).toEqual(['json', 'json.dumps']);
-  expect(await texts('from pathlib import Path', 'p: Path = Path("x")')).toEqual(['pathlib', 'Path', 'Path', 'Path']);
-  expect(await texts('from pathlib import Path', 'def f(p: Path = Path("x")):', '    pass')).toEqual([
-    'pathlib',
-    'Path',
-    'Path',
-    'Path',
-  ]);
-  expect(
-    await texts('from pathlib import Path', 'def read(p: dict[str, Path]) -> Path:', '    return Path(p)'),
-  ).toEqual(['pathlib', 'Path', 'Path', 'Path', 'Path']);
-  expect(await texts('import json', 'def f(a, b=g(1, json)):', '    json.loads(a)')).toEqual([
-    'json',
-    'json',
-    'json.loads',
-  ]);
-  expect(await texts('import json', 'f = lambda k: json.dumps(k)')).toEqual(['json', 'json.dumps']);
-  expect(await texts('from pathlib import Path', 'def read() -> dict[str, Path]:', '    return Path("a")')).toEqual([
-    'pathlib',
-    'Path',
-    'Path',
-    'Path',
-  ]);
-  expect(await texts('import json', 'def main(): print(json, 1)', 'json.loads(s)')).toEqual([
-    'json',
-    'json',
-    'json.loads',
-  ]);
-});
-
-test('guesses a type only after a call to a class', async () => {
-  expect(await texts('import json', 'json.loads(s).read_text()')).toEqual(['json', 'json.loads']);
-  expect(await texts('from pathlib import Path', 'Path.missing().read_text()')).toEqual(['pathlib', 'Path', 'Path']);
-});
 
 test('does nothing with apiLinks=false or in other languages', async () => {
   expect((await render(block('py apiLinks=false', 'import json'))).html).not.toContain('scb-api-link');
@@ -154,7 +167,7 @@ const myproject = () =>
       },
     ],
     ['myproject.report.Report', { ...report, signature: 'class myproject.report.Report(title: str)' }],
-    // A documented re-export: `Report` is defined in `myproject._report`, a private module.
+    // A documented re-export of a class from a private module.
     ['myproject.Report', { ...report, signature: 'class myproject.report.Report(title: str)' }],
     [
       'myproject.Report.render',
@@ -210,7 +223,7 @@ test('links the objects of a starlight-pydocs package through its registry, with
   expect(warnings).toEqual([]);
 });
 
-test('takes the first starlight-pydocs package that has a path, and wins over the inventories', async () => {
+test('takes the first starlight-pydocs package that has a path, wins over the inventories, and ignores other versions', async () => {
   pydocs({
     version: 1,
     packages: [
@@ -223,58 +236,45 @@ test('takes the first starlight-pydocs package that has a path, and wins over th
       { name: 'json', base: 'api/json', symbols: new Map([['json', { href: '/api/json/', kind: 'module' }]]) },
     ],
   });
-  const { html } = await render(block('py', 'import json, myproject'));
-  expect(links(html).map((l) => [l.text, l.href])).toEqual([
-    ['json', '/api/json/'],
-    ['myproject', '/api/myproject/'],
-  ]);
+  expect(await hrefs('py', 'import json, myproject')).toEqual(['/api/json/', '/api/myproject/']);
+  pydocs({ version: 2, packages: [{ name: 'myproject', base: 'api/myproject', symbols: myproject() }] } as never);
+  expect(await texts('import json, myproject')).toEqual(['json']);
 });
 
-const versions = (): PydocsRegistry => ({
-  version: 1,
-  packages: [
-    { name: 'myproject', base: 'api/myproject', symbols: myproject() },
-    {
-      name: 'myproject',
-      base: '1x/api/myproject',
-      symbols: new Map([
-        ['myproject', { href: '/1x/api/myproject/', kind: 'module' }],
-        ['myproject.Report', { href: '/1x/api/myproject/#myproject.Report', kind: 'class' }],
-      ]),
-    },
-  ],
-});
-
-test('prefers the starlight-pydocs package at the pydocsBase of the block', async () => {
-  pydocs(versions());
-  const code = ['from myproject import Report'];
-  const current = await render(block('py', ...code));
-  expect(links(current.html).map((l) => l.href)).toEqual([
+test('prefers the starlight-pydocs package at the pydocsBase of the block, falls back to the first, and warns for an unknown one', async () => {
+  pydocs({
+    version: 1,
+    packages: [
+      { name: 'myproject', base: 'api/myproject', symbols: myproject() },
+      {
+        name: 'myproject',
+        base: '1x/api/myproject',
+        symbols: new Map([
+          ['myproject', { href: '/1x/api/myproject/', kind: 'module' }],
+          ['myproject.Report', { href: '/1x/api/myproject/#myproject.Report', kind: 'class' }],
+        ]),
+      },
+    ],
+  });
+  const code = ['from myproject import Report, summarise'];
+  expect(await hrefs('py', ...code)).toEqual([
     '/api/myproject/',
     '/api/myproject/report/#myproject.report.Report',
+    '/api/myproject/#myproject.summarise',
   ]);
   const archived = await render(block('py pydocsBase="1x/api/myproject"', ...code));
   expect(links(archived.html).map((l) => l.href)).toEqual([
     '/1x/api/myproject/',
     '/1x/api/myproject/#myproject.Report',
+    '/api/myproject/#myproject.summarise',
   ]);
   expect(archived.warnings).toEqual([]);
-});
-
-test('falls back to the first package for a path that the pydocsBase package does not have', async () => {
-  pydocs(versions());
-  const { html } = await render(block('py pydocsBase="1x/api/myproject"', 'from myproject import summarise'));
-  expect(links(html).map((l) => l.href)).toEqual(['/1x/api/myproject/', '/api/myproject/#myproject.summarise']);
-});
-
-test('warns once for a pydocsBase that no package has, and links as usual', async () => {
-  pydocs(versions());
-  const { html, warnings } = await render(
-    block('py pydocsBase="2x/api/myproject"', 'import myproject', 'myproject.Report'),
-  );
-  expect(links(html).map((l) => l.href)).toEqual(['/api/myproject/', '/api/myproject/report/#myproject.report.Report']);
-  expect(warnings).toHaveLength(1);
-  expect(warnings[0]).toContain('pydocsBase="2x/api/myproject"');
+  const unknown = await render(block('py pydocsBase="2x/api/myproject"', 'import myproject', 'myproject.Report'));
+  expect(links(unknown.html).map((l) => l.href)).toEqual([
+    '/api/myproject/',
+    '/api/myproject/report/#myproject.report.Report',
+  ]);
+  expect(unknown.warnings).toEqual([expect.stringContaining('pydocsBase="2x/api/myproject"')]);
 });
 
 test('reads the starlight-pydocs registry on each render, so that changes in dev show', async () => {
@@ -288,11 +288,6 @@ test('reads the starlight-pydocs registry on each render, so that changes in dev
   expect(links((await render(code, adapter)).html).map((l) => l.text)).toEqual(['myproject']);
 });
 
-test('ignores a starlight-pydocs registry of another version', async () => {
-  pydocs({ version: 2, packages: [{ name: 'myproject', base: 'api/myproject', symbols: myproject() }] } as never);
-  expect(await texts('import json, myproject')).toEqual(['json']);
-});
-
 test('reads more inventories, can leave out the standard library, and warns about bad ones', async () => {
   const header = '# Sphinx inventory version 2\n# Project: NumPy\n# Version: 2.3\n# The rest is compressed.\n';
   const body =
@@ -304,17 +299,17 @@ test('reads more inventories, can leave out the standard library, and warns abou
     throw new TypeError('fetch failed');
   });
   vi.stubGlobal('fetch', fetch);
-  const { html, warnings } = await render(
-    block('py', 'import json', 'import numpy as np', 'np.linspace(0, 1)'),
-    withPython({
-      stdlib: false,
-      inventories: [
-        'https://numpy.org/doc/stable/objects.inv',
-        { url: 'https://example.com/page.inv', base: 'https://example.com/docs/' },
-        'https://offline.example/objects.inv',
-      ],
-    }),
-  );
+  const adapter = python({
+    stdlib: false,
+    inventories: [
+      'https://numpy.org/doc/stable/objects.inv',
+      { url: 'https://example.com/page.inv', base: 'https://example.com/docs/' },
+      'https://offline.example/objects.inv',
+    ],
+  });
+  const { html, warnings } = await render(block('py', 'import json', 'import numpy as np', 'np.linspace(0, 1)'), {
+    apiLinks: { adapters: [adapter] },
+  });
   expect(links(html)).toEqual([
     {
       text: 'numpy',

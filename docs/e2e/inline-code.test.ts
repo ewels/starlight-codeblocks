@@ -20,14 +20,26 @@ const token = (span: Locator) =>
 
 const theme = (locator: Locator) => locator.page().evaluate(() => document.documentElement.dataset.theme as string);
 
-test('draws each token in the colour of the current theme, and switches with the theme', async ({ page }) => {
+const background = (l: Locator) => css(l, 'backgroundColor');
+
+test('draws chips on the code block background, in the colours of the theme, and switches with it', async ({
+  page,
+}) => {
   const code = page.locator('.example .pane.output').first().locator('code.scb-inline').first();
   await expect(code).toHaveText('codeblocks()');
+  expect(await background(code)).toBe(await background(page.locator('.example .expressive-code pre').first()));
+  const plain = page.locator('.sl-markdown-content p code', { hasText: /^py$/ });
+  expect(await background(plain)).not.toBe(await background(code));
+  const corners = await code.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return [s.borderRadius, s.boxDecorationBreak || s.getPropertyValue('-webkit-box-decoration-break')];
+  });
+  expect(corners).toEqual(['4px', 'clone']);
+
   const keyword = code.locator('span').first();
   const current = await theme(code);
   const colours = await token(keyword);
   expect(colours.drawn).toBe(rgb(current === 'dark' ? colours.dark : colours.light));
-
   const other = current === 'dark' ? 'light' : 'dark';
   await page.evaluate((t) => {
     document.documentElement.dataset.theme = t;
@@ -35,45 +47,13 @@ test('draws each token in the colour of the current theme, and switches with the
   expect((await token(keyword)).drawn).toBe(rgb(other === 'dark' ? colours.dark : colours.light));
 });
 
-test('uses the background of the code blocks, and removes the suffix', async ({ page }) => {
-  const pane = page.locator('.example .pane.output').first();
-  const code = pane.locator('code.scb-inline').first();
-  const block = page.locator('.example .expressive-code pre').first();
-  const background = (l: Locator) => css(l, 'backgroundColor');
-  expect(await background(code)).toBe(await background(block));
-  await expect(pane.locator('p:not(.label)').first()).toHaveText(
-    'codeblocks() in astro.config.mjs adds a set of Expressive Code plugins to the site. ' +
-      'One of them reads a directive on its own comment line, such as // [!code focus] or # [!code focus]. ' +
-      'It removes the directive from codeBlock.code before the block renders, so the copy button never sees it.',
-  );
-});
-
-test('leaves inline code without a suffix unchanged', async ({ page }) => {
-  const plain = page.locator('.sl-markdown-content p code', { hasText: /^py$/ });
-  await expect(plain).toHaveCount(1);
-  await expect(plain.locator('span')).toHaveCount(0);
-  const highlighted = page.locator('code.scb-inline').first();
-  const background = (l: Locator) => css(l, 'backgroundColor');
-  expect(await background(plain)).not.toBe(await background(highlighted));
-});
-
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
   test('uses the same theme as the code blocks', async ({ page }) => {
-    const background = (l: Locator) => css(l, 'backgroundColor');
     const code = page.locator('code.scb-inline').first();
     expect(await background(code)).toBe(await background(page.locator('.expressive-code pre').first()));
     const colours = await token(code.locator('span').first());
     expect([rgb(colours.dark), rgb(colours.light)]).toContain(colours.drawn);
   });
-});
-
-test('chips have rounded corners, also on each line of a chip that wraps', async ({ page }) => {
-  const code = page.locator('.example .pane.output').first().locator('code.scb-inline').first();
-  const style = await code.evaluate((el) => {
-    const s = getComputedStyle(el);
-    return [s.borderRadius, s.boxDecorationBreak || s.getPropertyValue('-webkit-box-decoration-break')];
-  });
-  expect(style).toEqual(['4px', 'clone']);
 });

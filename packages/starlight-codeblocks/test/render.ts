@@ -51,7 +51,7 @@ export async function styleVariants(options: CodeblocksOptions = {}) {
 /** A fenced code block: the fence line's language and meta, then the code lines. */
 export const block = (fence: string, ...lines: string[]) => [`\`\`\`${fence}`, ...lines, '```'].join('\n');
 
-/** The classes after `ec-line` on each rendered line. */
+/** The class attribute of each rendered line. */
 export const lineClasses = (html: string) => html.match(/<div class="ec-line[^"]*"/g)?.map((m) => m.slice(12, -1));
 
 const decode = (value?: string) =>

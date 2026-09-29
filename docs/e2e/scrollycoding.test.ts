@@ -25,19 +25,30 @@ test.beforeEach(async ({ page }) => {
   await page.goto('./features/scrollycoding/');
 });
 
-test('the page does not scroll sideways', async ({ page }) => {
+test('shows the steps next to one sticky block, or a focused copy per step on a phone', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  // Each step copy shows the version of its step.
+  await expect(steps(page, 2).nth(1).locator('.expressive-code .ec-line')).toHaveCount(3);
+  await expect(steps(page, 2).nth(2).locator('.expressive-code .ec-line')).toHaveCount(4);
+  if (phone()) {
+    await expect(sticky(page)).toBeHidden();
+    const copy = steps(page).nth(3).locator('.expressive-code');
+    await expect(copy).toBeVisible();
+    await expect(copy.locator('.ec-line').nth(6)).not.toHaveClass(/scb-focus-out/);
+    await expect(copy.locator('.ec-line').nth(0)).toHaveClass(/scb-focus-out/);
+    return;
+  }
+  await expect(sticky(page)).toBeVisible();
+  await expect(steps(page).locator('.expressive-code').first()).toBeHidden();
+  const [a, b] = await Promise.all([steps(page).first().boundingBox(), sticky(page).boundingBox()]);
+  expect(b?.x).toBeGreaterThan((a?.x ?? 0) + (a?.width ?? 0));
+  // codeSide="left" puts the block in the left column.
+  const [code, step] = await Promise.all([sticky(page, 3).boundingBox(), steps(page, 3).first().boundingBox()]);
+  expect((code?.x ?? 0) + (code?.width ?? 0)).toBeLessThanOrEqual(step?.x ?? 0);
 });
 
 test.describe('wide layout', () => {
   test.skip(phone, 'The two columns need 600 px.');
-
-  test('shows the steps next to one sticky block', async ({ page }) => {
-    await expect(sticky(page)).toBeVisible();
-    await expect(steps(page).locator('.expressive-code').first()).toBeHidden();
-    const [a, b] = await Promise.all([steps(page).first().boundingBox(), sticky(page).boundingBox()]);
-    expect(b?.x).toBeGreaterThan((a?.x ?? 0) + (a?.width ?? 0));
-  });
 
   test('the active step stays level with the sticky block, from the first step to the last', async ({ page }) => {
     for (const [width, height] of [
@@ -70,7 +81,7 @@ test.describe('wide layout', () => {
     }
   });
 
-  test('the step on the middle of the block sets the focus', async ({ page }) => {
+  test('the step on the middle of the block sets the focus and marks, even after a jump', async ({ page }) => {
     expect(await clear(page)).toEqual([1]);
     await centre(page, 0, 3);
     await expect(steps(page).nth(3)).toHaveClass(/scb-scrolly-on/);
@@ -85,23 +96,11 @@ test.describe('wide layout', () => {
     expect(top).toBeLessThan(nav + 40);
     await centre(page, 0, 1);
     await expect.poll(() => clear(page)).toEqual([3]);
-  });
 
-  test('a jump past several steps, such as the End key, still picks the right step', async ({ page }) => {
     const last = (await steps(page).count()) - 1;
     await centre(page, 0, last);
     await expect(steps(page).nth(last)).toHaveClass(/scb-scrolly-on/);
-    await centre(page, 0, 0);
-    await expect(steps(page).nth(0)).toHaveClass(/scb-scrolly-on/);
-    await page.keyboard.press('End');
-    await expect(steps(page).nth(last)).toHaveClass(/scb-scrolly-on/);
-    await page.keyboard.press('Home');
-    await expect(steps(page).nth(0)).toHaveClass(/scb-scrolly-on/);
-  });
-
-  test('the block does not stay stuck alone after the last step', async ({ page }) => {
-    const last = (await steps(page).count()) - 1;
-    await centre(page, 0, last);
+    // The block does not stay stuck alone after the last step.
     const { spare, half } = await scrolly(page).evaluate((root) => {
       const grid = root.querySelector('.scb-scrolly-steps')?.getBoundingClientRect();
       const code = root.querySelector('.scb-scrolly-code')?.getBoundingClientRect();
@@ -110,38 +109,33 @@ test.describe('wide layout', () => {
     });
     expect(spare).toBeGreaterThanOrEqual(-1);
     expect(spare).toBeLessThanOrEqual(half);
-  });
+    // A jump past several steps, such as the End key, still picks the right step.
+    await centre(page, 0, 0);
+    await expect(steps(page).nth(0)).toHaveClass(/scb-scrolly-on/);
+    await page.keyboard.press('End');
+    await expect(steps(page).nth(last)).toHaveClass(/scb-scrolly-on/);
+    await page.keyboard.press('Home');
+    await expect(steps(page).nth(0)).toHaveClass(/scb-scrolly-on/);
 
-  test('a step can mark lines', async ({ page }) => {
     await centre(page, 1, 1);
     await expect(sticky(page, 1).locator('.ec-line').nth(2)).toHaveClass(/mark/);
     await centre(page, 1, 0);
     await expect(sticky(page, 1).locator('.ec-line.mark')).toHaveCount(0);
   });
 
-  test('the block stays blurred under the pointer, and clears with keyboard focus', async ({ page }) => {
+  test('the block stays blurred under the pointer, clears with keyboard focus, and fades at once under reduced motion', async ({
+    page,
+  }) => {
     const out = sticky(page).locator('.ec-line.scb-focus-out').first();
     await sticky(page).hover();
     await expect(out).not.toHaveCSS('filter', 'none');
     await sticky(page).locator('code').focus();
     await expect(out).toHaveCSS('filter', 'none');
+    if (reduced()) {
+      await expect(steps(page).first()).toHaveCSS('transition-duration', '0s');
+      await expect(sticky(page).locator('.ec-line').nth(1)).toHaveCSS('transition-duration', '0s');
+    }
   });
-
-  test('under reduced motion, the steps fade with no transition', async ({ page }) => {
-    test.skip(!reduced());
-    await expect(steps(page).first()).toHaveCSS('transition-duration', '0s');
-    await expect(sticky(page).locator('.ec-line').nth(1)).toHaveCSS('transition-duration', '0s');
-  });
-});
-
-test('on a phone, each step has its own focused copy of the block', async ({ page }) => {
-  test.skip(!phone());
-  await expect(sticky(page)).toBeHidden();
-  const copy = steps(page).nth(3).locator('.expressive-code');
-  await expect(copy).toBeVisible();
-  const lines = copy.locator('.ec-line');
-  await expect(lines.nth(6)).not.toHaveClass(/scb-focus-out/);
-  await expect(lines.nth(0)).toHaveClass(/scb-focus-out/);
 });
 
 test('without JavaScript, the page shows the narrow layout', async ({ browser }) => {
@@ -182,12 +176,9 @@ test.describe('versions of the code', () => {
   const sharp = (page: Page) =>
     lines(page).evaluateAll((all) => all.flatMap((l, i) => (l.classList.contains('scb-focus-out') ? [] : [i + 1])));
 
-  test('each step copy shows the version of its step', async ({ page }) => {
-    await expect(steps(page, 2).nth(1).locator('.expressive-code .ec-line')).toHaveCount(3);
-    await expect(steps(page, 2).nth(2).locator('.expressive-code .ec-line')).toHaveCount(4);
-  });
-
-  test('a step after a new version animates the sticky block to it, and back', async ({ page }) => {
+  test('a step after a new version animates the sticky block to it and back, and keyboard focus follows', async ({
+    page,
+  }) => {
     test.skip(phone(), 'The two columns need 600 px.');
     await expect(lines(page)).toHaveCount(3);
     await centre(page, 2, 2);
@@ -201,11 +192,8 @@ test.describe('versions of the code', () => {
     await centre(page, 2, 1);
     await expect(lines(page)).toHaveCount(3);
     await expect.poll(() => sharp(page)).toEqual([3]);
-  });
-
-  test('keyboard focus in the sticky block moves to the new version', async ({ page }) => {
-    test.skip(phone(), 'The two columns need 600 px.');
-    await centre(page, 2, 0);
+    // Keyboard focus in the sticky block moves to the new version.
+    await expect(sticky(page, 2).locator('.scb-steps-anim')).toHaveCount(0);
     await sticky(page, 2).locator('.scb-scrolly-current pre > code').focus();
     await centre(page, 2, 2);
     await expect(steps(page, 2).nth(2)).toHaveClass(/scb-scrolly-on/);
@@ -246,12 +234,6 @@ test('the active step stays still at every scroll position near a new version', 
   expect(moving, 'scroll positions where the block changes with no scroll').toEqual([]);
 });
 
-test('codeSide="left" puts the block in the left column', async ({ page }) => {
-  test.skip(phone(), 'The two columns need 600 px.');
-  const [code, step] = await Promise.all([sticky(page, 3).boundingBox(), steps(page, 3).first().boundingBox()]);
-  expect((code?.x ?? 0) + (code?.width ?? 0)).toBeLessThanOrEqual(step?.x ?? 0);
-});
-
 test.describe('on a page without a table of contents', () => {
   test.skip(phone, 'Phones have no space beside the content column.');
   const measure = async (page: Page) => ({
@@ -261,24 +243,24 @@ test.describe('on a page without a table of contents', () => {
     overflow: await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
   });
 
-  test('a block with long lines spreads by the same amount on each side', async ({ page }) => {
+  test('a block with long lines spreads evenly, and keeps to the content column when the window is too narrow', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('./features/scrollycoding/wide/');
-    const { column, grid, code, overflow } = await measure(page);
-    expect(code).toBe(true);
-    expect(grid?.width).toBeCloseTo(1000, 0);
-    const left = (column?.x ?? 0) - (grid?.x ?? 0);
-    const right = (grid?.x ?? 0) + (grid?.width ?? 0) - (column?.x ?? 0) - (column?.width ?? 0);
+    const wide = await measure(page);
+    expect(wide.code).toBe(true);
+    expect(wide.grid?.width).toBeCloseTo(1000, 0);
+    const left = (wide.column?.x ?? 0) - (wide.grid?.x ?? 0);
+    const right = (wide.grid?.x ?? 0) + (wide.grid?.width ?? 0) - (wide.column?.x ?? 0) - (wide.column?.width ?? 0);
     expect(Math.abs(left - right)).toBeLessThan(1);
-    expect(overflow).toBe(0);
-  });
+    expect(wide.overflow).toBe(0);
 
-  test('the block keeps to the content column when the window is too narrow', async ({ page }) => {
     await page.setViewportSize({ width: 1100, height: 900 });
     await page.goto('./features/scrollycoding/wide/');
-    const { column, grid, code, overflow } = await measure(page);
-    expect(code).toBe(false);
-    expect(grid?.width).toBeCloseTo(column?.width ?? 0, 0);
-    expect(overflow).toBe(0);
+    const narrow = await measure(page);
+    expect(narrow.code).toBe(false);
+    expect(narrow.grid?.width).toBeCloseTo(narrow.column?.width ?? 0, 0);
+    expect(narrow.overflow).toBe(0);
   });
 });
