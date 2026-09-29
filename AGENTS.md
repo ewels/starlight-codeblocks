@@ -6,14 +6,13 @@ These rules apply to every session in this repository.
 
 `starlight-codeblocks` is a Starlight plugin that adds 24 code block features (focus, line states, comment notation, annotations, API auto-linking and more) on top of Expressive Code, which already renders every code block in Starlight. The first release is built. `packages/starlight-codeblocks/` is the plugin, `docs/` is its Starlight docs site (it uses the plugin through `workspace:*`), and `skills/starlight-codeblocks/` is an agent skill for people who use the plugin.
 
-`design/` holds the original design pack and the build history:
+`.agents/` holds the notes for agents that work on the repository:
 
-- `SPEC.md` defines syntax and behaviour. It wins over the mockups.
-- `mockups.html` shows look and feel. Open it in a browser before you change how a feature looks.
 - `ARCHITECTURE.md` has the spike results and "How to add a feature", the conventions for every feature. Read it before you write plugin code.
-- `DECISIONS.md` records every decision the spec does not settle, with the reason. Search it before you change existing behaviour.
+- `DECISIONS.md` records every design decision, with the reason. Search it before you change existing behaviour.
 - `WRITING-STYLE.md` and `DOCS-SITE.md` define how the docs read and how the site is organised.
-- `PLAN.md`, `PROGRESS.md` and `ARCHITECTURE-QUESTIONS.md` are the build plan and its state.
+
+The docs site defines the syntax and behaviour of each feature.
 
 ## Stack
 
@@ -99,7 +98,7 @@ pnpm readme:media [slug...]   docs:build, then regenerate the README images in .
 
 ## Quality gates
 
-Every commit must pass `pnpm lint`, `pnpm test` and `pnpm docs:build` with no warnings. Run `pnpm lint:docs` before each push. CI runs the full e2e suite, so locally run only the Playwright specs for what you changed. For a visual change, compare a Playwright screenshot of the docs example in the dark and the light theme with the same feature in `design/mockups.html`. Put screenshots and experiments in a scratch folder, not in the repository.
+Every commit must pass `pnpm lint`, `pnpm test` and `pnpm docs:build` with no warnings. Run `pnpm lint:docs` before each push. CI runs the full e2e suite, so locally run only the Playwright specs for what you changed. For a visual change, check a Playwright screenshot of the docs example in the dark and the light theme. Put screenshots and experiments in a scratch folder, not in the repository.
 
 ## Accessibility
 
@@ -112,21 +111,19 @@ All features meet WCAG 2.2 AA in the light and the dark Starlight themes:
 
 ## Writing
 
-Every word in `docs/`, the README, `skills/` and package descriptions follows `design/WRITING-STYLE.md`, which is self-contained. Code comments and commit messages use British English and plain language.
+Every word in `docs/`, the README, `skills/` and package descriptions follows `.agents/WRITING-STYLE.md`, which is self-contained. Code comments and commit messages use British English and plain language.
 
 ## Git
 
 - Commit messages are `<area>: <what changed>`, for example `focus: add blur and dim styles`.
 - Never create tags or releases. Never publish to npm. Never force-push. Never rewrite history on a pushed branch.
 
-## Decisions and progress
+## Decisions
 
-- Record every decision that the spec does not settle in `design/DECISIONS.md`, with the reason and the alternatives.
-- Note completed work in `design/PROGRESS.md`.
+Record every design decision in `.agents/DECISIONS.md`, with the reason and the alternatives.
 
 ## Do not
 
-- Copy the mockup page's script into the package. It is a prototype that bypasses Expressive Code.
-- Add runtime dependencies that the spec does not name without an entry in `design/DECISIONS.md`.
+- Add a runtime dependency without an entry in `.agents/DECISIONS.md`.
 - Load client JavaScript on pages that do not use the feature it belongs to.
 - Build snippet import or an Ask AI button. Both were considered and dropped.

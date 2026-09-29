@@ -312,7 +312,7 @@ docs/src/content/docs/features/<name>.mdx   the feature page (DOCS-SITE.md templ
 
 ### 1. Options
 
-The keys and their types are already in `CodeblocksOptions` and `optionsReference` (`src/options.ts`). If the feature's settings differ from SPEC section 3, change both, with a test in `test/options.test.ts`. The docs options reference reads `optionsReference`, so write its descriptions in the docs style. The feature receives its resolved settings: `false`, `true` (features with no settings) or an object with every default filled in.
+The keys and their types are already in `CodeblocksOptions` and `optionsReference` (`src/options.ts`). When the feature's settings change, change both, with a test in `test/options.test.ts`. The docs options reference reads `optionsReference`, so write its descriptions in the docs style. The feature receives its resolved settings: `false`, `true` (features with no settings) or an object with every default filled in.
 
 ### 2. The Expressive Code plugin
 
@@ -389,7 +389,7 @@ With `codeblocks()`, the integration emits the modules next to `ec.<hash>.js`. W
 - Playwright tests in `docs/e2e/<name>.test.ts`, against the example on the feature's docs page (`page.goto('./features/<name>/')`). Use the keyboard and the pointer, and check the `reduced-motion` project. `docs/e2e/client.test.ts` shows how to test browser code on its own routed origin.
 - `pnpm test` builds the package first, because the tests read `dist/client`.
 - Unit tests cannot reach the network. `test/setup.ts` replaces `fetch` and serves the standard library inventory fixture; stub `fetch` in a test for other responses. `test/global-setup.ts` clears the fetch cache before each run.
-- Screenshots for the mockup comparison: build the docs, run `astro preview` in `docs/`, and use `agent-browser` (or Playwright). Set the theme with `document.documentElement.dataset.theme = 'dark'` or `'light'`. Scroll with `window.scrollTo({ top, behavior: 'instant' })`, because the mockup page and Starlight scroll smoothly. Save the files in the scratchpad.
+- Screenshots: build the docs, run `astro preview` in `docs/`, and use `agent-browser` (or Playwright). Set the theme with `document.documentElement.dataset.theme = 'dark'` or `'light'`. Scroll with `window.scrollTo({ top, behavior: 'instant' })`, because Starlight scrolls smoothly. Save the files in the scratchpad.
 
 ### 7. Docs
 

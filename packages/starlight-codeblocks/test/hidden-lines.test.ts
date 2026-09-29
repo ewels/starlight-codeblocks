@@ -102,7 +102,7 @@ test('the rule is brighter under the pointer and fainter while its lines show', 
   }
 });
 
-// The user chose the mockup's dimmed lines knowingly: at 0.75 opacity, syntax colours that Expressive Code
+// Dimmed hidden lines are a deliberate choice: at 0.75 opacity, syntax colours that Expressive Code
 // corrected to just 4.5:1 fall to about 3.1:1 to 3.5:1. This keeps them from falling further.
 test('the code of a hidden line that shows keeps at least 3:1 contrast', async () => {
   for (const v of await variants()) {
