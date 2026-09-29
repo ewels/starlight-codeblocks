@@ -232,3 +232,26 @@ export function pageMarkdown(entry: Entry) {
     );
   return `${head.join('\n\n')}\n\n${out.join('\n').trim()}\n`;
 }
+
+const sections = new Map(
+  entriesInOrder().flatMap(({ label, entries }) => entries.map((entry) => [entry.id, label] as const)),
+);
+
+/**
+ * The Markdown version of a page, with YAML front matter that says where it comes from, so that a copy
+ * read on its own still names the page, the site and the product. JSON strings are valid YAML.
+ */
+export function pageDocument(entry: Entry) {
+  const meta: [string, string | undefined][] = [
+    ['title', entry.data.title],
+    ['description', entry.data.description],
+    ['url', pageUrl(entry.id)],
+    ['markdown', pageUrl(entry.id, true)],
+    ['section', sections.get(entry.id)],
+    ['site', 'starlight-codeblocks documentation'],
+    ['context', `This page is from the documentation of starlight-codeblocks. ${descriptions.get('index')}`],
+    ['index', `${siteUrl}llms.txt`],
+  ];
+  const yaml = meta.flatMap(([key, value]) => (value ? [`${key}: ${JSON.stringify(value)}`] : []));
+  return `---\n${yaml.join('\n')}\n---\n\n${pageMarkdown(entry)}`;
+}

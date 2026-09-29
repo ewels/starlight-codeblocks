@@ -1,6 +1,6 @@
 import { getCollection } from 'astro:content';
 import type { APIRoute, GetStaticPaths } from 'astro';
-import { pageMarkdown } from '../markdown.ts';
+import { pageDocument } from '../markdown.ts';
 
 export const getStaticPaths = (async () =>
   (await getCollection('docs')).map((entry) => ({
@@ -9,4 +9,4 @@ export const getStaticPaths = (async () =>
   }))) satisfies GetStaticPaths;
 
 export const GET: APIRoute = ({ props }) =>
-  new Response(pageMarkdown(props.entry), { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } });
+  new Response(pageDocument(props.entry), { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } });

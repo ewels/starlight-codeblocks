@@ -39,7 +39,13 @@ test('every page links to its Markdown version and its share card, and llms.txt 
     expect.soft(response.status(), String(href)).toBe(200);
     expect.soft(response.headers()['content-type']).toContain('text/markdown');
     const markdown = await response.text();
-    expect.soft(markdown, String(href)).toMatch(/^# \S/);
+    // Front matter names the page, so that a copy read on its own says where it comes from.
+    const [, front = ''] = markdown.match(/^---\n([\s\S]*?)\n---\n\n# \S/) ?? [];
+    expect.soft(front, String(href)).toContain(`url: "${site}${path}"`);
+    expect.soft(front, String(href)).toContain(`markdown: "${href}"`);
+    expect
+      .soft(front, String(href))
+      .toMatch(/^context: "This page is from the documentation of starlight-codeblocks\./m);
     const prose = markdown.replace(/^\s*(`{3,})[^\n]*\n[\s\S]*?^\s*\1$/gm, '');
     expect.soft(prose, String(href)).not.toMatch(/^(import|export) |^\s*<\/?(Example|Tabs|TabItem|Aside|Steps)\b/m);
 
