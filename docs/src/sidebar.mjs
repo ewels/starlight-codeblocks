@@ -8,8 +8,6 @@ export const sidebar = [
     items: [
       'guides/comment-notation',
       'guides/choose-an-annotation-style',
-      'guides/code-switcher-or-tabs',
-      'guides/migrate-from-vitepress',
       'guides/use-with-other-plugins',
       'guides/use-with-other-themes',
       'guides/kitchen-sink',

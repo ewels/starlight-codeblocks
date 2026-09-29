@@ -11,8 +11,6 @@ Two features let the reader change what a block shows.
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/code-switcher/
 
-Guide: https://ewels.github.io/starlight-codeblocks/guides/code-switcher-or-tabs/
-
 Use for install commands for each package manager, or one example in several languages. The variants become one block with a menu in the title bar. The block takes no more space than a plain block.
 
 | Syntax | Where |

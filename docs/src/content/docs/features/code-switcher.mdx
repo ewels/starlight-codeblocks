@@ -3,7 +3,7 @@ title: Code switcher
 description: Show one code block with several variants, such as package managers or languages, and a menu in the title bar to switch between them.
 ---
 
-import { LinkCard } from '@astrojs/starlight/components';
+import { LinkCard, TabItem, Tabs } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
 Install commands and API examples often come in several versions: npm, pnpm and Yarn, or Python and JavaScript. Stacked one after the other, they fill the page with code that most readers skip. The code switcher shows them as one block, with a menu in the title bar that picks the variant.
@@ -181,6 +181,74 @@ port = 8080
 
 </Example>
 
+## Code switcher or tabs
+
+Starlight has a `<Tabs>` component that also shows one version at a time and remembers the choice across pages. The two differ in what they can contain and in how they look.
+
+| Property | Code switcher | `<Tabs>` |
+|---|---|---|
+| Contains | Code blocks only | Any content: prose, lists, code blocks, components |
+| Control | A menu in the title bar of the block | A row of tabs above the content |
+| Works in | Markdown and MDX | MDX only |
+| Keeps the choice | With `sync="<key>"` | With `syncKey="<key>"` |
+| Space on the page | One code block | One code block, plus the row of tabs |
+
+- If every version is one code block, use the code switcher.
+- If a version needs prose, a list or a second code block, use `<Tabs>`.
+- If the page is a `.md` file, use the code switcher, or change the file to `.mdx` for `<Tabs>`.
+
+For example, the steps to install a tool can differ for each operating system, with a sentence of explanation before each command:
+
+export const tabs = `
+<Tabs syncKey="os">
+<TabItem label="macOS">
+
+Install the tool with Homebrew:
+
+\`\`\`sh
+brew install jq
+\`\`\`
+
+</TabItem>
+<TabItem label="Windows">
+
+Install the tool with winget:
+
+\`\`\`sh
+winget install jqlang.jq
+\`\`\`
+
+</TabItem>
+</Tabs>
+`;
+
+<Example code={tabs}>
+
+<Tabs syncKey="os">
+<TabItem label="macOS">
+
+Install the tool with Homebrew:
+
+```sh
+brew install jq
+```
+
+</TabItem>
+<TabItem label="Windows">
+
+Install the tool with winget:
+
+```sh
+winget install jqlang.jq
+```
+
+</TabItem>
+</Tabs>
+
+</Example>
+
+The two keys are separate. A code switcher with `sync="pm"` and a `<Tabs>` group with `syncKey="pm"` do not switch together. Use one of the two for each kind of choice on a site.
+
 ## Limitations
 
 - The directive works in Markdown and MDX files. It does not work around a `<Code>` component.
@@ -189,5 +257,4 @@ port = 8080
 
 ## Related
 
-- [Code switcher or tabs](/starlight-codeblocks/guides/code-switcher-or-tabs/): when to use this feature, and when to use Starlight's `<Tabs>`.
 - [Fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/): one block with fields for the values that differ, instead of one variant for each value.

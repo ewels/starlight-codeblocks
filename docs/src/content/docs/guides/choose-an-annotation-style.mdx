@@ -3,8 +3,6 @@ title: Choose an annotation style
 description: Compare inline callouts, annotations, footnotes and side-by-side annotations on the same code, and pick the style that suits each block.
 ---
 
-import Example from '../../../components/Example.astro';
-
 The plugin has four ways to attach an explanation to a line of code. All four keep the explanation out of the copied code, and all four take their text from a comment in the block. They differ in when the reader sees the text, and where it goes on the page.
 
 Each example below uses the same code and the same two notes, so you can compare the four styles.
@@ -20,10 +18,9 @@ Each example below uses the same code and the same two notes, so you can compare
 
 ## Inline callouts
 
-Use a callout for a note of one short sentence that is about one word or name on a line. The bubble is always visible, so keep callouts to one or two in a block. Put `[!callout /text/]` in a comment above the line.
+Use a callout for a note of one short sentence that is about one word or name on a line. The bubble is always visible, so keep callouts to one or two in a block. See [Inline callouts](/starlight-codeblocks/features/inline-callouts/) for the syntax.
 
-export const callout = `
-\`\`\`py title="fetch.py"
+```py title="fetch.py"
 import httpx
 
 URL = "https://api.example.com/items"
@@ -32,34 +29,26 @@ response = httpx.get(URL, timeout=5.0)
 # [!callout] Raises an error for a 4xx or 5xx status.
 response.raise_for_status()
 items = response.json()
-\`\`\`
-`;
-
-<Example code={callout} />
+```
 
 ## Annotations
 
-Use an annotation when the note is longer, or when the line needs no visual interruption until the reader asks. The code stays as compact as a plain block. Put `[!annotate]` in a comment at the end of the line.
+Use an annotation when the note is longer, or when the line needs no visual interruption until the reader asks. The code stays as compact as a plain block. See [Annotations](/starlight-codeblocks/features/annotations/) for the syntax.
 
-export const annotation = `
-\`\`\`py title="fetch.py"
+```py title="fetch.py"
 import httpx
 
 URL = "https://api.example.com/items"
 response = httpx.get(URL, timeout=5.0)  # [!annotate] Gives up after 5 seconds without a reply.
 response.raise_for_status()  # [!annotate] Raises an error for a 4xx or 5xx status.
 items = response.json()
-\`\`\`
-`;
-
-<Example code={annotation} />
+```
 
 ## Footnotes
 
-Use footnotes when every reader needs every note, and the block is short enough that the list stays close to the lines. The list works the same on a phone and on a desktop. Put `[!ref]` in a comment above the line.
+Use footnotes when every reader needs every note, and the block is short enough that the list stays close to the lines. The list works the same on a phone and on a desktop. See [Footnotes](/starlight-codeblocks/features/footnotes/) for the syntax.
 
-export const footnote = `
-\`\`\`py title="fetch.py"
+```py title="fetch.py"
 import httpx
 
 URL = "https://api.example.com/items"
@@ -68,27 +57,20 @@ response = httpx.get(URL, timeout=5.0)
 # [!ref] Raises an error for a 4xx or 5xx status.
 response.raise_for_status()
 items = response.json()
-\`\`\`
-`;
-
-<Example code={footnote} />
+```
 
 ## Side-by-side annotations
 
-Use side-by-side annotations for a longer block that you explain step by step. On a wide screen, each note is beside the code. On a narrow screen, the notes are a list under the block, as footnotes are. Use `[!annotate]`, and add `annotations="side"` to the fence line.
+Use side-by-side annotations for a longer block that you explain step by step. On a wide screen, each note is beside the code. On a narrow screen, the notes are a list under the block, as footnotes are. See [Side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/) for the syntax.
 
-export const side = `
-\`\`\`py title="fetch.py" annotations="side"
+```py title="fetch.py" annotations="side"
 import httpx
 
 URL = "https://api.example.com/items"
 response = httpx.get(URL, timeout=5.0)  # [!annotate] Gives up after 5 seconds without a reply.
 response.raise_for_status()  # [!annotate] Raises an error for a 4xx or 5xx status.
 items = response.json()
-\`\`\`
-`;
-
-<Example code={side} />
+```
 
 ## Choose a style
 
