@@ -63,8 +63,9 @@ test('adds nothing when the feature is off, with wordDiff=false, or with inline 
   expect((await render(markers)).html).not.toContain('scb-worddiff');
 });
 
-test('marks changed words with an underline or a line-through, so that the tint does not carry the meaning alone', async () => {
+test('marks changed words with a bar, and removed words with a line-through too, so that the tint does not carry the meaning alone', async () => {
   const css = await baseStyles();
-  expect(css).toMatch(/\.scb-worddiff-ins\{[^}]*text-decoration:underline/);
+  expect(css).not.toMatch(/\.scb-worddiff-ins\{[^}]*text-decoration/);
+  expect(css).toMatch(/\.scb-worddiff-ins\{[^}]*box-shadow:inset 0 -2px 0/);
   expect(css).toMatch(/\.scb-worddiff-del\{[^}]*text-decoration:line-through/);
 });

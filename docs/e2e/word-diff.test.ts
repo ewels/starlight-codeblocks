@@ -1,16 +1,17 @@
 import { expect, test } from '@playwright/test';
 import { css, example } from './helpers.ts';
 
-test('marks changed words by shape in the code colour, keeps some syntax colour, and pads the markers', async ({
+test('marks changed words with a bar, strikes removed ones in the code colour, keeps some syntax colour, and pads the markers', async ({
   page,
 }) => {
   await page.goto('./features/word-level-diff/');
   const block = example(page);
   const decoration = (selector: string) => css(block.locator(selector).first(), 'textDecorationLine');
-  expect(await decoration('.scb-worddiff-ins')).toBe('underline');
+  expect(await decoration('.scb-worddiff-ins')).toBe('none');
+  expect(await css(block.locator('.scb-worddiff-ins').first(), 'boxShadow')).toContain('0px -2px 0px 0px inset');
   expect(await decoration('.scb-worddiff-del')).toBe('line-through');
 
-  const [fg, ...lines] = await block.locator('.scb-worddiff-ins, .scb-worddiff-del').evaluateAll((els) => {
+  const [fg, ...lines] = await block.locator('.scb-worddiff-del').evaluateAll((els) => {
     const probe = document.createElement('span');
     probe.style.color = 'var(--ec-codeFg)';
     els[0]?.closest('.expressive-code')?.append(probe);

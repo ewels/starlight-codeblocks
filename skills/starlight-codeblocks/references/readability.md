@@ -133,7 +133,7 @@ Word-level diff highlights the words that changed inside each pair of removed an
 ````
 
 - Prefer `[!code ++]` and `[!code --]` when the block can change, because they move with their line.
-- Changed words get a stronger tint. Added words are underlined, and removed words have a line through them.
+- Changed words get a stronger tint and a bar under them. Removed words also have a line through them.
 - A pair that is less than 40% similar keeps the whole-line tints only.
 - Needs no JavaScript.
 - Option: `wordDiff.minSimilarity` (default `0.4`, from 0 to 1). Raise it to show the highlight only for close edits. `wordDiff: false` turns it off for the site.

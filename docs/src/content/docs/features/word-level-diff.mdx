@@ -39,7 +39,7 @@ Word-level diff applies to every removed line that has an added line below it, f
 - The plugin pairs a run of removed lines with the run of added lines below it, one by one.
 - Each pair is compared token by token: words, runs of whitespace and single punctuation characters.
 - The changed tokens get a stronger tint and a bar in the diff colour. Whitespace between two changed tokens is part of the highlight, so a run of changed words tints as one block.
-- Added words are also underlined, and removed words have a line through them, so the change does not rely on colour.
+- Changed words have a bar under them, and removed words also have a line through them, so the change does not rely on colour.
 - If a pair is less than 40% similar, it is too different to compare. The plugin leaves the whole-line tints in place and adds no word highlight.
 - The plugin corrects the colour of each changed word to 4.5:1 contrast on the tint. In dark themes, this can turn the syntax colours of the words close to plain text.
 - Word-level diff needs no JavaScript in the browser.
