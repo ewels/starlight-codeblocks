@@ -62,16 +62,15 @@ const styleSettings = new PluginStyleSettings({
 
 const cls = (suffix = '') => `${PREFIX}-footnote${suffix}`;
 
-/** Turns `[!ref] text` above a line into a numbered badge on the line and an item in a list under the block. */
+/** Turns `[!ref] text` on or above a line into a numbered badge on the line and an item in a list under the block. */
 export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boolean } = {}): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:footnotes',
     directives: {
       ref: {
-        placement: 'own',
         text: true,
         docs: {
-          description: 'Adds a numbered badge to the next line, and the text to a list under the block.',
+          description: 'Adds a numbered badge to the line, and the text to a list under the block.',
           args: 'The text of the footnote.',
           example: { lang: 'js', code: '// [!ref] Read from the environment.\nconst port = process.env.PORT' },
           page: 'features/footnotes',

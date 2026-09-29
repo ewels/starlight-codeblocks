@@ -66,14 +66,9 @@ Directives turn on many different features. `<name>` is the name of a directive,
 
 For example, `// [!code ++:3]` marks its line and the next two lines as inserted. `// [!code focus ++] Loads the plugin` focuses its line and marks it as inserted, with "Loads the plugin" as the message of the inserted line.
 
-There are two kinds of directive:
+Every directive can go at the end of the line it marks, or on its own line above it. The plugin removes each line that holds only directives, so it does not show on the page.
 
-- An end-of-line directive goes on the line it marks, or on its own line above it.
-- An own-line directive goes only on its own line above the line it marks. `[!callout]`, `[!link]` and `[!ref]` are own-line directives.
-
-The plugin removes each line that holds only directives, so it does not show on the page.
-
-<LinkCard title="Directives reference" description="See every directive, which feature it belongs to, and where it can go." href="/starlight-codeblocks/reference/directives/" />
+<LinkCard title="Directives reference" description="See every directive and the feature it belongs to." href="/starlight-codeblocks/reference/directives/" />
 
 ## Behaviour
 
@@ -97,12 +92,9 @@ The build logs a warning with the file, the code block and the line when:
 
 - a directive has an unknown name, or the feature it belongs to is off;
 - the `/<text>/` of a directive has no match on its target line;
-- an own-line directive is at the end of a line of code;
-- an own-line directive has no line below it.
+- a directive on its own line has no line below it.
 
 The directive then has no effect. An unknown directive stays in the code as written, so you can see it on the page.
-
-The build also logs a warning when a comment has text before an own-line directive. The directive works, but the plugin removes the whole line, so the text is not on the page.
 
 ## Options
 

@@ -82,7 +82,6 @@ export function pluginAnnotations(): CodeblocksPlugin {
     name: 'starlight-codeblocks:annotations',
     directives: {
       annotate: {
-        placement: 'end',
         text: true,
         docs: {
           description: 'Adds a numbered marker after the code. Selecting it opens the text in a popover.',

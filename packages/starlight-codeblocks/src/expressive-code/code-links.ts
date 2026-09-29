@@ -55,11 +55,10 @@ export function pluginCodeLinks({ base }: { base?: string } = {}): CodeblocksPlu
     name: 'starlight-codeblocks:code-links',
     directives: {
       link: {
-        placement: 'own',
         text: true,
         docs: {
           description:
-            'Links the first match of `/text/` on the next line to the URL. Text after the directive shows in a card on hover and focus.',
+            'Links the first match of `/text/` on the line to the URL. Text after the directive shows in a card on hover and focus.',
           args: '`/text/` to link, then the URL, then optional text for the card.',
           example: {
             lang: 'js',

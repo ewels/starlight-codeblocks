@@ -27,7 +27,7 @@ Use for a note of one short sentence about one word or name on a line. The bubbl
 
 | Syntax | Where |
 |---|---|
-| `[!callout /text/] note` | Comment on its own line, directly above the target line |
+| `[!callout /text/] note` | Comment at the end of the target line, or on its own line directly above it |
 | `[!callout] note` | The same, with the arrow at the first character that is not a space |
 
 ```js
@@ -36,7 +36,7 @@ const controller = new AbortController();
 const res = await fetch(url, { signal: controller.signal });
 ```
 
-- The arrow points at the first match of `/text/` on the line below.
+- The arrow points at the first match of `/text/` on the target line.
 - Two callout lines above one line give two bubbles, in source order.
 - Between two lines with the same highlight (`{}`, `ins`, `del` or a line state), the bubble's row has the highlight too.
 - The bubble is at most 60 characters wide, or 90% of the block. Longer notes wrap.
@@ -76,7 +76,7 @@ Use when every reader needs every note, and the block is short enough that the l
 
 | Syntax | Where |
 |---|---|
-| `[!ref] note` | Comment on its own line, directly above the line it explains |
+| `[!ref] note` | Comment at the end of the line it explains, or on its own line directly above it |
 | `footnotes="sticky"` | Fence line: keeps the list at the bottom of the window while the block is on screen |
 | `footnotes="static"` | Fence line: turns the sticky list off for one block |
 

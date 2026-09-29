@@ -60,7 +60,6 @@ export function pluginHiddenLines(): CodeblocksPlugin {
     name: 'starlight-codeblocks:hidden-lines',
     directives: {
       'code hide': {
-        placement: 'end',
         docs: {
           description: 'Hides the line behind a marker that shows it again.',
           example: { lang: 'js', code: "const host = 'localhost' // [!code hide]\nconst port = 8080" },

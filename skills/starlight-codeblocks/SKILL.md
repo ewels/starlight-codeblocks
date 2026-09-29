@@ -41,9 +41,9 @@ Find the goal, then use the feature in the same row. Each reference file has the
 
 | Goal | Use | Why |
 |---|---|---|
-| One short sentence about one name on one line | Inline callout: `[!callout /name/]` on the line above | Always visible, with an arrow at the name. Use one or two in a block. |
+| One short sentence about one name on one line | Inline callout: `[!callout /name/]` on or above the line | Always visible, with an arrow at the name. Use one or two in a block. |
 | A long note, or a note for only some readers | Annotation: `[!annotate]` at the end of the line | A numbered marker. The note opens in a popover only when the reader asks. |
-| Every reader needs every note, and the block is short | Footnotes: `[!ref]` on the line above | A numbered list under the block, the same on phones and desktops. |
+| Every reader needs every note, and the block is short | Footnotes: `[!ref]` on or above the line | A numbered list under the block, the same on phones and desktops. |
 | Every reader needs every note, and the block is long | Side-by-side annotations: `[!annotate]` plus `annotations="side"` | Notes in a column beside the code on wide screens, a list on narrow screens. |
 | A walkthrough of one block in prose steps (MDX only) | Scrollycoding: `<Scrollycoding>` with `<Step focus="...">` | The block stays in view and focuses the lines of each step as it scrolls past. A block between steps changes the code. |
 | A file that grows or changes over the steps of a tutorial (MDX only) | Code walkthrough: `<CodeWalkthrough>` with `step="label"` on each block | One block with numbered steps. Code that stays moves, new code fades in. |
@@ -85,7 +85,7 @@ Hidden lines remove chosen lines. Expandable blocks cut a block at a line count.
 
 | Goal | Use | Why |
 |---|---|---|
-| One piece of text in the code links to a URL that you choose | Code links: `[!link /text/ url] description` on the line above | For one-off links and names that no adapter knows. The description shows in a card. |
+| One piece of text in the code links to a URL that you choose | Code links: `[!link /text/ url] description` on or above the line | For one-off links and names that no adapter knows. The description shows in a card. |
 | Every library name in Python or Nextflow code links to its reference | API auto-linking | Starts on its own for `py`, `python`, `pycon`, `nextflow` and `nf` blocks. |
 | Readers must link to one line or a range of lines | Line permalinks: `id="name"` | Line numbers that are links, as `#name-L2` or `#name-L2-L4`. |
 
@@ -135,8 +135,7 @@ Directives go in a comment, in the comment syntax of the language of the block. 
 
 Rules that apply to every directive:
 
-- End-of-line directives apply to their own line: `[!code ...]`, `[!annotate]`, `[!mention]`. On a line with no code, they apply to the line below, and that line goes.
-- Own-line directives take a whole line and apply to the line below it: `[!callout]`, `[!ref]`, `[!link]`. Put them directly above the target line.
+- A directive at the end of a line of code applies to that line. On a line with no code, it applies to the line below, and that line goes.
 - The plugin removes directives from the rendered code and from the copied text. A comment that holds only directives goes completely.
 - Ranges on the fence line count the lines that readers see. Lines that hold only directives do not count.
 - `/text/` is literal text, not a regular expression.

@@ -3,13 +3,13 @@ import { commentSyntaxFor } from '../src/expressive-code/comments.ts';
 import { type DirectiveSpecs, parseLine, parseNotation } from '../src/expressive-code/notation.ts';
 
 const specs: DirectiveSpecs = {
-  'code focus': { placement: 'end' },
-  'code highlight': { placement: 'end' },
-  'code error': { placement: 'end', text: true },
-  annotate: { placement: 'end', text: true },
-  mention: { placement: 'end' },
-  callout: { placement: 'own', text: true },
-  link: { placement: 'own' },
+  'code focus': {},
+  'code highlight': {},
+  'code error': { text: true },
+  annotate: { text: true },
+  mention: {},
+  callout: { text: true },
+  link: {},
 };
 const js = commentSyntaxFor('js');
 
@@ -80,18 +80,29 @@ describe('parseLine', () => {
     expect(parse('  /* [!code focus] */', commentSyntaxFor('css'))).toMatchObject({ text: '', removed: true });
     const jsx = parse('  {/* [!callout] Note */}', commentSyntaxFor('tsx'));
     expect(jsx).toMatchObject({ removed: true, directives: [{ text: 'Note' }] });
-    expect(parse('# fixes #12 [!callout /x/] Why', commentSyntaxFor('py'))).toMatchObject({ removed: true });
-    expect(parse('// see https://x.com [!callout /x/] Why')).toMatchObject({ removed: true });
   });
 
-  test('warns about own-line directives after code, and text before them', () => {
-    const afterCode = parse('x // [!callout /x/] Note');
-    expect(afterCode).toMatchObject({ removed: false, text: 'x // [!callout /x/] Note', directives: [] });
-    expect(afterCode.problems[0]).toContain('must be on a line of its own');
-    expect(parse('x // see https://x.com [!callout /x/] Why').problems[0]).toContain('must be on a line of its own');
-    const dropped = parse('// Setup: [!callout /x/] Why');
-    expect(dropped.removed).toBe(true);
-    expect(dropped.problems).toEqual(['`Setup:` is dropped, because the line holds a directive that removes it.']);
+  test('applies every directive at the end of a line to that line', () => {
+    expect(parse('x // [!callout /x/] Note')).toMatchObject({
+      removed: false,
+      text: 'x',
+      directives: [{ name: 'callout', match: 'x', text: 'Note' }],
+      problems: [],
+    });
+    expect(parse('x // see https://x.com [!callout /x/] Why')).toMatchObject({ text: 'x // see https://x.com' });
+  });
+
+  test('keeps a comment with other text, and applies its directives to it', () => {
+    expect(parse('// Setup: [!callout /Setup/] Why')).toMatchObject({
+      removed: false,
+      text: '// Setup:',
+      directives: [{ name: 'callout', text: 'Why' }],
+      problems: [],
+    });
+    expect(parse('# fixes #12 [!callout /x/] Why', commentSyntaxFor('py'))).toMatchObject({
+      removed: false,
+      text: '# fixes #12',
+    });
   });
 
   test('renders escaped directives as literal text', () => {
@@ -130,7 +141,7 @@ describe('parseNotation', () => {
     expect(end[1]?.directives).toMatchObject([{ name: 'code highlight', count: 2 }]);
   });
 
-  test('reports literal text with no match, and an own-line directive with no line below', () => {
+  test('reports literal text with no match, and a directive with no line below', () => {
     const { parsed, problems } = parseBlock(['// [!callout /c/] One', 'a + b']);
     expect(parsed[1]?.directives).toEqual([]);
     expect(problems).toEqual([[expect.stringContaining('does not match'), 1]]);

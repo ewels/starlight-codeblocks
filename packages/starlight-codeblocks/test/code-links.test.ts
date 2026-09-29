@@ -109,3 +109,10 @@ test('text after the directive gives the link an API card, in plain text', async
   const plain = await render(block('js', '// [!link /a/ https://example.com/]', 'a()'));
   expect(plain.html).not.toMatch(/data-scb-api|aria-description/);
 });
+
+test('a code link at the end of its line renders as one on the line above', async () => {
+  const above = await render(block('js', '// [!link /fetch/ https://example.com/fetch] Gets a URL.', 'fetch(url);'));
+  const inline = await render(block('js', 'fetch(url); // [!link /fetch/ https://example.com/fetch] Gets a URL.'));
+  expect(inline).toEqual(above);
+  expect(inline.warnings).toEqual([]);
+});

@@ -112,7 +112,6 @@ export function pluginLineStates({
   for (const [name, state] of Object.entries(names)) {
     const label = all[state]?.label;
     directives[`code ${name}`] = {
-      placement: 'end',
       text: true,
       docs: {
         description:
@@ -126,8 +125,7 @@ export function pluginLineStates({
     };
   }
   // Without line states, the text stays in the comment.
-  for (const name of Object.keys(markers))
-    directives[name] = { ...builtInDirectives[name], placement: 'end', text: true };
+  for (const name of Object.keys(markers)) directives[name] = { ...builtInDirectives[name], text: true };
   return {
     name: 'starlight-codeblocks:line-states',
     directives,

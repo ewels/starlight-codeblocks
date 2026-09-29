@@ -72,3 +72,10 @@ test('the list goes below the expandable bar, so that the bar stays under the co
   );
   expect(html).toMatch(/<\/pre><div class="scb-expandable-bar[^"]*">.*?<\/div><ol class="scb-footnotes">/);
 });
+
+test('a footnote at the end of its line renders as one on the line above', async () => {
+  const above = await render(block('js', '// [!ref] Read from the environment.', 'const port = process.env.PORT;'));
+  const inline = await render(block('js', 'const port = process.env.PORT; // [!ref] Read from the environment.'));
+  expect(inline).toEqual(above);
+  expect(inline.warnings).toEqual([]);
+});

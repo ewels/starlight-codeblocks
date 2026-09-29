@@ -20,16 +20,16 @@ y = np.sin(2 * np.pi * x)
 
 <Example code={basic} hiddenAttributes="apiLinks=false" />
 
-The directive is on its own line, above the line it applies to. The plugin removes that line, and `linspace` on the next line becomes a link with an underline in the accent colour. Hover over the link, or press Tab to focus it, to see the description in a card. The rest of the line keeps its syntax colours.
+The directive is on its own line, above the line it applies to. It can also go at the end of that line. The plugin removes the directive, and `linspace` becomes a link with an underline in the accent colour. Hover over the link, or press Tab to focus it, to see the description in a card. The rest of the line keeps its syntax colours.
 
 ## Syntax
 
 | Syntax | Where | Example |
 |---|---|---|
-| `[!link /<text>/ <url>] <description>` | Comment, on its own line | `# [!link /linspace/ https://numpy.org/doc/stable/] Returns evenly spaced numbers.` |
-| `[!link /<text>/ <url>]` | Comment, on its own line | `# [!link /linspace/ https://numpy.org/doc/stable/]` |
+| `[!link /<text>/ <url>] <description>` | Comment on or above the line | `# [!link /linspace/ https://numpy.org/doc/stable/] Returns evenly spaced numbers.` |
+| `[!link /<text>/ <url>]` | Comment on or above the line | `# [!link /linspace/ https://numpy.org/doc/stable/]` |
 
-`<text>` is literal text, not a regular expression. The plugin links its first match on the line below. `<url>` is a relative, `http` or `https` URL without spaces. A URL that starts with `/` is a link inside the site.
+`<text>` is literal text, not a regular expression. The plugin links its first match on the line it applies to. `<url>` is a relative, `http` or `https` URL without spaces. A URL that starts with `/` is a link inside the site.
 
 `<description>` is optional. It shows in a card, as for [API auto-linking](/starlight-codeblocks/features/api-auto-linking/). The text runs to the next directive or to the end of the comment. Without a description, the link has no card.
 
@@ -44,7 +44,7 @@ Several `[!link]` lines can stack above one line of code, one for each text to l
 - The link is a normal link. Readers can focus it with the keyboard, and it opens in the same tab.
 - A URL that starts with `/` gets Astro's `base` in front of it, unless it already starts with the base. On this site, `/reference/directives/` becomes `/starlight-codeblocks/reference/directives/`. A site without `codeblocks()` gives the base to `pluginCodeblocks()`, as the [Expressive Code plugins page](/starlight-codeblocks/reference/expressive-code-plugins/#the-preset) shows.
 - The copied text leaves out the directive line.
-- If the text has no match on the line below, the build logs a warning and the line renders without the link. A directive without a URL, or with another scheme such as `mailto:`, gets a warning too.
+- If the text has no match on the line it applies to, the build logs a warning and the line renders without the link. A directive without a URL, or with another scheme such as `mailto:`, gets a warning too.
 - The card needs JavaScript, and the page loads it only for a block with a description. Without JavaScript, the link still works.
 
 ## Options

@@ -77,3 +77,10 @@ test('between two lines with the same highlight, the callout has it too', async 
   expect(await lit('js {1} ins={2}', 'a()', '// [!callout] Note', 'b()')).toBe('scb-callout');
   expect(await lit('js {1}', '// [!callout] Note', 'a()')).toBe('scb-callout');
 });
+
+test('a callout at the end of its line renders as one on the line above', async () => {
+  const above = await render(block('js', '// [!callout /signal/] Aborts the request.', 'fetch(url, { signal });'));
+  const inline = await render(block('js', 'fetch(url, { signal }); // [!callout /signal/] Aborts the request.'));
+  expect(inline).toEqual(above);
+  expect(inline.warnings).toEqual([]);
+});

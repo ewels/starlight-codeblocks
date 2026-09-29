@@ -47,7 +47,6 @@ export function pluginFocus({
     name: 'starlight-codeblocks:focus',
     directives: {
       'code focus': {
-        placement: 'end',
         docs: {
           description: 'Focuses the line. The other lines are blurred.',
           example: {

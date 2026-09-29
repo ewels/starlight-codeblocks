@@ -53,7 +53,7 @@ const fenceLanguage = (code: Code) =>
 function mentionNames(code: Code, notation: ResolvedOptions['notation']) {
   if (!notation || !/\[\\?!/.test(code.value)) return new Set<string>();
   const syntaxes = commentSyntaxFor(fenceLanguage(code) ?? '', notation.comments);
-  const parsed = parseNotation(code.value.split('\n'), syntaxes, { mention: { placement: 'end' } }, () => {});
+  const parsed = parseNotation(code.value.split('\n'), syntaxes, { mention: {} }, () => {});
   return new Set(parsed.flatMap((line) => line.directives.flatMap((d) => d.args.slice(0, 1))));
 }
 

@@ -57,16 +57,15 @@ function highlight(line: Element | undefined) {
   return names.filter((name) => ['mark', 'ins', 'del'].includes(name) || name.startsWith(`${PREFIX}-state`)).sort();
 }
 
-/** Shows the text of `[!callout /text/]` in a bubble above the next line, pointing at `text`. */
+/** Shows the text of `[!callout /text/]` in a bubble above its line, pointing at `text`. */
 export function pluginCallouts(): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:callouts',
     directives: {
       callout: {
-        placement: 'own',
         text: true,
         docs: {
-          description: 'Shows the text in a bubble above the next line, pointing at `/text/` on that line.',
+          description: 'Shows the text in a bubble above the line, pointing at `/text/` on that line.',
           args: 'Optional. `/text/` to point at. Then the text of the bubble.',
           example: { lang: 'js', code: '// [!callout /signal/] Stops the request.\nfetch(url, { signal })' },
           page: 'features/inline-callouts',

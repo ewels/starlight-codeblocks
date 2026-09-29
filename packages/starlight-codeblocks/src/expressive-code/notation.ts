@@ -3,8 +3,6 @@ import { type CommentSyntax, commentSyntaxFor } from './comments.ts';
 import { type CodeblocksPlugin, lineData, lineElement, numberedLines, resolveRange, warn } from './core.ts';
 
 export interface DirectiveSpec {
-  /** `own`: the directive takes a whole line, and applies to the line below it. */
-  placement: 'end' | 'own';
   /** The directive takes the text after it, up to the next directive or the end of the comment. */
   text?: boolean;
   /** For the directives reference page. */
@@ -215,7 +213,6 @@ export function parseLine(
   const hasCode = text.slice(prefix, start).trim() !== '' || text.slice(end).trim() !== '';
 
   const directives: Directive[] = [];
-  let own = false;
   let remaining = '';
   let cursor = 0;
   let textOf: Directive | undefined;
@@ -237,14 +234,8 @@ export function parseLine(
       keep(raw);
       continue;
     }
-    if (hasCode && result.items.some(({ spec }) => spec.placement === 'own')) {
-      report(`\`${raw}\` must be on a line of its own, above the line it applies to.`, sourceLine);
-      keep(raw);
-      continue;
-    }
     for (const { spec, directive } of result.items) {
       directives.push(directive);
-      own ||= spec.placement === 'own';
       // In `[!code ++ error] text`, the text goes to the first directive that takes text.
       if (spec.text) textOf ??= directive;
     }
@@ -255,12 +246,8 @@ export function parseLine(
   else keep(tail);
 
   remaining = unescapeDirectives(remaining);
-  if (own && remaining.trim() !== '') {
-    report(`\`${remaining.trim()}\` is dropped, because the line holds a directive that removes it.`, sourceLine);
-  }
   // A line that holds only directives goes, as in Shiki's notation transformers.
-  if (own || (!hasCode && directives.length > 0 && remaining.trim() === ''))
-    return { text: '', removed: true, directives };
+  if (!hasCode && directives.length > 0 && remaining.trim() === '') return { text: '', removed: true, directives };
   const before = text.slice(0, start);
   const after = text.slice(end);
   const newText =
@@ -358,7 +345,6 @@ export const builtInDirectives: DirectiveSpecs = Object.fromEntries(
   Object.entries(markers).map(([name, [marker, change]]) => [
     name,
     {
-      placement: 'end',
       docs: {
         description: `Marks the line as ${change}, like the \`${marker}\` attribute of Expressive Code. With line states on, text after the directive shows as a message.`,
         example: { lang: 'js', code: `const host = 'localhost'\nconst port = 8080 // [!${name}]` },
@@ -494,7 +480,7 @@ function addMarkerLines(codeBlock: ExpressiveCodeBlock, marker: string, first: n
 
 /**
  * Expressive Code's collapsible sections plugin keeps the source lines of `collapse={…}` in `preprocessMetadata`,
- * while own-line directives are still there. Turns the lines that readers see into source lines before that.
+ * while lines that hold only directives are still there. Turns the lines that readers see into source lines before that.
  */
 function remapCollapse(
   codeBlock: ExpressiveCodeBlock,

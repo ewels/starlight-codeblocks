@@ -48,7 +48,7 @@ test('counts the lines that readers see in Expressive Code ranges and in directi
   const seen: string[] = [];
   const note: CodeblocksPlugin = {
     name: 'test:note',
-    directives: { note: { placement: 'own', text: true } },
+    directives: { note: { text: true } },
     hooks: {
       annotateCode({ codeBlock }) {
         for (const d of getDirectives(codeBlock, 'note')) seen.push(`${d.text} on ${d.lines.map((l) => l.text)}`);

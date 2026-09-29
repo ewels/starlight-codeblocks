@@ -6,13 +6,12 @@ import ReferenceEntry from './ReferenceEntry.astro';
 ---
 
 {
-  directives.map(({ id, label, placement, docs, example }) => (
+  directives.map(({ id, label, docs, example }) => (
     <ReferenceEntry
       id={id}
       labels={[label]}
       description={docs.description}
       facts={[
-        ['Placement', placement],
         ['Arguments', docs.args ? inlineCode(docs.args) : 'None'],
         ['Feature', featureLink(docs.page)],
       ]}

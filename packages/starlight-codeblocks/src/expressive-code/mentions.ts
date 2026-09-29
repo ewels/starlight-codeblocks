@@ -33,7 +33,6 @@ export function pluginMentions(): CodeblocksPlugin {
     name: 'starlight-codeblocks:mentions',
     directives: {
       mention: {
-        placement: 'end',
         docs: {
           description: 'Tags the line with a name. A link to `#mention:<name>` in the prose highlights it.',
           args: 'A name for the line.',

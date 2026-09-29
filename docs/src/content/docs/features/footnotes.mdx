@@ -31,12 +31,12 @@ The two `[!ref]` comment lines are gone from the output. Their lines have the ba
 
 | Syntax | Where | Example |
 |---|---|---|
-| `[!ref] note` | Comment on its own line | `# [!ref] Creates the application object.` |
+| `[!ref] note` | Comment on or above the line | `# [!ref] Creates the application object.` |
 | `footnotes="sticky"` | Fence line | `footnotes="sticky"` |
 | `footnotes="static"` | Fence line | `footnotes="static"` |
 | `footnotes.sticky=true`, `footnotes.sticky=false` | Fence line | The same, with the name of the option |
 
-The directive goes on its own line, above the line it explains. The note can hold inline code, links and bold text. `footnotes="sticky"` keeps the list in view while the block scrolls past. `footnotes="static"` turns the sticky list off for one block, if the site turns it on for every block.
+The directive goes at the end of the line it explains, or on its own line above it. The note can hold inline code, links and bold text. `footnotes="sticky"` keeps the list in view while the block scrolls past. `footnotes="static"` turns the sticky list off for one block, if the site turns it on for every block.
 
 ## Behaviour
 

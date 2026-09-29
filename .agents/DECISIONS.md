@@ -9,7 +9,7 @@ The choices that the code does not explain, with the options that were rejected.
 - **Working features over documented limits.** When a feature breaks in a combination (full screen copies, collapsible sections, `unified()`, Starlight tabs), fix it rather than list it as a limit.
 - **A wrong link is worse than none.** API auto-linking links only names it is certain about.
 - **Bad input warns, it does not fail.** An unknown directive or attribute value warns and stays in the code as written, so the author sees the typo and one page cannot stop the site build. Only malformed ranges and invalid component content fail.
-- **Ranges count the lines that readers see**, from 1: own-line directive lines, the frames file name comment and lines that other plugins delete do not count, and `startLineNumber` does not shift them, as in EC's own ranges.
+- **Ranges count the lines that readers see**, from 1: lines that hold only directives, the frames file name comment and lines that other plugins delete do not count, and `startLineNumber` does not shift them, as in EC's own ranges.
 - **UI strings are English only.** Translation is out of scope for the first release. Starlight's i18n strings are the likely route later.
 - **Ids are deterministic**: an 8-character SHA-1 of the file path, meta and code, plus a count for identical blocks, so builds are reproducible. *Rejected:* random ids, or a global counter (changes when a block above is added).
 
@@ -39,6 +39,7 @@ The choices that the code does not explain, with the options that were rejected.
 
 - **The notation plugin parses in `preprocessLanguage`** and maps EC's own `{}`, `ins` and `del` markers to the lines that readers see. *Rejected:* two numbering schemes in one block.
 - **A line that holds only directives is removed**, and its directives apply to the next visible line, as Shiki's transformers do (VitePress parity). A leading diff `+` or `-` does not count as code. JSX reads `{/* */}`.
+- **Every directive works at the end of its line or on a line of its own above it.** A comment with other text keeps that text, and its directives apply to the comment line. *Rejected:* own-line-only directives for callouts, links and footnotes (a rule to learn, for no rendering gain).
 - **Features declare their directives on their plugin**, so each feature stays in its own file. *Rejected:* a central directive list.
 - **`notation.comments` maps a language to several syntaxes**; C-family, Vue, Svelte and Astro also accept `//` and `/* */`. Languages resolve through Shiki ids and aliases. The bracket scanner uses the same map.
 - **The code switcher is a Sätteri container directive**, not an MDX component: it works in `.md` and `.mdx`, and each variant stays its own EC block with its own title, frame and copy text.

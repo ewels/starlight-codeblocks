@@ -90,12 +90,11 @@ const component: Record<string, (props: Record<string, string>, id: string) => s
       .join('\n\n'),
   Directives: () =>
     directives
-      .map(({ label, placement, docs, example }) =>
+      .map(({ label, docs, example }) =>
         [
           heading(2, [label]),
           docs.description,
           facts([
-            ['Placement', placement],
             ['Arguments', docs.args ?? 'None'],
             ['Feature', featureLink(docs.page)],
           ]),

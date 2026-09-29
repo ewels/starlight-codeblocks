@@ -14,7 +14,7 @@ Use for a one-off link from text in the code, or for a name that no API link ada
 
 | Syntax | Where |
 |---|---|
-| `[!link /<text>/ <url>] <description>` | Comment on its own line, directly above the target line. The description shows in a card on hover and focus. |
+| `[!link /<text>/ <url>] <description>` | Comment at the end of the target line, or on its own line directly above it. The description shows in a card on hover and focus. |
 | `[!link /<text>/ <url>]` | Same, as a plain link with no card |
 
 ```py
@@ -22,7 +22,7 @@ Use for a one-off link from text in the code, or for a name that no API link ada
 x = np.linspace(0, 1, 50)
 ```
 
-- The plugin links the first match of the literal text on the line below. Make the text longer to match a later place.
+- The plugin links the first match of the literal text on the target line. Make the text longer to match a later place.
 - Text after the directive shows in the same card as API auto-linking: the linked text, the description and the URL's domain. Use it to say what the link goes to. The card shows plain text only.
 - Stack several `[!link]` lines above one line to link several texts on it.
 - A URL that starts with `/` is a link inside the site. The plugin adds Astro's `base`.

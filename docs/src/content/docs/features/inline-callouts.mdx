@@ -25,14 +25,14 @@ The comment line with `[!callout /signal/]` is gone from the output. The bubble 
 
 | Syntax | Where | Example |
 |---|---|---|
-| `[!callout /text/] note` | Comment on its own line | `// [!callout /signal/] Lets abort() cancel it.` |
-| `[!callout] note` | Comment on its own line | `# [!callout] Runs once at start-up.` |
+| `[!callout /text/] note` | Comment on or above the line | `// [!callout /signal/] Lets abort() cancel it.` |
+| `[!callout] note` | Comment on or above the line | `# [!callout] Runs once at start-up.` |
 
-The directive goes on its own line, directly above the line it explains. `/text/` is literal text, not a regular expression. The arrow points at the first match on the line below. Without `/text/`, the arrow points at the first character that is not a space. The note can hold inline code, links and bold text.
+The directive goes at the end of the line it explains, or on its own line directly above it. `/text/` is literal text, not a regular expression. The arrow points at the first match on that line. Without `/text/`, the arrow points at the first character that is not a space. The note can hold inline code, links and bold text.
 
 ## Behaviour
 
-- The plugin removes the directive line. The bubble is in its place, above the target line.
+- The plugin removes the directive, and its line if the line holds nothing else. The bubble is above the target line.
 - The bubble starts 40 px to the left of the arrow, but never closer than 8 px to the edge of the block.
 - The bubble is at most 60 characters wide, or 90% of the block. Longer notes wrap inside the bubble, so the block does not get wider.
 - On a narrow screen, the target text can be past the right edge of the block. The bubble and its arrow then stay at the right edge, where the reader can see them.

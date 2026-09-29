@@ -14,13 +14,12 @@ export const directives = Object.entries(
   Object.assign({}, ...plugins.map((plugin) => plugin.directives ?? {})) as NonNullable<
     (typeof plugins)[number]['directives']
   >,
-).flatMap(([name, { placement, docs }]) =>
+).flatMap(([name, { docs }]) =>
   docs
     ? [
         {
           id: name.replace(/\S+/g, (word) => words[word] ?? word).replace(/ /g, '-'),
           label: `[!${name}]`,
-          placement: placement === 'own' ? 'Own line' : 'End of line',
           docs,
           example: `\`\`\`${docs.example.lang}\n${docs.example.code}\n\`\`\``,
         },
