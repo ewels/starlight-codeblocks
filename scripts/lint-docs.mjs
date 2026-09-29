@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Checks the rules in .agents/WRITING-STYLE.md, section 11.
+// Checks the mechanical rules in .agents/WRITING-STYLE.md.
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';

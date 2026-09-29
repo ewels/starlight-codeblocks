@@ -8,9 +8,9 @@ These rules apply to every session in this repository.
 
 `.agents/` holds the notes for agents that work on the repository:
 
-- `ARCHITECTURE.md` has the spike results and "How to add a feature", the conventions for every feature. Read it before you write plugin code.
-- `DECISIONS.md` records every design decision, with the reason. Search it before you change existing behaviour.
-- `WRITING-STYLE.md` and `DOCS-SITE.md` define how the docs read and how the site is organised.
+- `ARCHITECTURE.md`: how to add a feature, and the platform facts the design depends on. Read it before you write plugin code.
+- `DECISIONS.md`: design decisions and the options that were rejected. Search it before you change existing behaviour.
+- `WRITING-STYLE.md`: how the docs read, the feature page template and the glossary.
 
 The docs site defines the syntax and behaviour of each feature.
 
@@ -111,7 +111,7 @@ All features meet WCAG 2.2 AA in the light and the dark Starlight themes:
 
 ## Writing
 
-Every word in `docs/`, the README, `skills/` and package descriptions follows `.agents/WRITING-STYLE.md`, which is self-contained. Code comments and commit messages use British English and plain language.
+Every word in `docs/`, the README, `skills/` and package descriptions follows `.agents/WRITING-STYLE.md`. Code comments and commit messages use British English and plain language.
 
 ## Git
 
@@ -120,7 +120,7 @@ Every word in `docs/`, the README, `skills/` and package descriptions follows `.
 
 ## Decisions
 
-Record every design decision in `.agents/DECISIONS.md`, with the reason and the alternatives.
+Record each design decision that the code does not explain in `.agents/DECISIONS.md`, in the right section, with the reason and the rejected alternatives. Keep entries short, and replace an entry when a decision changes rather than adding a new one.
 
 ## Do not
 
