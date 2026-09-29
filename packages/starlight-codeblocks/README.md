@@ -171,7 +171,7 @@ Blur the lines outside a range, so that readers look at the lines that you name 
 <details>
 <summary>Line states</summary>
 
-Tint lines as errors, warnings or notes, with an optional message after the code, like the diagnostics in a code editor.
+Tint lines as errors, warnings, notes or successes, with an optional message after the code, like the diagnostics in a code editor.
 
 ```py
 for name in sys.argv[1:]  # [!code error] SyntaxError: expected ':'
@@ -302,18 +302,18 @@ Highlight the words that changed inside each line of a diff, so readers find a s
 ### Link code
 
 <details>
-<summary>Token links</summary>
+<summary>Code links</summary>
 
-Turn any text on a line of code into a link, with a directive in the comment above it.
+Turn text in code into a link with a card that describes it, from a directive in the comment above.
 
 ```py
-# [!link /linspace/ https://numpy.org/doc/stable/reference/generated/numpy.linspace.html]
+# [!link /linspace/ https://numpy.org/doc/stable/reference/generated/numpy.linspace.html] Returns evenly spaced numbers over an interval.
 x = np.linspace(0, 1, 50)
 ```
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/token-links.png" alt="A Python block where the word linspace is a link with a solid underline in the accent colour.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-links.webp" alt="A Python block where the word linspace is a link with a solid underline in the accent colour. The pointer moves over it and a card shows the description and numpy.org.">
 
-[Token links documentation](https://ewels.github.io/starlight-codeblocks/features/token-links/)
+[Code links documentation](https://ewels.github.io/starlight-codeblocks/features/code-links/)
 
 </details>
 

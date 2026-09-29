@@ -25,9 +25,9 @@ export const attributesReference: AttributeDoc[] = [
   },
   {
     name: 'error',
-    syntax: ['error={range}', 'warning={range}', 'info={range}'],
+    syntax: ['error={range}', 'warning={range}', 'info={range}', 'success={range}', 'note={range}', 'warn={range}'],
     description:
-      'Marks the lines in the range with a line state. The attribute gives no message. Use a directive for a message.',
+      'Marks the lines in the range with a line state. `note` is the same as `info`, and `warn` the same as `warning`. The attribute gives no message. Use a directive for a message.',
     page: 'features/line-states',
     example: { lang: 'js', meta: 'error={2}', code: 'const retries = 3\nconst delay = -1\nconst timeout = 5000' },
   },
@@ -267,6 +267,10 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
         description: 'The colour of the info state. The other info settings come from it.',
         derived: fromTheme('editorInfo.foreground', '3:1'),
       },
+      success: {
+        description: 'The colour of the success state. The other success settings come from it.',
+        derived: fromTheme('terminal.ansiGreen', '3:1'),
+      },
       '<state>Background': {
         description: 'The tint of a line with the state. There is one for each state, such as `errorBackground`.',
         derived: 'The state colour at 15% opacity.',
@@ -278,6 +282,15 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       '<state>LabelForeground': {
         description: 'The text of a message.',
         derived: 'The state colour mixed with the code colour, with 5:1 contrast on the message background.',
+      },
+      '<marker>LabelBackground': {
+        description:
+          'The background of a message after `[!code ++]`, `[!code --]` or `[!code highlight]`. There is one for each of `ins`, `del` and `mark`, such as `insLabelBackground`.',
+        derived: "Expressive Code's `textMarkers.<marker>BorderColor` at 20% opacity.",
+      },
+      '<marker>LabelForeground': {
+        description: 'The text of a message after `[!code ++]`, `[!code --]` or `[!code highlight]`.',
+        derived: 'The marker colour mixed with the code colour, with 5:1 contrast on the message background.',
       },
     },
   },
@@ -338,8 +351,8 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       },
     },
   },
-  codeblocksTokenLinks: {
-    page: 'features/token-links',
+  codeblocksCodeLinks: {
+    page: 'features/code-links',
     settings: {
       underline: {
         description: 'The underline of a link. Needs 3:1 contrast on the code background.',

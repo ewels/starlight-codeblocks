@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { expect, test } from 'vitest';
 import * as ecExports from '../src/expressive-code/index.ts';
 import { createPlugins } from '../src/expressive-code/index.ts';
-import { builtInStates } from '../src/expressive-code/line-states.ts';
+import { builtInStates, markers } from '../src/expressive-code/line-states.ts';
 import { resolveOptions } from '../src/options.ts';
 import { attributesReference, styleSettingsReference } from '../src/reference.ts';
 import { render } from './render.ts';
@@ -47,18 +47,23 @@ test('every attribute example renders cleanly and uses the attribute', async () 
 
 test('every style setting is in the style settings reference, with a derivation for computed defaults', () => {
   const states = Object.keys(builtInStates);
+  const lineMarkers = Object.values(markers);
   for (const plugin of createPlugins(resolveOptions())) {
     const groups = (plugin.styleSettings?.defaultValues ?? {}) as Record<string, Record<string, unknown>>;
     for (const [group, settings] of Object.entries(groups)) {
       const docs = styleSettingsReference[group]?.settings ?? {};
       const documented = Object.keys(docs).flatMap((key) =>
-        key.startsWith('<state>') ? states.map((s) => key.replace('<state>', s)) : [key],
+        key.startsWith('<state>')
+          ? states.map((s) => key.replace('<state>', s))
+          : key.startsWith('<marker>')
+            ? lineMarkers.map((m) => key.replace('<marker>', m))
+            : [key],
       );
       expect(Object.keys(settings).sort(), `\`styleSettingsReference.${group}\` in src/reference.ts`).toEqual(
         documented.sort(),
       );
       for (const [key, doc] of Object.entries(docs)) {
-        const value = settings[key.replace('<state>', states[0] ?? '')];
+        const value = settings[key.replace('<state>', states[0] ?? '').replace('<marker>', lineMarkers[0] ?? '')];
         expect(doc.derived !== undefined, `${group}.${key}: \`derived\` only for computed defaults`).toBe(
           typeof value === 'function',
         );

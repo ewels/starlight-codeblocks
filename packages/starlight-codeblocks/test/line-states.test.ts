@@ -75,6 +75,55 @@ test('supports custom states by attribute and directive, and new labels for buil
   expect((await render(block('js info={1}', 'a()'), tip)).html).toContain('>Tip:</span>');
 });
 
+test('has a success state, and note and warn as other names for info and warning', async () => {
+  const { html, warnings } = await render(
+    block('js success={1} note={2}', 'a()', 'b()', 'c() // [!code warn] Slow', 'd() // [!code success] Done'),
+  );
+  expect(lineClasses(html)).toEqual([
+    'ec-line scb-state scb-state-success',
+    'ec-line scb-state scb-state-info',
+    'ec-line scb-state scb-state-warning',
+    'ec-line scb-state scb-state-success',
+  ]);
+  expect(html).toContain('<strong aria-hidden="true">Warning</strong> Slow');
+  expect(html).toContain('<strong aria-hidden="true">Success</strong> Done');
+  expect(warnings).toEqual([]);
+});
+
+test('with prefix off, a message has no name, and a line with no message still shows the name', async () => {
+  const { html } = await render(block('js error={1}', 'a()', 'b() // [!code warning] Slow'), {
+    lineStates: { prefix: false },
+  });
+  expect(html).toContain('<span class="scb-state-label">Slow</span>');
+  expect(html).toContain('<span class="scb-state-label"><strong aria-hidden="true">Error</strong></span>');
+  expect(html).toContain('<span class="scb-state-prefix scb-sr-only">Warning:</span>');
+});
+
+test('shows a message after ++, -- and highlight directives in a label, and leaves the text in the comment without the feature', async () => {
+  const md = block(
+    'js',
+    'a() // [!code ++] Load the `plugin`',
+    'b() // [!code --] Old',
+    'c() // [!code highlight:2] Here',
+    'd()',
+  );
+  const { html, copyText, warnings } = await render(md);
+  expect(html).toContain('<span class="scb-state-label scb-state-label-ins">Load the <code>plugin</code></span>');
+  expect(html).toContain('<span class="scb-state-label scb-state-label-del">Old</span>');
+  expect(html.match(/scb-state-label-mark/g)).toHaveLength(1);
+  expect(lineClasses(html)).toEqual([
+    'ec-line highlight ins',
+    'ec-line highlight del',
+    'ec-line highlight mark',
+    'ec-line highlight mark',
+  ]);
+  expect(copyText).toBe('a()\nb()\nc()\nd()');
+  expect(warnings).toEqual([]);
+  const off = await render(md, { lineStates: false });
+  expect(off.copyText).toBe('a() // Load the `plugin`\nb() // Old\nc() // Here\nd()');
+  expect(off.html).not.toContain('scb-state-label');
+});
+
 test('warns about unknown states and lines outside the block', async () => {
   const { warnings } = await render(block('js error={3}', 'a() // [!code todo]'));
   expect(warnings).toEqual([
@@ -94,14 +143,22 @@ test('every state colour meets its contrast target in the dark and the light the
   for (const v of await variants(pluginCodeblocks({ lineStates: { states: todo } }))) {
     const get = (key: string) => v.get(`codeblocksLineStates.${key}`);
     const codeBg = v.get('codeBackground');
-    for (const state of ['error', 'warning', 'info']) {
+    for (const state of ['error', 'warning', 'info', 'success']) {
       expect(getColorContrast(get(state), codeBg), `${state} bar, ${v.name}`).toBeGreaterThanOrEqual(3);
     }
-    for (const state of ['error', 'warning', 'info', 'todo']) {
+    for (const state of ['error', 'warning', 'info', 'success', 'todo']) {
       const lineBg = onBackground(get(`${state}Background`), codeBg);
       const labelBg = onBackground(get(`${state}LabelBackground`), lineBg);
       // The code on the line is checked as rendered, in test/tints.test.ts.
       expect(getColorContrast(get(`${state}LabelForeground`), labelBg), `${state} label`).toBeGreaterThanOrEqual(4.5);
+    }
+    for (const marker of ['ins', 'del', 'mark']) {
+      const lineBg = onBackground(v.get(`textMarkers.${marker}Background`), codeBg);
+      const labelBg = onBackground(get(`${marker}LabelBackground`), lineBg);
+      expect(
+        getColorContrast(get(`${marker}LabelForeground`), labelBg),
+        `${marker} label, ${v.name}`,
+      ).toBeGreaterThanOrEqual(4.5);
     }
   }
 });

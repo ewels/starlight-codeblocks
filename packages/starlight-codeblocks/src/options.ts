@@ -63,7 +63,7 @@ export interface ApiLinkAdapter {
 
 export interface CodeblocksOptions {
   focus?: false | { style?: 'blur' | 'dim' };
-  lineStates?: false | { states?: Record<string, LineStateDefinition> };
+  lineStates?: false | { states?: Record<string, LineStateDefinition>; prefix?: boolean };
   notation?: false | { comments?: Record<string, string[]> };
   callouts?: false;
   annotations?: false;
@@ -73,7 +73,7 @@ export interface CodeblocksOptions {
   wordDiff?: false | { minSimilarity?: number };
   whitespace?: false;
   brackets?: false | { languages?: string[] };
-  tokenLinks?: false;
+  codeLinks?: false;
   apiLinks?: false | { adapters?: ApiLinkAdapter[] };
   expandable?: false | { lines?: number; auto?: number | false };
   playgrounds?: false | Record<string, PlaygroundDefinition>;
@@ -139,7 +139,7 @@ const oneOf =
 
 // Attributes and directives of other features, which a custom state name would clash with.
 const reservedStateNames = new Set(
-  'title frame mark ins del collapse wrap lang focus hidden hide highlight whitespace brackets expandable playground id placeholder annotations footnotes label prefix step runnable'.split(
+  'title frame mark ins del collapse wrap lang focus hidden hide highlight whitespace brackets expandable playground id placeholder annotations footnotes label prefix step runnable note warn'.split(
     ' ',
   ),
 );
@@ -160,7 +160,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     },
   },
   lineStates: {
-    description: 'Tints lines as errors, warnings or notes, with an optional message.',
+    description: 'Tints lines as errors, warnings, notes or successes, with an optional message.',
     page: 'features/line-states',
     off: 'The directives then stay in the code as written.',
     fields: {
@@ -168,7 +168,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         type: 'Record<string, { label: string; colour: { dark: string; light: string } }>',
         default: {},
         description:
-          'Custom states by name, in addition to `error`, `warning` and `info`. A name uses lower-case letters, digits and hyphens.',
+          'Custom states by name, in addition to `error`, `warning`, `info` and `success`. A name uses lower-case letters, digits and hyphens.',
         valid: (value) =>
           isRecordOf(
             (state) =>
@@ -179,6 +179,13 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
               isString(state.colour.light),
           )(value) &&
           Object.keys(value as object).every((name) => /^[a-z][a-z0-9-]*$/.test(name) && !reservedStateNames.has(name)),
+      },
+      prefix: {
+        type: 'boolean',
+        default: true,
+        description:
+          'Show the name of the state, such as **Error**, before each message. A line with no message still shows the name.',
+        valid: (value) => typeof value === 'boolean',
       },
     },
   },
@@ -250,7 +257,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       },
     },
   },
-  tokenLinks: { description: 'Turns text on a line into a link.', page: 'features/token-links' },
+  codeLinks: { description: 'Turns text on a line into a link.', page: 'features/code-links' },
   apiLinks: {
     description: 'Links names in code to their reference pages.',
     page: 'features/api-auto-linking',

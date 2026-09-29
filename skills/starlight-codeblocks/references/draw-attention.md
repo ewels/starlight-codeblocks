@@ -43,14 +43,17 @@ export default defineConfig({
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/line-states/
 
-Use to tint a line as an error, a warning or a note. An optional message shows after the code, as in a code editor. Do not use for a plain highlight: use `[!code highlight]`.
+Use to tint a line as an error, a warning, a note or a success. An optional message shows after the code, as in a code editor. Do not use for a plain highlight: use `[!code highlight]`.
 
 | Syntax | Where |
 |---|---|
-| `error={range}`, `warning={range}`, `info={range}` | Fence line. Tints the lines, with no message. The first line of each group shows the name of the state. |
+| `error={range}`, `warning={range}`, `info={range}`, `success={range}` | Fence line. Tints the lines, with no message. The first line of each group shows the name of the state. |
 | `[!code error] message` | Comment. The message is optional. |
 | `[!code warning] message` | Comment |
 | `[!code info] message` | Comment. The label reads **Note**. |
+| `[!code success] message` | Comment |
+| `note={range}`, `[!code note]`, `warn={range}`, `[!code warn]` | Other names for `info` and `warning` |
+| `[!code ++] message`, `[!code --] message`, `[!code highlight] message` | Comment. The message shows in a label in the colour of the marker, with no name before it. |
 | `[!code <state>:N] message` | Comment: tints N lines, with the message on the first |
 | `<state>={range}`, `[!code <state>]` | A custom state from the options |
 
@@ -61,7 +64,9 @@ count = len(sys.argv)  # [!code warning] Includes the script name
 ```
 
 - Use the attribute when the text around the block explains the problem. Use the directive to show a message.
-- The label starts with the name of the state in bold: **Error**, **Warning** or **Note**. Screen readers hear the name before the line.
+- The label starts with the name of the state in bold: **Error**, **Warning**, **Note** or **Success**. Screen readers hear the name before the line.
+- `lineStates: { prefix: false }` leaves the name out of labels with a message. A line with no message still shows the name, so that the colour does not carry the state alone.
+- Use `[!code ++] message` to say why a line was added, for example in a step of a tutorial. Without line states, the message stays in the code as a comment.
 - The copy button leaves out the messages. Needs no JavaScript.
 - Add a custom state in `lineStates.states`:
 
@@ -75,6 +80,6 @@ count = len(sys.argv)  # [!code warning] Includes the script name
   });
   ```
 
-  Then use `todo={9}` or `[!code todo]`. A name uses lower-case letters, digits and hyphens, and cannot be the name of another attribute, such as `title` or `focus`. Each colour needs a contrast of 3:1 or more on the code background. A state with the name `error`, `warning` or `info` changes the built-in state.
+  Then use `todo={9}` or `[!code todo]`. A name uses lower-case letters, digits and hyphens, and cannot be the name of another attribute, such as `title` or `focus`. Each colour needs a contrast of 3:1 or more on the code background. A state with the name `error`, `warning`, `info` or `success` changes the built-in state. `note` and `warn` cannot be custom names.
 - Option: `lineStates: false` leaves the directives in the code.
 - Limits: a message is one line of text. `[!code <state>]` on a line with only a comment marks the line below, and the comment line goes.

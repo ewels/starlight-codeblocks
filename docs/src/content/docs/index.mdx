@@ -8,8 +8,8 @@ hero:
     alt: A terminal window with a star in it
   tagline: |
     This plugin adds 24 features to the <a href="https://expressive-code.com">Expressive Code</a> blocks of
-    <a href="https://starlight.astro.build">Starlight</a>, such as focus, annotations and runnable examples.
-    A feature starts only when a block uses its attribute or directive, so existing pages do not change.
+    <a href="https://starlight.astro.build">Starlight</a>.
+    Use them to enrich code blocks, they're perfect for docs and training.
     <span class="agent-skill">Using an agent? <a href="/starlight-codeblocks/guides/agent-skill/">Point it at the bundled skill</a>.</span>
   actions:
     - text: Get started
@@ -26,8 +26,6 @@ import Feature from '../../components/Feature.astro';
 import FeatureCarousel from '../../components/FeatureCarousel.astro';
 
 ## Features
-
-Select a feature to see its example. Until you select one, the example changes every 7 seconds. Hover over the example, or move keyboard focus into it, to stop the change while you read.
 
 <FeatureCarousel>
 
@@ -308,12 +306,12 @@ const client = createClient({
 
 </Feature>
 
-<Feature page="features/token-links">
+<Feature page="features/code-links">
 
 ```py apiLinks=false
 import numpy as np
 
-# [!link /linspace/ https://numpy.org/doc/stable/reference/generated/numpy.linspace.html]
+# [!link /linspace/ https://numpy.org/doc/stable/reference/generated/numpy.linspace.html] Returns evenly spaced numbers over an interval.
 x = np.linspace(0, 1, 50)
 y = np.sin(2 * np.pi * x)
 ```
@@ -439,13 +437,13 @@ Then add `codeblocks()` to the Starlight plugins in `astro.config.mjs`:
 ```js title="astro.config.mjs" ins={9}
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import codeblocks from 'starlight-codeblocks';
+import codeblocks from 'starlight-codeblocks'; // [!code focus ++] Import the plugin
 
 export default defineConfig({
   integrations: [
     starlight({
       title: 'My docs',
-      plugins: [codeblocks()],
+      plugins: [codeblocks()], // [!code focus ++] Load the plugin
     }),
   ],
 });

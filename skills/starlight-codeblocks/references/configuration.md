@@ -19,7 +19,7 @@ codeblocks({
 | Key | Settings | Feature |
 |---|---|---|
 | `focus` | `style`: `'blur'` or `'dim'`, default `'blur'` | Focus |
-| `lineStates` | `states`: custom states by name, each `{ label, colour: { dark, light } }` | Line states |
+| `lineStates` | `states`: custom states by name, each `{ label, colour: { dark, light } }`. `prefix`: `false` leaves the name out of labels with a message | Line states |
 | `notation` | `comments`: comment syntax for each language, added to the built-in map | Comment notation |
 | `callouts` | None | Inline callouts |
 | `annotations` | None | Annotations and side-by-side annotations |
@@ -29,7 +29,7 @@ codeblocks({
 | `wordDiff` | `minSimilarity`: from 0 to 1, default `0.4` | Word-level diff |
 | `whitespace` | None | Visible whitespace |
 | `brackets` | `languages`: default `[]` | Colourised brackets |
-| `tokenLinks` | None | Token links |
+| `codeLinks` | None | Code links |
 | `apiLinks` | `adapters`: default `[python(), nextflow()]` | API auto-linking |
 | `expandable` | `lines`: default `12`. `auto`: a line count, default `false` | Expandable blocks |
 | `playgrounds` | Custom playgrounds by name | Open in playground |

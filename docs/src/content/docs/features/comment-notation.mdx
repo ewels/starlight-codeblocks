@@ -52,7 +52,7 @@ The plugin reads the directives when the site builds. It needs no JavaScript in 
 - If a comment holds only directives, the plugin removes the whole comment and the whitespace before it. Other text in the comment stays.
 - In JSX and TSX, the plugin also reads comments in braces, `{/* [!code focus] */}`, and removes the braces with the comment.
 - The copy button leaves out messages, annotations, callouts and footnotes.
-- `[!code highlight]`, `[!code ++]` and `[!code --]` give the same result as the `mark`, `ins` and `del` attributes of Expressive Code.
+- `[!code highlight]`, `[!code ++]` and `[!code --]` give the same result as the `mark`, `ins` and `del` attributes of Expressive Code. Text after them shows as a message, as for [line states](/starlight-codeblocks/features/line-states/).
 - A backslash after the bracket, as in `[\!code focus]`, turns a directive into plain text. The plugin removes the backslash.
 - Inline code, links and bold in the text of a directive render as HTML. Other Markdown stays as text.
 

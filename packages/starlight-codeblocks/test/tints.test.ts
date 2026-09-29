@@ -48,7 +48,7 @@ function inheritedColour(root: Element, el: Element, index: number, fallback: st
 }
 
 const cases: { name: string; fence: string; lines: string[]; selector: string; layers: (v: Variant) => string[] }[] = [
-  ...['error', 'warning', 'info', 'todo'].map((state) => ({
+  ...['error', 'warning', 'info', 'success', 'todo'].map((state) => ({
     name: `${state} line`,
     fence: `js ${state}={1-4} brackets`,
     lines: code,
@@ -119,7 +119,7 @@ test('every syntax colour meets 4.5:1 contrast on the tints that any line or tok
     const layers = {
       'permalink target': [v.get('codeblocksPermalinks.targetBackground')],
       'API link hover': [v.get('codeblocksApiLinks.hoverBackground')],
-      'token link hover': [v.get('codeblocksTokenLinks.hoverBackground')],
+      'code link hover': [v.get('codeblocksCodeLinks.hoverBackground')],
       'active footnote line': [v.get('codeblocksFootnotes.lineBackground')],
       'active annotated line': [v.get('codeblocksAnnotations.lineBackground')],
       'active mention line': [v.get('codeblocksMentions.background')],

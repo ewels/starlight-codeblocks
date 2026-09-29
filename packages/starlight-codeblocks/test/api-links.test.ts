@@ -79,7 +79,7 @@ test('leaves names that do not resolve, names in strings and unsafe links as pla
   expect(html).not.toContain('data-scb-api-links');
 });
 
-test('skips names that cross a line, overlap a linked name, or sit on a line with a token link', async () => {
+test('skips names that cross a line, overlap a linked name, or sit on a line with a code link', async () => {
   const overlap = fakeAdapter({
     findSymbols: () => [
       { start: 0, end: 9, name: 'lib.parse', href: '/x/', source: 'S' },
@@ -90,12 +90,12 @@ test('skips names that cross a line, overlap a linked name, or sit on a line wit
   });
   const { html } = await render(block('js', 'lib.parse()', 'lib', 'x'), withAdapters(overlap));
   expect(html.match(/class="scb-api-link"/g)).toHaveLength(1);
-  const tokenLink = await render(
+  const codeLink = await render(
     block('js', '// [!link /lib/ https://example.com/]', 'lib.parse()', 'lib'),
     withAdapters(fakeAdapter()),
   );
-  expect(tokenLink.html.match(/class="scb-link"/g)).toHaveLength(1);
-  expect(tokenLink.html.match(/class="scb-api-link"/g)).toHaveLength(1);
+  expect(codeLink.html.match(/class="scb-link"/g)).toHaveLength(1);
+  expect(codeLink.html.match(/class="scb-api-link"/g)).toHaveLength(1);
 });
 
 test('only runs adapters for their languages and aliases, and not with apiLinks=false', async () => {

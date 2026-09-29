@@ -1,6 +1,6 @@
 ---
 name: starlight-codeblocks
-description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side-by-side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, inline code highlighting, token links, API auto-linking, line permalinks, the code switcher, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
+description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side-by-side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, inline code highlighting, code links, API auto-linking, line permalinks, the code switcher, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
 license: MIT
 ---
 
@@ -60,9 +60,9 @@ Use scrollycoding when prose explains the code step by step as the reader scroll
 | Goal | Use | Why |
 |---|---|---|
 | The text is about a few lines, but readers need the rest for context | Focus: `focus={4-7}` or `[!code focus]` | Blurs the other lines. Hover or keyboard focus makes every line sharp. |
-| A line is wrong, needs care, or needs a note, as in an editor | Line states: `[!code error] message`, `[!code warning]`, `[!code info]` | A tint, a bar and an optional message after the code. |
+| A line is wrong, needs care, or needs a note, as in an editor | Line states: `[!code error] message`, `[!code warning]`, `[!code info]`, `[!code success]` | A tint, a bar and an optional message after the code. |
 | A neutral highlight with no meaning | `{3}` on the fence line or `[!code highlight]` | The `mark` of Expressive Code. |
-| A state that is not error, warning or info, such as "To do" | A custom state in `lineStates.states` | Its name becomes an attribute and a directive. |
+| A state that is not error, warning, info or success, such as "To do" | A custom state in `lineStates.states` | Its name becomes an attribute and a directive. |
 
 ### Make code easier to read
 
@@ -85,7 +85,7 @@ Hidden lines remove chosen lines. Expandable blocks cut a block at a line count.
 
 | Goal | Use | Why |
 |---|---|---|
-| One piece of text in the code links to a URL that you choose | Token links: `[!link /text/ url]` on the line above | For one-off links and names that no adapter knows. |
+| One piece of text in the code links to a URL that you choose | Code links: `[!link /text/ url] description` on the line above | For one-off links and names that no adapter knows. The description shows in a card. |
 | Every library name in Python or Nextflow code links to its reference | API auto-linking | Starts on its own for `py`, `python`, `pycon`, `nextflow` and `nf` blocks. |
 | Readers must link to one line or a range of lines | Line permalinks: `id="name"` | Line numbers that are links, as `#name-L2` or `#name-L2-L4`. |
 

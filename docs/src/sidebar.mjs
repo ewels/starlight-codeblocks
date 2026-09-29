@@ -42,7 +42,7 @@ export const sidebar = [
   },
   {
     label: 'Link code',
-    items: ['features/token-links', 'features/api-auto-linking', 'features/line-permalinks'],
+    items: ['features/code-links', 'features/api-auto-linking', 'features/line-permalinks'],
   },
   {
     label: 'Adapt to the reader',

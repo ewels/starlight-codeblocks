@@ -1,12 +1,12 @@
 ---
 title: Line states
-description: Tint lines as errors, warnings or notes, with an optional message after the code, like the diagnostics in a code editor.
+description: Tint lines as errors, warnings, notes or successes, with an optional message after the code, like the diagnostics in a code editor.
 ---
 
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
-Expressive Code can mark a line, but a mark does not say what is wrong with the line. A line state tints the line as an error, a warning or a note. It can also show a message after the code, as a code editor does.
+Expressive Code can mark a line, but a mark does not say what is wrong with the line. A line state tints the line as an error, a warning, a note or a success. It can also show a message after the code, as a code editor does.
 
 export const basic = `
 \`\`\`py title="loop.py" info={1}
@@ -27,12 +27,17 @@ Each state has its own colour and a bar on the left edge. The text after the dir
 
 | Syntax | Where | Example |
 |---|---|---|
-| `error={range}`, `warning={range}`, `info={range}` | Fence line | `error={3}` |
+| `error={range}`, `warning={range}`, `info={range}`, `success={range}` | Fence line | `error={3}` |
 | `[!code error] <message>` | Comment | `# [!code error] Must be 0 or more` |
 | `[!code warning] <message>` | Comment | `# [!code warning] Slow` |
 | `[!code info] <message>` | Comment | `# [!code info] Added in 2.0` |
+| `[!code success] <message>` | Comment | `# [!code success] Tests pass` |
+| `note`, `warn` | Both | `note={2}`, `# [!code warn] Slow` |
+| `[!code ++] <message>`, `[!code --] <message>`, `[!code highlight] <message>` | Comment | `// [!code ++] Load the plugin` |
 | `[!code <state>:N] <message>` | Comment | `// [!code info:3] Defaults` |
 | `<state>={range}`, `[!code <state>]` | Both | `todo={9}` |
+
+`note` is another name for `info`, and `warn` for `warning`.
 
 The message is optional. An attribute tints the lines and shows no message. `[!code <state>:N]` tints its own line and the next N-1 lines, and shows the message on the first line.
 
@@ -41,10 +46,11 @@ Inline code, links and bold in a message render as HTML. Other Markdown stays as
 ## Behaviour
 
 - Each state has a background tint and a 3 px bar on the left edge.
-- A message shows after the code, as a small label. The label starts with the name of the state in bold: **Error**, **Warning** or **Note**.
+- A message shows after the code, as a small label. The label starts with the name of the state in bold: **Error**, **Warning**, **Note** or **Success**. With `prefix: false`, the label shows only the message.
 - A line with no message shows a label with only the name of the state. In a group of lines with the same state, only the first line shows it. The colour then does not carry the meaning alone.
 - Screen readers hear the name of the state before the line, for example "Error:". A screen reader reads the message after the code.
 - The copy button leaves out the messages. The names of the states and the messages are also not part of a manual text selection.
+- A message after `[!code ++]`, `[!code --]` or `[!code highlight]` shows in the same label, in the colour of the marker. The label has no name before the message, because Expressive Code already marks the line. With `lineStates: false`, the message stays in the code as a comment.
 - A line can have more than one state. The line then shows the colour of the last state in the configuration.
 - Line states need no JavaScript in the browser.
 
@@ -88,6 +94,29 @@ export async function handler(request: Request) {
 `;
 
 <Example code={todo} />
+
+A message after `[!code ++]` tells readers why a line is new, for example in a step of a tutorial:
+
+export const inserted = `
+\`\`\`js title="astro.config.mjs"
+import starlight from '@astrojs/starlight';
+import codeblocks from 'starlight-codeblocks'; // [!code ++] Import the plugin
+
+export default defineConfig({
+  integrations: [starlight({ plugins: [codeblocks()] })], // [!code ++] Load the plugin
+});
+\`\`\`
+`;
+
+<Example code={inserted} hiddenAttributes="apiLinks=false" />
+
+With `prefix: false`, a label shows only the message. A line without a message still shows the name of the state, so that the colour does not carry the meaning alone:
+
+```js title="astro.config.mjs"
+codeblocks({
+  lineStates: { prefix: false },
+});
+```
 
 An attribute marks lines without a message. Use it when the text around the block explains the problem:
 

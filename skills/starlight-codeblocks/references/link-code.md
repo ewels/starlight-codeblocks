@@ -2,31 +2,33 @@
 
 Three features add links to code blocks.
 
-- If one piece of text needs a link that you choose, use a token link.
+- If one piece of text needs a link that you choose, use a code link.
 - If every library name in Python or Nextflow code needs a link to its reference, use API auto-linking. It starts on its own.
 - If readers must share a link to one line or a range, use line permalinks.
 
-## Token links
+## Code links
 
-Docs: https://ewels.github.io/starlight-codeblocks/features/token-links/
+Docs: https://ewels.github.io/starlight-codeblocks/features/code-links/
 
-Use for a one-off link from text in the code, or for a name that no API link adapter knows. The linked text keeps its syntax colours, with an underline in the accent colour.
+Use for a one-off link from text in the code, or for a name that no API link adapter knows. Give each link a short description: it shows in the same card as API auto-linking. The linked text keeps its syntax colours, with an underline in the accent colour.
 
 | Syntax | Where |
 |---|---|
-| `[!link /<text>/ <url>]` | Comment on its own line, directly above the target line |
+| `[!link /<text>/ <url>] <description>` | Comment on its own line, directly above the target line. The description shows in a card on hover and focus. |
+| `[!link /<text>/ <url>]` | Same, as a plain link with no card |
 
 ```py
-# [!link /linspace/ https://numpy.org/doc/stable/reference/generated/numpy.linspace.html]
+# [!link /linspace/ https://numpy.org/doc/stable/reference/generated/numpy.linspace.html] Returns evenly spaced numbers over an interval.
 x = np.linspace(0, 1, 50)
 ```
 
 - The plugin links the first match of the literal text on the line below. Make the text longer to match a later place.
+- Text after the directive shows in the same card as API auto-linking: the linked text, the description and the URL's domain. Use it to say what the link goes to. The card shows plain text only.
 - Stack several `[!link]` lines above one line to link several texts on it.
 - A URL that starts with `/` is a link inside the site. The plugin adds Astro's `base`.
 - The URL is relative, `http` or `https`. If the text has no match, or the URL is missing or has another scheme, the build logs a warning.
 - Names on the target line of a `[!link]` do not get API links, so a link is never inside another link.
-- Option: `tokenLinks: false` turns the feature off. The directive then stays in the code, with a warning.
+- Option: `codeLinks: false` turns the feature off. The directive then stays in the code, with a warning.
 - Limits: a link cannot span two lines. JSON has no comments: use `jsonc`.
 
 ## API auto-linking

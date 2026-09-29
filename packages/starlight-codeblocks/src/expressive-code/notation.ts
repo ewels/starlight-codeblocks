@@ -345,13 +345,13 @@ const markers: Record<string, [marker: string, change: string]> = {
   'code --': ['del', 'deleted'],
 };
 
-const builtInDirectives: DirectiveSpecs = Object.fromEntries(
+export const builtInDirectives: DirectiveSpecs = Object.fromEntries(
   Object.entries(markers).map(([name, [marker, change]]) => [
     name,
     {
       placement: 'end',
       docs: {
-        description: `Marks the line as ${change}, like the \`${marker}\` attribute of Expressive Code.`,
+        description: `Marks the line as ${change}, like the \`${marker}\` attribute of Expressive Code. With line states on, text after the directive shows as a message.`,
         example: { lang: 'js', code: `const host = 'localhost'\nconst port = 8080 // [!${name}]` },
         page: 'features/comment-notation',
       },

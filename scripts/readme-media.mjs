@@ -92,7 +92,16 @@ const features = [
   { slug: 'word-level-diff' },
   { slug: 'visible-whitespace' },
   { slug: 'colourised-brackets' },
-  { slug: 'token-links' },
+  {
+    slug: 'code-links',
+    run: async (page, rec) => {
+      await rec.hold(1000);
+      await rec.point(block(page).locator('a.scb-link').first());
+      await page.locator('.scb-api-card').first().waitFor({ state: 'visible' });
+      await rec.include(page.locator('.scb-api-card').first());
+      await rec.hold(2500);
+    },
+  },
   {
     slug: 'api-auto-linking',
     run: async (page, rec) => {

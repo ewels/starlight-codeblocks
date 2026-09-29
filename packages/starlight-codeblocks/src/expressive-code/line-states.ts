@@ -14,7 +14,7 @@ import type { LineStateDefinition } from '../options.ts';
 import { type CodeblocksPlugin, ensureTextContrast, resolveRange } from './core.ts';
 import { isHiddenLine } from './hidden-lines.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
-import { type DirectiveSpecs, getDirectives } from './notation.ts';
+import { builtInDirectives, type DirectiveSpecs, getDirectives } from './notation.ts';
 import { onCode, PREFIX, solidCodeBackground, themeColour } from './styles.ts';
 
 /**
@@ -39,7 +39,33 @@ export const builtInStates: Record<string, { label: string; themeColour: string 
   error: { label: 'Error', themeColour: 'editorError.foreground' },
   warning: { label: 'Warning', themeColour: 'editorWarning.foreground' },
   info: { label: 'Note', themeColour: 'editorInfo.foreground' },
+  success: { label: 'Success', themeColour: 'terminal.ansiGreen' },
 };
+
+/** Expressive Code's line markers, whose directives take a message in the same label. */
+export const markers: Record<string, string> = { 'code ++': 'ins', 'code --': 'del', 'code highlight': 'mark' };
+
+function markerSettings(marker: string) {
+  const border = ({ resolveSetting }: Context) => resolveSetting(`textMarkers.${marker}BorderColor` as never);
+  return {
+    [`${marker}LabelBackground`]: (context: Context) => setAlpha(border(context), 0.2),
+    [`${marker}LabelForeground`]: (context: Context) =>
+      ensureColorContrastOnBackground(
+        mix(border(context), context.resolveSetting('codeForeground'), 0.5),
+        onBackground(
+          get(context.resolveSetting, `${marker}LabelBackground`),
+          onBackground(
+            context.resolveSetting(`textMarkers.${marker}Background` as never),
+            solidCodeBackground(context),
+          ),
+        ),
+        5,
+      ),
+  };
+}
+
+/** Other names for built-in states, in the attribute and the directive. */
+export const stateAliases: Record<string, string> = { note: 'info', warn: 'warning' };
 
 type Context = Parameters<StyleResolverFn>[0];
 type Resolve = Context['resolveSetting'];
@@ -66,30 +92,41 @@ function stateSettings(name: string, state: LineStateDefinition | (typeof builtI
 
 const stateData = new AttachedPluginData<{
   states: Map<ExpressiveCodeLine, { name: string; messages: string[] }[]>;
-}>(() => ({ states: new Map() }));
+  markers: Map<ExpressiveCodeLine, { marker: string; message: string }[]>;
+}>(() => ({ states: new Map(), markers: new Map() }));
 
 const cls = (suffix: string) => `${PREFIX}-state${suffix}`;
 
-/** Tints lines as errors, warnings, notes or custom states, with an optional message after the code. */
+/** Tints lines as errors, warnings, notes, successes or custom states, with an optional message after the code. */
 export function pluginLineStates({
   states = {},
+  prefix = true,
 }: {
   states?: Record<string, LineStateDefinition>;
+  prefix?: boolean;
 } = {}): CodeblocksPlugin {
   const all = { ...builtInStates, ...states };
+  const names = { ...Object.fromEntries(Object.keys(all).map((name) => [name, name])), ...stateAliases };
   const directives: DirectiveSpecs = {};
-  for (const [name, { label }] of Object.entries(all)) {
+  for (const [name, state] of Object.entries(names)) {
+    const label = all[state]?.label;
     directives[`code ${name}`] = {
       placement: 'end',
       text: true,
       docs: {
-        description: `Marks the line with the "${label}" state. Text after the directive becomes the message.`,
+        description:
+          name === state
+            ? `Marks the line with the "${label}" state. Text after the directive becomes the message.`
+            : `The same as \`[!code ${state}]\`.`,
         args: 'Optional. The message.',
         example: { lang: 'js', code: `const retries = -1 // [!code ${name}] Must be 0 or more` },
         page: 'features/line-states',
       },
     };
   }
+  // Without line states, the text stays in the comment.
+  for (const name of Object.keys(markers))
+    directives[name] = { ...builtInDirectives[name], placement: 'end', text: true };
   return {
     name: 'starlight-codeblocks:line-states',
     directives,
@@ -98,6 +135,7 @@ export function pluginLineStates({
         codeblocksLineStates: Object.assign(
           { barWidth: '3px', labelFontSize: '0.75rem', labelRadius: '3px' },
           ...Object.entries(all).map(([name, state]) => stateSettings(name, state)),
+          ...Object.values(markers).map(markerSettings),
         ),
       },
     }),
@@ -130,6 +168,14 @@ ${Object.keys(all)
   --scbStateLabelFg: ${v(`${name}LabelForeground`)};
 }`,
   )
+  .join('\n')}
+${Object.values(markers)
+  .map(
+    (marker) => `.${cls(`-label-${marker}`)} {
+  --scbStateLabelBg: ${v(`${marker}LabelBackground`)};
+  --scbStateLabelFg: ${v(`${marker}LabelForeground`)};
+}`,
+  )
   .join('\n')}`;
     },
     hooks: {
@@ -142,10 +188,17 @@ ${Object.keys(all)
           if (message) entry.messages.push(message);
           lineStates.set(line, list);
         };
-        for (const name of Object.keys(all)) {
-          for (const line of resolveRange(context, name) ?? []) add(line, name);
+        for (const [name, state] of Object.entries(names)) {
+          for (const line of resolveRange(context, name) ?? []) add(line, state);
           for (const directive of getDirectives(context.codeBlock, `code ${name}`)) {
-            for (const [i, line] of directive.lines.entries()) add(line, name, i === 0 ? directive.text : undefined);
+            for (const [i, line] of directive.lines.entries()) add(line, state, i === 0 ? directive.text : undefined);
+          }
+        }
+        const lineMarkers = stateData.getOrCreateFor(context.codeBlock).markers;
+        for (const [name, marker] of Object.entries(markers)) {
+          for (const { lines, text } of getDirectives(context.codeBlock, name)) {
+            const line = lines[0];
+            if (line && text) lineMarkers.set(line, [...(lineMarkers.get(line) ?? []), { marker, message: text }]);
           }
         }
       },
@@ -159,10 +212,16 @@ ${Object.keys(all)
         }
       },
       postprocessRenderedLine({ codeBlock, line, renderData }) {
-        const { states } = stateData.getOrCreateFor(codeBlock);
+        const { states, markers: lineMarkers } = stateData.getOrCreateFor(codeBlock);
+        const code = select('.code', renderData.lineAst);
+        if (!code) return;
+        for (const { marker, message } of lineMarkers.get(line) ?? []) {
+          code.children.push(
+            h('span', { class: `${cls('-label')} ${cls(`-label-${marker}`)}` }, inlineMarkdown(message)),
+          );
+        }
         const list = states.get(line);
-        const code = list && select('.code', renderData.lineAst);
-        if (!list || !code) return;
+        if (!list) return;
         addClassName(renderData.lineAst, cls(''));
         const lines = codeBlock.getLines();
         // A hidden line above does not count: readers would see the run without its name.
@@ -175,8 +234,9 @@ ${Object.keys(all)
           for (const message of messages) {
             labelNodes.push(
               h('span', { class: cls('-label') }, [
-                h('strong', { ariaHidden: 'true' }, labels[i]),
-                { type: 'text', value: ' ' },
+                ...(prefix
+                  ? [h('strong', { ariaHidden: 'true' }, labels[i]), { type: 'text', value: ' ' } as const]
+                  : []),
                 ...inlineMarkdown(message),
               ]),
             );

@@ -4,13 +4,16 @@ import {
   PluginStyleSettings,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
-import { h } from '@expressive-code/core/hast';
+import { h, select, toText } from '@expressive-code/core/hast';
+import { clientJsModules } from '../client-modules.ts';
 import { getRegistry } from '../registry.ts';
-import { type CodeblocksPlugin, isSafeUrl, warn } from './core.ts';
+import { apiCardStyles, sentences } from './api-links.ts';
+import { type CodeblocksPlugin, isSafeUrl, warn, withBase } from './core.ts';
+import { inlineMarkdown } from './inline-markdown.ts';
 import { getDirectives } from './notation.ts';
 import { PREFIX, tint } from './styles.ts';
 
-export interface TokenLinksStyleSettings {
+export interface CodeLinksStyleSettings {
   /** The underline that marks the link. Needs 3:1 contrast on the code background. */
   underline: UnresolvedStyleValue;
   hoverBackground: UnresolvedStyleValue;
@@ -18,13 +21,13 @@ export interface TokenLinksStyleSettings {
 
 declare module '@expressive-code/core' {
   export interface StyleSettings {
-    codeblocksTokenLinks: TokenLinksStyleSettings;
+    codeblocksCodeLinks: CodeLinksStyleSettings;
   }
 }
 
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
-    codeblocksTokenLinks: {
+    codeblocksCodeLinks: {
       underline: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),
       hoverBackground: (context) => tint(context.resolveSetting('codeblocks.accent'), context),
     },
@@ -33,52 +36,52 @@ const styleSettings = new PluginStyleSettings({
 
 class LinkAnnotation extends ExpressiveCodeAnnotation {
   constructor(
-    private readonly href: string,
+    private readonly properties: Record<string, string>,
     inlineRange: { columnStart: number; columnEnd: number },
   ) {
     super({ inlineRange });
   }
   render({ nodesToTransform }: AnnotationRenderOptions) {
-    return nodesToTransform.map((node) => h('a', { class: `${PREFIX}-link`, href: this.href }, [node]));
+    return nodesToTransform.map((node) => h('a', { class: `${PREFIX}-link`, ...this.properties }, [node]));
   }
 }
 
-/** Adds Astro's `base` to a site-relative URL, unless the URL already starts with it. */
-export function withBase(url: string, base = '/') {
-  const root = base.replace(/\/$/, '');
-  if (!root || !url.startsWith('/') || url.startsWith('//')) return url;
-  return url === root || url.startsWith(`${root}/`) ? url : root + url;
-}
-
-/** Turns the first match of `/text/` on the next line into a link, from `[!link /text/ <url>]`. */
-export function pluginTokenLinks({ base }: { base?: string } = {}): CodeblocksPlugin {
+/**
+ * Turns the first match of `/text/` on the next line into a link, from `[!link /text/ <url>]`.
+ * Text after the directive shows in the API links card.
+ */
+export function pluginCodeLinks({ base }: { base?: string } = {}): CodeblocksPlugin {
   return {
-    name: 'starlight-codeblocks:token-links',
+    name: 'starlight-codeblocks:code-links',
     directives: {
       link: {
         placement: 'own',
+        text: true,
         docs: {
-          description: 'Links the first match of `/text/` on the next line to the URL.',
-          args: '`/text/` to link, then the URL.',
+          description:
+            'Links the first match of `/text/` on the next line to the URL. Text after the directive shows in a card on hover and focus.',
+          args: '`/text/` to link, then the URL, then optional text for the card.',
           example: {
             lang: 'js',
             code: '// [!link /const/ https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const]\nconst port = 8080',
           },
-          page: 'features/token-links',
+          page: 'features/code-links',
         },
       },
     },
+    jsModules: clientJsModules,
     styleSettings,
     baseStyles: ({ cssVar }) => `
 .${PREFIX}-link {
   color: inherit;
   text-decoration: underline;
-  text-decoration-color: ${cssVar('codeblocksTokenLinks.underline')};
+  text-decoration-color: ${cssVar('codeblocksCodeLinks.underline')};
   text-underline-offset: 3px;
 }
 .${PREFIX}-link:hover {
-  background: ${cssVar('codeblocksTokenLinks.hoverBackground')};
-}`,
+  background: ${cssVar('codeblocksCodeLinks.hoverBackground')};
+}
+${apiCardStyles(cssVar)}`,
     hooks: {
       annotateCode(context) {
         const root = base ?? getRegistry()?.base;
@@ -99,10 +102,25 @@ export function pluginTokenLinks({ base }: { base?: string } = {}): CodeblocksPl
           const line = directive.lines[0];
           const start = line?.text.indexOf(directive.match) ?? -1;
           if (!line || start === -1) continue;
+          const href = withBase(url, root);
+          const properties: Record<string, string> = { href };
+          const summary = directive.text && toText(h('span', inlineMarkdown(directive.text)));
+          if (summary) {
+            const source = /^https?:/.test(href) ? new URL(href).hostname : undefined;
+            properties['aria-description'] = sentences(summary, source);
+            properties.dataScbApiHead = directive.match;
+            properties.dataScbApiSummary = summary;
+            if (source) properties.dataScbApiSource = source;
+          }
           line.addAnnotation(
-            new LinkAnnotation(withBase(url, root), { columnStart: start, columnEnd: start + directive.match.length }),
+            new LinkAnnotation(properties, { columnStart: start, columnEnd: start + directive.match.length }),
           );
         }
+      },
+      postprocessRenderedBlock({ renderData }) {
+        if (!select(`.${PREFIX}-link[data-scb-api-head]`, renderData.blockAst)) return;
+        const figure = select('figure', renderData.blockAst);
+        if (figure) figure.properties.dataScbApiLinks = '';
       },
     },
   };

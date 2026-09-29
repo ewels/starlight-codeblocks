@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { css, example } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('./features/token-links/');
+  await page.goto('./features/code-links/');
 });
 
 test('links keep their token colour, with an underline, a hover background and the site base', async ({ page }) => {
@@ -34,4 +34,23 @@ test('readers can reach the link with the keyboard', async ({ page }) => {
   const next = block.getByRole('link', { name: 'read_text' });
   await expect(next).toBeFocused();
   expect(await css(next, 'outlineStyle')).toBe('solid');
+});
+
+test('a link with a description shows the card on hover and on focus, and Escape hides it', async ({ page }) => {
+  const block = example(page);
+  const link = block.getByRole('link', { name: 'linspace' });
+  const card = block.locator('.scb-api-card');
+  await expect(link).toHaveAttribute('aria-description', 'Returns evenly spaced numbers over an interval. numpy.org.');
+  await link.hover();
+  await expect(card).toHaveText('linspaceReturns evenly spaced numbers over an interval.numpy.org');
+  await page.mouse.move(0, 0);
+  await expect(card).toBeHidden();
+  await link.focus();
+  await expect(card).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(card).toBeHidden();
+  const plain = example(page, 3).getByRole('link', { name: 'linspace' });
+  await expect(plain).not.toHaveAttribute('aria-description');
+  await plain.focus();
+  await expect(page.locator('.scb-api-card:popover-open')).toHaveCount(0);
 });

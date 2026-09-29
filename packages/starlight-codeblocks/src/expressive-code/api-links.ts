@@ -14,11 +14,10 @@ import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import type { AdapterContext, ApiLinkAdapter, SymbolRef } from '../options.ts';
 import { getRegistry } from '../registry.ts';
-import { type CodeblocksPlugin, isSafeUrl, languageId } from './core.ts';
+import { type CodeblocksPlugin, isSafeUrl, languageId, withBase } from './core.ts';
 import { getDirectives } from './notation.ts';
 import { isShellOutput, pythonSessionPrompts } from './shell-copy.ts';
 import { onCode, PREFIX, solidCodeBackground, solidCodeForeground, tint } from './styles.ts';
-import { withBase } from './token-links.ts';
 
 export interface ApiLinksStyleSettings {
   /** The dotted underline that marks a link. Needs 3:1 contrast on the code background. */
@@ -154,7 +153,7 @@ export const apiCardStyles = (cssVar: ResolverContext['cssVar']) => `.${PREFIX}-
 }
 .${PREFIX}-api-card-action { color: ${cssVar('codeblocks.mutedForeground')}; }`;
 
-const sentences = (...parts: (string | undefined)[]) =>
+export const sentences = (...parts: (string | undefined)[]) =>
   parts
     .filter(Boolean)
     .map((part) => (/[.!?]$/.test(part as string) ? part : `${part}.`))
@@ -188,7 +187,7 @@ ${apiCardStyles(cssVar)}`,
         if (active.length === 0) return;
         const root = base ?? getRegistry()?.base;
         const lines = codeBlock.getLines();
-        const tokenLinked = new Set(getDirectives(codeBlock, 'link').flatMap((d) => d.lines));
+        const codeLinked = new Set(getDirectives(codeBlock, 'link').flatMap((d) => d.lines));
         // Output lines of a shell or Python session are not code. Without shell copy, the session
         // prompts are still in the text: blank them with spaces so that columns stay valid.
         const shellCopied = lines.some((line) => isShellOutput(codeBlock, line));
@@ -218,7 +217,7 @@ ${apiCardStyles(cssVar)}`,
             const index = starts.findLastIndex((s) => s <= start);
             const line = lines[index];
             const lineStart = starts[index] ?? 0;
-            if (!line || tokenLinked.has(line) || end > lineStart + (texts[index]?.length ?? 0)) continue;
+            if (!line || codeLinked.has(line) || end > lineStart + (texts[index]?.length ?? 0)) continue;
             if (!isSafeUrl(symbol.href)) continue;
             const head = cardHead(symbol);
             const properties: Record<string, string> = {

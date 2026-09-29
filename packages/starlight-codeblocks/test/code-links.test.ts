@@ -1,7 +1,6 @@
 import { getColorContrast } from '@expressive-code/core';
 import { afterEach, expect, test } from 'vitest';
-import { isSafeUrl } from '../src/expressive-code/core.ts';
-import { withBase } from '../src/expressive-code/token-links.ts';
+import { isSafeUrl, withBase } from '../src/expressive-code/core.ts';
 import { resolveOptions } from '../src/options.ts';
 import { setRegistry } from '../src/registry.ts';
 import { variants } from './contrast.ts';
@@ -66,12 +65,12 @@ test('warns about a link without a URL, and about text with no match', async () 
 
 test('renders a block without links the same as without the feature', async () => {
   const md = block('js title="a.js"', 'const a = 1;');
-  expect((await render(md)).html).toBe((await render(md, { tokenLinks: false })).html);
+  expect((await render(md)).html).toBe((await render(md, { codeLinks: false })).html);
 });
 
 test('the underline meets 3:1 contrast in both themes', async () => {
   for (const { get, name } of await variants()) {
-    const colour = get('codeblocksTokenLinks.underline');
+    const colour = get('codeblocksCodeLinks.underline');
     expect(getColorContrast(colour, get('codeBackground')), name).toBeGreaterThanOrEqual(3);
   }
 });
@@ -91,4 +90,22 @@ test('does not link a javascript: URL, however it is hidden', async () => {
   for (const url of ['https://example.com/', 'http://example.com/', '/docs/', '../x', '#y', 'page?q=a:b']) {
     expect(isSafeUrl(url), url).toBe(true);
   }
+});
+
+test('text after the directive gives the link an API card, in plain text', async () => {
+  const { html, copyText, warnings } = await render(
+    block('py', `# [!link /linspace/ ${url}] Returns **evenly** spaced numbers.`, 'x = np.linspace(0, 1)'),
+  );
+  expect(html).toContain('aria-description="Returns evenly spaced numbers. numpy.org."');
+  expect(html).toContain('data-scb-api-head="linspace"');
+  expect(html).toContain('data-scb-api-summary="Returns evenly spaced numbers."');
+  expect(html).toContain('data-scb-api-source="numpy.org"');
+  expect(html).toMatch(/<figure[^>]*data-scb-api-links/);
+  expect(copyText).toBe('x = np.linspace(0, 1)');
+  expect(warnings).toEqual([]);
+  const local = await render(block('js', '// [!link /a/ /reference/] The reference.', 'a()'));
+  expect(local.html).toContain('aria-description="The reference."');
+  expect(local.html).not.toContain('data-scb-api-source');
+  const plain = await render(block('js', '// [!link /a/ https://example.com/]', 'a()'));
+  expect(plain.html).not.toMatch(/data-scb-api|aria-description/);
 });

@@ -16,7 +16,7 @@ The first release. It adds these features to Starlight code blocks, on top of Ex
 - Word-level diff
 - Visible whitespace
 - Colourised brackets
-- Token links
+- Code links
 - API auto-linking, with adapters for Python and Nextflow
 - Expandable blocks
 - Open in playground

@@ -185,6 +185,13 @@ export function isSafeUrl(href: string, schemes = ['http:', 'https:']) {
   }
 }
 
+/** Adds Astro's `base` to a site-relative URL, unless the URL already starts with it. */
+export function withBase(url: string, base = '/') {
+  const root = base.replace(/\/$/, '');
+  if (!root || !url.startsWith('/') || url.startsWith('//')) return url;
+  return url === root || url.startsWith(`${root}/`) ? url : root + url;
+}
+
 /** Logs a build warning that names the file, the code block and, if given, the line in the block. */
 export function warn({ codeBlock, config }: Context, message: string, line?: number) {
   config.logger.warn(`${where(codeBlock, line)}: ${message}`);

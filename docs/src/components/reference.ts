@@ -8,21 +8,24 @@ import { attributesReference, styleSettingsReference } from '../../../packages/s
 const plugins = createPlugins(resolveOptions()) as CodeblocksPlugin[];
 const words: Record<string, string> = { '++': 'insert', '--': 'delete' };
 
+// Line states declares the marker directives of the notation plugin again, so each name comes once.
 /** Every directive with its docs, for the directives reference page and its table of contents. */
-export const directives = plugins.flatMap((plugin) =>
-  Object.entries(plugin.directives ?? {}).flatMap(([name, { placement, docs }]) =>
-    docs
-      ? [
-          {
-            id: name.replace(/\S+/g, (word) => words[word] ?? word).replace(/ /g, '-'),
-            label: `[!${name}]`,
-            placement: placement === 'own' ? 'Own line' : 'End of line',
-            docs,
-            example: `\`\`\`${docs.example.lang}\n${docs.example.code}\n\`\`\``,
-          },
-        ]
-      : [],
-  ),
+export const directives = Object.entries(
+  Object.assign({}, ...plugins.map((plugin) => plugin.directives ?? {})) as NonNullable<
+    (typeof plugins)[number]['directives']
+  >,
+).flatMap(([name, { placement, docs }]) =>
+  docs
+    ? [
+        {
+          id: name.replace(/\S+/g, (word) => words[word] ?? word).replace(/ /g, '-'),
+          label: `[!${name}]`,
+          placement: placement === 'own' ? 'Own line' : 'End of line',
+          docs,
+          example: `\`\`\`${docs.example.lang}\n${docs.example.code}\n\`\`\``,
+        },
+      ]
+    : [],
 );
 
 export const attributes = attributesReference.map(({ example, ...attribute }) => ({

@@ -5,6 +5,7 @@ import { pluginAnnotations } from './annotations.ts';
 import { pluginApiLinks } from './api-links.ts';
 import { pluginBrackets } from './brackets.ts';
 import { pluginCallouts } from './callouts.ts';
+import { pluginCodeLinks } from './code-links.ts';
 import { pluginCodeSwitcher } from './code-switcher.ts';
 import { pluginCore } from './core.ts';
 import { pluginExpandable } from './expandable.ts';
@@ -19,7 +20,6 @@ import { pluginPlaceholders } from './placeholders.ts';
 import { pluginPlayground } from './playground.ts';
 import { pluginRunnable } from './runnable.ts';
 import { pluginShellCopy } from './shell-copy.ts';
-import { pluginTokenLinks } from './token-links.ts';
 import { pluginWalkthrough } from './walkthrough.ts';
 import { pluginWhitespace } from './whitespace.ts';
 import { pluginWordDiff } from './word-diff.ts';
@@ -30,6 +30,7 @@ export {
   pluginApiLinks,
   pluginBrackets,
   pluginCallouts,
+  pluginCodeLinks,
   pluginCodeSwitcher,
   pluginCore,
   pluginExpandable,
@@ -44,7 +45,6 @@ export {
   pluginPlayground,
   pluginRunnable,
   pluginShellCopy,
-  pluginTokenLinks,
   pluginWalkthrough,
   pluginWhitespace,
   pluginWordDiff,
@@ -79,7 +79,7 @@ export function createPlugins(options: ResolvedOptions, base?: string): Expressi
       ? [pluginBrackets({ ...options.brackets, comments: options.notation ? options.notation.comments : {} })]
       : []),
     ...(options.shellCopy ? [pluginShellCopy(options.shellCopy)] : []),
-    ...(options.tokenLinks ? [pluginTokenLinks({ base })] : []),
+    ...(options.codeLinks ? [pluginCodeLinks({ base })] : []),
     ...(options.apiLinks ? [pluginApiLinks({ ...options.apiLinks, base })] : []),
     ...(options.placeholders ? [pluginPlaceholders(options.placeholders)] : []),
     ...(options.mentions ? [pluginMentions()] : []),
