@@ -65,6 +65,31 @@ test('counts the lines that readers see in Expressive Code ranges and in directi
   expect(seen).toEqual(['About two on two()']);
 });
 
+test('applies every name in one `[!code …]`, and gives the text to the first name that takes text', async () => {
+  const { html, copyText, warnings } = await render(
+    block(
+      'js',
+      "import a from 'a' // [!code focus ++] Load the plugin",
+      'const b = a() // [!code focus ++:2]',
+      'const c = 1',
+      'const d = 2 // [!code error warn] Bad',
+    ),
+  );
+  expect(copyText).toBe("import a from 'a'\nconst b = a()\nconst c = 1\nconst d = 2");
+  expect(lineClasses(html)).toEqual([
+    'ec-line highlight ins',
+    'ec-line highlight ins',
+    'ec-line highlight ins scb-focus-out',
+    'ec-line scb-focus-out scb-state scb-state-error scb-state-warning',
+  ]);
+  expect(html.match(/scb-state-label-ins">([^<]*)/)?.[1]).toBe('Load the plugin');
+  expect(html).toContain('Error</strong> Bad<');
+  expect(warnings).toEqual([]);
+  expect((await render(block('js', 'a() // [!code focus fokus]'))).warnings.join()).toContain(
+    'is not a known directive',
+  );
+});
+
 test('warns about unknown directives with the file and line, and keeps them', async () => {
   const { copyText, warnings } = await render(block('js title="app.js"', 'a()', 'b() // [!code fokus]'));
   expect(copyText).toBe('a()\nb() // [!code fokus]');

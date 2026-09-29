@@ -109,28 +109,34 @@ const unescapeDirectives = (s: string) => {
 
 function interpret(token: Token, specs: DirectiveSpecs, sourceLine: number) {
   const [head, ...rest] = token.parts;
-  let name = head && 'word' in head ? head.word : '';
-  let count = 1;
+  const name = head && 'word' in head ? head.word : '';
   if (name === 'code') {
-    const sub = rest.shift();
-    const match = sub && 'word' in sub ? sub.word.match(/^(.+?)(?::(\d+))?$/) : null;
-    if (!match?.[1]) return { problem: 'needs a name, such as `[!code focus]`' };
-    if (match[1].includes(':')) return { problem: 'needs a count of 1 or more after the colon, such as `:3`' };
-    name = `code ${match[1]}`;
-    count = match[2] === undefined ? 1 : Number(match[2]);
-    if (count < 1) return { problem: 'needs a count of 1 or more after the colon, such as `:3`' };
+    // `[!code focus ++]` holds several directives, each with its own optional `:N`.
+    if (rest.length === 0) return { problem: 'needs a name, such as `[!code focus]`' };
+    const items: { spec: DirectiveSpec; directive: Directive }[] = [];
+    for (const part of rest) {
+      const match = 'word' in part ? part.word.match(/^(.+?)(?::(\d+))?$/) : null;
+      if (!match?.[1]) return { problem: 'needs a name, such as `[!code focus]`' };
+      if (match[1].includes(':')) return { problem: 'needs a count of 1 or more after the colon, such as `:3`' };
+      const count = match[2] === undefined ? 1 : Number(match[2]);
+      if (count < 1) return { problem: 'needs a count of 1 or more after the colon, such as `:3`' };
+      const spec = Object.hasOwn(specs, `code ${match[1]}`) ? specs[`code ${match[1]}`] : undefined;
+      if (!spec) return { problem: 'is not a known directive' };
+      items.push({ spec, directive: { name: `code ${match[1]}`, count, args: [], sourceLine } });
+    }
+    return { items };
   }
   const spec = Object.hasOwn(specs, name) ? specs[name] : undefined;
   if (!spec) return { problem: 'is not a known directive' };
   const match = rest.find((part) => 'literal' in part);
   const directive: Directive = {
     name,
-    count,
+    count: 1,
     args: rest.filter((part) => part !== match).map((part) => ('word' in part ? part.word : part.literal)),
     sourceLine,
   };
   if (match && 'literal' in match) directive.match = match.literal;
-  return { spec, directive };
+  return { items: [{ spec, directive }] };
 }
 
 /**
@@ -231,14 +237,17 @@ export function parseLine(
       keep(raw);
       continue;
     }
-    if (result.spec.placement === 'own' && hasCode) {
+    if (hasCode && result.items.some(({ spec }) => spec.placement === 'own')) {
       report(`\`${raw}\` must be on a line of its own, above the line it applies to.`, sourceLine);
       keep(raw);
       continue;
     }
-    directives.push(result.directive);
-    own ||= result.spec.placement === 'own';
-    if (result.spec.text) textOf = result.directive;
+    for (const { spec, directive } of result.items) {
+      directives.push(directive);
+      own ||= spec.placement === 'own';
+      // In `[!code ++ error] text`, the text goes to the first directive that takes text.
+      if (spec.text) textOf ??= directive;
+    }
     removedBefore = true;
   }
   const tail = body.slice(cursor);

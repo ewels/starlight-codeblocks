@@ -128,6 +128,7 @@ Directives go in a comment, in the comment syntax of the language of the block. 
 |---|---|---|
 | `[!code <name>]` | Applies to the line it is on. | `port: 3000, // [!code focus]` |
 | `[!code <name>:N]` | Applies to its line and the next N-1 lines. | `// [!code ++:3]` |
+| `[!code <name> <name>]` | Applies each name to the line. Text after it goes to the first name that takes text. | `// [!code focus ++] Loads the plugin` |
 | `[!<name>] <text>` | Takes the text after it, to the end of the comment. | `// [!annotate] Runs once` |
 | `[!<name> /<text>/]` | Points at the first match of the literal text on its target line. | `// [!callout /port/] From the environment` |
 | `[\!code <name>]` | Renders as the literal text `[!code <name>]`. | `// [\!code focus]` |
