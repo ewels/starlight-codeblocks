@@ -52,6 +52,7 @@ test('keyboard focus shows the card at once, and Escape hides it', async ({ page
   await page.keyboard.press('Tab');
   await expect(links.nth(5)).toBeFocused();
   await expect(card(page).locator('.scb-api-card-head')).toHaveText('method pathlib.Path.read_text');
+  await expect(card(page).locator('.scb-api-card-source svg[aria-hidden="true"] path')).toHaveAttribute('d', /^M/);
   expect(await css(links.nth(5), 'outlineStyle')).toBe('solid');
   // The card is inside the block, so it gets the theme colours.
   const colours = await card(page).evaluate((el) => ({
@@ -96,6 +97,7 @@ test('the card is 360px wide, centred under its link, 12px inside the viewport, 
     'Creates a channel that emits the file pairs that match a glob pattern, grouped by their shared prefix.',
   );
   await expect(card(page, 1).locator('.scb-api-card-source')).toHaveText('Nextflow reference');
+  await expect(card(page, 1).locator('.scb-api-card-source svg')).toHaveCount(1);
   // Screen readers get the card text as the link's description, not twice.
   await expect(card(page, 1)).toHaveAttribute('aria-hidden', 'true');
 });

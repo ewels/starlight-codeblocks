@@ -10,7 +10,7 @@ import {
   type ResolverContext,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
-import { h, select } from '@expressive-code/core/hast';
+import { h, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import type { AdapterContext, ApiLinkAdapter, SymbolRef } from '../options.ts';
 import { getRegistry } from '../registry.ts';
@@ -131,6 +131,27 @@ function ready(adapter: ApiLinkAdapter, { config }: Pick<ExpressiveCodeHookConte
   return setup;
 }
 
+let brandIcons: Promise<{ paths: Map<string, string>; slug: (title: string) => string }> | undefined;
+
+/** Simple Icons paths by slug. Loaded on the first block with an API link, because the set is large. */
+const loadIcons = () =>
+  (brandIcons ??= Promise.all([import('simple-icons'), import('simple-icons/sdk')]).then(([icons, sdk]) => ({
+    paths: new Map(
+      Object.values(icons).flatMap((icon) => (icon && 'slug' in icon ? [[icon.slug, icon.path] as const] : [])),
+    ),
+    slug: sdk.titleToSlug,
+  })));
+
+/** The Simple Icons slug for a link: the adapter's own, or the project at the start of `source`. */
+export async function iconSlug({ icon, source }: SymbolRef) {
+  if (icon === false) return undefined;
+  const { paths, slug } = await loadIcons();
+  // "Python 3.14 documentation" is the project "Python".
+  const project = source.replace(/\s+(api\s+)?(documentation|docs|reference)$/i, '').replace(/\s+v?\d[\w.-]*$/, '');
+  const candidate = icon ?? slug(project);
+  return paths.has(candidate) ? candidate : undefined;
+}
+
 /** The line at the top of the card: the signature, or the kind and qualified name. */
 const cardHead = ({ signature, kind, name }: SymbolRef) => signature ?? [kind, name].filter(Boolean).join(' ');
 
@@ -150,6 +171,13 @@ export const apiCardStyles = (cssVar: ResolverContext['cssVar']) => `.${PREFIX}-
 .${PREFIX}-api-card-source {
   color: ${cssVar('codeblocks.mutedForeground')};
   font-style: italic;
+}
+.${PREFIX}-api-card-source svg {
+  width: 1em;
+  height: 1em;
+  margin-inline-end: 0.4em;
+  vertical-align: -0.125em;
+  fill: currentColor;
 }
 .${PREFIX}-api-card-action { color: ${cssVar('codeblocks.mutedForeground')}; }`;
 
@@ -228,6 +256,8 @@ ${apiCardStyles(cssVar)}`,
               dataScbApiSource: symbol.source,
             };
             if (symbol.summary) properties.dataScbApiSummary = symbol.summary;
+            const icon = await iconSlug(symbol);
+            if (icon) properties.dataScbApiIcon = icon;
             line.addAnnotation(
               new ApiLinkAnnotation(properties, { columnStart: start - lineStart, columnEnd: end - lineStart }),
             );
@@ -235,10 +265,20 @@ ${apiCardStyles(cssVar)}`,
           }
         }
       },
-      postprocessRenderedBlock({ renderData }) {
+      async postprocessRenderedBlock({ renderData }) {
         if (!select(`.${cls()}`, renderData.blockAst)) return;
         const figure = select('figure', renderData.blockAst);
-        if (figure) figure.properties.dataScbApiLinks = '';
+        if (!figure) return;
+        figure.properties.dataScbApiLinks = '';
+        const used = new Set(
+          selectAll('a[data-scb-api-icon]', renderData.blockAst).map((a) => a.properties.dataScbApiIcon),
+        );
+        if (used.size === 0) return;
+        const { paths } = await loadIcons();
+        // Once for the block, so that each link carries only its slug.
+        figure.properties.dataScbApiIcons = JSON.stringify(
+          Object.fromEntries([...used].map((slug) => [slug, paths.get(String(slug))])),
+        );
       },
     },
   };

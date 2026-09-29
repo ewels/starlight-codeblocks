@@ -11,6 +11,17 @@ const part = (name: string, text: string) => {
   return span;
 };
 
+const SVG = 'http://www.w3.org/2000/svg';
+
+/** The icon path that the link's block holds for `slug`. */
+function iconPath(link: HTMLElement, slug: string): string | undefined {
+  try {
+    return JSON.parse(link.closest<HTMLElement>('[data-scb-api-icons]')?.dataset.scbApiIcons ?? '{}')[slug];
+  } catch {
+    return undefined;
+  }
+}
+
 let card: HTMLElement;
 let current: HTMLElement | undefined;
 let showTimer = 0;
@@ -30,11 +41,21 @@ function show(link: HTMLElement) {
   clearTimeout(hideTimer);
   if (link === current) return;
   hide();
-  const { scbApiHead = '', scbApiSummary, scbApiSource, scbApiAction } = link.dataset;
+  const { scbApiHead = '', scbApiSummary, scbApiSource, scbApiAction, scbApiIcon } = link.dataset;
+  const source = scbApiSource ? part('source', scbApiSource) : undefined;
+  const path = scbApiIcon && iconPath(link, scbApiIcon);
+  if (source && path) {
+    const svg = document.createElementNS(SVG, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.append(document.createElementNS(SVG, 'path'));
+    svg.firstElementChild?.setAttribute('d', path);
+    source.prepend(svg);
+  }
   card.replaceChildren(
     part('head', scbApiHead),
     ...(scbApiSummary ? [part('summary', scbApiSummary)] : []),
-    ...(scbApiSource ? [part('source', scbApiSource)] : []),
+    ...(source ? [source] : []),
     ...(scbApiAction ? [part('action', scbApiAction)] : []),
   );
   // Inside the link's own block, which holds the theme colours and can be a copy of a block in a full

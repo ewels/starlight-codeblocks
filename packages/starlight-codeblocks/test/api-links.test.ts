@@ -59,6 +59,35 @@ test('links resolved names, with the card text on the link and the syntax colour
   expect(warnings).toEqual([]);
 });
 
+test('puts a Simple Icons icon for the project of the source on the block once, and an adapter can pick or drop it', async () => {
+  const symbol = (source: string, icon?: string | false): SymbolRef => ({
+    start: 0,
+    end: 3,
+    href: '/x/',
+    name: 'lib',
+    source,
+    ...(icon === undefined ? {} : { icon }),
+  });
+  const html = async (...symbols: SymbolRef[]) =>
+    (await render(block('js', 'lib lib'), withAdapters(fakeAdapter({ findSymbols: () => symbols })))).html;
+  const python = await html(symbol('Python 3.14 documentation'), {
+    ...symbol('Python 3.14 documentation'),
+    start: 4,
+    end: 7,
+  });
+  expect(python.match(/data-scb-api-icon="python"/g)).toHaveLength(2);
+  const icons = JSON.parse(python.match(/data-scb-api-icons="([^"]*)"/)?.[1].replaceAll('&#x22;', '"') ?? '{}');
+  expect(Object.keys(icons)).toEqual(['python']);
+  expect(icons.python).toMatch(/^M/);
+  expect(await html(symbol('scikit-learn 1.5 documentation'))).toContain('data-scb-api-icon="scikitlearn"');
+  expect(await html(symbol('Nextflow reference'))).toContain('data-scb-api-icon="nextflow"');
+  expect(await html(symbol('Example docs', 'flask'))).toContain('data-scb-api-icon="flask"');
+  for (const none of [symbol('Example docs'), symbol('Python docs', false), symbol('Example docs', 'no-such-icon')]) {
+    const out = await html(none);
+    expect(out).not.toContain('data-scb-api-icon');
+  }
+});
+
 test('shows the kind and the qualified name when there is no signature, and adds Astro base', async () => {
   setRegistry({ options: resolveOptions(), plugins: [], base: '/docs' });
   const { html } = await render(block('js', 'lib'), withAdapters(fakeAdapter()));

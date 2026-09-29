@@ -93,6 +93,9 @@ importers:
       shiki:
         specifier: ^4.4.3
         version: 4.4.3
+      simple-icons:
+        specifier: ^16.33.0
+        version: 16.33.0
     devDependencies:
       '@astrojs/markdown-remark':
         specifier: 7.3.1

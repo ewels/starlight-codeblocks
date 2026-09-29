@@ -30,6 +30,7 @@ interface SymbolRef {
   signature?: string;
   summary?: string;
   source: string;
+  icon?: string | false;
 }
 ```
 
@@ -52,6 +53,7 @@ A `SymbolRef` is one name in `code`, its link and the text of its card:
 | `signature` | The first line of the card. Without a signature, the card shows the kind and the name. |
 | `summary` | One sentence under the signature. |
 | `source` | Where the link comes from, at the bottom of the card. |
+| `icon` | The [Simple Icons](https://simpleicons.org/) slug of the icon before the source, such as `flask`, or `false` for no icon. By default, the plugin uses the project at the start of `source`: `NumPy 2.1 documentation` gets the NumPy icon. |
 
 ## The adapter context
 
@@ -136,6 +138,8 @@ export const outside = `
 | `data-scb-api-head` | Each `a` element | The first line of the card, such as a signature. The attribute marks the link for the card. |
 | `data-scb-api-summary` | Each `a` element, optional | One sentence under the first line. |
 | `data-scb-api-source` | Each `a` element, optional | Where the link comes from. |
+| `data-scb-api-icon` | Each `a` element, optional | The key of the icon before the source, in `data-scb-api-icons`. |
+| `data-scb-api-icons` | The element that holds the links, optional | JSON that maps each icon key to the path of a 24 by 24 SVG icon. |
 | `data-scb-api-action` | Each `a` element, optional | What the link does when a reader selects it, such as "Opens docs.python.org in a new tab." |
 
 - The card works on every page, also on a page with no code blocks. It gets the colours of the code block themes.

@@ -44,6 +44,11 @@ export interface Resolution {
   signature?: string;
   summary?: string;
   source: string;
+  /**
+   * A Simple Icons slug, such as `flask`, for the icon before the source on the card, or `false` for none.
+   * By default, the plugin finds the icon from the project name at the start of `source`.
+   */
+  icon?: string | false;
 }
 
 /** A name in the code that `findSymbols` got, from index `start` up to `end`, with its link. */
