@@ -3,6 +3,15 @@ import { Code } from '@astrojs/starlight/components';
 import { ExpressiveCode, ExpressiveCodeTheme } from '@astrojs/starlight/expressive-code';
 import { toHtml } from '@astrojs/starlight/expressive-code/hast';
 import { pluginCodeblocks } from 'starlight-codeblocks/expressive-code';
+// Astro's build leaves Shiki's list of bundled themes empty, so each theme comes from its own module.
+import catppuccinLatte from '@shikijs/themes/catppuccin-latte';
+import dracula from '@shikijs/themes/dracula';
+import githubDark from '@shikijs/themes/github-dark';
+import githubLight from '@shikijs/themes/github-light';
+import minLight from '@shikijs/themes/min-light';
+import nord from '@shikijs/themes/nord';
+import oneDarkPro from '@shikijs/themes/one-dark-pro';
+import solarizedLight from '@shikijs/themes/solarized-light';
 
 interface Props {
   /** Markdown with one fenced code block, which renders once in each theme. */
@@ -11,14 +20,14 @@ interface Props {
 
 // Dark and light pairs, by Shiki's names for its bundled themes.
 const themes = [
-  ['github-dark', 'GitHub Dark'],
-  ['github-light', 'GitHub Light'],
-  ['dracula', 'Dracula'],
-  ['solarized-light', 'Solarized Light'],
-  ['one-dark-pro', 'One Dark Pro'],
-  ['catppuccin-latte', 'Catppuccin Latte'],
-  ['nord', 'Nord'],
-  ['min-light', 'Min Light'],
+  ['github-dark', 'GitHub Dark', githubDark],
+  ['github-light', 'GitHub Light', githubLight],
+  ['dracula', 'Dracula', dracula],
+  ['solarized-light', 'Solarized Light', solarizedLight],
+  ['one-dark-pro', 'One Dark Pro', oneDarkPro],
+  ['catppuccin-latte', 'Catppuccin Latte', catppuccinLatte],
+  ['nord', 'Nord', nord],
+  ['min-light', 'Min Light', minLight],
 ] as const;
 
 const { code } = Astro.props;
@@ -40,9 +49,8 @@ const styleOverrides = {
 };
 
 const cards = await Promise.all(
-  themes.map(async ([name, label]) => {
-    // Astro's build leaves Shiki's list of bundled themes empty, so each theme comes from its own module.
-    const theme = new ExpressiveCodeTheme((await import(`@shikijs/themes/${name}`)).default);
+  themes.map(async ([name, label, source]) => {
+    const theme = new ExpressiveCodeTheme(source);
     // The theme twice, so that the token colours of both of the site's style variants come from it.
     const ec = new ExpressiveCode({ themes: [theme, theme], plugins: pluginCodeblocks(), styleOverrides });
     const { renderedGroupAst } = await ec.render({
