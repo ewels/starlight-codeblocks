@@ -27,10 +27,10 @@ The comment line with `[!callout /signal/]` is gone from the output. The bubble 
 
 ## Syntax
 
-| Syntax | Where | Example |
-|---|---|---|
-| `[!callout /text/] note` | Comment on or above the line | `// [!callout /signal/] Lets abort() cancel it.` |
-| `[!callout] note` | Comment on or above the line | `# [!callout] Runs once at start-up.` |
+| Syntax | Where |
+|---|---|
+| `[!callout /text/] note` | Comment on or above the line |
+| `[!callout] note` | Comment on or above the line |
 
 The directive goes at the end of the line it explains, or on its own line directly above it. `/text/` is literal text, not a regular expression. The arrow points at the first match on that line. Without `/text/`, the arrow points at the first character that is not a space. The note can hold inline code, links and bold text.
 

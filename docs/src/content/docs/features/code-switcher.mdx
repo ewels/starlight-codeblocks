@@ -38,15 +38,15 @@ yarn add starlight-codeblocks
 
 </Example>
 
-Select **pnpm** in the menu, and the block shows the pnpm command. The choice stays for every block with `sync="pm"`, on this page and on the other pages of the site.
+Choose **pnpm** in the menu, and the block shows the pnpm command. The choice stays for every block with `sync="pm"`, on this page and on the other pages of the site.
 
 ## Syntax
 
-| Syntax | Where | Example |
-|---|---|---|
-| `:::code-switcher` ... `:::` | Around the code blocks | `:::code-switcher` |
-| `sync="<key>"` | After `:::code-switcher`, in braces | `:::code-switcher{sync="pm"}` |
-| `label="<text>"` | Code block fence line of each variant | `label="pnpm"` |
+| Syntax | Where |
+|---|---|
+| `:::code-switcher` ... `:::` | Around the code blocks |
+| `sync="<key>"` | After `:::code-switcher`, in braces |
+| `label="<text>"` | Code block fence line of each variant |
 
 Put two or more fenced code blocks between the `:::code-switcher` line and the `:::` line. The directive can contain only code blocks. Anything else, such as a paragraph, fails the build with a message that names the file.
 
@@ -56,7 +56,7 @@ Each variant keeps its own attributes, such as `title`. A variant with no `label
 
 - Only one variant shows at a time. The title bar shows the `title` of that variant, if it has one, and the menu on the right.
 - The menu starts with an icon for the language of the variant, such as the Python logo for `py`. A language with no icon gets a generic code icon.
-- Selecting a menu entry shows that variant. Keyboard focus stays on the menu.
+- Choosing an entry in the menu shows that variant. Keyboard focus stays on the menu.
 - Blocks with the same `sync` key switch together, matched by label. The browser keeps the choice for each key in `localStorage`, so it applies across the site and on the next visit.
 - If a block does not have the saved label, it shows its first variant.
 - A block with no `sync` key switches on its own, and the browser does not keep the choice.
@@ -81,7 +81,7 @@ With `codeSwitcher: false`, each code block in the directive renders on its own,
 
 ## Examples
 
-Two blocks with the same `sync` key and no labels switch together by language. Select **JavaScript** in one menu, and the other block changes too:
+Two blocks with the same `sync` key and no labels switch together by language. Choose **JavaScript** in one menu, and the other block changes too:
 
 export const languages = `
 :::code-switcher{sync="lang"}

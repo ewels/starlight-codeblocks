@@ -69,14 +69,14 @@ Scroll down the page. The block stays below the site header, and each step that 
 
 ## Syntax
 
-| Syntax | Where | Example |
-|---|---|---|
-| `<Scrollycoding>` ... `</Scrollycoding>` | Around the code blocks and the steps, in an MDX file | `<Scrollycoding>` |
-| `<Step>` ... `</Step>` | After the code block, one for each step | `<Step focus="6-8">Text</Step>` |
-| `focus="<range>"` | On `<Step>` | `focus="6-8"` |
-| `mark="<range>"` | On `<Step>` | `mark="4"` |
-| A code block between two steps | After a `<Step>` | A new version of the code |
-| `codeSide="left"` | On `<Scrollycoding>` | `<Scrollycoding codeSide="left">` |
+| Syntax | Where |
+|---|---|
+| `<Scrollycoding>` ... `</Scrollycoding>` | Around the code blocks and the steps, in an MDX file |
+| `<Step>` ... `</Step>` | After the code block, one for each step |
+| `focus="<range>"` | On `<Step>` |
+| `mark="<range>"` | On `<Step>` |
+| A code block between two steps | After a `<Step>` |
+| `codeSide="left"` | On `<Scrollycoding>` |
 
 Import both components at the top of the MDX file:
 
@@ -95,7 +95,7 @@ To change the code during the walkthrough, put a new version of the code block b
 - The step that crosses the middle of the block is the active step. It shows at full opacity, and the other steps fade.
 - When the active step changes, the block changes its focused and marked lines, with the 250 ms transition of [focus](/starlight-codeblocks/features/focus/).
 - When the active step has a new version of the code, the code moves to the new version as in a [code walkthrough](/starlight-codeblocks/features/code-walkthrough/). Code that is in both versions moves, and new lines fade in with a green tint.
-- The block stays blurred when the pointer is over it, because the pointer often rests there while the reader scrolls. Move keyboard focus into the block to make every line sharp.
+- The block stays blurred when the mouse cursor is over it, because the mouse cursor often rests there while the reader scrolls. Move keyboard focus into the block to make every line sharp.
 - On a narrow screen, each step shows its own copy of the block below its text, in the version of that step.
 - When the reader's system asks for reduced motion, the focus, the fade and the code change without a transition.
 - The copy button copies the whole block, in every step.

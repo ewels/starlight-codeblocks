@@ -84,7 +84,7 @@ Use when an online playground can run the language. A title bar button opens the
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/run-in-the-browser/
 
-Use for short Python examples that readers can run in the page. A **Run in browser** button runs the code in the browser and shows the output under the block. Python runs with Pyodide, which loads only when a reader selects **Run in browser**. The Python runtime has no standard input, so `input()` fails.
+Use for short Python examples that readers can run in the page. A **Run in browser** button runs the code in the browser and shows the output under the block. Python runs with Pyodide, which loads only when a reader clicks **Run in browser**. The Python runtime has no standard input, so `input()` fails.
 
 | Syntax | Where |
 |---|---|

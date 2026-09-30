@@ -8,7 +8,7 @@ Readers are authors of Starlight sites. They know Markdown, Starlight basics and
 
 - Sentences of 25 words or fewer; numbered steps of 20 or fewer. Paragraphs of six sentences or fewer.
 - No word or phrase from the lists in the script (hype, filler, meta-commentary such as "In this section").
-- No "should", "may", "might" (use "must" or "can"), no "click" or "tap" (use "select").
+- No "should", "may", "might" (use "must" or "can"), "click" for using a control, and "select" only for text.
 - British spelling with -ise (colour, behaviour, customise, licence as a noun). Code and CSS stay as they are.
 - No em or en dashes, arrows, emoji or curly quotes in the source.
 - No list item that starts with bold text. Headings in sentence case, never a question.
@@ -49,7 +49,7 @@ description: <One sentence, 25 words or fewer: what the feature does for readers
 
 <Two or three sentences on what the example shows.>
 
-## Syntax        attributes and directives, one example each
+## Syntax        a "Syntax | Where" table of attributes and directives, with no Example column
 ## Behaviour     what readers see and do: copied text, keyboard, reduced motion, no JavaScript
 ## Options       generated with <Options />
 ## Examples      two to four real uses, one sentence of context each
@@ -88,5 +88,7 @@ Background comes before detail: start from a normal Starlight code block, show t
 | adapter | code that resolves names for API auto-linking | plugin, resolver |
 | playground | an external site that runs code | sandbox (unless its name) |
 | runtime | code that runs examples in the browser | engine, interpreter |
-| select | choose a control | click, tap, press |
+| click | use a control, with a mouse, a tap or the keyboard | select, press |
+| selection | text that a reader highlights to copy | |
+| mouse cursor | what a reader moves over a control to hover | pointer |
 | turn on, turn off | change an option | enable, disable, toggle |

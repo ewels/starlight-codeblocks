@@ -50,7 +50,7 @@ Add numbered markers to lines. Each marker opens a note in a popover, so the cod
 python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
 ```
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/annotations.webp" alt="A YAML block with two numbered markers. The pointer selects each marker. The first note opens out of its marker, beside the line, and the second opens under its marker.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/annotations.webp" alt="A YAML block with two numbered markers. The mouse cursor clicks each marker. The first note opens out of its marker, beside the line, and the second opens under its marker.">
 
 [Annotations documentation](https://ewels.github.io/starlight-codeblocks/features/annotations/)
 
@@ -82,7 +82,7 @@ Add numbered badges to lines, with the notes in a list under the block, where re
 app = Flask(__name__)
 ```
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/footnotes.webp" alt="A Python block with numbered badges on two lines and the notes in a list under the block. Selecting a badge highlights its line and its note.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/footnotes.webp" alt="A Python block with numbered badges on two lines and the notes in a list under the block. Clicking a badge highlights its line and its note.">
 
 [Footnotes documentation](https://ewels.github.io/starlight-codeblocks/features/footnotes/)
 
@@ -144,7 +144,7 @@ Step through versions of one code block, and watch the code move from each versi
 </CodeWalkthrough>
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-walkthrough.webp" alt="A JavaScript block with step buttons. Selecting Next moves the code to the next version, and the new lines fade in.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-walkthrough.webp" alt="A JavaScript block with step buttons. Clicking Next moves the code to the next version, and the new lines fade in.">
 
 [Code walkthrough documentation](https://ewels.github.io/starlight-codeblocks/features/code-walkthrough/)
 
@@ -162,7 +162,7 @@ Blur the lines outside a range, so that readers look at the lines that you name 
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/focus.webp" alt="A code block with four sharp lines and the other lines blurred. The pointer moves over the block and every line becomes sharp.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/focus.webp" alt="A code block with four sharp lines and the other lines blurred. The mouse cursor moves over the block and every line becomes sharp.">
 
 [Focus documentation](https://ewels.github.io/starlight-codeblocks/features/focus/)
 
@@ -196,7 +196,7 @@ The [base case](#mention:base) stops the recursion.
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-mentions.webp" alt="A paragraph with two linked phrases above a Python block. The pointer moves over each phrase and the lines it names stay sharp while the others fade.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-mentions.webp" alt="A paragraph with two linked phrases above a Python block. The mouse cursor moves over each phrase and the lines it names stay sharp while the others fade.">
 
 [Code mentions documentation](https://ewels.github.io/starlight-codeblocks/features/code-mentions/)
 
@@ -214,7 +214,7 @@ Hide the imports and set-up that readers need to run an example but not to under
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/hidden-lines.webp" alt="A Python block with dashed lines in place of hidden lines. Selecting a dashed line shows the hidden imports.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/hidden-lines.webp" alt="A Python block with dashed lines in place of hidden lines. Clicking a dashed line shows the hidden imports.">
 
 [Hidden lines documentation](https://ewels.github.io/starlight-codeblocks/features/hidden-lines/)
 
@@ -230,7 +230,7 @@ Show the first lines of a long block, with a fade and a button to reveal the res
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/expandable-blocks.webp" alt="A Python block that shows its first lines with a fade and a button. Selecting the button shows every line.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/expandable-blocks.webp" alt="A Python block that shows its first lines with a fade and a button. Clicking the button shows every line.">
 
 [Expandable blocks documentation](https://ewels.github.io/starlight-codeblocks/features/expandable-blocks/)
 
@@ -311,7 +311,7 @@ Turn text in code into a link with a card that describes it, from a directive in
 x = np.linspace(0, 1, 50)
 ```
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-links.webp" alt="A Python block where the word linspace is a link with a solid underline in the accent colour. The pointer moves over it and a card shows the description and numpy.org.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-links.webp" alt="A Python block where the word linspace is a link with a solid underline in the accent colour. The mouse cursor moves over it and a card shows the description and numpy.org.">
 
 [Code links documentation](https://ewels.github.io/starlight-codeblocks/features/code-links/)
 
@@ -329,7 +329,7 @@ from pathlib import Path
 run = json.loads(Path("run.json").read_text())
 ```
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/api-auto-linking.webp" alt="A Python block where library names have dotted underlines. The pointer moves over one and a card shows its signature and a summary.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/api-auto-linking.webp" alt="A Python block where library names have dotted underlines. The mouse cursor moves over one and a card shows its signature and a summary.">
 
 [API auto-linking documentation](https://ewels.github.io/starlight-codeblocks/features/api-auto-linking/)
 
@@ -345,7 +345,7 @@ Give a code block line numbers that link to each line, so readers can share a li
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/line-permalinks.webp" alt="A YAML block with line numbers. Selecting a number highlights the line, and a shift-selection extends it to a range.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/line-permalinks.webp" alt="A YAML block with line numbers. Clicking a number highlights the line, and a Shift-click extends it to a range.">
 
 [Line permalinks documentation](https://ewels.github.io/starlight-codeblocks/features/line-permalinks/)
 
@@ -403,7 +403,7 @@ $ uv tool install ruff
 Resolved 1 package in 180ms
 ```
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/smart-shell-copy.webp" alt="A terminal block with prompts and their output. The pointer selects the Copy commands button in the title bar. A caption below the block then shows the copied text: the commands only, without the prompts or the output.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/smart-shell-copy.webp" alt="A terminal block with prompts and their output. The mouse cursor clicks the Copy commands button in the title bar. A caption below the block then shows the copied text: the commands only, without the prompts or the output.">
 
 [Smart shell copy documentation](https://ewels.github.io/starlight-codeblocks/features/smart-shell-copy/)
 
@@ -428,14 +428,14 @@ Add a title bar button that opens the example in an online playground, with the 
 <details>
 <summary>Run in the browser</summary>
 
-Add a Run in browser button that runs the example in the browser and shows the output under the block. Python runs with Pyodide, which loads only when a reader selects **Run in browser**.
+Add a Run in browser button that runs the example in the browser and shows the output under the block. Python runs with Pyodide, which loads only when a reader clicks **Run in browser**.
 
 ````md
 ```py runnable
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/run-in-the-browser.webp" alt="A Python block with a Run in browser button. Selecting it shows the output of the program under the block.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/run-in-the-browser.webp" alt="A Python block with a Run in browser button. Clicking it shows the output of the program under the block.">
 
 [Run in the browser documentation](https://ewels.github.io/starlight-codeblocks/features/run-in-the-browser/)
 

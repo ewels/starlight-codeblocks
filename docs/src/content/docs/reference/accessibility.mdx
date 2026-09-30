@@ -13,7 +13,7 @@ These rules apply to all features, so the sections below do not repeat them:
 - Every control shows a focus ring in `codeblocks.focusRing` when it has keyboard focus. The ring has 3:1 contrast or more on the code background. The code area of a block, which takes focus when it scrolls, uses the same ring.
 - In forced colours mode, markers keep their outline and the current step keeps its highlight.
 - A block with controls in its title bar has the title as its accessible name. Without a title, the name is "Code block". The labels of the controls are not part of the name.
-- A change that happens on hover over a control also happens on keyboard focus, or when the reader selects the control.
+- A change that happens on hover over a control also happens on keyboard focus, or when the reader clicks the control.
 - Escape closes an open popover or hover card.
 - When the reader's system asks for reduced motion, every transition and animation of the plugin stops, and so does the transition of the copy button. The change still happens, at once, and pages jump instead of scrolling smoothly.
 - The copy button and a manual selection give the code only. Messages, markers, notes, line numbers and glyphs are not part of the copied text.
@@ -35,7 +35,7 @@ The default colours come from the Expressive Code theme. The plugin makes each o
 Four features fade lines or text on purpose: [focus](/starlight-codeblocks/features/focus/), [code mentions](/starlight-codeblocks/features/code-mentions/), [scrollycoding](/starlight-codeblocks/features/scrollycoding/) and [expandable blocks](/starlight-codeblocks/features/expandable-blocks/). A collapsed expandable block fades its last visible lines. While it is faded, the text is below 4.5:1. This is a known exception to WCAG 1.4.3, and the plugin limits it in these ways:
 
 - The faded text stays in the page. Screen readers read it the same as the other text, and a copy gives it in full.
-- The reader can always bring the text back to full contrast. For focus, hover over the block or move keyboard focus into it. For code mentions, the fade lasts only while a mention link has hover or focus. For scrollycoding, scroll to the step, or move focus into the sticky block. For expandable blocks, select the button under the code.
+- The reader can always bring the text back to full contrast. For focus, hover over the block or move keyboard focus into it. For code mentions, the fade lasts only while a mention link has hover or focus. For scrollycoding, scroll to the step, or move focus into the sticky block. For expandable blocks, click the button under the code.
 - The fade does not hide information. It shows where to look.
 
 Some tints are on known lines, such as a line state or a word-level diff. There, the plugin changes each syntax colour that falls below 4.5:1 on the tint. Expressive Code does the same for its own marked lines. A tint that any line can get, such as a permalink target, is light enough for every syntax colour of the default themes.
@@ -56,8 +56,8 @@ The plugin reads directives at build time and removes them from the page. Reader
 
 - Each marker is a button with the label "Annotation N". Screen readers read the note after its marker. The number at the start of the note is hidden from screen readers, so they do not read it twice.
 - The note fades in and out. With reduced motion, it opens and closes at once.
-- Escape, or a selection outside the markers and the notes, closes every open note.
-- A hover note stays while the pointer is on the marker or the note, and Escape closes it. Touch screens and the keyboard open a note only when the reader selects the marker.
+- Escape, or a click outside the markers and the notes, closes every open note.
+- A hover note stays while the mouse cursor is on the marker or the note, and Escape closes it. Touch screens and the keyboard open a note only on a tap, or on Enter on the marker.
 - When the page prints, the notes print as a numbered list under the block.
 
 ### Footnotes
@@ -67,7 +67,7 @@ The plugin reads directives at build time and removes them from the page. Reader
 - A badge that gets keyboard focus under a sticky list scrolls into view above the list.
 - The number links are 24 by 24 pixels or more.
 - A selected line and its note get a bar as well as a tint, so the highlight does not rely on colour.
-- Hover highlights only. It shows nothing that selection does not show, and touch screens and the keyboard use selection.
+- Hover highlights only. It shows nothing that a click does not show. A tap, or Enter on the keyboard, works as a click.
 - Under reduced motion, the page jumps to the note or the line.
 
 ### Inline callouts
@@ -83,7 +83,7 @@ The plugin reads directives at build time and removes them from the page. Reader
 ### Scrollycoding
 
 - Screen readers read the steps in order, then the code block. On a narrow screen, each step has its own copy of the block. When the code changes between steps, the step where each version starts also has that version as text for screen readers.
-- The pointer does not clear the focus of the sticky block. Move keyboard focus into the block to make every line sharp.
+- The mouse cursor does not clear the focus of the sticky block. Move keyboard focus into the block to make every line sharp.
 - Under reduced motion, the focus and the fade of the steps change at once.
 
 ### Code walkthrough
@@ -127,7 +127,7 @@ The plugin reads directives at build time and removes them from the page. Reader
 - The button under the code says how many lines it shows, such as "Show all 24 lines". It has `aria-expanded`.
 - The collapsed lines use `hidden="until-found"`, so Find in the browser still finds text in them, and the block expands to show the match.
 - The last lines that show fade into the background while the block is collapsed, so they are below 4.5:1. The [contrast](#contrast) section explains this exception.
-- Screen readers do not read the collapsed lines. They read the lines that show, then the button. When the reader selects the button, or Find in the browser opens the block, all the lines are read.
+- Screen readers do not read the collapsed lines. They read the lines that show, then the button. When the reader clicks the button, or Find in the browser opens the block, all the lines are read.
 
 ### Visible whitespace
 
@@ -165,7 +165,7 @@ The highlighted code is a normal `code` element, with the same characters as bef
 
 ### Line permalinks
 
-- The line numbers are links. Enter selects a line, and Shift with Enter selects a range.
+- The line numbers are links. Enter highlights a line, and Shift with Enter highlights a range.
 - Screen readers announce each number as "Link to line N". Highlighted numbers have `aria-current`.
 - A highlighted line gets a bar as well as a tint.
 

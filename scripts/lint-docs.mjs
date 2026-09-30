@@ -31,7 +31,7 @@ the benefits are significant, many users find
   .trim()
   .split(/,\s*/);
 
-const MODALS = ['should', 'may', 'might', 'click', 'clicks', 'clicked', 'tap', 'taps', 'tapped'];
+const MODALS = ['should', 'may', 'might'];
 
 const AMERICAN = [
   /\bcolor(s|ed|ful|less)?\b/i,

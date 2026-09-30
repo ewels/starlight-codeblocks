@@ -28,10 +28,10 @@ Type a token into a `YOUR_TOKEN` field in one block, and the field in the other 
 
 ## Syntax
 
-| Syntax | Where | Example |
-|---|---|---|
-| `placeholder="<A>,<B>"` | Code block fence line | `placeholder="YOUR_TOKEN,WORKSPACE_ID"` |
-| `placeholders.storage="local"`, `"session"` or `"none"` | Code block fence line | `placeholders.storage="none"` |
+| Syntax | Where |
+|---|---|
+| `placeholder="<A>,<B>"` | Code block fence line |
+| `placeholders.storage="local"`, `"session"` or `"none"` | Code block fence line |
 
 The attribute lists the literal texts to turn into fields, separated by commas. Every match of each text in the block becomes a field. If one text contains another, the longer text wins where both match.
 
@@ -79,7 +79,7 @@ Accept: application/json
 
 <Example code={url} />
 
-This block combines fill-in placeholders with a playground button, to show that the playground gets the reader's value. Type a token, then select **Open in TS Playground**:
+This block combines fill-in placeholders with a playground button, to show that the playground gets the reader's value. Type a token, then click **Open in TS Playground**:
 
 export const playground = `
 \`\`\`ts placeholder="YOUR_TOKEN" playground="typescript"

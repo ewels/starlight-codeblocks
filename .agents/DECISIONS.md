@@ -64,6 +64,7 @@ The choices that the code does not explain, with the options that were rejected.
 - **Anchor names are set at build time**, so positioning works without JavaScript. A print-only list of notes follows the block.
 - **Side-by-side annotations use width classes (`scb-side-600/800/1000`)** from the longest line at build time, and spread past the content column on pages without a table of contents. Starlight's content column is about 632 px, so a 640 px threshold would never show columns. The code column takes at least half the width, so short code does not leave the spare width empty beside short notes. Scrollycoding does the same. *Rejected:* a client script that measures (layout shift); `@container style()` (no Firefox support).
 - **Footnote badges are links, and each note starts with its own number link back**, because notes can hold links and a link inside a link is invalid. Highlights toggle and several can stay on. `footnotes="static"` turns off the sticky list for one block.
+- **One `startNoteNumber` attribute for annotations and footnotes**, named after EC's `startLineNumber`, since a block uses one note style. *Rejected:* `annotations.start` and `footnotes.start`, whose dotted names read as site options.
 - **A callout is a sibling of its line**, so line tints and blur do not cover it. It takes the highlight of the lines around it when both sides match. Its width uses `cqi` of the `pre`, except in a side-by-side grid, where containment would collapse the code column.
 
 ### Hidden lines, expandable blocks

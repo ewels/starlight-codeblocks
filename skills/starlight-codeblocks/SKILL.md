@@ -178,4 +178,4 @@ If a page shows one feature, keep the others out of its examples with these attr
 
 1. Build the site and read every warning from `starlight-codeblocks`.
 2. Open the page. Check that the copy button copies the code without directives.
-3. For an interactive feature, check it with the keyboard as well as the pointer.
+3. For an interactive feature, check it with the keyboard as well as the mouse cursor.

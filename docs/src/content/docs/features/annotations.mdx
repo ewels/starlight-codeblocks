@@ -6,7 +6,7 @@ description: Add numbered markers to lines. Each marker opens a note in a popove
 import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
-A comment in a code block explains a line. But it takes space in the code, and readers copy it with the code. An annotation moves the explanation out of the code. The line gets a small numbered marker, and the note opens in a popover when a reader selects the marker.
+A comment in a code block explains a line. But it takes space in the code, and readers copy it with the code. An annotation moves the explanation out of the code. The line gets a small numbered marker, and the note opens in a popover when a reader clicks the marker.
 
 :::tip[Good for:]
 Additional helper info that most readers can skip.
@@ -29,34 +29,39 @@ jobs:
 
 <Example code={basic} />
 
-Each `[!annotate]` comment is gone from the output. A numbered marker is in its place, after the code on the line. Hover over a marker to see its note, or select the marker to keep the note open. Press Escape or select anywhere else to close the notes.
+Each `[!annotate]` comment is gone from the output. A numbered marker is in its place, after the code on the line. Hover over a marker to see its note, or click the marker to keep the note open. Press Escape or click anywhere else to close the notes.
 
 ## Syntax
 
-| Syntax | Where | Example |
-|---|---|---|
-| `[!annotate] note` | Comment at the end of a line | `run: uv run pytest  # [!annotate] Runs the tests.` |
+| Syntax | Where |
+|---|---|
+| `[!annotate] note` | Comment at the end of a line |
+| `startNoteNumber={N}` | Code block fence line |
 
-The directive goes at the end of the line it explains. The note is the rest of the comment. It can hold inline code, links and bold text.
+The directive goes at the end of the line it explains. The note is the rest of the comment. It can hold inline code, links and bold text. The markers count from 1, in line order. To continue the numbers of an earlier block, add `startNoteNumber={N}` to the fence line, and the first marker is `N`.
 
 <LinkCard title="Side-by-side annotations" description="Use the same syntax to show every note in a column beside the code." href="/starlight-codeblocks/features/side-by-side-annotations/" />
 
 ## Behaviour
 
-- Markers are numbered from 1 in each block, in line order.
-- Hovering over a marker with a mouse shows its note. The note hides when the pointer leaves the marker and the note. So the pointer can move into the note, for example to select a link. Selecting the marker, or the number at the start of the note, keeps the note open. Selecting it again closes the note.
-- Selecting a marker opens its note out of the marker. The note starts with the same number, on top of the marker. The box goes to the right, over the empty space after the line. A long note wraps onto more lines, up to the popover width (340 px by default).
-- If the box does not fit there, the note opens under the marker instead. It is centred and as wide as the popover width, with the number at its start. The box does not fit when it would cover code on its line or the lines next to it. It also does not fit when it would go past the right edge of the block or the window. On a phone, most notes open this way. The note moves between the two places when the window changes size or the page scrolls.
-- If there is no room under the marker, the note opens above it. Several notes can be open at once, and hovering over a marker still shows its note while others are open.
-- The number in the note is hidden from screen readers, because the marker already has the label.
-- Escape, or a selection outside the markers and the notes, closes every open note. Without JavaScript, a second selection of the marker closes its note.
-- The copy button leaves the markers and the notes out. A manual selection leaves the markers out.
-- Each marker is a button with the label "Annotation N", where N is its number. Screen readers read the note directly after its marker.
-- When the page prints, each marker prints as its number, and the notes print as a numbered list under the block.
-- The browser's `popover` attribute opens and closes the notes, so they work without JavaScript. Without JavaScript, the note always opens under the marker. In browsers without CSS anchor positioning, it opens where the browser puts it by default.
-- The note fades in and out in 160 ms. With reduced motion, it opens and closes at once.
-- The pointer is a hand on the marker and on the number of an open note, which covers the marker.
-- When the pointer is on a marker, or the marker has keyboard focus or an open note, it changes colour. On hover, the colour fades in on the timing of the note: it waits 80 ms, then fades for 160 ms. With reduced motion, it changes at once. The colour is the marker colour moved towards the code text: lighter in dark themes and darker in light themes.
+- Opening a note:
+  - Hover over a marker to show its note. The mouse cursor can move into the note, for example to click a link.
+  - Click the marker to keep the note open. Click it again to close the note.
+  - Several notes can be open at once. Escape, or a click outside the notes, closes them all.
+- Where the note opens:
+  - To the right of the marker, over the empty space after the line. A long note wraps at the popover width, 340 px by default.
+  - Under the marker, if the note would cover code or go past the edge of the block or the window. On a phone, most notes open here.
+  - Above the marker, if there is no room under it.
+- Screen readers:
+  - Each marker is a button with the label "Annotation N". Screen readers read the note directly after it.
+- Copy and print:
+  - The copy button leaves the markers and the notes out. A manual selection leaves the markers out.
+  - In print, each marker shows its number, and the notes are a numbered list under the block.
+- Without JavaScript:
+  - The browser's `popover` attribute opens and closes the notes. Each note opens under its marker.
+- Motion:
+  - The note fades in and out in 160 ms. On hover, the marker changes colour on the same timing, after 80 ms.
+  - With reduced motion, both change at once.
 
 ## Options
 

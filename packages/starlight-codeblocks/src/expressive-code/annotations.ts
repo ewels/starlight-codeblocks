@@ -1,7 +1,7 @@
 import { type ExpressiveCodeLine, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { blockUid, type CodeblocksPlugin, lineElement, lineNumber, warn } from './core.ts';
+import { blockUid, type CodeblocksPlugin, lineElement, lineNumber, startNoteNumber, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
 import { hoverColour, litLine, PREFIX, tint } from './styles.ts';
@@ -84,7 +84,7 @@ export function pluginAnnotations(): CodeblocksPlugin {
       annotate: {
         text: true,
         docs: {
-          description: 'Adds a numbered marker after the code. Selecting it opens the text in a popover.',
+          description: 'Adds a numbered marker after the code. Clicking it opens the text in a popover.',
           args: 'The text of the annotation.',
           example: { lang: 'js', code: 'const port = 8080 // [!annotate] The default port.' },
           page: 'features/annotations',
@@ -259,8 +259,9 @@ ${SIDE_SIZES.map(
           );
         }
         const uid = blockUid(context);
+        const start = startNoteNumber(context);
         const items = annotations.map((directive, i) => {
-          const n = String(i + 1);
+          const n = String(start + i);
           const text = inlineMarkdown(directive.text ?? '');
           const line = directive.lines[0] as ExpressiveCodeLine;
           const lineEl = lineElement(line);
@@ -304,11 +305,15 @@ ${SIDE_SIZES.map(
         });
         if (!side) {
           figure.properties.dataScbAnnotations = '';
-          figure.children.splice(figure.children.indexOf(pre) + 1, 0, h('ol', { class: cls('-list') }, items));
+          figure.children.splice(
+            figure.children.indexOf(pre) + 1,
+            0,
+            h('ol', { class: cls('-list'), start: start > 1 ? start : undefined }, items),
+          );
           return;
         }
         // The notes sit outside the frame, so the block becomes a two-column grid when its container is wide.
-        const notes = h('ol', { class: cls('-notes') }, items);
+        const notes = h('ol', { class: cls('-notes'), start: start > 1 ? start : undefined }, items);
         // A number takes about 3 characters, and the copy button pads the first line by about 4.
         const numbered = new Set(annotations.map((directive) => directive.lines[0]));
         const size = sideSize(

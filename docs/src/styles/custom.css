@@ -15,6 +15,12 @@ h1#_top,
   padding: 0;
 }
 
+/* Starlight's tables are display: block, which sizes them to their content. */
+.sl-markdown-content table {
+  display: table;
+  width: 100%;
+}
+
 /* Long code in a table cell would otherwise widen the table past a phone screen. */
 .sl-markdown-content :is(td, th) code {
   overflow-wrap: anywhere;

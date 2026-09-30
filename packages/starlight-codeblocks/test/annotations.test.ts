@@ -98,3 +98,18 @@ test('the hover colour of a marker comes from the theme and keeps the number rea
     expect(lighter, v.name).toBe(v.type === 'dark');
   }
 });
+
+test('startNoteNumber starts the numbers of markers, popovers and lists, in both layouts', async () => {
+  const lines = ['a() // [!annotate] First', 'b() // [!annotate] Second'];
+  const popover = await render(block('js startNoteNumber={12}', ...lines));
+  expect(popover.html.match(/aria-label="Annotation \d+"/g)).toEqual([
+    'aria-label="Annotation 12"',
+    'aria-label="Annotation 13"',
+  ]);
+  expect(popover.html).toContain('<ol class="scb-annotation-list" start="12">');
+  expect(popover.warnings).toEqual([]);
+  const side = await render(block('js annotations="side" startNoteNumber={12}', ...lines));
+  expect(side.html).toContain('<div class="ec-line" data-scb-anno="12">');
+  expect(side.html).toContain('<ol class="scb-annotation-notes" start="12">');
+  expect(side.html).toContain('Note 13, for line 2: ');
+});

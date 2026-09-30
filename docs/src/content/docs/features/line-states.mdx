@@ -26,18 +26,18 @@ Each state has its own colour and a bar on the left edge. The text after the dir
 
 ## Syntax
 
-| Syntax | Where | Example |
-|---|---|---|
-| `error={range}`, `warning={range}`, `info={range}`, `success={range}` | Code block fence line | `error={3}` |
-| `[!code error] <message>` | Comment | `# [!code error] Must be 0 or more` |
-| `[!code warning] <message>` | Comment | `# [!code warning] Slow` |
-| `[!code info] <message>` | Comment | `# [!code info] Added in 2.0` |
-| `[!code success] <message>` | Comment | `# [!code success] Tests pass` |
-| `note`, `warn` | Both | `note={2}`, `# [!code warn] Slow` |
-| `[!code ++] <message>`, `[!code --] <message>`, `[!code highlight] <message>` | Comment | `// [!code ++] Load the plugin` |
-| `[!code <state>:N] <message>` | Comment | `// [!code info:3] Defaults` |
-| `<state>={range}`, `[!code <state>]` | Both | `todo={9}` |
-| `lineStates.prefix=false`, `lineStates.prefix=true` | Code block fence line | `lineStates.prefix=false` |
+| Syntax | Where |
+|---|---|
+| `error={range}`, `warning={range}`, `info={range}`, `success={range}` | Code block fence line |
+| `[!code error] <message>` | Comment |
+| `[!code warning] <message>` | Comment |
+| `[!code info] <message>` | Comment |
+| `[!code success] <message>` | Comment |
+| `note`, `warn` | Both |
+| `[!code ++] <message>`, `[!code --] <message>`, `[!code highlight] <message>` | Comment |
+| `[!code <state>:N] <message>` | Comment |
+| `<state>={range}`, `[!code <state>]` | Both |
+| `lineStates.prefix=false`, `lineStates.prefix=true` | Code block fence line |
 
 `note` is another name for `info`, and `warn` for `warning`.
 

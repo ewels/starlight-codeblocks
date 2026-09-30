@@ -75,14 +75,14 @@ app.listen(3000);
 
 </Example>
 
-Select **Next**, and `app.listen(3000);` moves down while the new line fades in. Each numbered step shows one version of the file. The label of the current step shows next to the numbers.
+Click **Next**, and `app.listen(3000);` moves down while the new line fades in. Each numbered step shows one version of the file. The label of the current step shows next to the numbers.
 
 ## Syntax
 
-| Syntax | Where | Example |
-|---|---|---|
-| `<CodeWalkthrough>` ... `</CodeWalkthrough>` | Around the code blocks, in an MDX file | `<CodeWalkthrough>` |
-| `step="<label>"` | Code block fence line of each step | `step="Parse JSON bodies"` |
+| Syntax | Where |
+|---|---|
+| `<CodeWalkthrough>` ... `</CodeWalkthrough>` | Around the code blocks, in an MDX file |
+| `step="<label>"` | Code block fence line of each step |
 
 Import the component at the top of the MDX file:
 
@@ -97,11 +97,11 @@ Put two or more code blocks between the tags, with an empty line after `<CodeWal
 - The title bar shows the title, the numbered steps and the label of the current step.
 - Earlier steps have an outline in the accent colour. The current step is filled.
 - A row under the block shows the **Previous** and **Next** buttons, with the step count between them, such as "Step 2 of 3".
-- Select a number to go to that step. You cannot select **Previous** on the first step, or **Next** on the last step.
+- Click a number to go to that step. You cannot click **Previous** on the first step, or **Next** on the last step.
 - When a numbered step has keyboard focus, the left and right arrow keys go to the previous and the next step.
 - The animation takes 480 ms. Code that is in both versions moves. Removed code fades out, and new code fades in.
 - A line that is new in the step gets a green tint, which fades out in 1 second. The green is the terminal green of the theme.
-- When the pointer is on a step, its border changes colour. This is true for earlier steps and the current step too.
+- When the mouse cursor is on a step, its border changes colour. This is true for earlier steps and the current step too.
 - When the reader's system asks for reduced motion, the steps change without the animation.
 - Screen readers announce the number and the label of the new step.
 - The copy button copies the code of the current step.

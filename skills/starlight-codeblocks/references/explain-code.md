@@ -5,7 +5,7 @@ Five features attach an explanation to lines of code: inline callouts, annotatio
 | Style | Reader sees the note | Note goes |
 |---|---|---|
 | Inline callout | At once | Above the line, with an arrow at one name |
-| Annotation | After a selection | In a popover that opens from a marker |
+| Annotation | After a click | In a popover that opens from a marker |
 | Footnote | At once | In a list under the block |
 | Side-by-side annotation | At once | In a column beside the code, on a wide screen |
 | Scrollycoding | As each step scrolls past | In prose steps next to the block |
@@ -53,13 +53,14 @@ Use when the note is long, or when most readers can skip it. The code stays as c
 | Syntax | Where |
 |---|---|
 | `[!annotate] note` | Comment at the end of the line it explains |
+| `startNoteNumber={N}` | Code block fence line: numbers the notes from `N`, to continue an earlier block. Works for side-by-side annotations too. |
 
 ```yaml
 matrix:
   python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
 ```
 
-- Markers are numbered from 1 in each block. Hovering over a marker with a mouse shows its note until the pointer leaves the marker and the note. Selecting a marker keeps its note open, and several can be open. Escape, or a selection elsewhere, closes them.
+- Markers are numbered from 1 in each block, or from `startNoteNumber`. Hovering over a marker with a mouse shows its note until the mouse cursor leaves the marker and the note. Clicking a marker keeps its note open, and several can be open. Escape, or a click elsewhere, closes them.
 - The note opens out of the marker, to the right of the line, when it fits there without covering code or another marker. Otherwise it opens under the marker, 340 px wide at most. Short notes on short lines fit beside the line.
 - The note can hold inline code, links and bold text.
 - Works without JavaScript, through the browser's `popover` attribute.
@@ -78,13 +79,14 @@ Use when every reader needs every note, and the block is short enough that the l
 | `[!ref] note` | Comment at the end of the line it explains, or on its own line directly above it |
 | `footnotes="sticky"` | Code block fence line: keeps the list at the bottom of the window while the block is on screen |
 | `footnotes="static"` | Code block fence line: turns the sticky list off for one block |
+| `startNoteNumber={N}` | Code block fence line: numbers the footnotes from `N` |
 
 ```py
 # [!ref] Creates the application object.
 app = Flask(__name__)
 ```
 
-- Hovering over a badge or a note highlights its line and its note. Selecting one keeps the highlight, and a second selection clears it. Several can stay highlighted. Selecting a note does the same from the list.
+- Hovering over a badge or a note highlights its line and its note. Clicking one keeps the highlight, and a second click clears it. Several can stay highlighted. Clicking a note does the same from the list.
 - Without JavaScript, the badges and the numbers are plain links to each other.
 - Option: `footnotes.sticky` (default `false`) makes every list sticky. `footnotes: false` turns the feature off.
 - Limits: a footnote applies to one line. A sticky list covers the bottom of the block, so keep the notes short.

@@ -23,23 +23,23 @@ for key, value in config.items():
 
 <Example code={basic} hiddenAttributes="apiLinks=false" />
 
-The imports and the `if` block are behind their own markers. Select a marker to show that run, or the title bar button to show every hidden line at once. Copying the block gives the whole file, imports included.
+The imports and the `if` block are behind their own markers. Click a marker to show that run, or the title bar button to show every hidden line at once. Copying the block gives the whole file, imports included.
 
 ## Syntax
 
-| Syntax | Where | Example |
-|---|---|---|
-| `hidden={range}` | Code block fence line | `hidden={1-3,6-7}` |
-| `[!code hide]` | Comment | `import os  # [!code hide]` |
-| `[!code hide:N]` | Comment | `# [!code hide:3]` |
+| Syntax | Where |
+|---|---|
+| `hidden={range}` | Code block fence line |
+| `[!code hide]` | Comment |
+| `[!code hide:N]` | Comment |
 
 `hidden={range}` takes a [range](/starlight-codeblocks/comment-notation/#line-numbers), such as `{2}` or `{1, 4-6}`. `[!code hide:N]` hides its own line and the next N-1 lines. You can use the attribute and the directive in the same block.
 
 ## Behaviour
 
 - Each run of hidden lines is replaced by a dashed marker, with the text "N hidden lines".
-- Selecting a marker shows that run only. Its text changes to "Hide N lines". The lines get a faint background, and their code is dimmed to 75% opacity, so the reader can tell they asked for them.
-- The dashed rule of a marker gets brighter when the pointer is on it, and fainter while its lines show.
+- Clicking a marker shows that run only. Its text changes to "Hide N lines". The lines get a faint background, and their code is dimmed to 75% opacity, so the reader can tell they asked for them.
+- The dashed rule of a marker gets brighter when the mouse cursor is on it, and fainter while its lines show.
 - The title bar has a button, "Show N hidden lines", where N is the total across every run. It shows every run at once. Once every run is open, it reads "Hide N lines".
 - The copy button always includes hidden lines, so the code still runs after a paste. A manual selection includes only the hidden lines that are open, and never the text of a marker.
 - Each marker has `aria-expanded`. The label of the title bar button changes from **Show** to **Hide**. Both have `aria-controls`, so assistive technology reports what they open.
@@ -120,7 +120,7 @@ for key, value in config.items():
 
 <Example code={collapsed} hiddenAttributes="apiLinks=false" />
 
-Each section keeps a summary line in the block, where hidden lines leave only a thin marker. Select a summary line to open its section.
+Each section keeps a summary line in the block, where hidden lines leave only a thin marker. Click a summary line to open its section.
 
 With `collapseStyle`, an open section keeps a line to close it again. `collapsible-auto` puts that line at the start of the section, or at the end if the section ends the block:
 

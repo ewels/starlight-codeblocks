@@ -9,7 +9,16 @@ import {
 } from '@expressive-code/core';
 import { addClassName, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { blockSetting, blockUid, type CodeblocksPlugin, lineElement, lineNumber, parseBoolean, warn } from './core.ts';
+import {
+  blockSetting,
+  blockUid,
+  type CodeblocksPlugin,
+  lineElement,
+  lineNumber,
+  parseBoolean,
+  startNoteNumber,
+  warn,
+} from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
 import { litLine, onCode, PREFIX, solidCodeBackground, solidCodeForeground, themeColour } from './styles.ts';
@@ -195,8 +204,9 @@ ${litLine(`.${cls('-on')}, .${cls('-peek')}`, v('lineBackground'), v('accent'))}
           '`true` or `false`',
         );
         const uid = blockUid(context);
+        const start = startNoteNumber(context);
         const items = refs.map((directive, i) => {
-          const n = String(i + 1);
+          const n = String(start + i);
           const note = `${PREFIX}-fn-${uid}-${n}`;
           const badge = `${PREFIX}-fnref-${uid}-${n}`;
           const line = directive.lines[0] as ExpressiveCodeLine;
@@ -240,7 +250,7 @@ ${litLine(`.${cls('-on')}, .${cls('-peek')}`, v('lineBackground'), v('accent'))}
           );
         const bar = find('expandable-bar');
         const output = find('run-output');
-        const list = h('ol', { class: cls('s') }, items);
+        const list = h('ol', { class: cls('s'), start: start > 1 ? start : undefined }, items);
         if (output) figure.children.splice(figure.children.indexOf(output), 0, list);
         else figure.children.splice(figure.children.indexOf(bar ?? pre) + 1, 0, list);
       },

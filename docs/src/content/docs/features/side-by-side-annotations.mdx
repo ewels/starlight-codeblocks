@@ -6,7 +6,7 @@ description: Show the notes of an annotated block in a column beside the code, s
 import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 
-[Annotations](/starlight-codeblocks/features/annotations/) hide each note in a popover until a reader opens it. For a walkthrough, where readers need every note, that is one selection too many. Side-by-side annotations use the same `[!annotate]` directive, but show the notes in a column beside the code.
+[Annotations](/starlight-codeblocks/features/annotations/) hide each note in a popover until a reader opens it. For a walkthrough, where readers need every note, that is one click too many. Side-by-side annotations use the same `[!annotate]` directive, but show the notes in a column beside the code.
 
 :::tip[Good for:]
 A long block with a short note on many of its lines. Readers see every note at once, each beside its line, and the notes work in Markdown and MDX. To explain the code in paragraphs, one step at a time, use [scrollycoding](/starlight-codeblocks/features/scrollycoding/).
@@ -47,13 +47,14 @@ Each annotated line has a small number, and the note with the same number is in 
 
 ## Syntax
 
-| Syntax | Where | Example |
-|---|---|---|
-| `annotations="side"` | Code block fence line | `annotations="side"` |
-| `[!annotate] note` | Comment at the end of a line | `print(total)  # [!annotate] Shows the total.` |
-| `codeSide="right"` | Code block fence line | `annotations="side" codeSide="right"` |
+| Syntax | Where |
+|---|---|
+| `annotations="side"` | Code block fence line |
+| `[!annotate] note` | Comment at the end of a line |
+| `codeSide="right"` | Code block fence line |
+| `startNoteNumber={N}` | Code block fence line |
 
-Add `annotations="side"` to the fence line (the first line of the code block, with the language) of a block that uses `[!annotate]`. The directive works as on the [annotations](/starlight-codeblocks/features/annotations/) page. The code is in the left column. To put it in the right column, add `codeSide="right"`.
+Add `annotations="side"` to the fence line (the first line of the code block, with the language) of a block that uses `[!annotate]`. The directive works as on the [annotations](/starlight-codeblocks/features/annotations/) page. The code is in the left column. To put it in the right column, add `codeSide="right"`. `startNoteNumber={N}` numbers the notes from `N`.
 
 ## Behaviour
 
@@ -64,7 +65,7 @@ Add `annotations="side"` to the fence line (the first line of the code block, wi
 - If the notes column is taller than the space below the header, it scrolls with the page instead.
 - In a narrower container, such as on a phone, the notes are a numbered list under the block.
 - Hovering over a note, or focusing it with the Tab key, highlights its line. Hovering over a line highlights its note.
-- A number on a line changes colour when the pointer is on it, the same as an annotation marker.
+- A number on a line changes colour when the mouse cursor is on it, the same as an annotation marker.
 - The numbers on the lines are hidden from screen readers. Screen readers read the notes as a list after the code.
 - The copy button leaves the numbers and the notes out.
 - Without JavaScript, the layout works, but notes and lines do not highlight each other.

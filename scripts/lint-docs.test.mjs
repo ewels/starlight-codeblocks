@@ -59,7 +59,6 @@ test('each rule reports the right line', () => {
     '6:heading',
     '6:heading',
     '13:modal',
-    '13:modal',
     '7:sentence-length',
     '9:sentence-length',
     '11:paragraph-length',

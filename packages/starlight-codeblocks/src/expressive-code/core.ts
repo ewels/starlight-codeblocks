@@ -216,6 +216,16 @@ export function blockSetting<T>(
   return fallback;
 }
 
+/** The number of the block's first note, from `startNoteNumber={N}`. A bad value warns and gives 1. */
+export function startNoteNumber(context: Context) {
+  const option = context.codeBlock.metaOptions.list('startNoteNumber').at(-1);
+  if (!option) return 1;
+  const raw = String(option.value);
+  if (/^[1-9]\d*$/.test(raw)) return Number(raw);
+  warn(context, `\`${option.raw.trim()}\` must be a whole number of 1 or more. The plugin ignores it.`);
+  return 1;
+}
+
 /** Parses `true` or `false`, for `blockSetting()`. */
 export const parseBoolean = (raw: string) => (raw === 'true' ? true : raw === 'false' ? false : undefined);
 

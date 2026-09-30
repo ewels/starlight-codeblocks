@@ -79,3 +79,15 @@ test('a footnote at the end of its line renders as one on the line above', async
   expect(inline).toEqual(above);
   expect(inline.warnings).toEqual([]);
 });
+
+test('startNoteNumber starts the numbers of badges, notes and the list, and warns about a bad value', async () => {
+  const md = (attr: string) => block(`py ${attr}`, '# [!ref] First', 'a = 1', '# [!ref] Second', 'b = 2');
+  const { html, warnings } = await render(md('startNoteNumber={12}'));
+  expect(html.match(/aria-label="Footnote \d+"/g)).toEqual(['aria-label="Footnote 12"', 'aria-label="Footnote 13"']);
+  expect(html).toContain('<ol class="scb-footnotes" start="12">');
+  expect(html).toContain('>13.</a>');
+  expect(warnings).toEqual([]);
+  const bad = await render(md('startNoteNumber={0}'));
+  expect(bad.warnings.join('\n')).toContain('`startNoteNumber={0}` must be a whole number of 1 or more');
+  expect(bad.html).toContain('aria-label="Footnote 1"');
+});

@@ -23,13 +23,13 @@ logging:
 
 <Example code={basic} />
 
-Select a line number to highlight that line. The address of the page changes to `#cfg-L2`, and the page does not move. Hold Shift and select a second number to highlight every line between the two, as `#cfg-L2-L4`. Open that address in a new tab, and the page scrolls to the lines and highlights them.
+Click a line number to highlight that line. The address of the page changes to `#cfg-L2`, and the page does not move. Hold Shift and click a second number to highlight every line between the two, as `#cfg-L2-L4`. Open that address in a new tab, and the page scrolls to the lines and highlights them.
 
 ## Syntax
 
-| Syntax | Where | Example |
-|---|---|---|
-| `id="<id>"` | Code block fence line | `id="cfg"` |
+| Syntax | Where |
+|---|---|
+| `id="<id>"` | Code block fence line |
 
 The `id` turns on line numbers for that block. It is also the `id` of the block in the page, so `#cfg` links to the whole block. Each block on a page needs its own `id`.
 
@@ -38,10 +38,10 @@ Pick an `id` from what the block contains, such as its file name. The `id` keeps
 ## Behaviour
 
 - Each line number links to `#<id>-L<n>`, where `<n>` is the number that the reader sees. If the fence line (the first line of the code block, with the language) has `startLineNumber`, the numbers start there.
-- Selecting a number highlights that line and changes the address with `history.replaceState`. The page does not scroll, and the browser history gets no new entry.
-- Selecting a number with Shift held highlights the range from the last number you selected, as `#<id>-L<a>-L<b>`.
+- Clicking a number highlights that line and changes the address with `history.replaceState`. The page does not scroll, and the browser history gets no new entry.
+- Clicking a number with Shift held highlights the range from the last number you clicked, as `#<id>-L<a>-L<b>`.
 - When the page loads, or the address changes, the plugin highlights the lines in the address and scrolls them into view. If a line is a [hidden line](/starlight-codeblocks/features/hidden-lines/), its marker opens. If a line is in a `<Tabs>` panel that is not selected, its tab opens.
-- The line numbers are links, so you can reach them with the Tab key and select them with Enter. Shift and Enter together selects a range. Screen readers announce each one as "Link to line N", and the highlighted numbers have `aria-current`.
+- The line numbers are links, so you can reach them with the Tab key and press Enter to highlight a line. Shift and Enter together highlights a range. Screen readers announce each one as "Link to line N", and the highlighted numbers have `aria-current`.
 - Line numbers are not part of the copied text, and a manual selection of the code leaves them out.
 - Two blocks with the same `id` on one page cause a build warning.
 - Without JavaScript, the links go to their line, without the highlight.
@@ -92,7 +92,7 @@ createServer(handler).listen(port);
 ## Limitations
 
 - Line numbers take space on the left of every line. On a phone, a block with long lines scrolls sooner.
-- The plugin highlights one range at a time on a page. A new selection in any block removes the old highlight.
+- The plugin highlights one range at a time on a page. A new highlight in any block removes the old highlight.
 - An `id` must not match the `id` of a heading on the page. Heading ids come from the heading text, such as `#options`.
 - The `starlight-links-validator` plugin reports links to a block or a line, such as `#cfg-L2`, as broken. Give it `exclude: linksValidatorExclude`, imported from `starlight-codeblocks`.
 

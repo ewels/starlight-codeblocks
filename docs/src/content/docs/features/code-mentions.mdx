@@ -36,10 +36,10 @@ Hover over "base case", or move keyboard focus to it, to highlight lines 2 and 3
 
 ## Syntax
 
-| Syntax | Where | Example |
-|---|---|---|
-| `[!mention <name>]` | Comment, at the end of a line | `return 1  # [!mention base]` |
-| `[text](#mention:<name>)` | Prose | `[base case](#mention:base)` |
+| Syntax | Where |
+|---|---|
+| `[!mention <name>]` | Comment, at the end of a line |
+| `[text](#mention:<name>)` | Prose |
 
 Tag each line that belongs to a name. A name is one word, such as `base` or `parse-args`. One line can have more than one tag. The plugin removes the tags from the code and from the copied text.
 
@@ -48,7 +48,7 @@ Tag each line that belongs to a name. A name is one word, such as `base` or `par
 - A link pairs with the next code block in the same section that has lines with its name. A section ends at the next heading. If no block follows in the section, the link pairs with the nearest block before it.
 - In a [code switcher](/starlight-codeblocks/features/code-switcher/), only the variant that shows counts. Tag the same name in each variant, and the link follows the reader's choice.
 - Hovering over the link, or moving keyboard focus to it, highlights the tagged lines with a tint and a bar. The other lines of the block fade to 42% opacity.
-- Selecting the link keeps the highlight, and scrolls the block into view if it is not fully visible. The address of the page does not change.
+- Clicking the link keeps the highlight, and scrolls the block into view if it is not fully visible. The address of the page does not change.
 - The links have a dotted underline, which becomes solid on hover and focus. On hover, a link keeps its colour.
 - Screen readers read the tagged lines as the description of the link.
 - The fade and the scroll happen without animation when the reader's system asks for reduced motion.
@@ -114,7 +114,7 @@ if (!response.ok) { // [!mention errors]
 ## Limitations
 
 - The build check reads links and tags in Markdown only. It does not see tags in a block from the `<Code>` component, so a link to that block shows as plain text.
-- The tint and the fade show which lines a link names. A reader on a touch screen sees them after they select the link.
+- The tint and the fade show which lines a link names. A reader on a touch screen sees them after they tap the link.
 
 ## Related
 

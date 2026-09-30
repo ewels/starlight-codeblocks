@@ -153,6 +153,18 @@ export const attributesReference: AttributeDoc[] = [
     },
   },
   {
+    name: 'startNoteNumber',
+    syntax: ['startNoteNumber={N}'],
+    description:
+      'Numbers the annotations or footnotes of the block from `N`, not from 1, to continue the numbers of an earlier block.',
+    page: 'features/annotations',
+    example: {
+      lang: 'js',
+      meta: 'startNoteNumber={12}',
+      code: 'const port = 8080 // [!annotate] The port that the server listens on.',
+    },
+  },
+  {
     name: 'label',
     syntax: ['label="<text>"'],
     description:
@@ -290,7 +302,7 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
         derived: fromTheme('terminal.ansiBlue', '4.5:1'),
       },
       accentHover: {
-        description: 'Step borders under the pointer.',
+        description: 'Step borders under the mouse cursor.',
         derived: '`accent` mixed 45% towards `codeForeground`: lighter in dark themes, darker in light themes.',
       },
       accentForeground: {
@@ -500,7 +512,7 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
         derived: '`codeblocks.mutedForeground` at 35% opacity.',
       },
       ruleHover: {
-        description: 'The dashed rule of a marker under the pointer.',
+        description: 'The dashed rule of a marker under the mouse cursor.',
         derived: 'The value of `codeblocks.mutedForeground`.',
       },
       ruleOpen: {
@@ -579,7 +591,7 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
         derived: 'The value of `codeblocks.accentForeground`.',
       },
       markerHoverBackground: {
-        description: 'The background of a marker under the pointer, with keyboard focus or with its note open.',
+        description: 'The background of a marker under the mouse cursor, with keyboard focus or with its note open.',
         derived: '`markerBackground` mixed 45% towards `codeForeground`.',
       },
       markerSize: { description: 'The width and height of a marker.' },

@@ -24,7 +24,7 @@ interface Runtime {
 | `load()` | Downloads and starts the runtime, and gets the packages that `code` needs. The plugin calls it with the code before each run, so it must return at once when the runtime and the packages are ready. The timeout does not apply to it. |
 | `run()` | Runs the copied text of the block, and returns its standard output and standard error as text. |
 
-The browser imports the module when a reader selects **Run in browser** for the first time, and calls `load()` at once. Import the `Runtime` type from `starlight-codeblocks` to check a module in TypeScript.
+The browser imports the module when a reader clicks **Run in browser** for the first time, and calls `load()` at once. Import the `Runtime` type from `starlight-codeblocks` to check a module in TypeScript.
 
 When the block is a session with prompts, `code` is its commands and `session` is `true`. Run the commands as the language's REPL does, so that the output shows the value of each expression, as the block does.
 
