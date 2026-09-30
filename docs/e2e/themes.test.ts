@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('./guides/use-with-other-themes/');
+  await page.goto('./reference/themes/');
 });
 
 test('each card shows the block in its own theme, whatever the theme of the site', async ({ page }) => {

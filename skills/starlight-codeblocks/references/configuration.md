@@ -110,7 +110,7 @@ Keep `codeblocks()` in `astro.config.mjs`, and give it all the options. `pluginC
 
 ## Other plugins
 
-Docs: https://ewels.github.io/starlight-codeblocks/guides/use-with-other-plugins/
+Docs: https://ewels.github.io/starlight-codeblocks/reference/plugin-compatibility/
 
 - List `codeblocks()` before any plugin or theme that sets the Starlight `expressiveCode` option. If a theme must come first, set `expressiveCode: {}` in the Starlight config.
 - `starlight-links-validator`: give it `exclude: linksValidatorExclude`, imported from `starlight-codeblocks`. It then skips `#mention:` links and links to a block `id`, such as `#cfg-L2`.

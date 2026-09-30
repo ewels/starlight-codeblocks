@@ -5,13 +5,7 @@ export const sidebar = [
   },
   {
     label: 'Guides',
-    items: [
-      'guides/comment-notation',
-      'guides/choose-an-annotation-style',
-      'guides/use-with-other-plugins',
-      'guides/use-with-other-themes',
-      'guides/agent-skill',
-    ],
+    items: ['guides/comment-notation', 'guides/choose-an-annotation-style', 'guides/agent-skill'],
   },
   {
     label: 'Explain code',
@@ -63,6 +57,8 @@ export const sidebar = [
       'reference/directives',
       'reference/style-settings',
       'reference/expressive-code-plugins',
+      'reference/plugin-compatibility',
+      'reference/themes',
       'reference/accessibility',
     ],
   },
