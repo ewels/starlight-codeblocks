@@ -1,7 +1,6 @@
 import { expect, test } from 'vitest';
 import { block, lineClasses, render } from './render.ts';
 
-// The "Everything at once" block of the kitchen sink page.
 const everything = block(
   'js title="server.js" placeholder="YOUR_API_KEY" hidden={1} focus={4-10} apiLinks=false',
   "import 'dotenv/config';",

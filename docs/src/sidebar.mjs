@@ -10,7 +10,6 @@ export const sidebar = [
       'guides/choose-an-annotation-style',
       'guides/use-with-other-plugins',
       'guides/use-with-other-themes',
-      'guides/kitchen-sink',
       'guides/agent-skill',
     ],
   },

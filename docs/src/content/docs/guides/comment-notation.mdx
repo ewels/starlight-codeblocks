@@ -85,6 +85,157 @@ const port = 8080 // Default port [!code focus]
 
 Text after a directive that takes text, such as `[!code error]` or `[!callout]`, is the text of that directive. Put your own comment before the directive.
 
+## Combining directives
+
+One code block often needs several features: a focus, a changed line with a message, and a note to explain it. The features work together in one block, and each one keeps its own effect.
+
+### Several names in one directive
+
+One `[!code …]` directive can hold several names. Each name applies to the line. The text after the directive goes to the first name that takes text, here `++`.
+
+export const names = `
+\`\`\`js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
+import codeblocks from 'starlight-codeblocks'; // [!code focus ++] Import the plugin
+
+export default defineConfig({
+  integrations: [
+    starlight({
+      title: 'My docs',
+      plugins: [codeblocks()], // [!code focus ++] Load the plugin
+    }),
+  ],
+});
+\`\`\`
+`;
+
+<Example code={names} />
+
+The two new lines are green, show their messages, and stay sharp. The other lines are blurred. To give two line states their own messages, use two lines.
+
+### Several directives in one comment
+
+One comment can hold several directives. Each directive takes the text up to the next directive.
+
+export const directives = `
+\`\`\`py title="retry.py"
+import time
+
+
+def fetch_with_retry(fetch, retries=3):  # [!mention retries]
+    for attempt in range(retries):
+        try:
+            return fetch()
+        except TimeoutError:  # [!code warning] Other errors fail at once [!annotate] Only a timeout is worth a retry.
+            time.sleep(2**attempt)  # [!code ++] Back off [!mention retries]
+    raise TimeoutError("no response")
+\`\`\`
+`;
+
+<Example code={directives} hiddenAttributes="apiLinks=false">
+
+```py title="retry.py" apiLinks=false
+import time
+
+
+def fetch_with_retry(fetch, retries=3):  # [!mention retries]
+    for attempt in range(retries):
+        try:
+            return fetch()
+        except TimeoutError:  # [!code warning] Other errors fail at once [!annotate] Only a timeout is worth a retry.
+            time.sleep(2**attempt)  # [!code ++] Back off [!mention retries]
+    raise TimeoutError("no response")
+```
+
+</Example>
+
+The `except` line has a warning and an annotation. The `sleep` line is new, and it is part of the [retry loop](#mention:retries) with the first line.
+
+### Attributes and directives together
+
+Attributes on the fence line and directives in comments add up. Here the fence line names a placeholder and hides the imports. The comments add a callout, a footnote and an error.
+
+export const together = `
+\`\`\`py title="client.py" placeholder="YOUR_TOKEN" hidden={1-2}
+import os
+import requests
+
+session = requests.Session()
+# [!callout /headers/] Sent with every request
+session.headers["Authorization"] = "Bearer YOUR_TOKEN"
+# [!ref] The service closes idle connections after 30 s.
+session.timeout = 30
+session.verify = False  # [!code error] Never turn off TLS checks
+\`\`\`
+`;
+
+<Example code={together} hiddenAttributes="apiLinks=false" />
+
+Readers can type their token into the field. The copy button copies their token, the hidden imports and none of the notes.
+
+### The kitchen sink
+
+This block turns on 15 features at once. It has focus, every line state and a word-level diff. It has annotations, mentions, a callout, a footnote and a code link. On the fence line, it adds a placeholder, hidden lines, visible whitespace, line permalinks and an expandable block. Colourised brackets start on their own.
+
+Do not publish a block like this. It shows that each feature keeps its own effect.
+
+export const everything = `
+\`\`\`js title="server.js" id="kitchen-sink" placeholder="YOUR_API_KEY" hidden={1-2} whitespace="all" expandable={12}
+import 'dotenv/config';
+import express from 'express';
+
+const app = express(); // [!mention app]
+const PORT = 3000; // [!code --]
+const PORT = Number(process.env.PORT ?? 3000); // [!code ++] Read the port from the environment
+app.use(express.json()); // [!code ++] Parse JSON bodies [!annotate] Before any route, or \`req.body\` is \`undefined\`.
+// [!callout /x-api-key/] Checked on every request
+app.use((req, res, next) => (req.get('x-api-key') === 'YOUR_API_KEY' ? next() : res.sendStatus(401)));
+// [!ref] Load balancers call this route every 10 s.
+app.get('/health', (req, res) => { // [!mention health] [!code focus:3]
+  res.json({ ok: true, uptime: process.uptime() }); // [!code success] Always 200 [!mention health]
+});
+// [!link /express.Router/ https://expressjs.com/en/5x/api.html#router] Groups routes under one prefix.
+const api = express.Router(); // [!mention app]
+api.get('/users/:id', async (req, res) => { // [!code info] Needs a database
+  const user = await db.users.find(req.params.id); // [!code error] \`db\` is not defined
+  res.json(user ?? {}); // [!code todo] Return 404 when missing
+}); // [!code warning] No error handler
+app.use('/api', api); // [!code highlight] [!annotate] Every route in \`api\` starts with \`/api\`.
+app.listen(PORT, () => console.log('Listening on', PORT)); // [!mention app]
+\`\`\`
+`;
+
+The [health route](#mention:health) and the [app](#mention:app) are mentions.
+
+<Example code={everything} hiddenAttributes="apiLinks=false">
+
+```js title="server.js" id="kitchen-sink" placeholder="YOUR_API_KEY" hidden={1-2} whitespace="all" expandable={12} apiLinks=false
+import 'dotenv/config';
+import express from 'express';
+
+const app = express(); // [!mention app]
+const PORT = 3000; // [!code --]
+const PORT = Number(process.env.PORT ?? 3000); // [!code ++] Read the port from the environment
+app.use(express.json()); // [!code ++] Parse JSON bodies [!annotate] Before any route, or `req.body` is `undefined`.
+// [!callout /x-api-key/] Checked on every request
+app.use((req, res, next) => (req.get('x-api-key') === 'YOUR_API_KEY' ? next() : res.sendStatus(401)));
+// [!ref] Load balancers call this route every 10 s.
+app.get('/health', (req, res) => { // [!mention health] [!code focus:3]
+  res.json({ ok: true, uptime: process.uptime() }); // [!code success] Always 200 [!mention health]
+});
+// [!link /express.Router/ https://expressjs.com/en/5x/api.html#router] Groups routes under one prefix.
+const api = express.Router(); // [!mention app]
+api.get('/users/:id', async (req, res) => { // [!code info] Needs a database
+  const user = await db.users.find(req.params.id); // [!code error] `db` is not defined
+  res.json(user ?? {}); // [!code todo] Return 404 when missing
+}); // [!code warning] No error handler
+app.use('/api', api); // [!code highlight] [!annotate] Every route in `api` starts with `/api`.
+app.listen(PORT, () => console.log('Listening on', PORT)); // [!mention app]
+```
+
+</Example>
+
 ## Behaviour
 
 The plugin reads the directives when the site builds. It needs no JavaScript in the browser.

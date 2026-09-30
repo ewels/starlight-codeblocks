@@ -139,7 +139,7 @@ Rules that apply to every directive:
 - The plugin removes directives from the rendered code and from the copied text. A comment that holds only directives goes completely.
 - Ranges on the fence line count the lines that readers see. Lines that hold only directives do not count.
 - `/text/` is literal text, not a regular expression.
-- Features combine. One comment can hold several end-of-line directives, as in `// [!code ++] New [!annotate] Why`, and fence line attributes add to them. The kitchen sink page on the docs site shows a block that uses most features at once.
+- Features combine. One comment can hold several end-of-line directives, as in `// [!code ++] New [!annotate] Why`. Fence line attributes add to them.
 - Inline code, links and bold in the text of a directive render as HTML. Other Markdown stays as text.
 - One comment on each line can hold directives.
 - JSON has no comments. Use `jsonc` for a block with directives.
