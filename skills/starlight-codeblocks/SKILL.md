@@ -1,6 +1,6 @@
 ---
 name: starlight-codeblocks
-description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side-by-side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, inline code highlighting, code links, API auto-linking, line permalinks, the code switcher, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
+description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side-by-side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, inline code highlighting, code links, API auto-linking, line permalinks, the code switcher, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
 license: MIT
 ---
 
@@ -30,6 +30,10 @@ Full docs: https://ewels.github.io/starlight-codeblocks/. Each page has a Markdo
 5. If the site uses `starlight-links-validator`, give it `exclude: linksValidatorExclude`, imported from `starlight-codeblocks`.
 
 Requirements: Astro 7 or later, Starlight 0.42 or later, Node.js 22.12 or later. The plugin works with Astro's default Markdown processor (Sätteri) and with `unified()`. [references/configuration.md](references/configuration.md) has every option and the set-up for other plugins, Markdoc and sites without Starlight.
+
+## Add features to an existing site
+
+To add features to pages that exist, follow [references/retrofit.md](references/retrofit.md). It goes through the pages one at a time, and through each block in the context of its page.
 
 ## Choose a feature
 

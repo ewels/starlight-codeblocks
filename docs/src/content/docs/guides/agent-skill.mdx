@@ -3,67 +3,30 @@ title: Use with an AI agent
 description: Install the starlight-codeblocks agent skill, so an AI coding agent knows each feature, its syntax and when to use it.
 ---
 
-import { Code } from '@astrojs/starlight/components';
-import skill from '../../../../../skills/starlight-codeblocks/SKILL.md?raw';
-import explainCode from '../../../../../skills/starlight-codeblocks/references/explain-code.md?raw';
-import drawAttention from '../../../../../skills/starlight-codeblocks/references/draw-attention.md?raw';
-import readability from '../../../../../skills/starlight-codeblocks/references/readability.md?raw';
-import linkCode from '../../../../../skills/starlight-codeblocks/references/link-code.md?raw';
-import adaptToTheReader from '../../../../../skills/starlight-codeblocks/references/adapt-to-the-reader.md?raw';
-import copyAndRun from '../../../../../skills/starlight-codeblocks/references/copy-and-run.md?raw';
-import configuration from '../../../../../skills/starlight-codeblocks/references/configuration.md?raw';
+import { LinkCard } from '@astrojs/starlight/components';
 
-An AI coding agent can write the pages of a Starlight site, but it does not know the attributes and directives of this plugin. The plugin comes with an agent skill: a set of instructions in the [Agent Skills](https://agentskills.io) format. Claude Code, Codex, Cursor, GitHub Copilot and many other agents read this format. With the skill, an agent can pick the right feature for each code block and write its syntax correctly.
+The plugin comes with an [agent skill](https://github.com/ewels/starlight-codeblocks/tree/main/skills/starlight-codeblocks) for Claude Code, Codex, Cursor, GitHub Copilot and other agents. With the skill, your agent uses the features as it writes new pages. For example, it focuses the lines of a new option, or adds a placeholder for an API token. It also knows when a feature does not help.
 
 ## Install the skill
 
-Run this command in the folder of the site:
+Run this command in the folder of your starlight website, or install globally:
 
 ```sh
 npx skills add ewels/starlight-codeblocks
 ```
 
-The [skills CLI](https://github.com/vercel-labs/skills) finds the coding agents that you use. It installs the skill into the skills folder of each agent in the project, such as `.claude/skills/` for Claude Code or `.agents/skills/` for Codex.
+The [skills CLI](https://github.com/vercel-labs/skills) installs the skill for each coding agent that you use. Run `npx skills update` to get a new version.
 
-To give the skill to one agent without the questions, name the agent:
+An agent without a skills folder can read [`SKILL.md`](https://github.com/ewels/starlight-codeblocks/blob/main/skills/starlight-codeblocks/SKILL.md) on GitHub:
 
-```sh
-npx skills add ewels/starlight-codeblocks --agent claude-code --yes
-```
+<LinkCard
+  title="Agent skill source"
+  description="SKILL.md and the reference files on GitHub."
+  href="https://github.com/ewels/starlight-codeblocks/tree/main/skills/starlight-codeblocks"
+/>
 
-Add `--global` to install the skill for every project on your computer. Run `npx skills update` to get a new version of the skill.
+## Add features to an existing site
 
-An agent without a skills folder can read the skill from the text of this page. Point it at the [Markdown version](/starlight-codeblocks/guides/agent-skill.md) of the page.
+The skill works well for agents building new sites, but can also retrofit existing content.
 
-## What the skill covers
-
-The skill is short, so it costs an agent little context. The agent reads `SKILL.md` first. It reads a reference file only when a task needs the features in it.
-
-- `SKILL.md` gives the set-up and the syntax rules for attributes and directives. For each sidebar group, a table goes from a goal to the feature for it. A list gives the mistakes to avoid.
-- Each reference file covers one sidebar group. For each feature, it gives what the feature is for, when not to use it, its attributes, directives and options, an example and its limits.
-- `references/configuration.md` gives every option, the set-up with `ec.config.mjs`, and the set-up next to other plugins.
-
-A test in the repository fails if a feature, an attribute, a directive or an option is missing from the skill. This page shows the skill files themselves, so the text below is always the current skill.
-
-## The skill
-
-<Code code={skill} lang="md" title="SKILL.md" meta="wrap expandable={24}" />
-
-<Code code={explainCode} lang="md" title="references/explain-code.md" meta="wrap expandable={12}" />
-
-<Code code={drawAttention} lang="md" title="references/draw-attention.md" meta="wrap expandable={12}" />
-
-<Code code={readability} lang="md" title="references/readability.md" meta="wrap expandable={12}" />
-
-<Code code={linkCode} lang="md" title="references/link-code.md" meta="wrap expandable={12}" />
-
-<Code code={adaptToTheReader} lang="md" title="references/adapt-to-the-reader.md" meta="wrap expandable={12}" />
-
-<Code code={copyAndRun} lang="md" title="references/copy-and-run.md" meta="wrap expandable={12}" />
-
-<Code code={configuration} lang="md" title="references/configuration.md" meta="wrap expandable={12}" />
-
-## Related
-
-- [Markdown versions of the pages](/starlight-codeblocks/#markdown-versions-of-the-pages): every page of these docs as Markdown, and `llms.txt`.
-- [Choose an annotation style](/starlight-codeblocks/guides/choose-an-annotation-style/): the comparison that the skill's guide to explanations comes from.
+Ask the agent to add the features to one page, a sidebar group or the whole site. It works through the pages one at a time, and reads each code block in the context of its page. It adds a feature only when the page gives a reason for it. After each page, it tells you what it changed and why.
