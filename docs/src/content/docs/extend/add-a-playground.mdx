@@ -32,7 +32,7 @@ The input of both functions has three properties:
 | Property | Description |
 |---|---|
 | `code` | The copied text of the block. Directives are removed, hidden lines are kept, and a terminal session has only its commands. |
-| `lang` | The language of the block, as written on the fence line, such as `py`. |
+| `lang` | The language of the block, as written on the first line of the code block, such as `py`. |
 | `title` | The `title` attribute of the block, if it has one. |
 
 The plugin calls the function once for each block, when the site builds. Both kinds of button open the playground in a new tab.

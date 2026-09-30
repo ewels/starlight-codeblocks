@@ -46,10 +46,10 @@ The block shows its first eight lines, faded at the bottom, with "Show all 24 li
 
 | Syntax | Where | Effect |
 |---|---|---|
-| `expandable` | Fence line | Caps the block at the site default, 12 lines |
-| `expandable={N}` | Fence line | Caps the block at `N` lines |
-| `expandable=false` | Fence line | Turns off the `auto` option for the block |
-| `expandable.lines=<N>` | Fence line | The line count for the block when it expands through `expandable` or `auto` |
+| `expandable` | Code block fence line | Caps the block at the site default, 12 lines |
+| `expandable={N}` | Code block fence line | Caps the block at `N` lines |
+| `expandable=false` | Code block fence line | Turns off the `auto` option for the block |
+| `expandable.lines=<N>` | Code block fence line | The line count for the block when it expands through `expandable` or `auto` |
 
 ## Behaviour
 
@@ -85,7 +85,7 @@ codeblocks({
 });
 ```
 
-With this configuration, a block of 31 lines or more shows its first 12 lines. Add `expandable=false` to the fence line of a block that must show in full. An `expandable={N}` attribute wins over the option.
+With this configuration, a block of 31 lines or more shows its first 12 lines. Add `expandable=false` to the fence line (the first line of the code block, with the language) of a block that must show in full. An `expandable={N}` attribute wins over the option.
 
 `auto` skips blocks that have their own layout or their own controls:
 

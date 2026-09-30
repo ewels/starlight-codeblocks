@@ -14,7 +14,7 @@ Use when a block shows a whole file but the text is about a few lines. Focus blu
 
 | Syntax | Where |
 |---|---|
-| `focus={range}` | Fence line, such as `focus={4-7}` or `focus={1, 4-6}` |
+| `focus={range}` | Code block fence line, such as `focus={4-7}` or `focus={1, 4-6}` |
 | `[!code focus]` | Comment at the end of the line |
 | `[!code focus:N]` | Comment: its line and the next N-1 lines |
 
@@ -47,7 +47,7 @@ Use to tint a line as an error, a warning, a note or a success. An optional mess
 
 | Syntax | Where |
 |---|---|
-| `error={range}`, `warning={range}`, `info={range}`, `success={range}` | Fence line. Tints the lines, with no message. The first line of each group shows the name of the state. |
+| `error={range}`, `warning={range}`, `info={range}`, `success={range}` | Code block fence line. Tints the lines, with no message. The first line of each group shows the name of the state. |
 | `[!code error] message` | Comment. The message is optional. |
 | `[!code warning] message` | Comment |
 | `[!code info] message` | Comment. The label reads **Note**. |

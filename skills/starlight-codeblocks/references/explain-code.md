@@ -53,7 +53,6 @@ Use when the note is long, or when most readers can skip it. The code stays as c
 | Syntax | Where |
 |---|---|
 | `[!annotate] note` | Comment at the end of the line it explains |
-| `annotations="side"` | Fence line: shows the notes beside the code (see below) |
 
 ```yaml
 matrix:
@@ -77,8 +76,8 @@ Use when every reader needs every note, and the block is short enough that the l
 | Syntax | Where |
 |---|---|
 | `[!ref] note` | Comment at the end of the line it explains, or on its own line directly above it |
-| `footnotes="sticky"` | Fence line: keeps the list at the bottom of the window while the block is on screen |
-| `footnotes="static"` | Fence line: turns the sticky list off for one block |
+| `footnotes="sticky"` | Code block fence line: keeps the list at the bottom of the window while the block is on screen |
+| `footnotes="static"` | Code block fence line: turns the sticky list off for one block |
 
 ```py
 # [!ref] Creates the application object.
@@ -94,7 +93,7 @@ app = Flask(__name__)
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/side-by-side-annotations/
 
-Use for a longer block that you explain step by step, where readers need every note. Write the notes with `[!annotate]`, and add `annotations="side"` to the fence line.
+Use for a longer block that you explain step by step, where readers need every note. Write the notes with `[!annotate]`, and add `annotations="side"` to the fence line (the first line of the code block, with the language).
 
 ````md
 ```py title="report.py" annotations="side"
@@ -163,7 +162,7 @@ Use for a tutorial that shows the same file several times, with changes each tim
 | Syntax | Where |
 |---|---|
 | `<CodeWalkthrough>` ... `</CodeWalkthrough>` | Around two or more code blocks, in an MDX file |
-| `step="<text>"` | Fence line of each step: the label of the step. Optional. |
+| `step="<text>"` | Code block fence line of each step: the label of the step. Optional. |
 
 ````mdx
 import { CodeWalkthrough } from 'starlight-codeblocks/components';

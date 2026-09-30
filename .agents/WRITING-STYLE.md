@@ -67,7 +67,7 @@ Background comes before detail: start from a normal Starlight code block, show t
 | reader | a person who visits the site | user, visitor, viewer |
 | site | a Starlight site | project (unless the repository) |
 | code block | a fenced block of code | snippet, listing, code sample |
-| fence line | the opening line of a code block | meta, meta string, info string |
+| fence line | the opening line of a code block. Jargon: gloss it at its first use on a page, as "the fence line (the first line of the code block, with the language)", and in tables write "Code block fence line" | meta, meta string, info string, a bare "fence line" |
 | attribute | a `key=value` item or flag on the fence line | meta option, prop, parameter |
 | directive | a marker in a comment, such as `[!code focus]` | magic comment, notation |
 | comment notation | the system of directives | magic comments |

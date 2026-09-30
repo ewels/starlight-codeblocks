@@ -26,8 +26,8 @@ The colour cycles every three levels, so the outermost call and the innermost ca
 
 | Syntax | Where | Example |
 |---|---|---|
-| `brackets` | Fence line | `js brackets` |
-| `brackets=false` | Fence line | `js brackets=false` |
+| `brackets` | Code block fence line | `js brackets` |
+| `brackets=false` | Code block fence line | `js brackets=false` |
 
 ## Behaviour
 
@@ -52,7 +52,7 @@ codeblocks({
 
 Each name also covers the other names of its language, so `js` also turns on the colours in `javascript` and `mjs` blocks.
 
-To turn the colours off for one block of those languages, add `brackets=false` to its fence line.
+To turn the colours off for one block of those languages, add `brackets=false` to its fence line. The fence line is the first line of the code block, with the language.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 

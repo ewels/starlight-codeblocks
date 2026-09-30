@@ -56,7 +56,7 @@ Use when an online playground can run the language. A title bar button opens the
 
 | Syntax | Where |
 |---|---|
-| `playground="<name>"` | Fence line |
+| `playground="<name>"` | Code block fence line |
 
 | Name | Button |
 |---|---|
@@ -88,7 +88,7 @@ Use for short Python examples that readers can run in the page. A **Run in brows
 
 | Syntax | Where |
 |---|---|
-| `runnable` | Fence line |
+| `runnable` | Code block fence line |
 
 ````md
 ```py runnable

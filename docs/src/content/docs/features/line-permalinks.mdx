@@ -29,7 +29,7 @@ Select a line number to highlight that line. The address of the page changes to 
 
 | Syntax | Where | Example |
 |---|---|---|
-| `id="<id>"` | Fence line | `id="cfg"` |
+| `id="<id>"` | Code block fence line | `id="cfg"` |
 
 The `id` turns on line numbers for that block. It is also the `id` of the block in the page, so `#cfg` links to the whole block. Each block on a page needs its own `id`.
 
@@ -37,7 +37,7 @@ Pick an `id` from what the block contains, such as its file name. The `id` keeps
 
 ## Behaviour
 
-- Each line number links to `#<id>-L<n>`, where `<n>` is the number that the reader sees. If the fence line has `startLineNumber`, the numbers start there.
+- Each line number links to `#<id>-L<n>`, where `<n>` is the number that the reader sees. If the fence line (the first line of the code block, with the language) has `startLineNumber`, the numbers start there.
 - Selecting a number highlights that line and changes the address with `history.replaceState`. The page does not scroll, and the browser history gets no new entry.
 - Selecting a number with Shift held highlights the range from the last number you selected, as `#<id>-L<a>-L<b>`.
 - When the page loads, or the address changes, the plugin highlights the lines in the address and scrolls them into view. If a line is a [hidden line](/starlight-codeblocks/features/hidden-lines/), its marker opens. If a line is in a `<Tabs>` panel that is not selected, its tab opens.

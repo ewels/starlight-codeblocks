@@ -39,8 +39,8 @@ API auto-linking finds library names in a block and links each one to its refere
 
 | Syntax | Where |
 |---|---|
-| `apiLinks=false` | Fence line: turns the feature off for one block |
-| `pydocsBase="<base>"` | Fence line of a Python block: prefers the starlight-pydocs package at this base |
+| `apiLinks=false` | Code block fence line: turns the feature off for one block |
+| `pydocsBase="<base>"` | Code block fence line of a Python block: prefers the starlight-pydocs package at this base |
 
 - The Python adapter runs on `py`, `python` and `pycon` blocks. It reads `import x`, `import x as y` and `from a import b as c`, then links the names that they bind and attribute chains on them, such as `os.path.join`.
 - The Nextflow adapter runs on `nextflow` and `nf` blocks. It links channel factories, such as `channel.of`, and operators after them. With the `modules` option, it links processes and workflows from `include` statements.
@@ -75,7 +75,7 @@ Use when readers must link to exact lines, for example to ask about one setting.
 
 | Syntax | Where |
 |---|---|
-| `id="<id>"` | Fence line |
+| `id="<id>"` | Code block fence line |
 
 - Each number links to `#<id>-L<n>`. Shift and a second number link a range, `#<id>-L<a>-L<b>`. `#<id>` links to the whole block.
 - Pick an `id` from the content, such as the file name. It must be unique on the page, and must not match a heading id such as `options`. A duplicate gives a build warning.

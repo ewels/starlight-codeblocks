@@ -18,7 +18,7 @@ Use for imports, settings and boilerplate that readers need to run an example bu
 
 | Syntax | Where |
 |---|---|
-| `hidden={range}` | Fence line, such as `hidden={1-3,6-7}` |
+| `hidden={range}` | Code block fence line, such as `hidden={1-3,6-7}` |
 | `[!code hide]` | Comment at the end of the line |
 | `[!code hide:N]` | Comment: its line and the next N-1 lines |
 
@@ -44,9 +44,9 @@ Use when a full file is the clearest example, but a reader who scans the page do
 
 | Syntax | Where |
 |---|---|
-| `expandable` | Fence line: caps the block at the site default, 12 lines |
-| `expandable={N}` | Fence line: caps the block at `N` lines |
-| `expandable=false` | Fence line: turns off the `expandable.auto` option for the block |
+| `expandable` | Code block fence line: caps the block at the site default, 12 lines |
+| `expandable={N}` | Code block fence line: caps the block at `N` lines |
+| `expandable=false` | Code block fence line: turns off the `expandable.auto` option for the block |
 
 - A block collapses only if the collapse hides three lines or more.
 - Lines that hidden lines remove do not count towards `N` or the total on the button.
@@ -64,8 +64,8 @@ Use when the exact whitespace character changes the meaning: a Makefile recipe n
 
 | Syntax | Where |
 |---|---|
-| `whitespace` | Fence line: shows the leading whitespace of each line |
-| `whitespace="all"` | Fence line: shows every space and tab, also between words and at the end of a line |
+| `whitespace` | Code block fence line: shows the leading whitespace of each line |
+| `whitespace="all"` | Code block fence line: shows every space and tab, also between words and at the end of a line |
 
 - Trailing whitespace shows only in fenced code blocks in Markdown and MDX. Expressive Code removes it from a block that the `<Code>` component renders.
 - The glyphs are CSS. The copied text has the real spaces and tabs. Screen readers do not hear the glyphs.
@@ -80,8 +80,8 @@ Use for lines with several levels of nested brackets. `()`, `[]` and `{}` cycle 
 
 | Syntax | Where |
 |---|---|
-| `brackets` | Fence line |
-| `brackets=false` | Fence line. Turns off the colours for a language in `brackets.languages`. |
+| `brackets` | Code block fence line |
+| `brackets=false` | Code block fence line. Turns off the colours for a language in `brackets.languages`. |
 
 - Brackets in strings and comments, and brackets with no partner, keep their normal colour.
 - The colours need no JavaScript. The outline on hover needs JavaScript.
@@ -120,10 +120,10 @@ Word-level diff highlights the words that changed inside each pair of removed an
 
 | Source | Where |
 |---|---|
-| A `diff` block, such as `diff lang="js"` | Fence line. `lang` keeps the syntax colours. |
-| `ins={range}`, `del={range}` | Fence line, in a block of any language |
+| A `diff` block, such as `diff lang="js"` | Code block fence line. `lang` keeps the syntax colours. |
+| `ins={range}`, `del={range}` | Code block fence line, in a block of any language |
 | `[!code ++]`, `[!code --]` | Comment at the end of the line |
-| `wordDiff=false` | Fence line: turns the feature off for one block |
+| `wordDiff=false` | Code block fence line: turns the feature off for one block |
 
 ````md
 ```diff lang="js"

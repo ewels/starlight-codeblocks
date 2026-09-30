@@ -44,7 +44,7 @@ codeblocks({
 
 ### Options for one block
 
-Put a setting on the fence line, with its name from `codeblocks()`, to change it for that block only. The forms:
+Put a setting on the fence line, with its name from `codeblocks()`, to change it for that block only. The fence line is the first line of the code block, with the language. The forms:
 
 - `focus.style="dim"`
 - `focus.style="blur"`

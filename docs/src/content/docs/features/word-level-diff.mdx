@@ -28,11 +28,11 @@ The new `timeout` line adds `options.timeout ??`, and `3` becomes `options.retri
 
 | Syntax | Where | Example |
 |---|---|---|
-| A `diff` block | Fence line | `diff lang="js"` |
-| `ins={range}`, `del={range}` | Fence line | `ins={2} del={1}` |
+| A `diff` block | Code block fence line | `diff lang="js"` |
+| `ins={range}`, `del={range}` | Code block fence line | `ins={2} del={1}` |
 | `[!code ++]`, `[!code --]` | Comment | `retries: 3, // [!code --]` |
-| `wordDiff=false` | Fence line | Turns the feature off for one block |
-| `wordDiff.minSimilarity=<0-1>` | Fence line | `wordDiff.minSimilarity=0.6` |
+| `wordDiff=false` | Code block fence line | Turns the feature off for one block |
+| `wordDiff.minSimilarity=<0-1>` | Code block fence line | `wordDiff.minSimilarity=0.6` |
 
 Word-level diff applies to every removed line that has an added line below it, from any of these sources. You do not turn it on.
 

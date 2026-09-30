@@ -49,11 +49,11 @@ Each annotated line has a small number, and the note with the same number is in 
 
 | Syntax | Where | Example |
 |---|---|---|
-| `annotations="side"` | Fence line | `annotations="side"` |
+| `annotations="side"` | Code block fence line | `annotations="side"` |
 | `[!annotate] note` | Comment at the end of a line | `print(total)  # [!annotate] Shows the total.` |
-| `codeSide="right"` | Fence line | `annotations="side" codeSide="right"` |
+| `codeSide="right"` | Code block fence line | `annotations="side" codeSide="right"` |
 
-Add `annotations="side"` to the fence line of a block that uses `[!annotate]`. The directive works as on the [annotations](/starlight-codeblocks/features/annotations/) page. The code is in the left column. To put it in the right column, add `codeSide="right"`.
+Add `annotations="side"` to the fence line (the first line of the code block, with the language) of a block that uses `[!annotate]`. The directive works as on the [annotations](/starlight-codeblocks/features/annotations/) page. The code is in the left column. To put it in the right column, add `codeSide="right"`.
 
 ## Behaviour
 

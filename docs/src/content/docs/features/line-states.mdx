@@ -28,7 +28,7 @@ Each state has its own colour and a bar on the left edge. The text after the dir
 
 | Syntax | Where | Example |
 |---|---|---|
-| `error={range}`, `warning={range}`, `info={range}`, `success={range}` | Fence line | `error={3}` |
+| `error={range}`, `warning={range}`, `info={range}`, `success={range}` | Code block fence line | `error={3}` |
 | `[!code error] <message>` | Comment | `# [!code error] Must be 0 or more` |
 | `[!code warning] <message>` | Comment | `# [!code warning] Slow` |
 | `[!code info] <message>` | Comment | `# [!code info] Added in 2.0` |
@@ -37,7 +37,7 @@ Each state has its own colour and a bar on the left edge. The text after the dir
 | `[!code ++] <message>`, `[!code --] <message>`, `[!code highlight] <message>` | Comment | `// [!code ++] Load the plugin` |
 | `[!code <state>:N] <message>` | Comment | `// [!code info:3] Defaults` |
 | `<state>={range}`, `[!code <state>]` | Both | `todo={9}` |
-| `lineStates.prefix=false`, `lineStates.prefix=true` | Fence line | `lineStates.prefix=false` |
+| `lineStates.prefix=false`, `lineStates.prefix=true` | Code block fence line | `lineStates.prefix=false` |
 
 `note` is another name for `info`, and `warn` for `warning`.
 
@@ -49,7 +49,7 @@ Inline code, links and bold in a message render as HTML. Other Markdown stays as
 
 - Each state has a background tint and a 3 px bar on the left edge.
 - If every line of a block has the same state, the tint covers the whole block, with one bar down its side.
-- A message shows after the code, as a small label. The label starts with the name of the state in bold: **Error**, **Warning**, **Note** or **Success**. With `prefix: false`, or `lineStates.prefix=false` on the fence line, the label shows only the message.
+- A message shows after the code, as a small label. The label starts with the name of the state in bold: **Error**, **Warning**, **Note** or **Success**. With `prefix: false`, or `lineStates.prefix=false` on the fence line (the first line of the code block, with the language), the label shows only the message.
 - A line with no message shows a label with only the name of the state. In a group of lines with the same state, only the first line shows it. The colour then does not carry the meaning alone. With the names off, a line with no message shows only the tint.
 - Screen readers hear the name of the state before the line, for example "Error:". A screen reader reads the message after the code.
 - The copy button leaves out the messages. The names of the states and the messages are also not part of a manual text selection.

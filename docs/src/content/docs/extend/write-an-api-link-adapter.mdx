@@ -40,7 +40,7 @@ interface SymbolRef {
 | `name` | The name of the adapter. Build warnings start with it. |
 | `languages` | The languages of the code blocks that the adapter reads, such as `py`. A name also covers the other names of its language: `py` covers `python`. |
 | `setup` | Loads the indexes. The plugin calls it once, before the first code block in one of the languages. |
-| `findSymbols` | Returns the names in the code that are links, with the link and the text of the card. `attributes` has the attributes of the fence line that have a text value, such as `title`. |
+| `findSymbols` | Returns the names in the code that are links, with the link and the text of the card. `attributes` has the attributes on the fence line of the code block that have a text value, such as `title`. |
 | `describe` | Optional. Returns a summary for a name that `findSymbols` returned with no `summary`. Use it for text that needs a fetch, such as a documentation page. |
 
 A `SymbolRef` is one name in `code`, its link and the text of its card:

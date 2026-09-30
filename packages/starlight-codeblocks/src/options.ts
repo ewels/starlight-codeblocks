@@ -161,7 +161,8 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       style: {
         type: "'blur' | 'dim'",
         default: 'blur',
-        description: 'Blur and fade the other lines, or only fade them. A block can set its own on its fence line.',
+        description:
+          'Blur and fade the other lines, or only fade them. A code block can set its own on its fence line.',
         valid: oneOf('blur', 'dim'),
       },
     },
@@ -191,7 +192,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         type: 'boolean',
         default: true,
         description:
-          'Show the name of the state, such as **Error**, before each message, and on the first line of a run with no message. Off, the tint alone marks the state on screen. A block can set its own on its fence line.',
+          'Show the name of the state, such as **Error**, before each message, and on the first line of a run with no message. Off, the tint alone marks the state on screen. A code block can set its own on its fence line.',
         valid: (value) => typeof value === 'boolean',
       },
     },
@@ -219,7 +220,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         type: 'boolean',
         default: false,
         description:
-          'Keep the list of footnotes in view while the block is on screen. A block can set its own on its fence line.',
+          'Keep the list of footnotes in view while the block is on screen. A code block can set its own on its fence line.',
         valid: (value) => typeof value === 'boolean',
       },
     },
@@ -235,7 +236,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       prompts: {
         type: 'string[]',
         default: ['$ ', '> '],
-        description: 'Line starts that mark a command. A block can set its own on its fence line.',
+        description: 'Line starts that mark a command. A code block can set its own on its fence line.',
         valid: isStringArray,
       },
     },
@@ -248,7 +249,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         type: 'number',
         default: 0.4,
         description:
-          'Pairs of lines less similar than this keep whole-line tints only. From 0 to 1. A block can set its own on its fence line.',
+          'Pairs of lines less similar than this keep whole-line tints only. From 0 to 1. A code block can set its own on its fence line.',
         valid: (value) => typeof value === 'number' && value >= 0 && value <= 1,
       },
     },
@@ -297,7 +298,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       lines: {
         type: 'number',
         default: 12,
-        description: 'Lines to show before the block expands. A block can set its own on its fence line.',
+        description: 'Lines to show before the block expands. A code block can set its own on its fence line.',
         valid: (value) => Number.isInteger(value) && (value as number) > 0,
       },
       auto: {
@@ -334,7 +335,8 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       storage: {
         type: "'local' | 'session' | 'none'",
         default: 'local',
-        description: 'Where the browser keeps the values that readers type. A block can set its own on its fence line.',
+        description:
+          'Where the browser keeps the values that readers type. A code block can set its own on its fence line.',
         valid: oneOf('local', 'session', 'none'),
       },
     },
@@ -381,19 +383,19 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         type: 'number',
         default: 10000,
         description:
-          'Milliseconds before a run stops, from 1 to 2147483647, the largest delay browsers accept. A block can set its own on its fence line.',
+          'Milliseconds before a run stops, from 1 to 2147483647, the largest delay browsers accept. A code block can set its own on its fence line.',
         valid: (value) => typeof value === 'number' && value > 0 && value <= 2 ** 31 - 1,
       },
       label: {
         type: 'string',
         default: 'Run in browser',
-        description: 'The text of the button. A block can set its own on its fence line.',
+        description: 'The text of the button. A code block can set its own on its fence line.',
         valid: (value) => isString(value) && value.trim() !== '',
       },
       againLabel: {
         type: 'string',
         default: 'Run again',
-        description: 'The text of the button after the first run. A block can set its own on its fence line.',
+        description: 'The text of the button after the first run. A code block can set its own on its fence line.',
         valid: (value) => isString(value) && value.trim() !== '',
       },
     },

@@ -17,7 +17,7 @@ Use for install commands for each package manager, or one example in several lan
 |---|---|
 | `:::code-switcher` ... `:::` | Around two or more code blocks. No space after the colons. |
 | `sync="<key>"` | After `:::code-switcher`, in braces |
-| `label="<text>"` | Fence line of each variant |
+| `label="<text>"` | Code block fence line of each variant |
 
 ````md
 :::code-switcher{sync="pm"}
@@ -47,7 +47,7 @@ Use for values that each reader must change, such as `YOUR_TOKEN` or `WORKSPACE_
 
 | Syntax | Where |
 |---|---|
-| `placeholder="<A>,<B>"` | Fence line: the literal texts, separated by commas |
+| `placeholder="<A>,<B>"` | Code block fence line: the literal texts, separated by commas |
 
 ````md
 ```sh placeholder="YOUR_TOKEN,WORKSPACE_ID"

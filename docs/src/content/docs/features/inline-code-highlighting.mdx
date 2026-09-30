@@ -50,7 +50,7 @@ Each piece of inline code with a suffix gets the colours and the background of t
 | `` `<code>{:<lang>}` `` | Inside the backticks, at the end of the code | `` `res.ok{:js}` `` |
 | `` `<code>`{:<lang>} `` | Directly after the closing backtick | `` `res.ok`{:js} `` |
 
-`<lang>` is a language name or alias that Expressive Code knows, the same as on a fence line: `js`, `py`, `sh`, `css` and others. Languages that the site adds in the `shiki.langs` option of Expressive Code work too. The suffix must follow the code or the backtick with no space between them.
+`<lang>` is a language name or alias that Expressive Code knows, as in a code block: `js`, `py`, `sh`, `css` and others. Languages that the site adds in the `shiki.langs` option of Expressive Code work too. The suffix must follow the code or the backtick with no space between them.
 
 Use the suffix inside the backticks. It is the syntax of rehype-pretty-code, and it is valid in `.md` and `.mdx` files with no change. Inline code that contains a backtick keeps its suffix as text, so that a page can show the syntax, as this one does.
 

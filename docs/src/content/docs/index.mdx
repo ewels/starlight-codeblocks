@@ -35,41 +35,11 @@ import FeatureCarousel from '../../components/FeatureCarousel.astro';
 on: [push, pull_request]
 jobs:
   test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
+    runs-on: ubuntu-latest # [!annotate] Uses ubuntu GitHub Actions runner
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v6  # [!annotate] Installs `uv` and caches its downloads between runs.
       - run: uv run pytest
-```
-
-</Feature>
-
-<Feature page="features/footnotes">
-
-```py title="app.py" apiLinks=false
-from flask import Flask
-
-# [!ref] Creates the application object.
-app = Flask(__name__)
-
-# [!ref] Runs this function for `GET /health`.
-@app.get("/health")
-def health():
-    return {"ok": True}
-```
-
-</Feature>
-
-<Feature page="features/inline-callouts">
-
-```js
-const controller = new AbortController();
-// [!callout /signal/] Lets `controller.abort()` cancel the request.
-const res = await fetch(url, { signal: controller.signal });
-const data = await res.json();
 ```
 
 </Feature>
@@ -101,6 +71,33 @@ def main():
 
 if __name__ == "__main__":
     main()
+```
+
+</Feature>
+
+<Feature page="features/footnotes">
+
+```py title="app.py" apiLinks=false
+from flask import Flask
+
+# [!ref] Creates the application object.
+app = Flask(__name__)
+
+# [!ref] Runs this function for `GET /health`.
+@app.get("/health")
+def health():
+    return {"ok": True}
+```
+
+</Feature>
+
+<Feature page="features/inline-callouts">
+
+```js
+const controller = new AbortController();
+// [!callout /signal/] Lets `controller.abort()` cancel the request.
+const res = await fetch(url, { signal: controller.signal });
+const data = await res.json();
 ```
 
 </Feature>

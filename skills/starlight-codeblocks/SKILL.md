@@ -53,7 +53,7 @@ Find the goal, then use the feature in the same row. Each reference file has the
 | A file that grows or changes over the steps of a tutorial (MDX only) | Code walkthrough: `<CodeWalkthrough>` with `step="label"` on each block | One block with numbered steps. Code that stays moves, new code fades in. |
 | A paragraph that names lines of the block below it | Code mentions: `[!mention name]` plus `[text](#mention:name)` | The link highlights the tagged lines. The page stays plain Markdown. |
 
-Use one note style in a block. Annotations and side-by-side annotations use the same directive, so a change between them is only the fence line.
+Use one note style in a block. Annotations and side-by-side annotations use the same directive, so a change between them is only the fence line. The fence line is the first line of the code block, with the language.
 
 Use scrollycoding when prose explains the code step by step as the reader scrolls. Use code walkthrough when readers step through the versions of a file with buttons. For versions that are alternatives, not steps in an order, use the code switcher.
 

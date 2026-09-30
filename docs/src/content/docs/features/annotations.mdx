@@ -9,7 +9,9 @@ import Example from '../../../components/Example.astro';
 A comment in a code block explains a line. But it takes space in the code, and readers copy it with the code. An annotation moves the explanation out of the code. The line gets a small numbered marker, and the note opens in a popover when a reader selects the marker.
 
 :::tip[Good for:]
-A longer note, or one that most readers can skip. The code stays as compact as a plain block until a reader opens a marker. If readers need every note, use [footnotes](/starlight-codeblocks/features/footnotes/) or [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/).
+Additional helper info that most readers can skip.
+Takes up almost no additional space until a reader opens a marker.
+If readers need every note, use [footnotes](/starlight-codeblocks/features/footnotes/) or [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/).
 :::
 
 export const basic = `
@@ -17,10 +19,7 @@ export const basic = `
 on: [push, pull_request]
 jobs:
   test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
+    runs-on: ubuntu-latest # [!annotate] Uses ubuntu GitHub Actions runner
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v6  # [!annotate] Installs \`uv\` and caches its downloads between runs.
@@ -37,9 +36,10 @@ Each `[!annotate]` comment is gone from the output. A numbered marker is in its 
 | Syntax | Where | Example |
 |---|---|---|
 | `[!annotate] note` | Comment at the end of a line | `run: uv run pytest  # [!annotate] Runs the tests.` |
-| `annotations="side"` | Fence line | `annotations="side"` |
 
-The directive goes at the end of the line it explains. The note is the rest of the comment. It can hold inline code, links and bold text. `annotations="side"` shows the notes in a column beside the code instead, as the [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/) page explains.
+The directive goes at the end of the line it explains. The note is the rest of the comment. It can hold inline code, links and bold text.
+
+<LinkCard title="Side-by-side annotations" description="Use the same syntax to show every note in a column beside the code." href="/starlight-codeblocks/features/side-by-side-annotations/" />
 
 ## Behaviour
 

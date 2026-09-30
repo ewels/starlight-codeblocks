@@ -57,6 +57,22 @@ python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
 </details>
 
 <details>
+<summary>Side-by-side annotations</summary>
+
+Show the notes of an annotated block in a column beside the code, so readers see every note next to its line.
+
+````md
+```py annotations="side"
+```
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/side-by-side-annotations.png" alt="A Python block with its notes in a column beside the code, each note next to its line.">
+
+[Side-by-side annotations documentation](https://ewels.github.io/starlight-codeblocks/features/side-by-side-annotations/)
+
+</details>
+
+<details>
 <summary>Footnotes</summary>
 
 Add numbered badges to lines, with the notes in a list under the block, where readers see them all at once.
@@ -85,22 +101,6 @@ const res = await fetch(url, { signal: controller.signal });
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/inline-callouts.png" alt="A JavaScript block with a note in a bubble above a line, with an arrow that points at the word signal.">
 
 [Inline callouts documentation](https://ewels.github.io/starlight-codeblocks/features/inline-callouts/)
-
-</details>
-
-<details>
-<summary>Side-by-side annotations</summary>
-
-Show the notes of an annotated block in a column beside the code, so readers see every note next to its line.
-
-````md
-```py annotations="side"
-```
-````
-
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/side-by-side-annotations.png" alt="A Python block with its notes in a column beside the code, each note next to its line.">
-
-[Side-by-side annotations documentation](https://ewels.github.io/starlight-codeblocks/features/side-by-side-annotations/)
 
 </details>
 

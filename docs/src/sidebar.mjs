@@ -13,9 +13,9 @@ export const sidebar = [
     label: 'Explain code',
     items: [
       'features/annotations',
+      'features/side-by-side-annotations',
       'features/footnotes',
       'features/inline-callouts',
-      'features/side-by-side-annotations',
       'features/scrollycoding',
       'features/code-walkthrough',
     ],
