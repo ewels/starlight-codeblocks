@@ -9,6 +9,10 @@ import Example from '../../../components/Example.astro';
 
 A tutorial often shows the same file several times, with a few lines more each time. Readers must compare the blocks line by line to find the change. A code walkthrough puts the versions in one block with numbered steps in the title bar. When the reader changes step, unchanged code moves to its new place, and new code fades in.
 
+:::tip[Good for:]
+A file that grows over a few steps, where each step needs only a short label. The versions take the space of one block, and readers step through them with buttons. To explain each step in paragraphs next to the code, use [scrollycoding](/starlight-codeblocks/features/scrollycoding/).
+:::
+
 export const basic = `
 <CodeWalkthrough>
 

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { clipboard, copyFromKeyboard, example, phone } from './helpers.ts';
 
 test('directives change their lines and disappear from the code and the copied text', async ({ page }) => {
-  await page.goto('./guides/comment-notation/');
+  await page.goto('./comment-notation/');
   const result = example(page);
   await expect(result.locator('.ec-line.del')).toHaveCount(1);
   await expect(result.locator('.ec-line.ins')).toHaveCount(1);
@@ -18,7 +18,7 @@ test('directives change their lines and disappear from the code and the copied t
 test('directives and attributes combine in one block, with no errors', async ({ page }) => {
   const errors: Error[] = [];
   page.on('pageerror', (error) => errors.push(error));
-  await page.goto('./guides/comment-notation/');
+  await page.goto('./comment-notation/');
 
   const retry = example(page, 3);
   await retry.locator('.scb-annotation').first().focus();

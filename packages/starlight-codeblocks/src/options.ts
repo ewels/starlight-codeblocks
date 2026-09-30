@@ -198,7 +198,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   },
   notation: {
     description: 'Reads directives in code comments.',
-    page: 'guides/comment-notation',
+    page: 'comment-notation',
     off: 'Every comment then renders as written.',
     fields: {
       comments: {

@@ -4,7 +4,7 @@
 
 A Starlight plugin that adds 24 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
 
-Using an agent? [Point it at the bundled skill](https://ewels.github.io/starlight-codeblocks/guides/agent-skill/).
+Using an agent? [Point it at the bundled skill](https://ewels.github.io/starlight-codeblocks/agent-skill/).
 
 ## Install
 

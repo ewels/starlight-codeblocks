@@ -117,7 +117,7 @@ A code switcher `sync` key and a `<Tabs>` `syncKey` do not switch together. Use 
 
 ## Syntax rules
 
-Docs: https://ewels.github.io/starlight-codeblocks/guides/comment-notation/, with every attribute in https://ewels.github.io/starlight-codeblocks/reference/attributes/ and every directive in https://ewels.github.io/starlight-codeblocks/reference/directives/
+Docs: https://ewels.github.io/starlight-codeblocks/comment-notation/, with every attribute in https://ewels.github.io/starlight-codeblocks/reference/attributes/ and every directive in https://ewels.github.io/starlight-codeblocks/reference/directives/
 
 Attributes go on the fence line, after the language:
 

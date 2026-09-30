@@ -1,11 +1,13 @@
 export const sidebar = [
   {
     label: 'Start here',
-    items: [{ label: 'Introduction', link: '/' }, 'getting-started', 'configuration'],
-  },
-  {
-    label: 'Guides',
-    items: ['guides/comment-notation', 'guides/choose-an-annotation-style', 'guides/agent-skill'],
+    items: [
+      { label: 'Introduction', link: '/' },
+      'getting-started',
+      'configuration',
+      'comment-notation',
+      'agent-skill',
+    ],
   },
   {
     label: 'Explain code',

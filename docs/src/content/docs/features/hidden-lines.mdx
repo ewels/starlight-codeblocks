@@ -33,7 +33,7 @@ The imports and the `if` block are behind their own markers. Select a marker to 
 | `[!code hide]` | Comment | `import os  # [!code hide]` |
 | `[!code hide:N]` | Comment | `# [!code hide:3]` |
 
-`hidden={range}` takes a [range](/starlight-codeblocks/guides/comment-notation/#line-numbers), such as `{2}` or `{1, 4-6}`. `[!code hide:N]` hides its own line and the next N-1 lines. You can use the attribute and the directive in the same block.
+`hidden={range}` takes a [range](/starlight-codeblocks/comment-notation/#line-numbers), such as `{2}` or `{1, 4-6}`. `[!code hide:N]` hides its own line and the next N-1 lines. You can use the attribute and the directive in the same block.
 
 ## Behaviour
 
@@ -163,4 +163,4 @@ Use hidden lines for lines that most readers never need, such as imports, and wh
 - [Focus](/starlight-codeblocks/features/focus/): blur the lines around the ones you explain, and keep them in view.
 - [Expandable blocks](/starlight-codeblocks/features/expandable-blocks/): cap a long block at a line count, instead of a list of lines to hide.
 - [Collapsible sections](https://expressive-code.com/plugins/collapsible-sections/): the Expressive Code plugin that folds lines behind a summary line.
-- [Comment notation](/starlight-codeblocks/guides/comment-notation/): the directive syntax that `[!code hide]` uses.
+- [Comment notation](/starlight-codeblocks/comment-notation/): the directive syntax that `[!code hide]` uses.

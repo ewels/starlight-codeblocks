@@ -8,6 +8,10 @@ import Example from '../../../components/Example.astro';
 
 A code block shows the code, and the prose around it explains it. When the explanation is about one name on one line, a reader must find that name themselves. An inline callout puts the note in a bubble directly above the line, with an arrow that points down at the name.
 
+:::tip[Good for:]
+A note of one short sentence about one name on a line. The bubble is always visible, so keep to one or two callouts in a block. For a longer note, use [annotations](/starlight-codeblocks/features/annotations/) or [footnotes](/starlight-codeblocks/features/footnotes/).
+:::
+
 export const basic = `
 \`\`\`js
 const controller = new AbortController();
@@ -94,4 +98,3 @@ const client = createClient({ retries: 3, backoffMs: 250 });
 
 - [Annotations](/starlight-codeblocks/features/annotations/): numbered markers that open a note only when the reader asks for it.
 - [Footnotes](/starlight-codeblocks/features/footnotes/): numbered notes listed under the block, all visible at once.
-- [Choose an annotation style](/starlight-codeblocks/guides/choose-an-annotation-style/): a comparison of the four styles, with the same code.

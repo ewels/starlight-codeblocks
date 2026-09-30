@@ -65,8 +65,8 @@ test('the agent skill page has every skill file, on the page and in its Markdown
   oneProject();
   const skill = new URL('../../skills/starlight-codeblocks/', import.meta.url);
   const files = ['SKILL.md', ...readdirSync(new URL('references/', skill)).map((file) => `references/${file}`)];
-  const markdown = await (await request.get('./guides/agent-skill.md')).text();
-  await page.goto('./guides/agent-skill/');
+  const markdown = await (await request.get('./agent-skill.md')).text();
+  await page.goto('./agent-skill/');
   for (const file of files) {
     expect(markdown).toContain(readFileSync(new URL(file, skill), 'utf8').trim());
     await expect(page.locator('.expressive-code .title', { hasText: new RegExp(`^${file}$`) })).toHaveCount(1);

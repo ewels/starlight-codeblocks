@@ -9,6 +9,10 @@ import Options from '../../../components/Options.astro';
 
 A code block often comes with a list of notes in the prose after it, where each note names the line it is about. Footnotes put that list inside the block. Each line with a note gets a numbered badge, and the notes are a numbered list under the code.
 
+:::tip[Good for:]
+A short block where readers need every note. The list stays close to the lines and works the same on a phone and a desktop. For a long block, use [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/).
+:::
+
 export const basic = `
 \`\`\`py title="app.py"
 from flask import Flask
@@ -120,4 +124,3 @@ if __name__ == "__main__":
 - [Annotations](/starlight-codeblocks/features/annotations/): numbered markers that open a note only when the reader asks for it.
 - [Side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/): the notes in a column beside the code, on wide screens.
 - [Inline callouts](/starlight-codeblocks/features/inline-callouts/): a short note above the line, with an arrow at one name.
-- [Choose an annotation style](/starlight-codeblocks/guides/choose-an-annotation-style/): a comparison of the four styles, with the same code.

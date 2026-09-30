@@ -9,6 +9,10 @@ import Example from '../../../components/Example.astro';
 
 A walkthrough of a file often puts the whole block first, then explains it in paragraphs below. Readers scroll back up to find each line that a paragraph names. Scrollycoding keeps the block next to the prose. As each step scrolls past the middle of the block, the block focuses the lines of that step.
 
+:::tip[Good for:]
+A tutorial that explains a block in paragraphs, one step at a time. To show versions of a file with only a short label for each step, use a [code walkthrough](/starlight-codeblocks/features/code-walkthrough/). For a short note on each of many lines, all visible at once, use [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/).
+:::
+
 export const basic = `
 <Scrollycoding>
 
@@ -80,7 +84,7 @@ Import both components at the top of the MDX file:
 import { Scrollycoding, Step } from 'starlight-codeblocks/components';
 ```
 
-Put one code block first, then the steps. Leave an empty line after `<Scrollycoding>` and before `</Scrollycoding>`. `focus` and `mark` take a [range](/starlight-codeblocks/guides/comment-notation/#line-numbers) without braces, such as `4` or `1, 6-8`. A step can contain any Markdown, such as links, inline code or several paragraphs. Text outside the steps fails the build: put it in a step, or before or after `<Scrollycoding>`.
+Put one code block first, then the steps. Leave an empty line after `<Scrollycoding>` and before `</Scrollycoding>`. `focus` and `mark` take a [range](/starlight-codeblocks/comment-notation/#line-numbers) without braces, such as `4` or `1, 6-8`. A step can contain any Markdown, such as links, inline code or several paragraphs. Text outside the steps fails the build: put it in a step, or before or after `<Scrollycoding>`.
 
 To change the code during the walkthrough, put a new version of the code block between two steps. The steps after it show the new version, and their `focus` and `mark` ranges count its lines. See [Change the code between steps](#change-the-code-between-steps).
 
