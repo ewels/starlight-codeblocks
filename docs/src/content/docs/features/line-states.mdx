@@ -45,17 +45,93 @@ The message is optional. An attribute tints the lines and shows no message. `[!c
 
 Inline code, links and bold in a message render as HTML. Other Markdown stays as text.
 
+## Examples
+
+### A custom state
+
+This site defines a `todo` state, as in the [custom state example](#add-a-custom-state). Use it to show readers the parts of a file that they must complete:
+
+export const todo = `
+\`\`\`ts title="handler.ts"
+export async function handler(request: Request) {
+  const body = await request.json(); // [!code todo] Check the body against a schema
+  return Response.json({ ok: true });
+}
+\`\`\`
+`;
+
+<Example code={todo} layout="tabs" />
+
+### A message on an inserted line
+
+A message after `[!code ++]` tells readers why a line is new, for example in a step of a tutorial:
+
+export const inserted = `
+\`\`\`js title="astro.config.mjs"
+import starlight from '@astrojs/starlight';
+import codeblocks from 'starlight-codeblocks'; // [!code ++] Import the plugin
+
+export default defineConfig({
+  integrations: [starlight({ plugins: [codeblocks()] })], // [!code ++] Load the plugin
+});
+\`\`\`
+`;
+
+<Example code={inserted} hiddenAttributes="apiLinks=false" layout="tabs" />
+
+### Labels without the name of the state
+
+With `prefix: false`, a label shows only the message, and a line without a message shows only the tint. Screen readers still hear the name of the state:
+
+```js title="astro.config.mjs"
+codeblocks({
+  lineStates: { prefix: false },
+});
+```
+
+To leave the names out of one block only, add `lineStates.prefix=false` to its fence line. `lineStates.prefix=true` shows them in one block when the option is off:
+
+export const prefix = `
+\`\`\`py title="config.py" lineStates.prefix=false
+retries = -1  # [!code error] Must be 0 or more
+timeout = 0.5  # [!code warning] Less than a second
+\`\`\`
+`;
+
+<Example code={prefix} layout="tabs" />
+
+### States without a message
+
+An attribute marks lines without a message. Use it when the text around the block explains the problem:
+
+export const attribute = `
+\`\`\`js title="retry.js" warning={2-4}
+export async function fetchWithRetry(url) {
+  while (true) {
+    try { return await fetch(url); } catch {}
+  }
+}
+\`\`\`
+`;
+
+<Example code={attribute} layout="tabs" />
+
 ## Behaviour
 
-- Each state has a background tint and a 3 px bar on the left edge.
-- If every line of a block has the same state, the tint covers the whole block, with one bar down its side.
-- A message shows after the code, as a small label. The label starts with the name of the state in bold: **Error**, **Warning**, **Note** or **Success**. With `prefix: false`, or `lineStates.prefix=false` on the fence line (the first line of the code block, with the language), the label shows only the message.
-- A line with no message shows a label with only the name of the state. In a group of lines with the same state, only the first line shows it. The colour then does not carry the meaning alone. With the names off, a line with no message shows only the tint.
-- Screen readers hear the name of the state before the line, for example "Error:". A screen reader reads the message after the code.
-- The copy button leaves out the messages. The names of the states and the messages are also not part of a manual text selection.
-- A message after `[!code ++]`, `[!code --]` or `[!code highlight]` shows in the same label, in the colour of the marker. The label has no name before the message, because Expressive Code already marks the line. With `lineStates: false`, the message stays in the code as a comment.
-- A line can have more than one state. The line then shows the colour of the last state in the configuration.
-- Line states need no JavaScript in the browser.
+- Tints and bars:
+  - Each state has a background tint and a 3 px bar on the left edge.
+  - If every line of a block has the same state, the tint covers the whole block, with one bar down its side.
+  - A line can have more than one state. The line then shows the colour of the last state in the configuration.
+- Labels:
+  - A message shows after the code, as a small label. The label starts with the name of the state in bold: **Error**, **Warning**, **Note** or **Success**. With `prefix: false`, or `lineStates.prefix=false` on the fence line (the first line of the code block, with the language), the label shows only the message.
+  - A line with no message shows a label with only the name of the state. In a group of lines with the same state, only the first line shows it. The colour then does not carry the meaning alone. With the names off, a line with no message shows only the tint.
+  - A message after `[!code ++]`, `[!code --]` or `[!code highlight]` shows in the same label, in the colour of the marker. The label has no name before the message, because Expressive Code already marks the line. With `lineStates: false`, the message stays in the code as a comment.
+- Screen readers:
+  - Screen readers hear the name of the state before the line, for example "Error:". A screen reader reads the message after the code.
+- Copy:
+  - The copy button leaves out the messages. The names of the states and the messages are also not part of a manual text selection.
+- Without JavaScript:
+  - Line states need no JavaScript in the browser.
 
 ## Options
 
@@ -84,69 +160,6 @@ A name uses lower-case letters, digits and hyphens. It cannot be the name of ano
 The plugin makes the tint and the label colours from the colour that you give. Each colour must have a contrast of 3:1 or more against the background of the code, so that readers can see the bar.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-This site defines the `todo` state from the options example. Use it to show readers the parts of a file that they must complete:
-
-export const todo = `
-\`\`\`ts title="handler.ts"
-export async function handler(request: Request) {
-  const body = await request.json(); // [!code todo] Check the body against a schema
-  return Response.json({ ok: true });
-}
-\`\`\`
-`;
-
-<Example code={todo} />
-
-A message after `[!code ++]` tells readers why a line is new, for example in a step of a tutorial:
-
-export const inserted = `
-\`\`\`js title="astro.config.mjs"
-import starlight from '@astrojs/starlight';
-import codeblocks from 'starlight-codeblocks'; // [!code ++] Import the plugin
-
-export default defineConfig({
-  integrations: [starlight({ plugins: [codeblocks()] })], // [!code ++] Load the plugin
-});
-\`\`\`
-`;
-
-<Example code={inserted} hiddenAttributes="apiLinks=false" />
-
-With `prefix: false`, a label shows only the message, and a line without a message shows only the tint. Screen readers still hear the name of the state:
-
-```js title="astro.config.mjs"
-codeblocks({
-  lineStates: { prefix: false },
-});
-```
-
-To leave the names out of one block only, add `lineStates.prefix=false` to its fence line. `lineStates.prefix=true` shows them in one block when the option is off:
-
-export const prefix = `
-\`\`\`py title="config.py" lineStates.prefix=false
-retries = -1  # [!code error] Must be 0 or more
-timeout = 0.5  # [!code warning] Less than a second
-\`\`\`
-`;
-
-<Example code={prefix} />
-
-An attribute marks lines without a message. Use it when the text around the block explains the problem:
-
-export const attribute = `
-\`\`\`js title="retry.js" warning={2-4}
-export async function fetchWithRetry(url) {
-  while (true) {
-    try { return await fetch(url); } catch {}
-  }
-}
-\`\`\`
-`;
-
-<Example code={attribute} />
 
 ## Limitations
 

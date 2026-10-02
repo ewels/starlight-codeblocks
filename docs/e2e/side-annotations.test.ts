@@ -3,10 +3,10 @@ import { render } from '../../packages/starlight-codeblocks/test/render.ts';
 import { css, example, reduced } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('./features/side-by-side-annotations/');
+  await page.goto('./features/side-annotations/');
 });
 
-/** The box of a side-by-side block's grid and the content column, and whether the notes are beside the code. */
+/** The box of the grid of a block with side annotations and the content column, and whether the notes are beside the code. */
 async function measure(page: Page, index: number) {
   const side = page.locator('.sl-markdown-content > .expressive-code > .scb-side').nth(index);
   const grid = side.locator('.scb-side-grid');
@@ -40,8 +40,8 @@ test('on a desktop, the notes are a sticky column beside code that fits without 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
   // codeSide="right" puts the notes in the left column.
-  await expect(example(page, 2).locator('.scb-side-code-right')).toBeAttached();
-  const [right, left] = await boxes(example(page, 2));
+  await expect(example(page, 1).locator('.scb-side-code-right')).toBeAttached();
+  const [right, left] = await boxes(example(page, 1));
   expect((left?.x ?? 0) + (left?.width ?? 0)).toBeLessThanOrEqual(right?.x ?? 0);
   expect(Math.abs((left?.y ?? 0) - (right?.y ?? 0))).toBeLessThan(2);
 
@@ -125,12 +125,39 @@ test('hovering over a note or a line highlights the other, and a line marker tak
   expect(hover).not.toBe(rest);
 });
 
+test('a click on a note or its number keeps the highlight, a second click or a click elsewhere clears it', async ({
+  page,
+}) => {
+  const block = example(page);
+  const notes = block.locator('.scb-annotation-notes li');
+  const line = (n: number) => block.locator(`.ec-line[data-scb-anno="${n}"]`);
+  await notes.nth(1).click();
+  await page.mouse.move(0, 0);
+  await expect(notes.nth(1)).toHaveClass(/scb-annotation-pin/);
+  await expect(line(2)).toHaveClass(/scb-annotation-pin/);
+  await notes.nth(1).click();
+  await expect(notes.nth(1)).not.toHaveClass(/scb-annotation-pin/);
+  await expect(line(2)).not.toHaveClass(/scb-annotation-pin/);
+  await notes.nth(0).click();
+  await line(3).locator('.scb-annotation-num').click();
+  await expect(notes.nth(0)).toHaveClass(/scb-annotation-pin/);
+  await expect(notes.nth(2)).toHaveClass(/scb-annotation-pin/);
+  await expect(line(3)).toHaveClass(/scb-annotation-pin/);
+  await page.locator('h1').click();
+  await expect(block.locator('.scb-annotation-pin')).toHaveCount(0);
+  await notes.nth(1).focus();
+  await page.keyboard.press('Enter');
+  await expect(line(2)).toHaveClass(/scb-annotation-pin/);
+  await page.keyboard.press(' ');
+  await expect(line(2)).not.toHaveClass(/scb-annotation-pin/);
+});
+
 test('focusing a note with the keyboard highlights its line, and the border changes at once under reduced motion', async ({
   page,
 }) => {
   const block = example(page);
   const notes = block.locator('.scb-annotation-notes li');
-  expect(await css(notes.first(), 'transitionDuration')).toBe(reduced() ? '0s' : '0.15s');
+  expect(await css(notes.first(), 'transitionDuration')).toBe(reduced() ? '0s' : '0.15s, 0.15s');
   await notes.first().focus();
   await expect(block.locator('.ec-line[data-scb-anno="1"]')).toHaveClass(/scb-annotation-lit/);
   await page.keyboard.press('Tab');
@@ -155,7 +182,7 @@ test('on a page without a table of contents, wide blocks spread evenly as far as
   test.skip(isMobile, 'Phones have no space beside the content column.');
   const at = async (width: number) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('./features/side-by-side-annotations/wide/');
+    await page.goto('./features/side-annotations/wide/');
   };
 
   await at(1440);

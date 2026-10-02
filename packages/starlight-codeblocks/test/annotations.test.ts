@@ -23,7 +23,7 @@ test('numbers annotations from 1 in line order, keeps the rest of a comment, and
     block('js', 'a() // keep [!annotate] First', 'b()', 'c() // [!annotate] Second'),
   );
   expect(html.match(/aria-label="Annotation \d"/g)).toEqual(['aria-label="Annotation 1"', 'aria-label="Annotation 2"']);
-  expect(html).toContain('data-scb-annotations=""');
+  expect(html).toContain('data-scb-annotations="filled"');
   expect(html).toContain('<ol class="scb-annotation-list"><li>First</li><li>Second</li></ol>');
   expect(copyText).toBe('a() // keep\nb()\nc()');
 });
@@ -41,7 +41,7 @@ test('annotations="side" puts the notes in a column beside the block, with numbe
     block('py annotations="side"', 'x = 1  # [!annotate] Sets `x`.', 'y = 2  # [!annotate] Sets y.'),
   );
   expect(html).toMatch(
-    /^<div class="expressive-code"><div class="scb-side scb-side-600 not-content" data-scb-annotations=""><div class="scb-side-grid"><figure/,
+    /^<div class="expressive-code"><div class="scb-side scb-side-600 not-content" data-scb-annotations="filled"><div class="scb-side-grid"><figure/,
   );
   expect(html).toContain('<div class="ec-line" data-scb-anno="1">');
   expect(html).toContain('<span class="scb-annotation scb-annotation-num" aria-hidden="true">1</span>');
@@ -82,6 +82,42 @@ test('codeSide="right" puts the code in the right column, and bad annotations or
   const list = await render(block('py annotations="list"', note));
   expect(list.warnings.join('\n')).toContain('`annotations="list"` must be `"side"`');
   expect(list.html).toContain('popovertarget');
+});
+
+test('is filled by default, outlined with the style option, and a block can set its own with annotations.style', async () => {
+  const md = (attr: string) => block(`js ${attr}`, 'a() // [!annotate] Note');
+  expect((await render(md(''))).html).toContain('data-scb-annotations="filled"');
+  expect((await render(md(''), { annotations: { style: 'outline' } })).html).toContain(
+    'data-scb-annotations="outline"',
+  );
+  expect((await render(md('annotations.style="outline"'))).html).toContain('data-scb-annotations="outline"');
+  expect((await render(md('annotations="side" annotations.style="outline"'))).html).toMatch(
+    /<div class="scb-side [^"]+" data-scb-annotations="outline">/,
+  );
+  const bad = await render(md('annotations.style="dotted"'));
+  expect(bad.html).toContain('data-scb-annotations="filled"');
+  expect(bad.warnings.join('\n')).toContain('`annotations.style="dotted"` must be `"filled"` or `"outline"`');
+});
+
+test('the outline style colours of annotations and footnotes meet their contrast targets in both themes', async () => {
+  for (const [v, group] of (await variants()).flatMap(
+    (v) =>
+      [
+        [v, 'codeblocksAnnotations'],
+        [v, 'codeblocksFootnotes'],
+      ] as const,
+  )) {
+    const get = (key: string) => v.get(`${group}.${key}`);
+    const bg = v.get('codeBackground');
+    const name = `${group}, ${v.name}`;
+    expect(getColorContrast(get('outlineNumberForeground'), bg), name).toBeGreaterThanOrEqual(4.5);
+    expect(getColorContrast(get('outlineAccent'), bg), name).toBeGreaterThanOrEqual(3);
+    expect(getColorContrast(get('outlineActiveForeground'), get('outlineAccent')), name).toBeGreaterThanOrEqual(4.5);
+    expect(
+      getColorContrast(get('outlineNumberForeground'), get('outlineLineBackground')),
+      v.name,
+    ).toBeGreaterThanOrEqual(4.5);
+  }
 });
 
 test('the hover colour of a marker comes from the theme and keeps the number readable', async () => {

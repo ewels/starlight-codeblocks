@@ -38,16 +38,51 @@ The name is a built-in playground, or a playground that the site adds in its con
 | `typescript` | **Open in TS Playground** | The URL, compressed with lz-string |
 | `rust` | **Open in Rust Playground** | The URL |
 
+## Examples
+
+### A custom playground
+
+A Python example opens in Python Tutor, the custom playground that this site adds in its [options](#options):
+
+export const python = `
+\`\`\`py playground="pythontutor"
+from statistics import median
+
+print(median([3, 1, 4, 1, 5]))
+\`\`\`
+`;
+
+<Example code={python} hiddenAttributes="apiLinks=false" layout="tabs" />
+
+### A playground that takes a form post
+
+This site adds StackBlitz, which takes a project in a form post ([Add a playground](/starlight-codeblocks/extend/add-a-playground/)). The button is then part of a form:
+
+export const post = `
+\`\`\`js title="index.js" playground="stackblitz"
+const words = ['queued', 'running', 'done'];
+document.body.textContent = words.join(' then ');
+\`\`\`
+`;
+
+<Example code={post} layout="tabs" />
+
 ## Behaviour
 
-- A playground that takes the code in its URL renders as a link with the look of a button. It opens in a new tab.
-- A playground that takes the code in a form post renders as a form with hidden fields. It opens in a new tab too.
-- Screen readers announce "opens in a new tab" after the label.
-- The playground gets the copied text of the block. Directives are removed, hidden lines are kept, and a terminal session sends only its commands.
-- If a URL is longer than 8,000 characters, the build logs a warning, because some browsers cut long URLs.
-- If the name is not a known playground, the build logs a warning and the block has no button.
-- The button works without JavaScript. Only the values that readers type into [fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/) need JavaScript to reach the playground.
-- The button does not print.
+- The button:
+  - A playground that takes the code in its URL renders as a link with the look of a button. It opens in a new tab.
+  - A playground that takes the code in a form post renders as a form with hidden fields. It opens in a new tab too.
+- The code it sends:
+  - The playground gets the copied text of the block. Directives are removed, hidden lines are kept, and a terminal session sends only its commands.
+- Screen readers:
+  - Screen readers announce "opens in a new tab" after the label.
+- Warnings:
+  - If a URL is longer than 8,000 characters, the build logs a warning, because some browsers cut long URLs.
+  - If the name is not a known playground, the build logs a warning and the block has no button.
+- Print:
+  - The button does not print.
+- Without JavaScript:
+  - The button works without JavaScript. Only the values that readers type into [fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/) need JavaScript to reach the playground.
 
 ## Options
 
@@ -69,45 +104,6 @@ codeblocks({
 The guide to [adding a playground](/starlight-codeblocks/extend/add-a-playground/) describes both functions and the form post.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-A Rust example opens in the Rust Playground, on the stable channel with the 2024 edition:
-
-export const rust = `
-\`\`\`rust title="main.rs" playground="rust"
-fn main() {
-    let sizes = [3, 1, 4, 1, 5];
-    let total: i32 = sizes.iter().sum();
-    println!("Total: {total}");
-}
-\`\`\`
-`;
-
-<Example code={rust} />
-
-A Python example opens in Python Tutor, the custom playground from the configuration above:
-
-export const python = `
-\`\`\`py playground="pythontutor"
-from statistics import median
-
-print(median([3, 1, 4, 1, 5]))
-\`\`\`
-`;
-
-<Example code={python} hiddenAttributes="apiLinks=false" />
-
-This site adds StackBlitz, which takes a project in a form post ([Add a playground](/starlight-codeblocks/extend/add-a-playground/)). The button is then part of a form:
-
-export const post = `
-\`\`\`js title="index.js" playground="stackblitz"
-const words = ['queued', 'running', 'done'];
-document.body.textContent = words.join(' then ');
-\`\`\`
-`;
-
-<Example code={post} />
 
 ## Limitations
 

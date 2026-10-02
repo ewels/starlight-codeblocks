@@ -124,6 +124,8 @@ test('every syntax colour meets 4.5:1 contrast on the tints that any line or tok
       'code link hover': [v.get('codeblocksCodeLinks.hoverBackground')],
       'active footnote line': [v.get('codeblocksFootnotes.lineBackground')],
       'active annotated line': [v.get('codeblocksAnnotations.lineBackground')],
+      'active footnote line, outline style': [v.get('codeblocksFootnotes.outlineLineBackground')],
+      'active annotated line, outline style': [v.get('codeblocksAnnotations.outlineLineBackground')],
       'active mention line': [v.get('codeblocksMentions.background')],
     };
     for (const [name, tint] of Object.entries(layers)) {

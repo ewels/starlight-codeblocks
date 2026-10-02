@@ -52,34 +52,9 @@ Put two or more fenced code blocks between the `:::code-switcher` line and the `
 
 Each variant keeps its own attributes, such as `title`. A variant with no `label` shows the name of its language in the menu, such as "Python" for `py`. Two variants with the same label fail the build. For example, `sh` and `bash` both show "Shell", so give each one a `label`.
 
-## Behaviour
-
-- Only one variant shows at a time. The title bar shows the `title` of that variant, if it has one, and the menu on the right.
-- The menu starts with an icon for the language of the variant, such as the Python logo for `py`. A language with no icon gets a generic code icon.
-- Choosing an entry in the menu shows that variant. Keyboard focus stays on the menu.
-- Blocks with the same `sync` key switch together, matched by label. The browser keeps the choice for each key in `localStorage`, so it applies across the site and on the next visit.
-- If a block does not have the saved label, it shows its first variant.
-- A block with no `sync` key switches on its own, and the browser does not keep the choice.
-- The copy button copies the variant that shows.
-- The menu is a native `select` element with the accessible name "Variant", so it works with a keyboard and with screen readers.
-- Without JavaScript, the first variant shows, and the menu is hidden.
-- The menu does not print. The variant that shows prints.
-
-## Options
-
-The code switcher has no options. Turn the feature off for the whole site with `codeSwitcher: false`:
-
-```js title="astro.config.mjs"
-codeblocks({
-  codeSwitcher: false,
-});
-```
-
-With `codeSwitcher: false`, each code block in the directive renders on its own, one after the other. The directive lines do not show.
-
-<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
 ## Examples
+
+### Switch by language
 
 Two blocks with the same `sync` key and no labels switch together by language. Choose **JavaScript** in one menu, and the other block changes too:
 
@@ -116,7 +91,7 @@ std::fs::write("config.json", serde_json::to_string_pretty(&config)?)?;
 :::
 `;
 
-<Example code={languages} hiddenAttributes="apiLinks=false">
+<Example code={languages} hiddenAttributes="apiLinks=false" layout="tabs">
 
 :::code-switcher{sync="lang"}
 ```py apiLinks=false
@@ -151,6 +126,8 @@ std::fs::write("config.json", serde_json::to_string_pretty(&config)?)?;
 
 </Example>
 
+### A title for each variant
+
 Variants with a `title` show it in the title bar, so each variant can name its own file. Here, a tool reads its settings from YAML or TOML:
 
 export const titles = `
@@ -166,7 +143,7 @@ port = 8080
 :::
 `;
 
-<Example code={titles}>
+<Example code={titles} layout="tabs">
 
 :::code-switcher
 ```yaml title="config.yml"
@@ -180,6 +157,38 @@ port = 8080
 :::
 
 </Example>
+
+## Behaviour
+
+- The title bar:
+  - Only one variant shows at a time. The title bar shows the `title` of that variant, if it has one, and the menu on the right.
+  - The menu starts with an icon for the language of the variant, such as the Python logo for `py`. A language with no icon gets a generic code icon.
+- Switching variants:
+  - Choosing an entry in the menu shows that variant. Keyboard focus stays on the menu.
+  - Blocks with the same `sync` key switch together, matched by label. The browser keeps the choice for each key in `localStorage`, so it applies across the site and on the next visit.
+  - If a block does not have the saved label, it shows its first variant.
+  - A block with no `sync` key switches on its own, and the browser does not keep the choice.
+- Screen readers:
+  - The menu is a native `select` element with the accessible name "Variant", so it works with a keyboard and with screen readers.
+- Copy and print:
+  - The copy button copies the variant that shows.
+  - The menu does not print. The variant that shows prints.
+- Without JavaScript:
+  - The first variant shows, and the menu is hidden.
+
+## Options
+
+The code switcher has no options. Turn the feature off for the whole site with `codeSwitcher: false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  codeSwitcher: false,
+});
+```
+
+With `codeSwitcher: false`, each code block in the directive renders on its own, one after the other. The directive lines do not show.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Code switcher or tabs
 

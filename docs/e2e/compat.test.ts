@@ -80,8 +80,8 @@ test.describe('in a copy of the block', () => {
     await expect(copy.locator('.scb-api-card-head')).not.toBeEmpty();
   });
 
-  test('a side-by-side note lights its line in a copy of the block', async ({ page }) => {
-    await page.goto('./features/side-by-side-annotations/');
+  test('a side annotation lights its line in a copy of the block', async ({ page }) => {
+    await page.goto('./features/side-annotations/');
     const copy = await copyToOverlay(page, example(page));
     await copy.locator('.scb-annotation-notes li').nth(1).hover();
     await expect(copy.locator('.ec-line[data-scb-anno="2"]')).toHaveClass(/scb-annotation-lit/);

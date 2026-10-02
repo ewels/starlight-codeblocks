@@ -1,20 +1,20 @@
 # Explain code
 
-Five features attach an explanation to lines of code: inline callouts, annotations, footnotes, side-by-side annotations and scrollycoding. Code walkthrough steps through versions of a block that changes. Code mentions link the prose around a block to its lines. All of them keep the explanation out of the copied code.
+Five features attach an explanation to lines of code: inline callouts, annotations, footnotes, side annotations and scrollycoding. Code walkthrough steps through versions of a block that changes. Code mentions link the prose around a block to its lines. All of them keep the explanation out of the copied code.
 
 | Style | Reader sees the note | Note goes |
 |---|---|---|
 | Inline callout | At once | Above the line, with an arrow at one name |
 | Annotation | After a click | In a popover that opens from a marker |
 | Footnote | At once | In a list under the block |
-| Side-by-side annotation | At once | In a column beside the code, on a wide screen |
+| Side annotation | At once | In a column beside the code, on a wide screen |
 | Scrollycoding | As each step scrolls past | In prose steps next to the block |
 
 Rules to choose:
 
 - If the note is about one name and fits in one short sentence, use a callout.
 - If most readers can skip the note, use an annotation.
-- If readers need every note, use footnotes for short blocks and side-by-side annotations for long blocks.
+- If readers need every note, use footnotes for short blocks and side annotations for long blocks.
 - If the explanation is several paragraphs that walk through one block, use scrollycoding.
 - If the prose already explains the lines, use code mentions to connect the two.
 - Use one style in a block, so that readers find every note in the same way.
@@ -48,12 +48,12 @@ const res = await fetch(url, { signal: controller.signal });
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/annotations/
 
-Use when the note is long, or when most readers can skip it. The code stays as compact as a plain block. Do not use when readers need every note to follow the code: use footnotes or side-by-side annotations.
+Use when the note is long, or when most readers can skip it. The code stays as compact as a plain block. Do not use when readers need every note to follow the code: use footnotes or side annotations.
 
 | Syntax | Where |
 |---|---|
 | `[!annotate] note` | Comment at the end of the line it explains |
-| `startNoteNumber={N}` | Code block fence line: numbers the notes from `N`, to continue an earlier block. Works for side-by-side annotations too. |
+| `startNoteNumber={N}` | Code block fence line: numbers the notes from `N`, to continue an earlier block. Works for side annotations too. |
 
 ```yaml
 matrix:
@@ -65,7 +65,7 @@ matrix:
 - The note can hold inline code, links and bold text.
 - Works without JavaScript, through the browser's `popover` attribute.
 - When the page prints, each marker prints as its number, and the notes print as a numbered list under the block.
-- Option: `annotations: false` turns off annotations and side-by-side annotations.
+- Option: `annotations.style` is `'filled'` (default), for markers filled in the accent colour, or `'outline'`, for outlined markers in the theme's magenta. A block sets its own with `annotations.style="outline"` or `annotations.style="filled"` on the fence line. Side annotations use the same setting. `annotations: false` turns off annotations and side annotations.
 - Limits: an annotation applies to one line. For a range, put it on the first line. Long notes make long source lines.
 
 ## Footnotes
@@ -88,12 +88,12 @@ app = Flask(__name__)
 
 - Hovering over a badge or a note highlights its line and its note. Clicking one keeps the highlight, and a second click clears it. Several can stay highlighted. Clicking a note does the same from the list.
 - Without JavaScript, the badges and the numbers are plain links to each other.
-- Option: `footnotes.sticky` (default `false`) makes every list sticky. `footnotes: false` turns the feature off.
+- Option: `footnotes.sticky` (default `false`) makes every list sticky. `footnotes.style` is `'outline'` (default) or `'filled'`, the same two styles as annotations. A block sets its own with `footnotes.style="filled"` or `footnotes.style="outline"` on the fence line. `footnotes: false` turns the feature off.
 - Limits: a footnote applies to one line. A sticky list covers the bottom of the block, so keep the notes short.
 
-## Side-by-side annotations
+## Side annotations
 
-Docs: https://ewels.github.io/starlight-codeblocks/features/side-by-side-annotations/
+Docs: https://ewels.github.io/starlight-codeblocks/features/side-annotations/
 
 Use for a longer block that you explain step by step, where readers need every note. Write the notes with `[!annotate]`, and add `annotations="side"` to the fence line (the first line of the code block, with the language).
 
@@ -105,10 +105,10 @@ with path.open() as fh:  # [!annotate] Opens the file and closes it when the blo
 ````
 
 - The notes are a column beside the code when the container has space for the longest line. From its longest line, each block gets a width of 600, 800 or 1000 px. These hold about 42, 66 or 90 characters. The column sticks below the site header.
-- In Starlight's default content column (45rem), only blocks with lines of about 42 characters or fewer get columns. Keep the lines of a side-by-side block short, or move a note off the longest line.
+- In Starlight's default content column (45rem), only blocks with lines of about 42 characters or fewer get columns. Keep the lines of a block with side annotations short, or move a note off the longest line.
 - For a page with longer lines, set `tableOfContents: false` in its frontmatter. Then a block that needs 800 or 1000 px spreads over the free space on each side of the content column. The text stays 45rem wide. This works only for a block directly on the page, not in tabs, asides, lists or components.
 - In a narrower container, such as on a phone, the notes are a numbered list under the block.
-- Hovering over a note, or focusing it, highlights its line. Hovering over a line highlights its note.
+- Hovering over a note, or focusing it, highlights its line. Hovering over a line highlights its note. Clicking a note or its number keeps the highlight, as for footnotes, and a second click clears it. Several can stay highlighted, and a click elsewhere clears them. Enter or Space does the same for a focused note.
 - `codeSide="right"` on the fence line puts the code in the right column and the notes on the left.
 - No options of its own. `annotations: false` turns it off.
 - Limits: each note is next to its number, not next to its line. Lines of more than about 90 characters scroll inside the code column.

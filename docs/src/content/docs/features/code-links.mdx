@@ -35,33 +35,9 @@ The directive is on its own line, above the line it applies to. It can also go a
 
 Several `[!link]` lines can stack above one line of code, one for each text to link.
 
-## Behaviour
-
-- The card shows on hover and on focus. It shows the linked text, the description and the domain of the URL. A link inside the site shows no domain. Press Escape to close the card.
-- The card shows plain text. Inline code, bold and links in the description become plain text.
-- Screen readers read the description and the domain as the link's description.
-- The linked text keeps its syntax colours, with an underline in the accent colour. Hover over the link to see a faint background.
-- The link is a normal link. Readers can focus it with the keyboard, and it opens in the same tab.
-- A URL that starts with `/` gets Astro's `base` in front of it, unless it already starts with the base. On this site, `/reference/directives/` becomes `/starlight-codeblocks/reference/directives/`. A site without `codeblocks()` gives the base to `pluginCodeblocks()`, as the [Expressive Code plugins page](/starlight-codeblocks/reference/expressive-code-plugins/#the-preset) shows.
-- The copied text leaves out the directive line.
-- If the text has no match on the line it applies to, the build logs a warning and the line renders without the link. A directive without a URL, or with another scheme such as `mailto:`, gets a warning too.
-- The card needs JavaScript, and the page loads it only for a block with a description. Without JavaScript, the link still works.
-
-## Options
-
-Code links have no options. Turn the feature off for the whole site with `codeLinks: false`:
-
-```js title="astro.config.mjs"
-codeblocks({
-  codeLinks: false,
-});
-```
-
-With `codeLinks: false`, a `[!link]` directive is an unknown directive. The build logs a warning and leaves the comment in the code.
-
-<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
 ## Examples
+
+### Two links on one line
 
 Two `[!link]` lines above one line link two names on it, each with its own card:
 
@@ -75,7 +51,9 @@ notes = Path("notes.txt").read_text()
 \`\`\`
 `;
 
-<Example code={stacked} hiddenAttributes="apiLinks=false" />
+<Example code={stacked} hiddenAttributes="apiLinks=false" layout="tabs" />
+
+### A link inside the site
 
 A link inside the site starts with `/`. The plugin adds the site's base:
 
@@ -88,7 +66,7 @@ export default defineConfig({
 \`\`\`
 `;
 
-<Example code={internal} />
+<Example code={internal} layout="tabs" />
 
 ### Links without a description
 
@@ -103,7 +81,39 @@ x = np.linspace(0, 1, 50)
 \`\`\`
 `;
 
-<Example code={plain} hiddenAttributes="apiLinks=false" />
+<Example code={plain} hiddenAttributes="apiLinks=false" layout="tabs" />
+
+## Behaviour
+
+- The link:
+  - The linked text keeps its syntax colours, with an underline in the accent colour. Hover over the link to see a faint background.
+  - The link is a normal link. Readers can focus it with the keyboard, and it opens in the same tab.
+  - A URL that starts with `/` gets Astro's `base` in front of it, unless it already starts with the base. On this site, `/reference/directives/` becomes `/starlight-codeblocks/reference/directives/`. A site without `codeblocks()` gives the base to `pluginCodeblocks()`, as the [Expressive Code plugins page](/starlight-codeblocks/reference/expressive-code-plugins/#the-preset) shows.
+- The card:
+  - The card shows on hover and on focus. It shows the linked text, the description and the domain of the URL. A link inside the site shows no domain. Press Escape to close the card.
+  - The card shows plain text. Inline code, bold and links in the description become plain text.
+- Screen readers:
+  - Screen readers read the description and the domain as the link's description.
+- Copy:
+  - The copied text leaves out the directive line.
+- Warnings:
+  - If the text has no match on the line it applies to, the build logs a warning and the line renders without the link. A directive without a URL, or with another scheme such as `mailto:`, gets a warning too.
+- Without JavaScript:
+  - The card needs JavaScript, and the page loads it only for a block with a description. Without JavaScript, the link still works.
+
+## Options
+
+Code links have no options. Turn the feature off for the whole site with `codeLinks: false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  codeLinks: false,
+});
+```
+
+With `codeLinks: false`, a `[!link]` directive is an unknown directive. The build logs a warning and leaves the comment in the code.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Limitations
 

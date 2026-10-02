@@ -35,18 +35,40 @@ Type a token into a `YOUR_TOKEN` field in one block, and the field in the other 
 
 The attribute lists the literal texts to turn into fields, separated by commas. Every match of each text in the block becomes a field. If one text contains another, the longer text wins where both match.
 
+## Examples
+
+### Values in a playground
+
+This block combines fill-in placeholders with a playground button, to show that the playground gets the reader's value. Type a token, then click **Open in TS Playground**:
+
+export const playground = `
+\`\`\`ts placeholder="YOUR_TOKEN" playground="typescript"
+const response = await fetch('https://api.example.com/v1/runs', {
+  headers: { Authorization: 'Bearer YOUR_TOKEN' },
+});
+console.log(await response.json());
+\`\`\`
+`;
+
+<Example code={playground} layout="tabs" />
+
 ## Behaviour
 
-- A field shows its placeholder text until the reader types. Its accessible name is the placeholder text.
-- A field is as wide as its placeholder text or its value, whichever is longer.
-- Typing in a field updates every field with the same text on the page. Pages that load later show the value too.
-- Escape in a field clears its value, in every field with the same text.
-- The copy button copies the code with the reader's values. An empty field copies its placeholder text. A manual copy of a selection in the block copies the same way.
-- A [playground](/starlight-codeblocks/features/open-in-playground/) button opens the code with the reader's values.
-- Values stay in the reader's browser. The plugin never sends them anywhere.
-- If a text in the attribute is not in the code, the build logs a warning.
-- Without JavaScript, fields are plain inputs. They do not update each other, and the copy button copies the placeholder text.
-- A field prints as its text, without the border: the value if the reader typed one, or else the placeholder text.
+- Fields:
+  - A field shows its placeholder text until the reader types. Its accessible name is the placeholder text.
+  - A field is as wide as its placeholder text or its value, whichever is longer.
+- Typing:
+  - Typing in a field updates every field with the same text on the page. Pages that load later show the value too.
+  - Escape in a field clears its value, in every field with the same text.
+  - Values stay in the reader's browser. The plugin never sends them anywhere.
+- Copy, playgrounds and print:
+  - The copy button copies the code with the reader's values. An empty field copies its placeholder text. A manual copy of a selection in the block copies the same way.
+  - A [playground](/starlight-codeblocks/features/open-in-playground/) button opens the code with the reader's values.
+  - A field prints as its text, without the border: the value if the reader typed one, or else the placeholder text.
+- Warnings:
+  - If a text in the attribute is not in the code, the build logs a warning.
+- Without JavaScript:
+  - Fields are plain inputs. They do not update each other, and the copy button copies the placeholder text.
 
 <Aside type="danger">
 Tell readers where their values go. With the default `storage: 'local'`, the browser keeps the values after the reader closes the tab. On a shared computer, the next person can see them.
@@ -65,32 +87,6 @@ codeblocks({
 ```
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-A field inside a URL works the same as a field inside a string:
-
-export const url = `
-\`\`\`http placeholder="WORKSPACE_ID"
-GET https://api.example.com/workspaces/WORKSPACE_ID/runs HTTP/1.1
-Accept: application/json
-\`\`\`
-`;
-
-<Example code={url} />
-
-This block combines fill-in placeholders with a playground button, to show that the playground gets the reader's value. Type a token, then click **Open in TS Playground**:
-
-export const playground = `
-\`\`\`ts placeholder="YOUR_TOKEN" playground="typescript"
-const response = await fetch('https://api.example.com/v1/runs', {
-  headers: { Authorization: 'Bearer YOUR_TOKEN' },
-});
-console.log(await response.json());
-\`\`\`
-`;
-
-<Example code={playground} />
 
 ## Limitations
 

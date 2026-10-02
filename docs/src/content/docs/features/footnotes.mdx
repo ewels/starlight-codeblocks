@@ -10,7 +10,7 @@ import Options from '../../../components/Options.astro';
 A code block often comes with a list of notes in the prose after it, where each note names the line it is about. Footnotes put that list inside the block. Each line with a note gets a numbered badge, and the notes are a numbered list under the code.
 
 :::tip[Good for:]
-A short block where readers need every note. The list stays close to the lines and works the same on a phone and a desktop. For a long block, use [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/).
+A short block where readers need every note. The list stays close to the lines and works the same on a phone and a desktop. For a long block, use [side annotations](/starlight-codeblocks/features/side-annotations/).
 :::
 
 export const basic = `
@@ -40,39 +40,15 @@ The two `[!ref]` comment lines are gone from the output. Their lines have the ba
 | `footnotes="static"` | Code block fence line |
 | `footnotes.sticky=true`, `footnotes.sticky=false` | Code block fence line |
 | `startNoteNumber={N}` | Code block fence line |
+| `footnotes.style="filled"`, `footnotes.style="outline"` | Code block fence line |
 
 The directive goes at the end of the line it explains, or on its own line above it. The note can hold inline code, links and bold text. `footnotes="sticky"` keeps the list in view while the block scrolls past. `footnotes="static"` turns the sticky list off for one block, if the site turns it on for every block. `footnotes.sticky=true` and `footnotes.sticky=false` do the same, with the name of the option. `startNoteNumber={N}` numbers the footnotes from `N`, to continue the numbers of an earlier block.
 
-## Behaviour
-
-- Badges are numbered from 1 in each block, or from the `startNoteNumber` value, in line order.
-- Hovering over a badge or a note with a mouse highlights the line and the note until the mouse cursor leaves. The highlight fades in after 80 ms, so it does not flash while the mouse cursor passes over. The page does not scroll.
-- Clicking a badge highlights its whole line and its note, and the highlight stays. Clicking the badge or the note again clears it. From the keyboard, the badge always goes to its note. Several footnotes can be highlighted at once. If the note is not on screen, the page scrolls to it.
-- The note gets the same tint and bar as its line.
-- Clicking a note highlights it and its line. If the line is not on screen, the page scrolls to it.
-- Clicking anywhere else clears every highlight. With reduced motion, the highlights change at once.
-- With `footnotes="sticky"`, the list sticks to the bottom of the window while any part of the block is on screen.
-- The copy button leaves the badges and the notes out. A manual selection of the code leaves the badges out.
-- Each badge is a link with the label "Footnote N", and its note is its accessible description. The number in front of each note is a link back to its line, with the label "Footnote N, for line L".
-- A badge moves keyboard focus to its note, and the number moves focus back to the badge.
-- Without JavaScript, the badges and the numbers are plain links to each other, so they still work, without the highlight.
-- Under reduced motion, the page jumps to the line or the note instead of scrolling smoothly.
-
-## Options
-
-<Options />
-
-```js title="astro.config.mjs"
-codeblocks({
-  footnotes: { sticky: true },
-});
-```
-
-With `footnotes: false`, the plugin does not know the `[!ref]` directive. It leaves the comment in the code as written, and logs a build warning.
-
-<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
+`footnotes.style` sets the style of the badges for one block.
 
 ## Examples
+
+### A sticky list
 
 A sticky list suits a long block, where the notes would otherwise be far from the lines they are about. Scroll past this block to see the list stay at the bottom of the window:
 
@@ -113,7 +89,57 @@ if __name__ == "__main__":
 \`\`\`
 `;
 
-<Example code={sticky} hiddenAttributes="apiLinks=false" />
+<Example code={sticky} hiddenAttributes="apiLinks=false" layout="tabs" />
+
+### The filled style
+
+The `filled` style, for one block:
+
+export const filled = `
+\`\`\`py footnotes.style="filled"
+# [!ref] Creates the application object.
+app = Flask(__name__)
+\`\`\`
+`;
+
+<Example code={filled} hiddenAttributes="apiLinks=false" layout="tabs" />
+
+## Behaviour
+
+- Numbers and placement:
+  - Badges are numbered from 1 in each block, or from the `startNoteNumber` value, in line order.
+  - With `footnotes="sticky"`, the list sticks to the bottom of the window while any part of the block is on screen.
+- Highlighting:
+  - Hovering over a badge or a note with a mouse highlights the line and the note until the mouse cursor leaves. The highlight fades in after 80 ms, so it does not flash while the mouse cursor passes over. The page does not scroll.
+  - Clicking a badge highlights its whole line and its note, and the highlight stays. Clicking the badge or the note again clears it. Several footnotes can be highlighted at once. If the note is not on screen, the page scrolls to it.
+  - Clicking a note highlights it and its line. If the line is not on screen, the page scrolls to it.
+  - The note gets the same tint and bar as its line.
+  - Clicking anywhere else clears every highlight.
+- Keyboard and screen readers:
+  - Each badge is a link with the label "Footnote N", and its note is its accessible description. The number in front of each note is a link back to its line, with the label "Footnote N, for line L".
+  - From the keyboard, a badge always moves focus to its note, and the number moves focus back to the badge.
+- Copy:
+  - The copy button leaves the badges and the notes out. A manual selection of the code leaves the badges out.
+- Without JavaScript:
+  - The badges and the numbers are plain links to each other, so they still work, without the highlight.
+- Motion:
+  - With reduced motion, the highlights change at once, and the page jumps to the line or the note instead of scrolling smoothly.
+
+## Options
+
+<Options />
+
+The `outline` style draws an outlined badge in the magenta of the theme, and fills it when its line is highlighted. The `filled` style draws each badge filled with the accent colour, the same as an [annotation](/starlight-codeblocks/features/annotations/) marker.
+
+```js title="astro.config.mjs"
+codeblocks({
+  footnotes: { sticky: true, style: 'filled' },
+});
+```
+
+With `footnotes: false`, the plugin does not know the `[!ref]` directive. It leaves the comment in the code as written, and logs a build warning.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Limitations
 
@@ -123,5 +149,5 @@ if __name__ == "__main__":
 ## Related
 
 - [Annotations](/starlight-codeblocks/features/annotations/): numbered markers that open a note only when the reader asks for it.
-- [Side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/): the notes in a column beside the code, on wide screens.
+- [Side annotations](/starlight-codeblocks/features/side-annotations/): the notes in a column beside the code, on wide screens.
 - [Inline callouts](/starlight-codeblocks/features/inline-callouts/): a short note above the line, with an arrow at one name.

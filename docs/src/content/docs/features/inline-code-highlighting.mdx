@@ -58,16 +58,39 @@ Use the suffix inside the backticks. It is the syntax of rehype-pretty-code, and
 MDX reads a `{:js}` after the closing backtick as a JavaScript expression, and the build fails. Write a backslash before it: `` `res.ok`\{:js} ``. Some plugins read `.md` files as MDX too, such as starlight-versions and starlight-md-txt, so the backslash is needed in `.md` files on those sites. The backslash works in `.md` files on every site.
 </Aside>
 
+## Examples
+
+### The suffix after the backtick
+
+A CSS declaration and a Python expression in a list, with the suffix after the backtick:
+
+export const list = `
+- Hide the element with \`display: none\`{:css}.
+- Round the value with \`round(total / count, 2)\`{:py}.
+`;
+
+<Example code={list} layout="tabs">
+
+- Hide the element with `display: none`\{:css}.
+- Round the value with `round(total / count, 2)`\{:py}.
+
+</Example>
+
 ## Behaviour
 
-- The inline code uses the site's Expressive Code themes: the background and the token colours of the dark theme and the light theme.
-- The colours change with Starlight's theme menu, the same as the code blocks.
-- The colours have the same contrast correction as the code blocks.
-- The plugin removes the suffix from the page, in both forms.
-- Inline code without a suffix does not change, unless the site sets a [default language](#a-default-language).
-- If Expressive Code does not know the language, the code shows as normal inline code and the build logs a warning with the file name. The plugin removes the suffix.
-- The highlighting happens at build time, so it works without JavaScript. Pages with no code blocks get the colours too.
-- The highlighted code is a normal `code` element. Screen readers and the copied text get the same characters as before.
+- Colours:
+  - The inline code uses the site's Expressive Code themes: the background and the token colours of the dark theme and the light theme.
+  - The colours change with Starlight's theme menu, the same as the code blocks.
+  - The colours have the same contrast correction as the code blocks.
+- The suffix:
+  - The plugin removes the suffix from the page, in both forms.
+  - Inline code without a suffix does not change, unless the site sets a [default language](#a-default-language).
+- Warnings:
+  - If Expressive Code does not know the language, the code shows as normal inline code and the build logs a warning with the file name. The plugin removes the suffix.
+- Screen readers and copy:
+  - The highlighted code is a normal `code` element. Screen readers and the copied text get the same characters as before.
+- Without JavaScript:
+  - The highlighting happens at build time, so it works without JavaScript. Pages with no code blocks get the colours too.
 
 ## Options
 
@@ -100,34 +123,6 @@ codeblocks({
 With `inlineHighlighting: false`, the suffix stays in the prose as text.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-A shell command in a sentence:
-
-export const shell = `
-Install the package with \`pnpm add starlight-codeblocks{:sh}\`, then restart the dev server.
-`;
-
-<Example code={shell}>
-
-Install the package with `pnpm add starlight-codeblocks{:sh}`, then restart the dev server.
-
-</Example>
-
-A CSS declaration and a Python expression in a list, with the suffix after the backtick:
-
-export const list = `
-- Hide the element with \`display: none\`{:css}.
-- Round the value with \`round(total / count, 2)\`{:py}.
-`;
-
-<Example code={list}>
-
-- Hide the element with `display: none`\{:css}.
-- Round the value with `round(total / count, 2)`\{:py}.
-
-</Example>
 
 ## Limitations
 

@@ -35,32 +35,9 @@ The `id` turns on line numbers for that block. It is also the `id` of the block 
 
 Pick an `id` from what the block contains, such as its file name. The `id` keeps links to the block working when you add other blocks to the page.
 
-## Behaviour
-
-- Each line number links to `#<id>-L<n>`, where `<n>` is the number that the reader sees. If the fence line (the first line of the code block, with the language) has `startLineNumber`, the numbers start there.
-- Clicking a number highlights that line and changes the address with `history.replaceState`. The page does not scroll, and the browser history gets no new entry.
-- Clicking a number with Shift held highlights the range from the last number you clicked, as `#<id>-L<a>-L<b>`.
-- When the page loads, or the address changes, the plugin highlights the lines in the address and scrolls them into view. If a line is a [hidden line](/starlight-codeblocks/features/hidden-lines/), its marker opens. If a line is in a `<Tabs>` panel that is not selected, its tab opens.
-- The line numbers are links, so you can reach them with the Tab key and press Enter to highlight a line. Shift and Enter together highlights a range. Screen readers announce each one as "Link to line N", and the highlighted numbers have `aria-current`.
-- Line numbers are not part of the copied text, and a manual selection of the code leaves them out.
-- Two blocks with the same `id` on one page cause a build warning.
-- Without JavaScript, the links go to their line, without the highlight.
-
-## Options
-
-Line permalinks have no options. Turn the feature off for the whole site with `permalinks: false`:
-
-```js title="astro.config.mjs"
-codeblocks({
-  permalinks: false,
-});
-```
-
-With `permalinks: false`, the plugin ignores `id` on the fence line.
-
-<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
 ## Examples
+
+### Numbers that match the file
 
 A block that shows part of a file can start at the line number of that part, so the numbers match the file:
 
@@ -72,7 +49,9 @@ def health():
 \`\`\`
 `;
 
-<Example code={start} />
+<Example code={start} layout="tabs" />
+
+### With hidden lines and a callout
 
 This example combines line permalinks with hidden lines and an inline callout on purpose. The hidden-lines marker and the callout arrow line up with the code after the line numbers:
 
@@ -87,7 +66,38 @@ createServer(handler).listen(port);
 \`\`\`
 `;
 
-<Example code={combined} />
+<Example code={combined} layout="tabs" />
+
+## Behaviour
+
+- The links:
+  - Each line number links to `#<id>-L<n>`, where `<n>` is the number that the reader sees. If the fence line (the first line of the code block, with the language) has `startLineNumber`, the numbers start there.
+  - Clicking a number highlights that line and changes the address with `history.replaceState`. The page does not scroll, and the browser history gets no new entry.
+  - Clicking a number with Shift held highlights the range from the last number you clicked, as `#<id>-L<a>-L<b>`.
+- Opening a link:
+  - When the page loads, or the address changes, the plugin highlights the lines in the address and scrolls them into view. If a line is a [hidden line](/starlight-codeblocks/features/hidden-lines/), its marker opens. If a line is in a `<Tabs>` panel that is not selected, its tab opens.
+- Keyboard and screen readers:
+  - The line numbers are links, so you can reach them with the Tab key and press Enter to highlight a line. Shift and Enter together highlights a range. Screen readers announce each one as "Link to line N", and the highlighted numbers have `aria-current`.
+- Copy:
+  - Line numbers are not part of the copied text, and a manual selection of the code leaves them out.
+- Warnings:
+  - Two blocks with the same `id` on one page cause a build warning.
+- Without JavaScript:
+  - The links go to their line, without the highlight.
+
+## Options
+
+Line permalinks have no options. Turn the feature off for the whole site with `permalinks: false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  permalinks: false,
+});
+```
+
+With `permalinks: false`, the plugin ignores `id` on the fence line.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Limitations
 

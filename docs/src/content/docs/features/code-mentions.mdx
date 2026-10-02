@@ -43,17 +43,53 @@ Hover over "base case", or move keyboard focus to it, to highlight lines 2 and 3
 
 Tag each line that belongs to a name. A name is one word, such as `base` or `parse-args`. One line can have more than one tag. The plugin removes the tags from the code and from the copied text.
 
+## Examples
+
+### Two names on one line
+
+Two names can share a line. Here, the call to `fetch` is part of the request and of the error handling:
+
+export const shared = `
+The [request](#mention:request) sends the form data. The [error handling](#mention:errors) turns a failed response into an exception.
+
+\`\`\`js title="submit.js"
+const response = await fetch('/api/signup', { method: 'POST', body: form }); // [!mention request] [!mention errors]
+if (!response.ok) { // [!mention errors]
+  throw new Error(\`Sign-up failed: \${response.status}\`); // [!mention errors]
+}
+\`\`\`
+`;
+
+<Example code={shared} layout="tabs">
+
+The [request](#mention:request) sends the form data. The [error handling](#mention:errors) turns a failed response into an exception.
+
+```js title="submit.js"
+const response = await fetch('/api/signup', { method: 'POST', body: form }); // [!mention request] [!mention errors]
+if (!response.ok) { // [!mention errors]
+  throw new Error(`Sign-up failed: ${response.status}`); // [!mention errors]
+}
+```
+
+</Example>
+
 ## Behaviour
 
-- A link pairs with the next code block in the same section that has lines with its name. A section ends at the next heading. If no block follows in the section, the link pairs with the nearest block before it.
-- In a [code switcher](/starlight-codeblocks/features/code-switcher/), only the variant that shows counts. Tag the same name in each variant, and the link follows the reader's choice.
-- Hovering over the link, or moving keyboard focus to it, highlights the tagged lines with a tint and a bar. The other lines of the block fade to 42% opacity.
-- Clicking the link keeps the highlight, and scrolls the block into view if it is not fully visible. The address of the page does not change.
-- The links have a dotted underline, which becomes solid on hover and focus. On hover, a link keeps its colour.
-- Screen readers read the tagged lines as the description of the link.
-- The fade and the scroll happen without animation when the reader's system asks for reduced motion.
-- A link with no matching block shows as plain text, and the build logs a warning with the file name.
-- Without JavaScript, the links do nothing, and they look like other links.
+- Which block a link pairs with:
+  - A link pairs with the next code block in the same section that has lines with its name. A section ends at the next heading. If no block follows in the section, the link pairs with the nearest block before it.
+  - In a [code switcher](/starlight-codeblocks/features/code-switcher/), only the variant that shows counts. Tag the same name in each variant, and the link follows the reader's choice.
+- Hover, focus and click:
+  - Hovering over the link, or moving keyboard focus to it, highlights the tagged lines with a tint and a bar. The other lines of the block fade to 42% opacity.
+  - Clicking the link keeps the highlight, and scrolls the block into view if it is not fully visible. The address of the page does not change.
+  - The links have a dotted underline, which becomes solid on hover and focus. On hover, a link keeps its colour.
+- Screen readers:
+  - Screen readers read the tagged lines as the description of the link.
+- Warnings:
+  - A link with no matching block shows as plain text, and the build logs a warning with the file name.
+- Without JavaScript:
+  - The links do nothing, and they look like other links.
+- Motion:
+  - The fade and the scroll happen without animation when the reader's system asks for reduced motion.
 
 ## Options
 
@@ -83,34 +119,6 @@ The function also skips links to [line permalinks](/starlight-codeblocks/feature
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
-## Examples
-
-Two names can share a line. Here, the call to `fetch` is part of the request and of the error handling:
-
-export const shared = `
-The [request](#mention:request) sends the form data. The [error handling](#mention:errors) turns a failed response into an exception.
-
-\`\`\`js title="submit.js"
-const response = await fetch('/api/signup', { method: 'POST', body: form }); // [!mention request] [!mention errors]
-if (!response.ok) { // [!mention errors]
-  throw new Error(\`Sign-up failed: \${response.status}\`); // [!mention errors]
-}
-\`\`\`
-`;
-
-<Example code={shared}>
-
-The [request](#mention:request) sends the form data. The [error handling](#mention:errors) turns a failed response into an exception.
-
-```js title="submit.js"
-const response = await fetch('/api/signup', { method: 'POST', body: form }); // [!mention request] [!mention errors]
-if (!response.ok) { // [!mention errors]
-  throw new Error(`Sign-up failed: ${response.status}`); // [!mention errors]
-}
-```
-
-</Example>
-
 ## Limitations
 
 - The build check reads links and tags in Markdown only. It does not see tags in a block from the `<Code>` component, so a link to that block shows as plain text.
@@ -120,4 +128,4 @@ if (!response.ok) { // [!mention errors]
 
 - [Focus](/starlight-codeblocks/features/focus/): blur every line outside a range for every reader, without a link.
 - [Line permalinks](/starlight-codeblocks/features/line-permalinks/): let readers link to lines, instead of the author.
-- [Side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/): notes next to the block that highlight their line on hover.
+- [Side annotations](/starlight-codeblocks/features/side-annotations/): notes next to the block that highlight their line on hover.

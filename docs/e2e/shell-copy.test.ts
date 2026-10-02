@@ -48,14 +48,14 @@ test('prompts are not selected or copied by the button, and output is muted', as
       '$ uv tool install ruff\nResolved 1 package in 180ms\nInstalled 1 executable: ruff\n$ ruff check src/ \\\n    --fix\nFound 3 errors (3 fixed, 0 remaining).',
     );
 
-  await expect(example(page, 1).locator('figure')).not.toHaveClass(/is-terminal/);
-  await example(page, 1).getByRole('button', { name: 'Copy commands' }).click();
+  await expect(example(page, 3).locator('figure')).not.toHaveClass(/is-terminal/);
+  await example(page, 3).getByRole('button', { name: 'Copy commands' }).click();
   await expect
     .poll(() => clipboard(page))
     .toBe(
       'from collections import Counter\ncounts = Counter(["ok", "ok", "failed"])\nfor status, n in counts.most_common():\n    print(f"{status:<8} {n}")\n',
     );
-  await example(page, 2).getByRole('button', { name: 'Copy commands' }).click();
+  await example(page, 1).getByRole('button', { name: 'Copy commands' }).click();
   await expect.poll(() => clipboard(page)).toBe('Get-ChildItem -Name\nGet-Content summary.txt');
 
   await block.evaluate((el) => {

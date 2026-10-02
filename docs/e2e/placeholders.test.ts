@@ -47,8 +47,8 @@ test('typing fills every field, the copied code and the playground link, and Esc
   await field.fill('a-much-longer-token-value');
   expect((await field.boundingBox())?.width ?? 0).toBeGreaterThan(empty * 2);
 
-  const link = output(page, 2).locator('a.scb-playground');
-  const playgroundField = output(page, 2).getByRole('textbox', { name: 'YOUR_TOKEN' });
+  const link = output(page, 1).locator('a.scb-playground');
+  const playgroundField = output(page, 1).getByRole('textbox', { name: 'YOUR_TOKEN' });
   await playgroundField.press('Escape');
   const before = (await link.getAttribute('href')) as string;
   await playgroundField.fill('tok_saved');
@@ -56,7 +56,7 @@ test('typing fills every field, the copied code and the playground link, and Esc
 
   await page.reload();
   await expect(token(page).nth(1)).toHaveValue('tok_saved');
-  await output(page, 2).getByRole('textbox', { name: 'YOUR_TOKEN' }).press('Escape');
+  await output(page, 1).getByRole('textbox', { name: 'YOUR_TOKEN' }).press('Escape');
   await expect(link).toHaveAttribute('href', before);
 });
 

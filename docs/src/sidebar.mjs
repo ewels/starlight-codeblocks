@@ -13,7 +13,7 @@ export const sidebar = [
     label: 'Explain code',
     items: [
       'features/annotations',
-      'features/side-by-side-annotations',
+      'features/side-annotations',
       'features/footnotes',
       'features/inline-callouts',
       'features/scrollycoding',
@@ -81,4 +81,4 @@ export const carouselGroups = sidebar
   .filter(({ ids }) => ids.length > 0);
 
 /** Pages that the sidebar and `llms.txt` leave out, such as demos that a feature page links to. */
-export const unlisted = ['features/side-by-side-annotations/wide', 'features/scrollycoding/wide'];
+export const unlisted = ['features/side-annotations/wide', 'features/scrollycoding/wide'];

@@ -5,13 +5,14 @@ description: Add numbered markers to lines. Each marker opens a note in a popove
 
 import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
 A comment in a code block explains a line. But it takes space in the code, and readers copy it with the code. An annotation moves the explanation out of the code. The line gets a small numbered marker, and the note opens in a popover when a reader clicks the marker.
 
 :::tip[Good for:]
 Additional helper info that most readers can skip.
 Takes up almost no additional space until a reader opens a marker.
-If readers need every note, use [footnotes](/starlight-codeblocks/features/footnotes/) or [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/).
+If readers need every note, use [footnotes](/starlight-codeblocks/features/footnotes/) or [side annotations](/starlight-codeblocks/features/side-annotations/).
 :::
 
 export const basic = `
@@ -22,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest # [!annotate] Uses ubuntu GitHub Actions runner
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v6  # [!annotate] Installs \`uv\` and caches its downloads between runs.
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # Pin sha [!annotate] Installs \`uv\` and caches its downloads between runs.
       - run: uv run pytest
 \`\`\`
 `;
@@ -37,10 +38,46 @@ Each `[!annotate]` comment is gone from the output. A numbered marker is in its 
 |---|---|
 | `[!annotate] note` | Comment at the end of a line |
 | `startNoteNumber={N}` | Code block fence line |
+| `annotations.style="filled"`, `annotations.style="outline"` | Code block fence line |
 
-The directive goes at the end of the line it explains. The note is the rest of the comment. It can hold inline code, links and bold text. The markers count from 1, in line order. To continue the numbers of an earlier block, add `startNoteNumber={N}` to the fence line, and the first marker is `N`.
+The directive goes at the end of the line it explains. The note is the rest of the comment. It can hold inline code, links and bold text. The markers count from 1, in line order. To continue the numbers of an earlier block, add `startNoteNumber={N}` to the fence line, and the first marker is `N`. `annotations.style` sets the style of the markers for one block.
 
-<LinkCard title="Side-by-side annotations" description="Use the same syntax to show every note in a column beside the code." href="/starlight-codeblocks/features/side-by-side-annotations/" />
+<LinkCard title="Side annotations" description="Use the same syntax to show every note in a column beside the code." href="/starlight-codeblocks/features/side-annotations/" />
+
+## Examples
+
+### A link in a note
+
+A note can hold a link, for a line that needs more explanation than a sentence:
+
+export const link = `
+\`\`\`ts title="retry.ts"
+export async function retry<T>(task: () => Promise<T>, attempts = 3): Promise<T> {
+  for (let i = 1; ; i++) {
+    try {
+      return await task();
+    } catch (error) {
+      if (i >= attempts) throw error; // [!annotate] Gives up and passes on the last error. See [Error handling](https://example.com/errors).
+      await new Promise((done) => setTimeout(done, 2 ** i * 100)); // [!annotate] Waits 200 ms, then 400 ms: an exponential backoff.
+    }
+  }
+}
+\`\`\`
+`;
+
+<Example code={link} layout="tabs" />
+
+### The outline style
+
+The `outline` style, for one block:
+
+export const outline = `
+\`\`\`js annotations.style="outline"
+const port = 8080 // [!annotate] The default port. Set \`PORT\` to change it.
+\`\`\`
+`;
+
+<Example code={outline} layout="tabs" />
 
 ## Behaviour
 
@@ -65,47 +102,28 @@ The directive goes at the end of the line it explains. The note is the rest of t
 
 ## Options
 
-Annotations have no options. Turn the feature off for the whole site with `annotations: false`:
+<Options />
+
+The `filled` style draws each marker as a circle filled with the accent colour. The `outline` style draws an outlined circle in the magenta of the theme, and fills it when the note is open. [Footnotes](/starlight-codeblocks/features/footnotes/) have the same two styles. To use outlined markers on the whole site:
 
 ```js title="astro.config.mjs"
 codeblocks({
-  annotations: false,
+  annotations: { style: 'outline' },
 });
 ```
 
-With `annotations: false`, the plugin does not know the `[!annotate]` directive. It leaves the comment in the code as written, and logs a build warning. Side-by-side annotations are off too.
+With `annotations: false`, the plugin does not know the `[!annotate]` directive. It leaves the comment in the code as written, and logs a build warning. Side annotations are off too.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-A note can hold a link, for a line that needs more explanation than a sentence:
-
-export const link = `
-\`\`\`ts title="retry.ts"
-export async function retry<T>(task: () => Promise<T>, attempts = 3): Promise<T> {
-  for (let i = 1; ; i++) {
-    try {
-      return await task();
-    } catch (error) {
-      if (i >= attempts) throw error; // [!annotate] Gives up and passes on the last error. See [Error handling](https://example.com/errors).
-      await new Promise((done) => setTimeout(done, 2 ** i * 100)); // [!annotate] Waits 200 ms, then 400 ms: an exponential backoff.
-    }
-  }
-}
-\`\`\`
-`;
-
-<Example code={link} />
 
 ## Limitations
 
 - The note is part of the source line. Long notes make long lines in the Markdown file.
 - An annotation applies to one line. For a note about a range of lines, put it on the first line of the range.
-- Readers see a note only when they open it. If readers need every note to follow the code, use [footnotes](/starlight-codeblocks/features/footnotes/) or [side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/).
+- Readers see a note only when they open it. If readers need every note to follow the code, use [footnotes](/starlight-codeblocks/features/footnotes/) or [side annotations](/starlight-codeblocks/features/side-annotations/).
 
 ## Related
 
 - [Inline callouts](/starlight-codeblocks/features/inline-callouts/): a short, always visible note above the line, with an arrow at one name.
 - [Footnotes](/starlight-codeblocks/features/footnotes/): numbered notes listed under the block, all visible at once.
-- [Side-by-side annotations](/starlight-codeblocks/features/side-by-side-annotations/): the same notes in a column beside the code.
+- [Side annotations](/starlight-codeblocks/features/side-annotations/): the same notes in a column beside the code.

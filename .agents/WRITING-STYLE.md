@@ -50,9 +50,9 @@ description: <One sentence, 25 words or fewer: what the feature does for readers
 <Two or three sentences on what the example shows.>
 
 ## Syntax        a "Syntax | Where" table of attributes and directives, with no Example column
-## Behaviour     what readers see and do: copied text, keyboard, reduced motion, no JavaScript
+## Examples      up to four real uses that the first example does not show, one sentence of context each, each <Example layout="tabs">
+## Behaviour     what readers see and do, as a list of short group labels with the details nested under them
 ## Options       generated with <Options />
-## Examples      two to four real uses, one sentence of context each
 ## Limitations   short list
 ## Related       other features, one sentence each on when to use them instead
 ```

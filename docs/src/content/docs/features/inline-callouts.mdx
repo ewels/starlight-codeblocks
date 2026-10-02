@@ -34,17 +34,54 @@ The comment line with `[!callout /signal/]` is gone from the output. The bubble 
 
 The directive goes at the end of the line it explains, or on its own line directly above it. `/text/` is literal text, not a regular expression. The arrow points at the first match on that line. Without `/text/`, the arrow points at the first character that is not a space. The note can hold inline code, links and bold text.
 
+## Examples
+
+### A callout for the whole line
+
+A callout without `/text/` points at the start of the line. This suits a note about the whole statement:
+
+export const noMatch = `
+\`\`\`py
+import sqlite3
+
+# [!callout] Creates the file if it does not exist yet.
+db = sqlite3.connect("notes.db")
+db.execute("CREATE TABLE IF NOT EXISTS notes (body TEXT)")
+\`\`\`
+`;
+
+<Example code={noMatch} hiddenAttributes="apiLinks=false" layout="tabs" />
+
+### Two callouts on one line
+
+Two callouts above one line explain two parts of it. The bubbles stack in source order:
+
+export const stacked = `
+\`\`\`ts
+// [!callout /retries/] How many times to try again after the first attempt.
+// [!callout /backoffMs/] The wait before each retry, in milliseconds.
+const client = createClient({ retries: 3, backoffMs: 250 });
+\`\`\`
+`;
+
+<Example code={stacked} layout="tabs" />
+
 ## Behaviour
 
-- The plugin removes the directive, and its line if the line holds nothing else. The bubble is above the target line.
-- The bubble starts 40 px to the left of the arrow, but never closer than 8 px to the edge of the block.
-- The bubble is at most 60 characters wide, or 90% of the block. Longer notes wrap inside the bubble, so the block does not get wider.
-- On a narrow screen, the target text can be past the right edge of the block. The bubble and its arrow then stay at the right edge, where the reader can see them.
-- Two callout lines above one line give two bubbles, in the order you wrote them.
-- If the lines above and below the callout have the same highlight, the callout has it too, so the highlight does not break. This works for marked, inserted and deleted lines and for [line states](/starlight-codeblocks/features/line-states/).
-- The copy button leaves callouts out. A manual selection of the code leaves them out too.
-- Screen readers read the bubble before its line. The bubble has the `note` role.
-- Callouts are plain HTML and CSS. They work without JavaScript, and they have no animation.
+- Where the bubble shows:
+  - The plugin removes the directive, and its line if the line holds nothing else. The bubble is above the target line.
+  - The bubble starts 40 px to the left of the arrow, but never closer than 8 px to the edge of the block.
+  - The bubble is at most 60 characters wide, or 90% of the block. Longer notes wrap inside the bubble, so the block does not get wider.
+  - On a narrow screen, the target text can be past the right edge of the block. The bubble and its arrow then stay at the right edge, where the reader can see them.
+  - Two callout lines above one line give two bubbles, in the order you wrote them.
+- Highlights:
+  - If the lines above and below the callout have the same highlight, the callout has it too, so the highlight does not break. This works for marked, inserted and deleted lines and for [line states](/starlight-codeblocks/features/line-states/).
+- Screen readers:
+  - Screen readers read the bubble before its line. The bubble has the `note` role.
+- Copy:
+  - The copy button leaves callouts out. A manual selection of the code leaves them out too.
+- Without JavaScript:
+  - Callouts are plain HTML and CSS. They work without JavaScript, and they have no animation.
 
 ## Options
 
@@ -59,34 +96,6 @@ codeblocks({
 With `callouts: false`, the plugin does not know the `[!callout]` directive. It leaves the directive line in the code as written, and logs a build warning.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-A callout without `/text/` points at the start of the line. This suits a note about the whole statement:
-
-export const noMatch = `
-\`\`\`py
-import sqlite3
-
-# [!callout] Creates the file if it does not exist yet.
-db = sqlite3.connect("notes.db")
-db.execute("CREATE TABLE IF NOT EXISTS notes (body TEXT)")
-\`\`\`
-`;
-
-<Example code={noMatch} hiddenAttributes="apiLinks=false" />
-
-Two callouts above one line explain two parts of it. The bubbles stack in source order:
-
-export const stacked = `
-\`\`\`ts
-// [!callout /retries/] How many times to try again after the first attempt.
-// [!callout /backoffMs/] The wait before each retry, in milliseconds.
-const client = createClient({ retries: 3, backoffMs: 250 });
-\`\`\`
-`;
-
-<Example code={stacked} />
 
 ## Limitations
 

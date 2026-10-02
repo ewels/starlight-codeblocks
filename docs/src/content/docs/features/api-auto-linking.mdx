@@ -31,18 +31,71 @@ API auto-linking has no syntax. It runs on every code block in a language that h
 |---|---|---|
 | `apiLinks=false` | Code block fence line | Turns the feature off for one code block |
 
+## Examples
+
+### Nextflow
+
+A Nextflow workflow gets links for the channel factory and for the process from nf-core:
+
+export const nextflowExample = `
+\`\`\`nextflow title="main.nf"
+include { FASTQC } from './modules/nf-core/fastqc/main'
+
+workflow {
+    reads = channel.fromFilePairs(params.reads)
+    FASTQC(reads)
+}
+\`\`\`
+`;
+
+<Example code={nextflowExample} layout="tabs" />
+
+### An adapter for your own names
+
+A site can link its own names with an adapter of its own. This site links the names that a block imports from starlight-codeblocks:
+
+export const siteAdapter = `
+\`\`\`js title="adapters.mjs"
+import { nextflow } from 'starlight-codeblocks/adapters/nextflow';
+import { python } from 'starlight-codeblocks/adapters/python';
+
+export const adapters = [python(), nextflow()];
+\`\`\`
+`;
+
+<Example code={siteAdapter} layout="tabs" />
+
+### Turn links off for one block
+
+With `apiLinks=false`, the same Python block has no links:
+
+export const off = `
+\`\`\`py title="report.py" apiLinks=false
+import json
+
+run = json.loads(text)
+\`\`\`
+`;
+
+<Example code={off} layout="tabs" />
+
 ## Behaviour
 
 An adapter finds the names in a code block and resolves each one against its indexes. It links a name only when it is certain about the name. All other names stay plain text.
 
-- A link has a dotted underline. On hover and on focus, the underline is solid and the link gets a faint background.
-- After 150 ms of hover, or at once on keyboard focus, a card opens under the link. It shows the signature, or the kind and the qualified name. Under that, it shows a summary, if the index has one, and the source of the link.
-- The source has the icon of its project, if [Simple Icons](https://simpleicons.org/) has one, such as Python, NumPy or Flask.
-- The card stays open while the mouse cursor is on the link or on the card. Press <kbd>Escape</kbd> to close it. The card closes when the link loses focus.
-- Screen readers get the text of the card as the description of the link.
-- Names inside strings and comments never link.
-- The copied text is the same as the code. Links and cards are not part of it.
-- Without JavaScript, the links work, but there is no card.
+- Links:
+  - A link has a dotted underline. On hover and on focus, the underline is solid and the link gets a faint background.
+  - Names inside strings and comments never link.
+- The card:
+  - After 150 ms of hover, or at once on keyboard focus, a card opens under the link. It shows the signature, or the kind and the qualified name. Under that, it shows a summary, if the index has one, and the source of the link.
+  - The source has the icon of its project, if [Simple Icons](https://simpleicons.org/) has one, such as Python, NumPy or Flask.
+  - The card stays open while the mouse cursor is on the link or on the card. Press <kbd>Escape</kbd> to close it. The card closes when the link loses focus.
+- Screen readers:
+  - Screen readers get the text of the card as the description of the link.
+- Copy:
+  - The copied text is the same as the code. Links and cards are not part of it.
+- Without JavaScript:
+  - The links work, but there is no card.
 
 Adapters load their indexes once for each build. An index that the build fetches from another site stays on disk in `node_modules/.cache/starlight-codeblocks/`, so later builds do not fetch it again. If a fetch fails and there is no copy on disk, the build logs a warning, and the names from that index stay plain text. The build does not fail.
 
@@ -118,48 +171,6 @@ nextflow({
   }),
 });
 ```
-
-## Examples
-
-A Nextflow workflow gets links for the channel factory and for the process from nf-core:
-
-export const nextflowExample = `
-\`\`\`nextflow title="main.nf"
-include { FASTQC } from './modules/nf-core/fastqc/main'
-
-workflow {
-    reads = channel.fromFilePairs(params.reads)
-    FASTQC(reads)
-}
-\`\`\`
-`;
-
-<Example code={nextflowExample} />
-
-A site can link its own names with an adapter of its own. This site links the names that a block imports from starlight-codeblocks:
-
-export const siteAdapter = `
-\`\`\`js title="adapters.mjs"
-import { nextflow } from 'starlight-codeblocks/adapters/nextflow';
-import { python } from 'starlight-codeblocks/adapters/python';
-
-export const adapters = [python(), nextflow()];
-\`\`\`
-`;
-
-<Example code={siteAdapter} />
-
-With `apiLinks=false`, the same Python block has no links:
-
-export const off = `
-\`\`\`py title="report.py" apiLinks=false
-import json
-
-run = json.loads(text)
-\`\`\`
-`;
-
-<Example code={off} />
 
 ## Limitations
 

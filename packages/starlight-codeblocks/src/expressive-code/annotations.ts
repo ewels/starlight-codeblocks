@@ -1,12 +1,21 @@
 import { type ExpressiveCodeLine, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { blockUid, type CodeblocksPlugin, lineElement, lineNumber, startNoteNumber, warn } from './core.ts';
+import { blockUid, type CodeblocksPlugin, lineElement, lineNumber, noteStyle, startNoteNumber, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
-import { hoverColour, litLine, PREFIX, tint } from './styles.ts';
+import {
+  hoverColour,
+  litLine,
+  type NoteStyle,
+  noteStyleVars,
+  type OutlineStyleSettings,
+  outlineColours,
+  PREFIX,
+  tint,
+} from './styles.ts';
 
-export interface AnnotationsStyleSettings {
+export interface AnnotationsStyleSettings extends OutlineStyleSettings {
   markerBackground: UnresolvedStyleValue;
   markerForeground: UnresolvedStyleValue;
   markerHoverBackground: UnresolvedStyleValue;
@@ -20,7 +29,7 @@ declare module '@expressive-code/core' {
   }
 }
 
-/** Container widths, in px, at which a side-by-side block can become two columns. */
+/** Container widths, in px, at which a block with side annotations can become two columns. */
 export const SIDE_SIZES = [600, 800, 1000];
 
 /**
@@ -70,6 +79,7 @@ const styleSettings = new PluginStyleSettings({
         hoverColour(context.resolveSetting('codeblocksAnnotations.markerBackground'), context),
       markerSize: '1.55em',
       lineBackground: (context) => tint(context.resolveSetting('codeblocks.accent'), context),
+      ...outlineColours('codeblocksAnnotations'),
     },
   },
 });
@@ -77,7 +87,7 @@ const styleSettings = new PluginStyleSettings({
 const cls = (suffix = '') => `${PREFIX}-annotation${suffix}`;
 
 /** Turns `[!annotate] text` into a numbered button after the code that opens the text in a popover. */
-export function pluginAnnotations(): CodeblocksPlugin {
+export function pluginAnnotations({ style: siteStyle = 'filled' }: { style?: NoteStyle } = {}): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:annotations',
     directives: {
@@ -93,6 +103,17 @@ export function pluginAnnotations(): CodeblocksPlugin {
     },
     styleSettings,
     baseStyles: ({ cssVar }) => `
+${noteStyleVars(
+  cssVar,
+  { attribute: 'data-scb-annotations', prefix: 'anno', group: 'codeblocksAnnotations' },
+  {
+    bg: cssVar('codeblocksAnnotations.markerBackground'),
+    fg: cssVar('codeblocksAnnotations.markerForeground'),
+    activeBg: cssVar('codeblocksAnnotations.markerHoverBackground'),
+    line: cssVar('codeblocksAnnotations.lineBackground'),
+    bar: cssVar('codeblocks.accent'),
+  },
+)}
 :is(.${cls()}, .${cls('-badge')}) {
   display: inline-flex;
   align-items: center;
@@ -101,26 +122,25 @@ export function pluginAnnotations(): CodeblocksPlugin {
   width: ${cssVar('codeblocksAnnotations.markerSize')};
   height: ${cssVar('codeblocksAnnotations.markerSize')};
   /* Forced colours remove the background, but draw the border. */
-  border: 1px solid transparent;
+  border: 1px solid var(--scb-anno-border);
   border-radius: 50%;
-  color: ${cssVar('codeblocksAnnotations.markerForeground')};
+  color: var(--scb-anno-fg);
   user-select: none;
   -webkit-user-select: none;
 }
 .${cls()} {
   margin-inline-start: 1.6ch;
   padding: 0;
-  background: ${cssVar('codeblocksAnnotations.markerBackground')};
+  background: var(--scb-anno-bg);
   font: 600 0.8em/1 ${cssVar('codeFontFamily')};
   vertical-align: 0.1em;
   cursor: pointer;
 }
-.${cls()}:hover, .${cls()}:focus-visible, .${cls()}:has(+ :popover-open) {
-  background: ${cssVar('codeblocksAnnotations.markerHoverBackground')};
-}
+.${cls()}:is(:hover, :focus-visible) { background: var(--scb-anno-hover-bg); }
+.${cls()}:has(+ :popover-open) { background: var(--scb-anno-active-bg); color: var(--scb-anno-active-fg); }
 /* On the timing of the hover note: it waits 80 ms, then grows for 160 ms. */
 @media (prefers-reduced-motion: no-preference) {
-  button.${cls()} { transition: background-color 160ms ease-out; }
+  button.${cls()} { transition: background-color 160ms ease-out, color 160ms ease-out; }
   button.${cls()}:hover { transition-delay: 80ms; }
 }
 /* The whole note fades, in and out, on the timing of the marker colour. */
@@ -140,7 +160,8 @@ export function pluginAnnotations(): CodeblocksPlugin {
 .${cls('-badge')} {
   flex: none;
   margin-block: calc((1.3125rem - ${cssVar('codeblocksAnnotations.markerSize')}) / 2);
-  background: ${cssVar('codeblocksAnnotations.markerHoverBackground')};
+  background: var(--scb-anno-active-bg);
+  color: var(--scb-anno-active-fg);
   font: 600 calc(0.8 * ${cssVar('codeFontSize')})/1 ${cssVar('codeFontFamily')};
 }
 /* Set by the script when the box fits beside the marker: the badge covers the marker. Keep in step with the padding above. */
@@ -163,8 +184,9 @@ export function pluginAnnotations(): CodeblocksPlugin {
 }
 /* The badge covers the marker and acts as it, and a click in a hover note keeps it. */
 .${cls('-badge')}, .${cls('-popover')}[data-scb-peek] { cursor: pointer; }
-.${cls('-num')} { cursor: default; }
-${litLine(`.${cls('-lit')}`, cssVar('codeblocksAnnotations.lineBackground'), cssVar('codeblocks.accent'))}
+.${cls('-num')}, .${cls('-notes')} li { cursor: pointer; }
+.ec-line:is(.${cls('-lit')}, .${cls('-pin')}) .${cls('-num')} { background: var(--scb-anno-active-bg); color: var(--scb-anno-active-fg); }
+${litLine(`.${cls('-lit')}, .${cls('-pin')}`, 'var(--scb-anno-line)', 'var(--scb-anno-bar)')}
 .${PREFIX}-side { container-type: inline-size; }
 ${breakoutStyles(
   `.${PREFIX}-side-grid`,
@@ -183,12 +205,15 @@ ${breakoutStyles(
 }
 .${cls('-notes')} li {
   margin: 0 0 0.625rem;
-  padding: 3px 0 3px 12px;
+  padding: 6px 10px 6px 12px;
   border-inline-start: 2px solid ${cssVar('borderColor')};
-  transition: border-color 150ms ease;
+  border-radius: ${cssVar('borderRadius')};
+  transition: border-color 150ms ease, background-color 150ms ease;
 }
-.${cls('-notes')} li.${cls('-on')}, .${cls('-notes')} li:focus-visible {
-  border-color: ${cssVar('codeblocks.accent')};
+.${cls('-notes')} li:is(.${cls('-on')}, .${cls('-pin')}, :focus-visible) {
+  border-color: var(--scb-anno-bar);
+  background: ${cssVar('codeBackground')};
+  color: ${cssVar('codeForeground')};
 }
 .${cls('-notes')} li:focus-visible {
   outline: 2px solid ${cssVar('codeblocks.focusRing')};
@@ -196,7 +221,7 @@ ${breakoutStyles(
 }
 .${cls('-note-num')} {
   margin-inline-end: 5px;
-  color: ${cssVar('codeblocks.accent')};
+  color: var(--scb-anno-bar);
   font: 600 0.75rem ${cssVar('codeFontFamily')};
 }
 .${cls('-notes')} code {
@@ -251,6 +276,7 @@ ${SIDE_SIZES.map(
           warn(context, `\`annotations="${mode}"\` must be \`"side"\`. The plugin ignores it.`);
         }
         const side = mode === 'side';
+        const style = noteStyle(context, 'annotations.style', siteStyle);
         const codeSide = codeBlock.metaOptions.getString('codeSide');
         if (codeSide !== undefined && (!side || !['left', 'right'].includes(codeSide))) {
           warn(
@@ -304,7 +330,7 @@ ${SIDE_SIZES.map(
           return h('li', inlineMarkdown(directive.text ?? ''));
         });
         if (!side) {
-          figure.properties.dataScbAnnotations = '';
+          figure.properties.dataScbAnnotations = style;
           figure.children.splice(
             figure.children.indexOf(pre) + 1,
             0,
@@ -327,7 +353,7 @@ ${SIDE_SIZES.map(
           'div',
           {
             class: `${PREFIX}-side ${PREFIX}-side-${size}${codeSide === 'right' ? ` ${PREFIX}-side-code-right` : ''} not-content`,
-            dataScbAnnotations: '',
+            dataScbAnnotations: style,
           },
           [h('div', { class: `${PREFIX}-side-grid` }, [renderData.blockAst, notes])],
         );

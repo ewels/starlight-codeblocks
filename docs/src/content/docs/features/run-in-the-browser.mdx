@@ -32,17 +32,66 @@ Click **Run in browser**. The first time, the browser downloads Python (Pyodide,
 
 The language of the block chooses the runtime. The plugin has a runtime for Python, and a site can add runtimes for other languages in the configuration. A language name or its alias works: `py` and `python` both use the Python runtime. Sites without Starlight add the Python runtime themselves, as in [Without Starlight](/starlight-codeblocks/reference/expressive-code-plugins/#without-starlight).
 
+## Examples
+
+### JavaScript, with standard error
+
+A JavaScript example runs with the runtime that this site adds in its [options](#options). `console.log()` goes to standard output and `console.error()` to standard error:
+
+export const js = `
+\`\`\`js runnable
+const sizes = [3, 1, 4, 1, 5];
+const total = sizes.reduce((sum, size) => sum + size, 0);
+console.log('Total:', total);
+console.error('Sizes of 1 are deprecated.');
+\`\`\`
+`;
+
+<Example code={js} layout="tabs" />
+
+### An error
+
+An error in Python shows the traceback, from the line of the example that failed:
+
+export const error = `
+\`\`\`py runnable
+counts = {"passed": 3, "failed": 0}
+print(counts["passed"] / counts["failed"])
+\`\`\`
+`;
+
+<Example code={error} layout="tabs" />
+
+### The timeout
+
+Code that never ends stops at the timeout. This loop waits for a value that never changes, so the panel shows the timeout message after 5 seconds:
+
+export const loop = `
+\`\`\`js runnable
+let ready = false;
+while (!ready) {}
+\`\`\`
+`;
+
+<Example code={loop} layout="tabs" />
+
 ## Behaviour
 
-- The runtime loads only when a reader clicks **Run in browser** for the first time. A page with runnable blocks loads a small script, and no runtime.
-- After the first run, the button reads **Run again**. Each run replaces the output of the run before it. The `label` and `againLabel` options change the two texts, for example for a site in another language.
-- The code that runs is the copied text of the block. Directives are removed, and hidden lines are kept. The values that readers type into [fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/) are part of it too. For a Python session with `>>>` prompts, only the commands run, as **Copy commands** copies them. They run as in the Python REPL, so the output shows the value of each expression.
-- The output panel has the label "Output". Standard output shows in green. Standard error shows in red, with a bar at its start, so the colour is not the only difference.
-- A run stops after 10 seconds, with a message in the panel. The download of the runtime and of the packages that the code imports does not count towards this time.
-- The Python runtime runs in a web worker, so the page stays responsive while code runs. Each run starts with no names from earlier runs, and `__name__` is `"__main__"`.
-- The output panel is a polite live region. Screen readers announce the loading message and the output when they change.
-- The button keeps the keyboard focus during a run, so readers can run the code again with <kbd>Enter</kbd> or <kbd>Space</kbd>.
-- The button does not print. Without JavaScript, the button is hidden.
+- Running code:
+  - The runtime loads only when a reader clicks **Run in browser** for the first time. A page with runnable blocks loads a small script, and no runtime.
+  - After the first run, the button reads **Run again**. Each run replaces the output of the run before it. The `label` and `againLabel` options change the two texts, for example for a site in another language.
+  - The code that runs is the copied text of the block. Directives are removed, and hidden lines are kept. The values that readers type into [fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/) are part of it too. For a Python session with `>>>` prompts, only the commands run, as **Copy commands** copies them. They run as in the Python REPL, so the output shows the value of each expression.
+  - The Python runtime runs in a web worker, so the page stays responsive while code runs. Each run starts with no names from earlier runs, and `__name__` is `"__main__"`.
+  - A run stops after 10 seconds, with a message in the panel. The download of the runtime and of the packages that the code imports does not count towards this time.
+- Output:
+  - The output panel has the label "Output". Standard output shows in green. Standard error shows in red, with a bar at its start, so the colour is not the only difference.
+- Keyboard and screen readers:
+  - The output panel is a polite live region. Screen readers announce the loading message and the output when they change.
+  - The button keeps the keyboard focus during a run, so readers can run the code again with <kbd>Enter</kbd> or <kbd>Space</kbd>.
+- Print:
+  - The button does not print.
+- Without JavaScript:
+  - The button is hidden.
 
 ## Options
 
@@ -62,43 +111,6 @@ codeblocks({
 The guide to [adding a runtime](/starlight-codeblocks/extend/add-a-runtime/) shows this runtime in full.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-A JavaScript example runs with the runtime from the configuration above. `console.log()` goes to standard output and `console.error()` to standard error:
-
-export const js = `
-\`\`\`js runnable
-const sizes = [3, 1, 4, 1, 5];
-const total = sizes.reduce((sum, size) => sum + size, 0);
-console.log('Total:', total);
-console.error('Sizes of 1 are deprecated.');
-\`\`\`
-`;
-
-<Example code={js} />
-
-An error in Python shows the traceback, from the line of the example that failed:
-
-export const error = `
-\`\`\`py runnable
-counts = {"passed": 3, "failed": 0}
-print(counts["passed"] / counts["failed"])
-\`\`\`
-`;
-
-<Example code={error} />
-
-Code that never ends stops at the timeout. This loop waits for a value that never changes, so the panel shows the timeout message after 5 seconds:
-
-export const loop = `
-\`\`\`js runnable
-let ready = false;
-while (!ready) {}
-\`\`\`
-`;
-
-<Example code={loop} />
 
 ## Limitations
 

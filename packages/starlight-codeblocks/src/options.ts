@@ -73,8 +73,8 @@ export interface CodeblocksOptions {
   lineStates?: false | { states?: Record<string, LineStateDefinition>; prefix?: boolean };
   notation?: false | { comments?: Record<string, string[]> };
   callouts?: false;
-  annotations?: false;
-  footnotes?: false | { sticky?: boolean };
+  annotations?: false | { style?: 'filled' | 'outline' };
+  footnotes?: false | { sticky?: boolean; style?: 'filled' | 'outline' };
   hiddenLines?: false;
   shellCopy?: false | { prompts?: string[] };
   wordDiff?: false | { minSimilarity?: number };
@@ -151,6 +151,13 @@ const reservedStateNames = new Set(
   ),
 );
 
+const noteStyleField = (marks: string, fallback: 'filled' | 'outline', extra = ''): Field => ({
+  type: "'filled' | 'outline'",
+  default: fallback,
+  description: `Filled ${marks} in the accent colour, or outlined ${marks} in the magenta of the theme.${extra} A code block can set its own on its fence line.`,
+  valid: oneOf('filled', 'outline'),
+});
+
 /** Every option, with its type, default and description. The docs reference tables read this. */
 export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   focus: {
@@ -211,7 +218,13 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     },
   },
   callouts: { description: 'Shows a note in a bubble above a line.', page: 'features/inline-callouts' },
-  annotations: { description: 'Adds numbered markers that open a note.', page: 'features/annotations' },
+  annotations: {
+    description: 'Adds numbered markers that open a note.',
+    page: 'features/annotations',
+    fields: {
+      style: noteStyleField('markers', 'filled', ' Side annotations use it too.'),
+    },
+  },
   footnotes: {
     description: 'Adds numbered badges to lines, with the notes in a list under the block.',
     page: 'features/footnotes',
@@ -223,6 +236,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
           'Keep the list of footnotes in view while the block is on screen. A code block can set its own on its fence line.',
         valid: (value) => typeof value === 'boolean',
       },
+      style: noteStyleField('badges', 'outline'),
     },
   },
   hiddenLines: {

@@ -29,14 +29,31 @@ The colour cycles every three levels, so the outermost call and the innermost ca
 | `brackets` | Code block fence line |
 | `brackets=false` | Code block fence line |
 
+## Examples
+
+### Brackets inside a string
+
+Brackets inside a string stay the normal string colour:
+
+export const strings = `
+\`\`\`js brackets
+const pattern = "(group)";
+\`\`\`
+`;
+
+<Example code={strings} layout="tabs" />
+
 ## Behaviour
 
-- `()`, `[]` and `{}` cycle through three colours by nesting depth.
-- Brackets inside a string or a comment keep the normal syntax colour, so they do not compete with the real structure of the code.
-- A bracket with no partner, such as one from an incomplete example, keeps its normal colour.
-- Hovering over a bracket outlines it and its matching partner with a solid line. The pair then stands out by shape, not only by colour.
-- Readers who use caret browsing (F7 in most browsers) get the same outline when the caret is on a bracket.
-- The colours work without JavaScript. The outline needs JavaScript, and does nothing without it.
+- Colours:
+  - `()`, `[]` and `{}` cycle through three colours by nesting depth.
+  - Brackets inside a string or a comment keep the normal syntax colour, so they do not compete with the real structure of the code.
+  - A bracket with no partner, such as one from an incomplete example, keeps its normal colour.
+- Matching pairs:
+  - Hovering over a bracket outlines it and its matching partner with a solid line. The pair then stands out by shape, not only by colour.
+  - Readers who use caret browsing (F7 in most browsers) get the same outline when the caret is on a bracket.
+- Without JavaScript:
+  - The colours work without JavaScript. The outline needs JavaScript, and does nothing without it.
 
 ## Options
 
@@ -55,34 +72,6 @@ Each name also covers the other names of its language, so `js` also turns on the
 To turn the colours off for one block of those languages, add `brackets=false` to its fence line. The fence line is the first line of the code block, with the language.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-Nested brackets do not have to sit on the same line. In a multi-line call, colour keeps an opening bracket connected to its closing partner, however far apart they fall:
-
-export const multiline = `
-\`\`\`js brackets
-const server = createServer({
-  routes: [
-    route('/users/:id', (req) => {
-      return db.users.find({ id: req.params.id });
-    }),
-  ],
-});
-\`\`\`
-`;
-
-<Example code={multiline} />
-
-Brackets inside a string stay the normal string colour:
-
-export const strings = `
-\`\`\`js brackets
-const pattern = "(group)";
-\`\`\`
-`;
-
-<Example code={strings} />
 
 ## Limitations
 

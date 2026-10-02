@@ -36,15 +36,61 @@ The new `timeout` line adds `options.timeout ??`, and `3` becomes `options.retri
 
 Word-level diff applies to every removed line that has an added line below it, from any of these sources. You do not turn it on. `wordDiff=false` turns it off for one block.
 
+## Examples
+
+### With `ins` and `del`
+
+The `ins` and `del` attributes give the same result as a `diff` block, without changing the language of the block:
+
+export const attributes = `
+\`\`\`js title="server.js" ins={2} del={1}
+const port = 3000;
+const port = Number(process.env.PORT ?? 3000);
+\`\`\`
+`;
+
+<Example code={attributes} layout="tabs" />
+
+### With directives
+
+`[!code --]` and `[!code ++]` move with their line when you edit the code:
+
+export const directives = `
+\`\`\`py title="config.py"
+TIMEOUT = 30  # [!code --]
+TIMEOUT = 60  # [!code ++]
+\`\`\`
+`;
+
+<Example code={directives} layout="tabs" />
+
+### Lines too different to compare
+
+A rewritten line is too different to compare, so it keeps a plain diff tint:
+
+export const different = `
+\`\`\`diff lang="js"
+-const total = a + b;
++export function computeGrandTotal(items) {
++  return items.reduce((sum, item) => sum + item.price, 0);
++}
+\`\`\`
+`;
+
+<Example code={different} layout="tabs" />
+
 ## Behaviour
 
-- The plugin pairs a run of removed lines with the run of added lines below it, one by one.
-- Each pair is compared token by token: words, runs of whitespace and single punctuation characters.
-- The changed tokens get a stronger tint and a bar in the diff colour. Whitespace between two changed tokens is part of the highlight, so a run of changed words tints as one block.
-- Changed words have a bar under them, and removed words also have a line through them, so the change does not rely on colour.
-- If a pair is less than 40% similar, it is too different to compare. The plugin leaves the whole-line tints in place and adds no word highlight.
-- The plugin corrects the colour of each changed word to 4.5:1 contrast on the tint. In dark themes, this can turn the syntax colours of the words close to plain text.
-- Word-level diff needs no JavaScript in the browser.
+- Pairing lines:
+  - The plugin pairs a run of removed lines with the run of added lines below it, one by one.
+  - Each pair is compared token by token: words, runs of whitespace and single punctuation characters.
+  - If a pair is less than 40% similar, it is too different to compare. The plugin leaves the whole-line tints in place and adds no word highlight.
+- Highlights:
+  - The changed tokens get a stronger tint and a bar in the diff colour. Whitespace between two changed tokens is part of the highlight, so a run of changed words tints as one block.
+  - Changed words have a bar under them, and removed words also have a line through them, so the change does not rely on colour.
+  - The plugin corrects the colour of each changed word to 4.5:1 contrast on the tint. In dark themes, this can turn the syntax colours of the words close to plain text.
+- Without JavaScript:
+  - Word-level diff needs no JavaScript in the browser.
 
 ## Options
 
@@ -59,43 +105,6 @@ codeblocks({
 ```
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-The `ins` and `del` attributes give the same result as a `diff` block, without changing the language of the block:
-
-export const attributes = `
-\`\`\`js title="server.js" ins={2} del={1}
-const port = 3000;
-const port = Number(process.env.PORT ?? 3000);
-\`\`\`
-`;
-
-<Example code={attributes} />
-
-`[!code --]` and `[!code ++]` move with their line when you edit the code:
-
-export const directives = `
-\`\`\`py title="config.py"
-TIMEOUT = 30  # [!code --]
-TIMEOUT = 60  # [!code ++]
-\`\`\`
-`;
-
-<Example code={directives} />
-
-A rewritten line is too different to compare, so it keeps a plain diff tint:
-
-export const different = `
-\`\`\`diff lang="js"
--const total = a + b;
-+export function computeGrandTotal(items) {
-+  return items.reduce((sum, item) => sum + item.price, 0);
-+}
-\`\`\`
-`;
-
-<Example code={different} />
 
 ## Limitations
 

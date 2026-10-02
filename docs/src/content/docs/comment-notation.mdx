@@ -240,13 +240,16 @@ app.listen(PORT, () => console.log('Listening on', PORT)); // [!mention app]
 
 The plugin reads the directives when the site builds. It needs no JavaScript in the browser.
 
-- The plugin removes every directive from the rendered code and from the copied text.
-- If a comment holds only directives, the plugin removes the whole comment and the whitespace before it. Other text in the comment stays.
-- In JSX, TSX and MDX, the plugin also reads comments in braces, `{/* [!code focus] */}`, and removes the braces with the comment.
-- The copy button leaves out messages, annotations, callouts and footnotes.
-- `[!code highlight]`, `[!code ++]` and `[!code --]` give the same result as the `mark`, `ins` and `del` attributes of Expressive Code. Text after them shows as a message, as for [line states](/starlight-codeblocks/features/line-states/).
-- A backslash after the bracket, as in `[\!code focus]`, turns a directive into plain text. The plugin removes the backslash.
-- Inline code, links and bold in the text of a directive render as HTML. Other Markdown stays as text.
+- Removing directives:
+  - The plugin removes every directive from the rendered code and from the copied text.
+  - If a comment holds only directives, the plugin removes the whole comment and the whitespace before it. Other text in the comment stays.
+  - In JSX, TSX and MDX, the plugin also reads comments in braces, `{/* [!code focus] */}`, and removes the braces with the comment.
+  - A backslash after the bracket, as in `[\!code focus]`, turns a directive into plain text. The plugin removes the backslash.
+- Expressive Code markers:
+  - `[!code highlight]`, `[!code ++]` and `[!code --]` give the same result as the `mark`, `ins` and `del` attributes of Expressive Code. Text after them shows as a message, as for [line states](/starlight-codeblocks/features/line-states/).
+- Text and copy:
+  - Inline code, links and bold in the text of a directive render as HTML. Other Markdown stays as text.
+  - The copy button leaves out messages, annotations, callouts and footnotes.
 
 ### Line numbers
 

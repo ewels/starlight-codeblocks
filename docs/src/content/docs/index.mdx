@@ -38,13 +38,13 @@ jobs:
     runs-on: ubuntu-latest # [!annotate] Uses ubuntu GitHub Actions runner
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v6  # [!annotate] Installs `uv` and caches its downloads between runs.
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # Pin sha [!annotate] Installs `uv` and caches its downloads between runs.
       - run: uv run pytest
 ```
 
 </Feature>
 
-<Feature page="features/side-by-side-annotations" tall>
+<Feature page="features/side-annotations" tall>
 
 ```py title="report.py" annotations="side" apiLinks=false
 import csv

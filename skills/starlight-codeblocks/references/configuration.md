@@ -22,8 +22,8 @@ codeblocks({
 | `lineStates` | `states`: custom states by name, each `{ label, colour: { dark, light } }`. `prefix`: `false` leaves the name out of labels with a message | Line states |
 | `notation` | `comments`: comment syntax for each language, added to the built-in map | Comment notation |
 | `callouts` | None | Inline callouts |
-| `annotations` | None | Annotations and side-by-side annotations |
-| `footnotes` | `sticky`: default `false` | Footnotes |
+| `annotations` | `style`: `'filled'` or `'outline'`, default `'filled'` | Annotations and side annotations |
+| `footnotes` | `sticky`: default `false`. `style`: `'filled'` or `'outline'`, default `'outline'` | Footnotes |
 | `hiddenLines` | None | Hidden lines |
 | `shellCopy` | `prompts`: default `['$ ', '> ']`. Python `>>>` sessions need no prompt setting | Smart shell copy |
 | `wordDiff` | `minSimilarity`: from 0 to 1, default `0.4` | Word-level diff |
@@ -52,6 +52,10 @@ Put a setting on the fence line, with its name from `codeblocks()`, to change it
 - `lineStates.prefix=true`
 - `footnotes.sticky=false`
 - `footnotes.sticky=true`
+- `footnotes.style="filled"`
+- `footnotes.style="outline"`
+- `annotations.style="filled"`
+- `annotations.style="outline"`
 - `shellCopy.prompts="<text>"` (repeat it for more prompts)
 - `wordDiff.minSimilarity=<0-1>`
 - `expandable.lines=<N>`

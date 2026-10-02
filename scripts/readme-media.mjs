@@ -199,7 +199,7 @@ const features = [
       }
     },
   },
-  { slug: 'side-by-side-annotations' },
+  { slug: 'side-annotations' },
   { slug: 'inline-code-highlighting' },
   {
     slug: 'run-in-the-browser',

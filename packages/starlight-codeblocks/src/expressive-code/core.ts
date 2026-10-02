@@ -28,7 +28,7 @@ import { decodeCode, encodeCode } from '../client/shared/copy.ts';
 import { getRegistry } from '../registry.ts';
 import type { DirectiveSpecs } from './notation.ts';
 import { parseRange, RangeSyntaxError } from './ranges.ts';
-import { baseStyles, PREFIX, styleSettings } from './styles.ts';
+import { baseStyles, type NoteStyle, PREFIX, styleSettings } from './styles.ts';
 
 /** An Expressive Code plugin that can declare directives for the notation plugin. */
 export interface CodeblocksPlugin extends ExpressiveCodePlugin {
@@ -225,6 +225,16 @@ export function startNoteNumber(context: Context) {
   warn(context, `\`${option.raw.trim()}\` must be a whole number of 1 or more. The plugin ignores it.`);
   return 1;
 }
+
+/** The note style of the block, from the fence line attribute `key`, or `fallback`. */
+export const noteStyle = (context: Context, key: string, fallback: NoteStyle) =>
+  blockSetting<NoteStyle>(
+    context,
+    key,
+    (raw) => (raw === 'filled' || raw === 'outline' ? raw : undefined),
+    fallback,
+    '`"filled"` or `"outline"`',
+  );
 
 /** Parses `true` or `false`, for `blockSetting()`. */
 export const parseBoolean = (raw: string) => (raw === 'true' ? true : raw === 'false' ? false : undefined);

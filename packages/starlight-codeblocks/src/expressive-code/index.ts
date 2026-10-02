@@ -94,7 +94,7 @@ export function createPlugins(options: ResolvedOptions, base?: string): Expressi
     pluginWalkthrough(),
     // After hidden lines, so that a callout sits between a hidden lines marker and its line.
     ...(options.callouts ? [pluginCallouts()] : []),
-    ...(options.annotations ? [pluginAnnotations()] : []),
+    ...(options.annotations ? [pluginAnnotations(options.annotations)] : []),
     ...(options.footnotes ? [pluginFootnotes(options.footnotes)] : []),
   ];
 }

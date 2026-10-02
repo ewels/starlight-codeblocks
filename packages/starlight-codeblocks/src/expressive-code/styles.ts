@@ -3,6 +3,7 @@ import {
   getFirstStaticColor,
   lighten,
   mix,
+  onBackground,
   PluginStyleSettings,
   type ResolverContext,
   type StyleResolverFn,
@@ -76,6 +77,75 @@ export const hoverColour = (colour: string, context: Context) => mix(colour, sol
 
 /** A tint of `colour` light enough for every syntax colour as it is, so that a line keeps its colours when it lights up. */
 export const tint = (colour: string, { theme }: Context) => setAlpha(colour, theme.type === 'dark' ? 0.1 : 0.12);
+
+/** Note styles of annotations and footnotes: a filled marker in the accent, or an outlined one in the theme's magenta. */
+export type NoteStyle = 'filled' | 'outline';
+
+/** Default colours of the `outline` note style, for the style settings group `group`. */
+export const outlineColours = (group: string) => {
+  const get = (context: Context, key: string) => context.resolveSetting(`${group}.${key}` as never) as string;
+  return {
+    outlineAccent: (context: Context) => onCode(context, themeColour(context, 'terminal.ansiMagenta'), 4.5),
+    outlineLineBackground: (context: Context) =>
+      onBackground(setAlpha(get(context, 'outlineAccent'), 0.1), solidCodeBackground(context)),
+    // Readable on the code and on the tint of an active line.
+    outlineNumberForeground: (context: Context) =>
+      ensureColorContrastOnBackground(
+        onCode(context, mix(get(context, 'outlineAccent'), solidCodeForeground(context), 0.3), 4.5),
+        get(context, 'outlineLineBackground'),
+        4.5,
+      ),
+    outlineActiveForeground: (context: Context) =>
+      ensureColorContrastOnBackground(solidCodeBackground(context), get(context, 'outlineAccent'), 4.5),
+  };
+};
+
+/**
+ * The CSS variables `--scb-<prefix>-*` of both note styles, on the element whose `attribute` holds the block's style.
+ * `filled` gives the colours of the filled style; the outline style reads the `outline*` settings of `group`.
+ */
+export const noteStyleVars = (
+  cssVar: ResolverContext['cssVar'],
+  { attribute, prefix, group }: { attribute: string; prefix: string; group: string },
+  filled: { bg: string; fg: string; activeBg: string; line: string; bar: string; num?: string },
+) => {
+  const o = (key: string) => cssVar(`${group}.${key}` as never);
+  const styles = {
+    filled: { border: 'transparent', ...filled, hoverBg: filled.activeBg, activeFg: filled.fg },
+    outline: {
+      border: o('outlineAccent'),
+      bg: 'transparent',
+      fg: o('outlineNumberForeground'),
+      hoverBg: `color-mix(in srgb, ${o('outlineAccent')} 18%, transparent)`,
+      activeBg: o('outlineAccent'),
+      activeFg: o('outlineActiveForeground'),
+      line: o('outlineLineBackground'),
+      bar: o('outlineAccent'),
+      num: o('outlineNumberForeground'),
+    },
+  };
+  return Object.entries(styles)
+    .map(
+      ([style, vars]) =>
+        `[${attribute}='${style}'] { ${Object.entries(vars)
+          .map(
+            ([key, value]) => `--${PREFIX}-${prefix}-${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}: ${value};`,
+          )
+          .join(' ')} }`,
+    )
+    .join('\n');
+};
+
+/** The style settings that `outlineColours()` fills. */
+export interface OutlineStyleSettings {
+  /** The marker border, the bar of a lit line and the background of an active marker. */
+  outlineAccent: UnresolvedStyleValue;
+  /** Marker and list numbers. Needs 4.5:1 on the code background and on `outlineLineBackground`. */
+  outlineNumberForeground: UnresolvedStyleValue;
+  /** The number of an active marker, on `outlineAccent`. */
+  outlineActiveForeground: UnresolvedStyleValue;
+  outlineLineBackground: UnresolvedStyleValue;
+}
 
 // Every colour comes from the theme, so that any Expressive Code theme, dark or light, keeps its look and contrast.
 export const styleSettings = new PluginStyleSettings({

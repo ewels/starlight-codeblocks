@@ -10,7 +10,7 @@ The first release. It adds these features to Starlight code blocks, on top of Ex
 - Inline callouts
 - Annotations
 - Footnotes
-- Side-by-side annotations
+- Side annotations
 - Hidden lines
 - Smart shell copy
 - Word-level diff

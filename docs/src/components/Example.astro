@@ -1,5 +1,5 @@
 ---
-import { Code } from '@astrojs/starlight/components';
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 import { keepTrailingWhitespace } from '../../../packages/starlight-codeblocks/src/expressive-code/whitespace.ts';
 
 interface Props {
@@ -8,8 +8,11 @@ interface Props {
    * prose or a directive, put the same Markdown between the tags too. `scripts/examples.test.mjs` checks that they match.
    */
   code: string;
-  /** `side` puts the two panes next to each other when there is room, the output first. */
-  layout?: 'stack' | 'side';
+  /**
+   * `side` puts the two panes next to each other when there is room, the output first. `tabs` puts
+   * them in **Output** and **Source** tabs.
+   */
+  layout?: 'stack' | 'side' | 'tabs';
   /**
    * Attributes for the fence line of each rendered block that the source pane leaves out, such as
    * `apiLinks=false` to keep another feature out of the example. Live Markdown must include them.
@@ -25,22 +28,41 @@ const blocks = [...code.matchAll(/^(`{3,}|~{3,})([^\s`]*)[ \t]*(.*)\n([\s\S]*?)\
 if (!live && blocks.length === 0) throw new Error(`<Example> found no fenced code block in:\n${code}`);
 ---
 
-<div class:list={['example', layout]}>
-  <div class:list={['pane output', { 'not-content': !live }]}>
-    <p class="label not-content">Readers see</p>
-    {live ? <slot /> : blocks.map((block) => <Code {...block} />)}
-  </div>
-  <div class="pane source not-content">
-    <p class="label">You write</p>
-    <Code code={code.trim()} lang="md" meta={keepTrailingWhitespace(code.trim(), '')} />
-  </div>
-</div>
+{
+  layout === 'tabs' ? (
+    <div class="example tabs">
+      <Tabs>
+        <TabItem label="Output">
+          <div class:list={['pane output', { 'not-content': !live }]}>
+            {live ? <slot /> : blocks.map((block) => <Code {...block} />)}
+          </div>
+        </TabItem>
+        <TabItem label="Source">
+          <div class="pane source not-content">
+            <Code code={code.trim()} lang="md" meta={keepTrailingWhitespace(code.trim(), '')} />
+          </div>
+        </TabItem>
+      </Tabs>
+    </div>
+  ) : (
+    <div class:list={['example', layout]}>
+      <div class:list={['pane output', { 'not-content': !live }]}>
+        <p class="label not-content">Readers see</p>
+        {live ? <slot /> : blocks.map((block) => <Code {...block} />)}
+      </div>
+      <div class="pane source not-content">
+        <p class="label">You write</p>
+        <Code code={code.trim()} lang="md" meta={keepTrailingWhitespace(code.trim(), '')} />
+      </div>
+    </div>
+  )
+}
 
 <style>
   .example {
     margin-top: 1.5rem;
   }
-  .pane + .pane {
+  .stack > .pane + .pane {
     margin-top: 1rem;
   }
   .side {

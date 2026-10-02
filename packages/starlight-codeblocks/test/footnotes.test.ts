@@ -15,7 +15,7 @@ test('turns [!ref] into a badge on the next line, described by an item in the li
   expect(html).toContain(
     `<ol class="scb-footnotes"><li id="${note}" tabindex="-1" data-scb-fn="1"><a class="scb-footnote-num" href="#${ref}" aria-label="Footnote 1, for line 2">1.</a><span id="${note}-text">Creates <code>app</code>.</span></li></ol>`,
   );
-  expect(html).toContain('data-scb-footnotes=""');
+  expect(html).toContain('data-scb-footnotes="outline"');
   expect(html).not.toContain('[!ref]');
   expect(copyText).toBe('import os\napp = 1');
   expect(warnings).toEqual([]);
@@ -43,6 +43,19 @@ test('makes the list sticky with footnotes="sticky" or the site option, static w
   );
 });
 
+test('is outlined by default, filled with the style option, and a block can set its own with footnotes.style', async () => {
+  const md = (attr: string) => block(`py ${attr}`, '# [!ref] Note', 'a = 1');
+  expect((await render(md(''))).html).toContain('data-scb-footnotes="outline"');
+  expect((await render(md(''), { footnotes: { style: 'filled' } })).html).toContain('data-scb-footnotes="filled"');
+  expect((await render(md('footnotes.style="filled"'))).html).toContain('data-scb-footnotes="filled"');
+  expect((await render(md('footnotes.style="outline"'), { footnotes: { style: 'filled' } })).html).toContain(
+    'data-scb-footnotes="outline"',
+  );
+  const bad = await render(md('footnotes.style="dotted"'));
+  expect(bad.html).toContain('data-scb-footnotes="outline"');
+  expect(bad.warnings.join('\n')).toContain('`footnotes.style="dotted"` must be `"filled"` or `"outline"`');
+});
+
 test('leaves an escaped [\\!ref], a block without footnotes and a block with the feature off alone', async () => {
   const escaped = await render(block('py', '# [\\!ref] Note', 'a = 1'));
   expect(escaped.html).toContain('[!ref] Note');
@@ -62,6 +75,7 @@ test('footnote colours meet their contrast targets in both themes', async () => 
     expect(getColorContrast(get('numberForeground'), bg), v.name).toBeGreaterThanOrEqual(4.5);
     expect(getColorContrast(get('accent'), bg), v.name).toBeGreaterThanOrEqual(3);
     expect(getColorContrast(get('activeForeground'), get('accent')), v.name).toBeGreaterThanOrEqual(4.5);
+    expect(getColorContrast(get('activeForeground'), get('activeBackground')), v.name).toBeGreaterThanOrEqual(4.5);
     expect(getColorContrast(get('numberForeground'), get('lineBackground')), v.name).toBeGreaterThanOrEqual(4.5);
   }
 });

@@ -191,7 +191,7 @@ const mark = (block: Element | null | undefined, n?: string) => {
   }
 };
 
-/** Lights the note and the line number of `n` in the side-by-side block of `el`, and nothing elsewhere. */
+/** Lights the note and the line number of `n` in the block with side annotations of `el`, and nothing elsewhere. */
 function light(el: Element | null, n?: string) {
   const block = el?.closest('[data-scb-annotations]');
   if (lit === block && litN === n) return;
@@ -206,7 +206,34 @@ const over = (event: Event) => {
   light(target, target.closest?.<HTMLElement>('[data-scb-anno]')?.dataset.scbAnno);
 };
 
-/** A focused side-by-side note opens its lines when an expandable block or hidden lines hide them. */
+const PIN = 'scb-annotation-pin';
+
+/** A click on a side annotation or its number toggles its highlight, and several can stay on. A click elsewhere clears them. */
+function pin(event: MouseEvent | KeyboardEvent) {
+  const target = event.target as Element;
+  const el = target.closest?.<HTMLElement>('.scb-annotation-notes li[data-scb-anno], .scb-annotation-num');
+  const block = el?.closest('[data-scb-annotations]');
+  if (event.type === 'keydown') {
+    if (!el?.matches('li') || ((event as KeyboardEvent).key !== 'Enter' && (event as KeyboardEvent).key !== ' '))
+      return;
+    event.preventDefault();
+  }
+  if (!el || !block) {
+    if (event.type === 'click') for (const on of document.querySelectorAll(`.${PIN}`)) on.classList.remove(PIN);
+    return;
+  }
+  if (target.closest('a[href]')) return;
+  const n = (el.matches('li') ? el : el.closest<HTMLElement>('.ec-line'))?.dataset.scbAnno?.split(' ')[0];
+  const note = block.querySelector(`.scb-annotation-notes li[data-scb-anno="${n}"]`);
+  const on = !note?.classList.contains(PIN);
+  note?.classList.toggle(PIN, on);
+  const pinned = [...block.querySelectorAll<HTMLElement>(`li.${PIN}`)].map((li) => li.dataset.scbAnno);
+  for (const line of block.querySelectorAll<HTMLElement>('.ec-line[data-scb-anno]')) {
+    line.classList.toggle(PIN, line.dataset.scbAnno?.split(' ').some((m) => pinned.includes(m)) ?? false);
+  }
+}
+
+/** A focused side annotation opens its lines when an expandable block or hidden lines hide them. */
 function show(event: FocusEvent) {
   const note = (event.target as Element).closest?.<HTMLElement>('.scb-annotation-notes li[data-scb-anno]');
   const on = note?.dataset.scbAnno?.split(' ') ?? [];
@@ -250,7 +277,7 @@ let ready = false;
 
 /**
  * Places annotation popovers beside their marker when they fit (the `popover` attribute does the rest),
- * and links each side-by-side note with its line on hover and focus.
+ * and links each side annotation with its line on hover and focus.
  */
 export default function initAnnotations() {
   if (!ready) {
@@ -267,6 +294,8 @@ export default function initAnnotations() {
     document.addEventListener('mouseover', over);
     document.addEventListener('focusin', over);
     document.addEventListener('focusin', show);
+    document.addEventListener('click', pin);
+    document.addEventListener('keydown', pin);
     document.addEventListener('focusout', () => light(null));
     document.addEventListener('mouseout', (event) => event.relatedTarget || light(null));
   }

@@ -27,7 +27,7 @@ test('each <Example> with live Markdown shows the same Markdown as its source pa
   for (const page of pages) {
     const text = readFileSync(join(root, page), 'utf8');
     for (const [, name, , hidden, live] of text.matchAll(
-      /<Example code=\{(\w+)\}( hiddenAttributes="([^"]*)")?>\n([\s\S]*?)\n<\/Example>/g,
+      /<Example code=\{(\w+)\}( hiddenAttributes="([^"]*)")?(?: layout="\w+")?>\n([\s\S]*?)\n<\/Example>/g,
     )) {
       assert.equal(
         unescapeMdx(live.trim()),
@@ -45,7 +45,9 @@ test("the home page carousel shows the same example as each feature page's first
   let checked = 0;
   for (const [, pageId, slide] of indexText.matchAll(/<Feature page="([^"]+)"[^>]*>\n([\s\S]*?)\n<\/Feature>/g)) {
     const pageText = readFileSync(join(root, `${pageId}.mdx`), 'utf8');
-    const example = pageText.match(/<Example code=\{(\w+)\}(?:\s+hiddenAttributes="([^"]*)")?\s*\/?>/);
+    const example = pageText.match(
+      /<Example code=\{(\w+)\}(?:\s+hiddenAttributes="([^"]*)")?(?:\s+layout="\w+")?\s*\/?>/,
+    );
     assert.ok(example, `index.mdx: "${pageId}" slide, but that page has no <Example> to compare it against`);
     const [, name, hidden] = example;
     assert.equal(

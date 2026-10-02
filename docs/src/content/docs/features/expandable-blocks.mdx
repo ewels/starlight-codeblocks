@@ -51,17 +51,56 @@ The block shows its first eight lines, faded at the bottom, with "Show all 24 li
 | `expandable=false` | Code block fence line | Turns off the `auto` option for the block |
 | `expandable.lines=<N>` | Code block fence line | The line count for the block when it expands through `expandable` or `auto` |
 
+## Examples
+
+### The site default
+
+`expandable` with no number uses the site default:
+
+export const siteDefault = `
+\`\`\`yaml title=".github/workflows/ci.yml" expandable
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - run: npm test
+\`\`\`
+`;
+
+<Example code={siteDefault} layout="tabs" />
+
 ## Behaviour
 
-- The block shows the first `N` lines, with a fade over the last one.
-- A bar under the code has a button, "Show all X lines", where X is the total. When the block is open, it reads "Show fewer lines".
-- The block eases open and closed in 200 ms. The button stays under the mouse cursor while the block closes. With reduced motion, the block opens and closes at once.
-- A block collapses only if the collapse hides three lines or more. A block with eight lines and `expandable={7}` renders in full.
-- Lines that [hidden lines](/starlight-codeblocks/features/hidden-lines/) remove do not count. In a block of 20 lines with `hidden={1-8} expandable={5}`, readers see 5 lines, and the button reads "Show all 12 lines".
-- A block with Expressive Code's `collapse` attribute does not collapse, even with `expandable`, because its collapsed sections already shorten it.
-- The collapsed lines use `hidden="until-found"` in browsers that support it. A reader who searches the page with Find still finds text inside them, and the block expands to show the match.
-- A [line permalink](/starlight-codeblocks/features/line-permalinks/) to a collapsed line opens the block.
-- Without JavaScript, the block renders in full, with no fade and no button.
+- The collapsed block:
+  - The block shows the first `N` lines, with a fade over the last one.
+  - A bar under the code has a button, "Show all X lines", where X is the total. When the block is open, it reads "Show fewer lines".
+- Other ways to open the block:
+  - The collapsed lines use `hidden="until-found"` in browsers that support it. A reader who searches the page with Find still finds text inside them, and the block expands to show the match.
+  - A [line permalink](/starlight-codeblocks/features/line-permalinks/) to a collapsed line opens the block.
+- Which blocks collapse:
+  - A block collapses only if the collapse hides three lines or more. A block with eight lines and `expandable={7}` renders in full.
+  - Lines that [hidden lines](/starlight-codeblocks/features/hidden-lines/) remove do not count. In a block of 20 lines with `hidden={1-8} expandable={5}`, readers see 5 lines, and the button reads "Show all 12 lines".
+  - A block with Expressive Code's `collapse` attribute does not collapse, even with `expandable`, because its collapsed sections already shorten it.
+- Without JavaScript:
+  - The block renders in full, with no fade and no button.
+- Motion:
+  - The block eases open and closed in 200 ms. The button stays under the mouse cursor while the block closes.
+  - With reduced motion, the block opens and closes at once.
 
 ## Options
 
@@ -95,37 +134,6 @@ With this configuration, a block of 31 lines or more shows its first 12 lines. A
 - Blocks in [`<CodeWalkthrough>`](/starlight-codeblocks/features/code-walkthrough/) and [`<Scrollycoding>`](/starlight-codeblocks/features/scrollycoding/), where each step must show every line.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-`expandable` with no number uses the site default:
-
-export const siteDefault = `
-\`\`\`yaml title=".github/workflows/ci.yml" expandable
-name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - run: npm ci
-
-      - run: npm test
-\`\`\`
-`;
-
-<Example code={siteDefault} />
 
 ## Limitations
 

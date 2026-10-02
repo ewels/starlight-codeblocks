@@ -4,7 +4,6 @@ import {
   mix,
   onBackground,
   PluginStyleSettings,
-  setAlpha,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { addClassName, h, select } from '@expressive-code/core/hast';
@@ -15,21 +14,36 @@ import {
   type CodeblocksPlugin,
   lineElement,
   lineNumber,
+  noteStyle,
   parseBoolean,
   startNoteNumber,
   warn,
 } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
-import { litLine, onCode, PREFIX, solidCodeBackground, solidCodeForeground, themeColour } from './styles.ts';
+import {
+  hoverColour,
+  litLine,
+  type NoteStyle,
+  noteStyleVars,
+  type OutlineStyleSettings,
+  onCode,
+  outlineColours,
+  PREFIX,
+  solidCodeBackground,
+  solidCodeForeground,
+  tint,
+} from './styles.ts';
 
-export interface FootnotesStyleSettings {
-  /** The badge border, the bar of a selected line and the badge background when selected. */
+export interface FootnotesStyleSettings extends OutlineStyleSettings {
+  /** The badge background and the bar of a selected line. */
   accent: UnresolvedStyleValue;
-  /** Badge numbers and list numbers. Needs 4.5:1 on the code background. */
+  /** List numbers. Needs 4.5:1 on the code background. */
   numberForeground: UnresolvedStyleValue;
-  /** The badge number on an `accent` background. */
+  /** The number on a badge. */
   activeForeground: UnresolvedStyleValue;
+  /** The badge under the pointer, with focus or on a selected line. */
+  activeBackground: UnresolvedStyleValue;
   lineBackground: UnresolvedStyleValue;
   stickyShadow: UnresolvedStyleValue;
 }
@@ -43,7 +57,7 @@ declare module '@expressive-code/core' {
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksFootnotes: {
-      accent: (context) => onCode(context, themeColour(context, 'terminal.ansiMagenta'), 4.5),
+      accent: ({ resolveSetting }) => resolveSetting('codeblocks.accent'),
       // Readable on the code and on the tint of an active line.
       numberForeground: (context) =>
         ensureColorContrastOnBackground(
@@ -61,9 +75,11 @@ const styleSettings = new PluginStyleSettings({
           context.resolveSetting('codeblocksFootnotes.accent'),
           4.5,
         ),
+      activeBackground: (context) => hoverColour(context.resolveSetting('codeblocksFootnotes.accent'), context),
       // Light enough for every syntax colour as it is, so that a line keeps its colours when it lights up.
       lineBackground: (context) =>
-        onBackground(setAlpha(context.resolveSetting('codeblocksFootnotes.accent'), 0.1), solidCodeBackground(context)),
+        onBackground(tint(context.resolveSetting('codeblocksFootnotes.accent'), context), solidCodeBackground(context)),
+      ...outlineColours('codeblocksFootnotes'),
       stickyShadow: ['0 -8px 16px rgb(10 14 24 / 0.35)', '0 -6px 14px rgb(12 20 36 / 0.1)'],
     },
   },
@@ -72,7 +88,13 @@ const styleSettings = new PluginStyleSettings({
 const cls = (suffix = '') => `${PREFIX}-footnote${suffix}`;
 
 /** Turns `[!ref] text` on or above a line into a numbered badge on the line and an item in a list under the block. */
-export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boolean } = {}): CodeblocksPlugin {
+export function pluginFootnotes({
+  sticky: siteSticky = false,
+  style: siteStyle = 'outline',
+}: {
+  sticky?: boolean;
+  style?: NoteStyle;
+} = {}): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:footnotes',
     directives: {
@@ -90,6 +112,18 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
     baseStyles: ({ cssVar }) => {
       const v = (key: string) => cssVar(`codeblocksFootnotes.${key}` as never);
       return `
+${noteStyleVars(
+  cssVar,
+  { attribute: 'data-scb-footnotes', prefix: 'fn', group: 'codeblocksFootnotes' },
+  {
+    bg: v('accent'),
+    fg: v('activeForeground'),
+    activeBg: v('activeBackground'),
+    line: v('lineBackground'),
+    bar: v('accent'),
+    num: v('numberForeground'),
+  },
+)}
 .frame:has(> .${cls('s')}) > :is(pre, .${PREFIX}-expandable-bar) { border-end-start-radius: 0; border-end-end-radius: 0; }
 .${cls('-badge')} {
   display: inline-flex;
@@ -100,9 +134,11 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
   height: 1.55em;
   margin-inline-start: 1.6ch;
   padding: 0 0.3em;
-  border: 1px solid ${v('accent')};
+  /* Forced colours remove the background, but draw the border. */
+  border: 1px solid var(--scb-fn-border);
   border-radius: 999px;
-  color: ${v('numberForeground')};
+  background: var(--scb-fn-bg);
+  color: var(--scb-fn-fg);
   font: 600 0.8em/1 ${cssVar('codeFontFamily')};
   text-decoration: none;
   vertical-align: 0.1em;
@@ -110,9 +146,9 @@ export function pluginFootnotes({ sticky: siteSticky = false }: { sticky?: boole
   -webkit-user-select: none;
   scroll-margin-block: 5rem;
 }
-.${cls('-badge')}:hover { background: color-mix(in srgb, ${v('accent')} 18%, transparent); }
-${litLine(`.${cls('-on')}, .${cls('-peek')}`, v('lineBackground'), v('accent'))}
-.ec-line:is(.${cls('-on')}, .${cls('-peek')}) .${cls('-badge')} { background: ${v('accent')}; color: ${v('activeForeground')}; }
+.${cls('-badge')}:is(:hover, :focus-visible) { background: var(--scb-fn-hover-bg); }
+${litLine(`.${cls('-on')}, .${cls('-peek')}`, 'var(--scb-fn-line)', 'var(--scb-fn-bar)')}
+.ec-line:is(.${cls('-on')}, .${cls('-peek')}) .${cls('-badge')} { background: var(--scb-fn-active-bg); color: var(--scb-fn-active-fg); }
 .${cls('s')} {
   margin: 0;
   /* Starts a one-digit number, such as "1.", at the right of its 24px target, level with the code. */
@@ -141,8 +177,8 @@ ${litLine(`.${cls('-on')}, .${cls('-peek')}`, v('lineBackground'), v('accent'))}
   scroll-margin-block: 5rem;
 }
 .${cls('s')} li:is(.${cls('-on')}, .${cls('-peek')}) {
-  border-inline-start-color: ${v('accent')};
-  background: ${v('lineBackground')};
+  border-inline-start-color: var(--scb-fn-bar);
+  background: var(--scb-fn-line);
   color: ${cssVar('codeForeground')};
 }
 /* A short delay before a hover highlight, so that it does not flash while the pointer passes over. */
@@ -162,10 +198,15 @@ ${litLine(`.${cls('-on')}, .${cls('-peek')}`, v('lineBackground'), v('accent'))}
   justify-content: flex-end;
   min-width: max(2.5ch, 24px);
   min-height: 24px;
-  color: ${v('numberForeground')};
+  color: var(--scb-fn-num);
   font-weight: 600;
   text-align: end;
   text-decoration: none;
+}
+.${cls('s')} li > span {
+  font-family: ${cssVar('uiFontFamily')};
+  font-size: 0.9375rem;
+  line-height: 1.45;
 }
 .${cls('-num')}:hover { text-decoration: underline; text-underline-offset: 3px; }
 /* 10%, not 12%, keeps 4.5:1 on the sticky list for themes whose code colour is near 4.5:1. */
@@ -239,7 +280,7 @@ ${litLine(`.${cls('-on')}, .${cls('-peek')}`, v('lineBackground'), v('accent'))}
             h('span', { id: `${note}-text` }, inlineMarkdown(directive.text ?? '')),
           ]);
         });
-        figure.properties.dataScbFootnotes = '';
+        figure.properties.dataScbFootnotes = noteStyle(context, 'footnotes.style', siteStyle);
         if (sticky) addClassName(figure, cls('s-sticky'));
         // Below the expandable bar, so that the bar stays under the code it expands, and above the run output.
         const find = (name: string) =>

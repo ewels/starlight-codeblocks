@@ -57,7 +57,7 @@ python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
 </details>
 
 <details>
-<summary>Side-by-side annotations</summary>
+<summary>Side annotations</summary>
 
 Show the notes of an annotated block in a column beside the code, so readers see every note next to its line.
 
@@ -66,9 +66,9 @@ Show the notes of an annotated block in a column beside the code, so readers see
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/side-by-side-annotations.png" alt="A Python block with its notes in a column beside the code, each note next to its line.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/side-annotations.png" alt="A Python block with its notes in a column beside the code, each note next to its line.">
 
-[Side-by-side annotations documentation](https://ewels.github.io/starlight-codeblocks/features/side-by-side-annotations/)
+[Side annotations documentation](https://ewels.github.io/starlight-codeblocks/features/side-annotations/)
 
 </details>
 

@@ -38,16 +38,51 @@ A prompt is text at the start of a line. The default prompts are `$ ` and `> `, 
 
 A `pycon` block with a line that starts with `>>> ` is a Python session. A `python` or `py` block is a session when its first line starts with `>>> `. It gets the same button, and keeps the editor frame. See [Python sessions](#python-sessions).
 
+## Examples
+
+### A custom prompt
+
+A PowerShell session uses its own prompt. This site adds `PS> ` to `shellCopy.prompts`, so **Copy commands** in the block below copies two commands:
+
+export const powershell = `
+\`\`\`powershell
+PS> Get-ChildItem -Name
+report.csv
+summary.txt
+PS> Get-Content summary.txt
+Rows: 1204
+\`\`\`
+`;
+
+<Example code={powershell} layout="tabs" />
+
+### A session in any language
+
+A block in any language can show a session, if it has `frame="terminal"`:
+
+export const python = `
+\`\`\`txt frame="terminal" title="Install the package"
+$ python -m pip install example-client
+Collecting example-client
+Successfully installed example-client-2.1.0
+\`\`\`
+`;
+
+<Example code={python} layout="tabs" />
+
 ## Behaviour
 
-- A line that starts with a prompt is a command. The prompt has its own colour, and a manual selection leaves it out.
-- A command line that ends with `\` continues on the next line. That line is part of the command too.
-- Every other line is output. Output lines have no syntax colours and use a muted colour.
-- The **Copy commands** button in the title bar copies each command without its prompt, one command on each line. After a copy, its label is **Copied** for a short time, and screen readers announce "Copied".
-- The copy button works as in every other block. It copies the whole block: the prompts, the commands and the output.
-- Hidden lines that are commands are part of the text that **Copy commands** copies. Hidden output lines are not.
-- A terminal block with no prompt line renders and copies as Expressive Code shows it.
-- The two buttons need JavaScript, as in Expressive Code. Without JavaScript, the **Copy commands** button is hidden, and readers can select the code by hand. The selection leaves out the prompts.
+- Commands and output:
+  - A line that starts with a prompt is a command. The prompt has its own colour, and a manual selection leaves it out.
+  - A command line that ends with `\` continues on the next line. That line is part of the command too.
+  - Every other line is output. Output lines have no syntax colours and use a muted colour.
+  - A terminal block with no prompt line renders and copies as Expressive Code shows it.
+- Copying:
+  - The **Copy commands** button in the title bar copies each command without its prompt, one command on each line. After a copy, its label is **Copied** for a short time, and screen readers announce "Copied".
+  - The copy button works as in every other block. It copies the whole block: the prompts, the commands and the output.
+  - Hidden lines that are commands are part of the text that **Copy commands** copies. Hidden output lines are not.
+- Without JavaScript:
+  - The two buttons need JavaScript, as in Expressive Code. Without JavaScript, the **Copy commands** button is hidden, and readers can select the code by hand. The selection leaves out the prompts.
 
 ## Python sessions
 
@@ -91,34 +126,6 @@ codeblocks({
 With `shellCopy: false`, terminal blocks have no **Copy commands** button, and prompts show as part of the code.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-A PowerShell session uses its own prompt. This site adds `PS> ` to `shellCopy.prompts`, so **Copy commands** in the block below copies two commands:
-
-export const powershell = `
-\`\`\`powershell
-PS> Get-ChildItem -Name
-report.csv
-summary.txt
-PS> Get-Content summary.txt
-Rows: 1204
-\`\`\`
-`;
-
-<Example code={powershell} />
-
-A block in any language can show a session, if it has `frame="terminal"`:
-
-export const python = `
-\`\`\`txt frame="terminal" title="Install the package"
-$ python -m pip install example-client
-Collecting example-client
-Successfully installed example-client-2.1.0
-\`\`\`
-`;
-
-<Example code={python} />
 
 ## Limitations
 

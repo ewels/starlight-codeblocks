@@ -39,16 +39,56 @@ Lines 4 to 7 are sharp, and the other lines are blurred. Hover over the block, o
 
 `focus={range}` takes a [range](/starlight-codeblocks/comment-notation/#line-numbers), such as `{2}` or `{1, 4-6}`. `[!code focus:N]` focuses its own line and the next N-1 lines. You can use the attribute and directives in the same block.
 
+## Examples
+
+### Focus with a directive
+
+A directive moves with its line when you edit the code. Use one when the block can change:
+
+export const directive = `
+\`\`\`py title="app.py"
+import os
+
+token = os.environ["API_TOKEN"]  # [!code focus]
+url = "https://api.example.com/v1/items"
+\`\`\`
+`;
+
+<Example code={directive} hiddenAttributes="apiLinks=false" layout="tabs" />
+
+### Focus with a diff
+
+Focus combines with the other line markers. Here the focused lines also show a change:
+
+export const diff = `
+\`\`\`ts title="server.ts" focus={3-4}
+import { createServer } from 'node:http';
+
+const port = 3000; // [!code --]
+const port = Number(process.env.PORT ?? 3000); // [!code ++]
+
+createServer(handler).listen(port);
+\`\`\`
+`;
+
+<Example code={diff} hiddenAttributes="wordDiff=false" layout="tabs" />
+
 ## Behaviour
 
-- Lines outside the focus are blurred and faded. Focused lines look the same as in a block without focus.
-- When the reader hovers over the block, or moves keyboard focus into it, every line becomes clear. The change takes 250 ms.
-- The code area takes keyboard focus, so keyboard readers can see every line. Tab moves focus into it.
-- When the reader's system asks for reduced motion, the lines change without the transition.
-- Screen readers read every line, because the blurred lines stay in the page.
-- The copy button copies every line, focused or not.
-- If no line is in focus, the block is the same as a block without the plugin.
-- Focus needs no JavaScript in the browser.
+- The blur:
+  - Lines outside the focus are blurred and faded. Focused lines look the same as in a block without focus.
+  - If no line is in focus, the block is the same as a block without the plugin.
+- Hover and keyboard:
+  - When the reader hovers over the block, or moves keyboard focus into it, every line becomes clear. The change takes 250 ms.
+  - The code area takes keyboard focus, so keyboard readers can see every line. Tab moves focus into it.
+- Screen readers:
+  - Screen readers read every line, because the blurred lines stay in the page.
+- Copy:
+  - The copy button copies every line, focused or not.
+- Without JavaScript:
+  - Focus needs no JavaScript in the browser.
+- Motion:
+  - When the reader's system asks for reduced motion, the lines change without the transition.
 
 ## Options
 
@@ -73,36 +113,6 @@ export default {
 ```
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-A directive moves with its line when you edit the code. Use one when the block can change:
-
-export const directive = `
-\`\`\`py title="app.py"
-import os
-
-token = os.environ["API_TOKEN"]  # [!code focus]
-url = "https://api.example.com/v1/items"
-\`\`\`
-`;
-
-<Example code={directive} hiddenAttributes="apiLinks=false" />
-
-Focus combines with the other line markers. Here the focused lines also show a change:
-
-export const diff = `
-\`\`\`ts title="server.ts" focus={3-4}
-import { createServer } from 'node:http';
-
-const port = 3000; // [!code --]
-const port = Number(process.env.PORT ?? 3000); // [!code ++]
-
-createServer(handler).listen(port);
-\`\`\`
-`;
-
-<Example code={diff} hiddenAttributes="wordDiff=false" />
 
 ## Limitations
 

@@ -25,7 +25,7 @@ function syncFigure(to: Element, from: Element) {
   else (to as HTMLElement).style.removeProperty('--scb-gutter');
 }
 
-/** Wraps, unwraps or updates the side-by-side note column around the copy's figure to match the block. */
+/** Wraps, unwraps or updates the side annotation column around the copy's figure to match the block. */
 function syncSide(copy: Element, block: Element, figure: Element) {
   const from = block.querySelector('.scb-side');
   const to = copy.querySelector('.scb-side');

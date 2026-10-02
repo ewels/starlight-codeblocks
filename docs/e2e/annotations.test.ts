@@ -214,11 +214,11 @@ test('the marker fades to the hover colour on the timing of the hover note', asy
     expect((await timing())[0]).toBe('0s');
     return;
   }
-  expect(await timing()).toEqual(['0.16s', '0s']);
+  expect(await timing()).toEqual(['0.16s, 0.16s', '0s, 0s']);
   test.skip(isMobile, 'Phones have no hover.');
   const rest = await css(marker, 'backgroundColor');
   await marker.hover();
-  expect(await timing()).toEqual(['0.16s', '0.08s']);
+  expect(await timing()).toEqual(['0.16s, 0.16s', '0.08s']);
   const expected = await marker.evaluate((el) => {
     const probe = document.createElement('span');
     probe.style.color = 'var(--ec-codeblocksAnnotations-markerHoverBg)';

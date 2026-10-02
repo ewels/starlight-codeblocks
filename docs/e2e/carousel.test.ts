@@ -247,7 +247,7 @@ test('fits a phone screen', async ({ page }) => {
   await expect(page.locator('.carousel .dots')).toBeVisible();
   const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(await overflow()).toBeLessThanOrEqual(0);
-  for (const name of ['Side-by-side annotations', 'Scrollycoding', 'Code switcher']) {
+  for (const name of ['Side annotations', 'Scrollycoding', 'Code switcher']) {
     await tile(page, name).click();
     expect(await overflow()).toBeLessThanOrEqual(0);
   }
@@ -296,7 +296,7 @@ test('scrolls the chosen example into view only as far as it needs to', async ({
   if (phone()) {
     // Only phones make this example taller than the screen.
     await load(page);
-    await tile(page, 'Side-by-side annotations').evaluate((el) => (el as HTMLElement).click());
+    await tile(page, 'Side annotations').evaluate((el) => (el as HTMLElement).click());
     await expect.poll(() => cardEdge(page, 'top')).toBe(Math.round(header));
   }
 });

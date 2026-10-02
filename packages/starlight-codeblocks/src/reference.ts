@@ -11,6 +11,21 @@ export interface AttributeDoc {
   example?: { lang: string; meta: string; code: string };
 }
 
+/** The fence line attribute `<feature>.style` of annotations and footnotes. */
+const noteStyleAttribute = (
+  feature: string,
+  marks: string,
+  lang: string,
+  code: string,
+  shown: string,
+): AttributeDoc => ({
+  name: `${feature}.style`,
+  syntax: [`${feature}.style="filled"`, `${feature}.style="outline"`],
+  description: `Draws the ${marks} filled in the accent colour, or outlined in the magenta of the theme. It overrides the \`${feature}.style\` option for the block.`,
+  page: `features/${feature}`,
+  example: { lang, meta: `${feature}.style="${shown}"`, code },
+});
+
 export const attributesReference: AttributeDoc[] = [
   {
     name: 'focus',
@@ -126,7 +141,7 @@ export const attributesReference: AttributeDoc[] = [
     name: 'annotations',
     syntax: ['annotations="side"'],
     description: 'Shows the `[!annotate]` notes of the block in a column beside the code, on wide screens.',
-    page: 'features/side-by-side-annotations',
+    page: 'features/side-annotations',
     example: {
       lang: 'js',
       meta: 'annotations="side"',
@@ -138,7 +153,7 @@ export const attributesReference: AttributeDoc[] = [
     syntax: ['codeSide="right"'],
     description:
       'With `annotations="side"`, puts the code in the right column and the notes in the left column. The default is `left`.',
-    page: 'features/side-by-side-annotations',
+    page: 'features/side-annotations',
   },
   {
     name: 'footnotes',
@@ -258,6 +273,14 @@ export const attributesReference: AttributeDoc[] = [
       'Keeps the list of footnotes in view while the block is on screen, or not. It overrides the `footnotes.sticky` option for the block.',
     page: 'features/footnotes',
   },
+  noteStyleAttribute(
+    'footnotes',
+    'badges',
+    'js',
+    '// [!ref] Read from the environment.\nconst port = process.env.PORT',
+    'filled',
+  ),
+  noteStyleAttribute('annotations', 'markers', 'js', 'const port = 8080 // [!annotate] The default port.', 'outline'),
   {
     name: 'expandable.lines',
     syntax: ['expandable.lines=<N>'],
@@ -293,6 +316,27 @@ const fromTheme = (colour: string, contrast: string) =>
   `The \`${colour}\` colour of the theme, with ${contrast} contrast on the code background.`;
 const bracket = (depth: string, fallback: string) =>
   `The \`editorBracketHighlight.foreground${depth}\` colour of the theme, or VS Code's default (\`${fallback}\`) if the theme has none, with 4.5:1 contrast on the code background.`;
+
+/** The `outline` note style settings, which annotations and footnotes share. */
+const outlineSettings = (marker: string) => ({
+  outlineAccent: {
+    description: `With \`style: 'outline'\`: the border of a ${marker}, the bar of a lit line and the background of an active ${marker}.`,
+    derived: fromTheme('terminal.ansiMagenta', '4.5:1'),
+  },
+  outlineNumberForeground: {
+    description: `With \`style: 'outline'\`: the numbers. Needs 4.5:1 contrast on the code background.`,
+    derived:
+      '`outlineAccent` mixed 30% towards `codeForeground`, with 4.5:1 contrast on the code background and on `outlineLineBackground`.',
+  },
+  outlineActiveForeground: {
+    description: `With \`style: 'outline'\`: the number of an active ${marker}, on an \`outlineAccent\` background.`,
+    derived: 'The code background, with 4.5:1 contrast on `outlineAccent`.',
+  },
+  outlineLineBackground: {
+    description: `With \`style: 'outline'\`: the tint of a lit line. Needs 4.5:1 contrast for every syntax colour.`,
+    derived: '`outlineAccent` at 10% opacity, on the code background.',
+  },
+});
 
 export const styleSettingsReference: Record<string, StyleGroupDoc> = {
   codeblocks: {
@@ -599,28 +643,34 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
         description: 'The tint of the line of an open annotation. Needs 4.5:1 contrast for every syntax colour.',
         derived: '`codeblocks.accent` at 10% opacity in dark themes and 12% in light themes.',
       },
+      ...outlineSettings('marker'),
     },
   },
   codeblocksFootnotes: {
     page: 'features/footnotes',
     settings: {
       accent: {
-        description: 'The border of a badge, the bar of a selected line and the background of a selected badge.',
-        derived: fromTheme('terminal.ansiMagenta', '4.5:1'),
+        description: 'The background of a badge and the bar of a selected line.',
+        derived: accent,
       },
       numberForeground: {
-        description: 'Badge numbers and list numbers. Needs 4.5:1 contrast on the code background.',
+        description: 'List numbers. Needs 4.5:1 contrast on the code background.',
         derived:
           '`accent` mixed 30% towards `codeForeground`, with 4.5:1 contrast on the code background and on `lineBackground`.',
       },
       activeForeground: {
-        description: 'The number of a selected badge, on an `accent` background.',
+        description: 'The number on a badge, on an `accent` background.',
         derived: 'The code background, with 4.5:1 contrast on `accent`.',
+      },
+      activeBackground: {
+        description: 'The background of a badge under the mouse cursor, with keyboard focus or on a selected line.',
+        derived: '`accent` mixed 45% towards `codeForeground`.',
       },
       lineBackground: {
         description: 'The tint of a selected line. Needs 4.5:1 contrast for every syntax colour.',
-        derived: '`accent` at 10% opacity, on the code background.',
+        derived: '`accent` at 10% opacity in dark themes and 12% in light themes, on the code background.',
       },
+      ...outlineSettings('badge'),
       stickyShadow: { description: 'The shadow above a sticky list of footnotes.' },
     },
   },

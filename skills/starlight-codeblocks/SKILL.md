@@ -1,6 +1,6 @@
 ---
 name: starlight-codeblocks
-description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side-by-side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, inline code highlighting, code links, API auto-linking, line permalinks, the code switcher, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
+description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, inline code highlighting, code links, API auto-linking, line permalinks, the code switcher, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
 license: MIT
 ---
 
@@ -48,12 +48,12 @@ Find the goal, then use the feature in the same row. Each reference file has the
 | One short sentence about one name on one line | Inline callout: `[!callout /name/]` on or above the line | Always visible, with an arrow at the name. Use one or two in a block. |
 | A long note, or a note for only some readers | Annotation: `[!annotate]` at the end of the line | A numbered marker. The note opens in a popover only when the reader asks. |
 | Every reader needs every note, and the block is short | Footnotes: `[!ref]` on or above the line | A numbered list under the block, the same on phones and desktops. |
-| Every reader needs every note, and the block is long | Side-by-side annotations: `[!annotate]` plus `annotations="side"` | Notes in a column beside the code on wide screens, a list on narrow screens. |
+| Every reader needs every note, and the block is long | Side annotations: `[!annotate]` plus `annotations="side"` | Notes in a column beside the code on wide screens, a list on narrow screens. |
 | A walkthrough of one block in prose steps (MDX only) | Scrollycoding: `<Scrollycoding>` with `<Step focus="...">` | The block stays in view and focuses the lines of each step as it scrolls past. A block between steps changes the code. |
 | A file that grows or changes over the steps of a tutorial (MDX only) | Code walkthrough: `<CodeWalkthrough>` with `step="label"` on each block | One block with numbered steps. Code that stays moves, new code fades in. |
 | A paragraph that names lines of the block below it | Code mentions: `[!mention name]` plus `[text](#mention:name)` | The link highlights the tagged lines. The page stays plain Markdown. |
 
-Use one note style in a block. Annotations and side-by-side annotations use the same directive, so a change between them is only the fence line. The fence line is the first line of the code block, with the language.
+Use one note style in a block. Annotations and side annotations use the same directive, so a change between them is only the fence line. The fence line is the first line of the code block, with the language.
 
 Use scrollycoding when prose explains the code step by step as the reader scrolls. Use code walkthrough when readers step through the versions of a file with buttons. For versions that are alternatives, not steps in an order, use the code switcher.
 

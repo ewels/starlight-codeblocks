@@ -4,14 +4,14 @@ import { css } from './helpers.ts';
 // Playwright hides scrollbars by default, and `100vw` includes a classic one.
 test.use({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } });
 
-test('a wide side-by-side block does not make the page scroll sideways with a classic scrollbar', async ({
+test('a wide block with side annotations does not make the page scroll sideways with a classic scrollbar', async ({
   page,
   isMobile,
   browserName,
 }) => {
   test.skip(isMobile || browserName !== 'chromium', 'Needs a desktop Chromium window.');
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('./features/side-by-side-annotations/wide/');
+  await page.goto('./features/side-annotations/wide/');
   await page.addStyleTag({
     content: '::-webkit-scrollbar { width: 17px; } ::-webkit-scrollbar-thumb { background: grey; }',
   });

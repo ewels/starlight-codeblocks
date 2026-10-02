@@ -213,6 +213,8 @@ export function pageMarkdown(entry: Entry) {
       out.push(`**${type[0]?.toUpperCase()}${type.slice(1)}:**`);
     } else if (name === 'LinkCard') {
       out.push(absoluteLinks(`- [${props.title}](${props.href}): ${props.description}`));
+    } else if (name === 'LinkButton') {
+      out.push(absoluteLinks(`[${line.match(/>([^<]*)<\/LinkButton>/)?.[1] ?? ''}](${props.href})`));
     } else if (component[name]) {
       out.push(absoluteLinks(component[name](props, entry.id)));
     } else {

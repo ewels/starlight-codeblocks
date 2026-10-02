@@ -5,6 +5,8 @@ test('turns every feature on with defaults, in new objects on each call', () => 
   const options = resolveOptions();
   expect(options.focus).toEqual({ style: 'blur' });
   expect(options.callouts).toBe(true);
+  expect(options.annotations).toEqual({ style: 'filled' });
+  expect(options.footnotes).toEqual({ sticky: false, style: 'outline' });
   expect(options.shellCopy).toEqual({ prompts: ['$ ', '> '] });
   expect(options.expandable).toEqual({ lines: 12, auto: false });
   expect(options.inlineHighlighting).toEqual({ defaultLanguage: false });
@@ -19,11 +21,13 @@ test('keeps given values and turns features off with false', () => {
   const options = resolveOptions({
     focus: { style: 'dim' },
     callouts: false,
+    annotations: { style: 'outline' },
     playgrounds: { demo: { label: 'Open in Demo', url } },
     runnable: false,
   });
   expect(options.focus).toEqual({ style: 'dim' });
   expect(options.callouts).toBe(false);
+  expect(options.annotations).toEqual({ style: 'outline' });
   expect(options.playgrounds).toEqual({ demo: { label: 'Open in Demo', url } });
   expect(options.runnable).toBe(false);
 });
@@ -36,6 +40,8 @@ test('rejects options that are not valid, with an OptionsError that names the op
     [{ focus: { blur: 2 } }, 'unknown option `focus.blur`'],
     [{ focus: true }, '`focus` must be `false` or an object, got true'],
     [{ callouts: {} }, '`callouts` must be `false` or left out'],
+    [{ annotations: { style: 'solid' } }, '`annotations.style` must be'],
+    [{ footnotes: { style: 'solid' } }, '`footnotes.style` must be'],
     [{ expandable: { lines: 0 } }, '`expandable.lines` must be number, got 0'],
     [{ wordDiff: { minSimilarity: 2 } }, '`wordDiff.minSimilarity`'],
     [{ lineStates: { states: { todo: { label: 'To do', colour: '#fff' } } } }, '`lineStates.states` must be'],

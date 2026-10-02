@@ -29,14 +29,40 @@ The first recipe starts with an arrow, for the tab that Make needs. The second s
 | `whitespace` | Code block fence line | Shows the leading whitespace of every line |
 | `whitespace="all"` | Code block fence line | Shows every space and tab in the block |
 
+## Examples
+
+### Every space and tab
+
+`whitespace="all"` shows every space, which is useful when trailing whitespace is part of what you are explaining:
+
+export const trailing = `
+\`\`\`text title="diff.patch" whitespace="all"
+-  const width = 10; 
++  const width = 12;
+\`\`\`
+`;
+
+<Example code={trailing} layout="tabs">
+
+```text title="diff.patch" whitespace="all"
+-  const width = 10; 
++  const width = 12;
+```
+
+</Example>
+
 ## Behaviour
 
-- A space renders as a middle dot. A tab renders as an arrow at the start of the tab. The tab keeps its width up to the next tab stop. The plugin sets the CSS `tab-size` property of code blocks to 2 columns.
-- By default, the plugin shows only the leading whitespace of each line, where indentation usually matters. `whitespace="all"` shows every space and tab, including the ones between words and at the end of a line.
-- The glyphs are faint, so that they do not compete with the code. They use the text colour of the theme at about a third of its strength.
-- The glyphs are drawn with CSS on top of the real character. A manual copy or the copy button gives the actual spaces and tabs.
-- Screen readers do not hear the glyphs. They read the same code as a block without the attribute.
-- Visible whitespace needs no JavaScript in the browser.
+- The glyphs:
+  - A space renders as a middle dot. A tab renders as an arrow at the start of the tab. The tab keeps its width up to the next tab stop. The plugin sets the CSS `tab-size` property of code blocks to 2 columns.
+  - By default, the plugin shows only the leading whitespace of each line, where indentation usually matters. `whitespace="all"` shows every space and tab, including the ones between words and at the end of a line.
+  - The glyphs are faint, so that they do not compete with the code. They use the text colour of the theme at about a third of its strength.
+- Screen readers:
+  - Screen readers do not hear the glyphs. They read the same code as a block without the attribute.
+- Copy:
+  - The glyphs are drawn with CSS on top of the real character. A manual copy or the copy button gives the actual spaces and tabs.
+- Without JavaScript:
+  - Visible whitespace needs no JavaScript in the browser.
 
 ## Options
 
@@ -51,38 +77,6 @@ codeblocks({
 The style setting `codeblocksWhitespace.foreground` changes the colour of the glyphs.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
-
-## Examples
-
-`whitespace="all"` shows every space, which is useful when trailing whitespace is part of what you are explaining:
-
-export const trailing = `
-\`\`\`text title="diff.patch" whitespace="all"
--  const width = 10; 
-+  const width = 12;
-\`\`\`
-`;
-
-<Example code={trailing}>
-
-```text title="diff.patch" whitespace="all"
--  const width = 10; 
-+  const width = 12;
-```
-
-</Example>
-
-Leading whitespace alone is usually enough to show an indentation error:
-
-export const python = `
-\`\`\`py title="script.py" whitespace
-def greet(name):
-    print(f"Hello, {name}")
-   return None  # Indented with 3 spaces, not 4
-\`\`\`
-`;
-
-<Example code={python} />
 
 ## Limitations
 

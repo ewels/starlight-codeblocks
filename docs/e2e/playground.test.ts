@@ -29,7 +29,7 @@ test('the link and the post form sit in the title bar, and open a new tab with t
   const [popup] = await Promise.all([page.waitForEvent('popup'), link.click()]);
   expect(popup.url()).toContain('typescriptlang.org/play#code/');
 
-  const form = example(page, 3).locator('form.scb-playground');
+  const form = example(page, 2).locator('form.scb-playground');
   await expect(form.locator('input[name="project[files][index.js]"]')).toHaveValue(/const words/);
   const button = form.getByRole('button', { name: 'Open in StackBlitz (opens in a new tab)' });
   const [post] = await Promise.all([page.waitForEvent('popup'), button.click()]);
