@@ -20,7 +20,11 @@ export default defineConfig({
       },
       favicon: '/favicon.svg',
       customCss: ['./src/styles/custom.css'],
-      components: { Head: './src/components/Head.astro', PageTitle: './src/components/PageTitle.astro' },
+      components: {
+        Head: './src/components/Head.astro',
+        Hero: './src/components/Hero.astro',
+        PageTitle: './src/components/PageTitle.astro',
+      },
       head: [{ tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/starlight-codeblocks/apple-touch-icon.png' } }],
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/ewels/starlight-codeblocks' }],
       disable404Route: true,

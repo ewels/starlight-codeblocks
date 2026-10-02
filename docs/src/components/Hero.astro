@@ -1,0 +1,25 @@
+---
+import Default from '@astrojs/starlight/components/Hero.astro';
+import logo from '../assets/logo.svg';
+import HeroSlider from './HeroSlider.astro';
+
+const { entry } = Astro.locals.starlightRoute;
+const home = entry.id === 'index' || entry.id === '';
+// Starlight's hero takes an image only as frontmatter, so the homepage renders the slider into this
+// component's slot (through Astro.self) and hands the HTML to the default hero as `image.html`.
+if (Astro.slots.has('default') && entry.data.hero) {
+  const { hero } = entry.data;
+  hero.image = { html: await Astro.slots.render('default'), alt: '' };
+  hero.title = `<img class="hero-logo" src="${logo.src}" alt="" width="32" height="32">${hero.title ?? entry.data.title}`;
+}
+---
+
+{
+  home && !Astro.slots.has('default') ? (
+    <Astro.self>
+      <HeroSlider />
+    </Astro.self>
+  ) : (
+    <Default />
+  )
+}

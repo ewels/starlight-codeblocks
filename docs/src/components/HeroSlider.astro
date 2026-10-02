@@ -1,0 +1,306 @@
+---
+import { Code } from '@astrojs/starlight/components';
+
+const code = `import json
+from pathlib import Path
+
+def load(path: Path) -> dict:  # [!annotate] Returns the parsed file as a dict.
+    with path.open() as fh:
+        return json.load(fh)
+
+cfg = load(Path("config.toml"))
+cfg = load(Path("config.json"))
+print(cfg["name"])  # [!code warning] KeyError if unset`;
+// The plain block is the same code without the directives, and with the features that start on their own turned off.
+const plain = code.replace(/ {2}# \[!.*$/gm, '');
+const diff = 'title="app.py" del={8} ins={9}';
+---
+
+<div class="hero-slider">
+<div class="compare" role="group" aria-label="A plain code block compared with the same block using starlight-codeblocks">
+  <div class="layer before" aria-hidden="true" inert>
+    <Code code={plain} lang="py" meta={`${diff} apiLinks=false wordDiff=false brackets=false`} />
+  </div>
+  <div class="layer after">
+    <Code code={code} lang="py" meta={`${diff} brackets focus={4-10}`} />
+  </div>
+  <div class="divider">
+    <div
+      class="handle"
+      role="slider"
+      tabindex="0"
+      aria-label="Divider between the plain and the enhanced block"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="38"
+      aria-valuetext="62% of the block shows the plugin"
+    >
+      <svg viewBox="0 0 44 44" aria-hidden="true">
+        <polyline class="chevron" points="10,18.5 6.5,22 10,25.5"></polyline>
+        <polyline class="chevron" points="34,18.5 37.5,22 34,25.5"></polyline>
+        <path
+          class="spark"
+          d="M22 13.5c.5 4.6 2.9 7 8.5 8.5-5.6 1.5-8 3.9-8.5 8.5-.5-4.6-2.9-7-8.5-8.5 5.6-1.5 8-3.9 8.5-8.5z"
+        ></path>
+      </svg>
+    </div>
+  </div>
+</div>
+<div class="captions" aria-hidden="true">
+  <span class="caption before">Plain Expressive Code</span>
+  <span class="caption after">With starlight-codeblocks</span>
+</div>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('.hero-slider');
+  const slider = root?.querySelector<HTMLElement>('.compare');
+  const handle = slider?.querySelector<HTMLElement>('.handle');
+  if (root && slider && handle) {
+    const target = 38;
+    let pos = target;
+    let sweep = 0;
+    let dragging = false;
+
+    const set = (value: number) => {
+      pos = Math.max(0, Math.min(100, value));
+      root.style.setProperty('--pos', String(pos));
+      const now = Math.round(pos);
+      handle.setAttribute('aria-valuenow', String(now));
+      handle.setAttribute('aria-valuetext', `${100 - now}% of the block shows the plugin`);
+    };
+    const stop = () => cancelAnimationFrame(sweep);
+
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const start = performance.now() + 500;
+      const ease = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+      const step = (now: number) => {
+        const t = Math.max(0, Math.min(1, (now - start) / 1700));
+        set(100 - (100 - target) * ease(t));
+        if (t < 1) sweep = requestAnimationFrame(step);
+      };
+      set(100);
+      sweep = requestAnimationFrame(step);
+    }
+
+    const follow = (event: PointerEvent) => {
+      const rect = slider.getBoundingClientRect();
+      set(((event.clientX - rect.left) / rect.width) * 100);
+    };
+    slider.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0 || (event.target as Element).closest('a, button, [popover], .scb-deco')) return;
+      stop();
+      dragging = true;
+      slider.classList.add('dragging');
+      slider.setPointerCapture(event.pointerId);
+      if (event.pointerType !== 'touch') follow(event);
+    });
+    slider.addEventListener('pointermove', (event) => dragging && follow(event));
+    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+      slider.addEventListener(type, () => {
+        dragging = false;
+        slider.classList.remove('dragging');
+      });
+    }
+
+    const steps: Record<string, number> = { ArrowLeft: -5, ArrowDown: -5, ArrowRight: 5, ArrowUp: 5, PageDown: -20, PageUp: 20 };
+    handle.addEventListener('keydown', (event) => {
+      const next =
+        event.key === 'Home' ? 0 : event.key === 'End' ? 100 : event.key in steps ? pos + (steps[event.key] ?? 0) : null;
+      if (next === null) return;
+      event.preventDefault();
+      stop();
+      set(next);
+    });
+
+    // A keyboard user who tabs into the enhanced block sees all of it, so focus is never under the plain layer.
+    slider.querySelector('.layer.after')?.addEventListener('focusin', (event) => {
+      if ((event.target as Element).matches(':focus-visible')) {
+        stop();
+        set(0);
+      }
+    });
+  }
+</script>
+
+<style>
+  .hero-slider {
+    --pos: 38;
+    --rim-2: color-mix(in oklab, var(--sl-color-accent), var(--sl-color-purple));
+    margin-block: 1.5rem 0;
+  }
+  .compare {
+    position: relative;
+    container-type: inline-size;
+    touch-action: pan-y;
+    user-select: none;
+    cursor: ew-resize;
+  }
+  .layer :global(.expressive-code) {
+    margin: 0;
+  }
+  .layer :global(.expressive-code .frame) {
+    --ec-codeFontSize: clamp(0.59rem, 3cqi, 0.78rem);
+    --ec-uiFontSize: clamp(0.65rem, 3.4cqi, 0.85rem);
+  }
+  /* The label's own size is in rem, so on a narrow screen it would make its line taller than the plain one. */
+  .layer :global(.scb-state-label) {
+    font-size: 0.9em;
+  }
+  .layer.after {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    clip-path: inset(-5em -5em -5em calc(var(--pos) * 1% - 5em * (1 - min(var(--pos), 1))));
+  }
+  .layer.before {
+    clip-path: inset(-5em calc((100 - var(--pos)) * 1% - 5em * (1 - min(100 - var(--pos), 1))) -5em -5em);
+  }
+  .layer.after :global(.expressive-code) {
+    --rim-1: var(--ec-codeblocksBrackets-colour1);
+    --rim-2: var(--ec-codeblocksBrackets-colour2);
+    --rim-3: var(--ec-codeblocksBrackets-colour3);
+    position: relative;
+    border-radius: var(--ec-brdRad);
+    box-shadow:
+      0 1.6em 4.5em -1.2em color-mix(in srgb, var(--rim-2) 45%, transparent),
+      0 0 2.4em -0.6em color-mix(in srgb, var(--rim-1) 40%, transparent);
+  }
+  /* A masked overlay draws the rim, because a border on the frame would shift every line against the plain layer. */
+  .layer.after :global(.expressive-code)::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    z-index: 1;
+    padding: 1px;
+    border-radius: calc(var(--ec-brdRad) + 1px);
+    background: linear-gradient(115deg, var(--rim-1), var(--rim-2) 52%, var(--rim-3));
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+  .divider {
+    position: absolute;
+    z-index: 3;
+    inset-block: -1.25rem;
+    left: calc(var(--pos) * 1%);
+    width: 0;
+    pointer-events: none;
+  }
+  .divider::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: -1px;
+    width: 2px;
+    border-radius: 2px;
+    background: linear-gradient(transparent, var(--sl-color-text-accent) 18% 82%, transparent);
+    box-shadow: 0 0 12px 1px color-mix(in srgb, var(--rim-2) 55%, transparent);
+  }
+  .handle {
+    /* The logo's gold, darkened in the light theme to keep 3:1 on the handle. */
+    --star: #ffd166;
+    position: absolute;
+    top: 50%;
+    width: 44px;
+    height: 44px;
+    translate: -50% -50%;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    pointer-events: auto;
+    cursor: grab;
+    background: color-mix(in srgb, var(--sl-color-black) 72%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid color-mix(in srgb, var(--sl-color-text-accent) 45%, transparent);
+    box-shadow:
+      0 0 0 5px color-mix(in srgb, var(--rim-2) 12%, transparent),
+      0 6px 18px -4px rgb(0 0 0 / 0.35);
+    transition: scale 0.15s ease;
+  }
+:global([data-theme='light']) .handle {
+    --star: color-mix(in srgb, #ffd166 65%, #000);
+  }
+  .dragging .handle {
+    cursor: grabbing;
+    scale: 1.07;
+  }
+  .handle:focus-visible {
+    outline: 2px solid var(--sl-color-text-accent);
+    outline-offset: 3px;
+  }
+  .handle svg {
+    width: 44px;
+    height: 44px;
+  }
+  .spark {
+    fill: var(--star);
+    transform-box: fill-box;
+    transform-origin: center;
+    rotate: calc(var(--pos) * -1.8deg);
+  }
+  .chevron {
+    fill: none;
+    stroke: var(--sl-color-gray-3);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .captions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.6rem;
+    font-size: var(--sl-text-sm);
+    line-height: 1.3;
+  }
+  .caption.before {
+    color: var(--sl-color-gray-3);
+    opacity: clamp(0, (var(--pos) - 6) / 24, 1);
+  }
+  .caption.after {
+    color: var(--sl-color-white);
+    text-align: end;
+    opacity: clamp(0, (94 - var(--pos)) / 24, 1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .handle {
+      transition: none;
+    }
+  }
+  :global(.hero-logo) {
+    display: inline;
+    width: 1.1em;
+    height: auto;
+    margin-inline-end: 0.3em;
+    vertical-align: -0.12em;
+  }
+  :global(.hero > .hero-html:has(.hero-slider)) {
+    display: block;
+    width: min(100%, 25rem);
+  }
+  /* On narrow screens the slider goes between the tagline and the buttons. */
+  @media (max-width: 49.99rem) {
+    :global(.hero:has(.hero-slider)) {
+      gap: clamp(1.5rem, calc(1.5rem + 1vw), 2rem);
+    }
+    :global(.hero:has(.hero-slider) > .stack) {
+      display: contents;
+    }
+    :global(.hero:has(.hero-slider) .actions) {
+      order: 2;
+    }
+    :global(.hero > .hero-html:has(.hero-slider)) {
+      order: 1;
+    }
+  }
+  @media (min-width: 50rem) {
+    :global(.hero:has(.hero-slider)) {
+      grid-template-columns: 3fr 2fr;
+    }
+    :global(.hero > .hero-html:has(.hero-slider)) {
+      width: min(100%, 30rem);
+    }
+  }
+</style>
