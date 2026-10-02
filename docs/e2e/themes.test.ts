@@ -10,7 +10,9 @@ test('each card shows the block in its own theme, whatever the theme of the site
   // The markers ease their colours in, so a read during the transition sees a colour in between.
   const read = () =>
     cards.evaluateAll(async (els) => {
-      await Promise.all(document.getAnimations().map((a) => a.finished));
+      // A theme switch cancels running transitions, whose `finished` then rejects, so wait again until none run.
+      const running = () => document.getAnimations().filter((a) => a.playState === 'running');
+      while (running().length) await Promise.all(running().map((a) => a.finished.catch(() => {})));
       return els.map((el) => ({
         bg: getComputedStyle(el.querySelector('pre') as Element).backgroundColor,
         keyword: getComputedStyle(el.querySelector('.ec-line span[style]') as Element).color,
