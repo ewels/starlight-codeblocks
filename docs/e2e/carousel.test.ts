@@ -58,11 +58,11 @@ test.describe('rotation', () => {
     await scrollToFraction(page, 0.2, 'bottom');
     const scrollY = await page.evaluate(() => window.scrollY);
     await page.clock.runFor(interval);
-    await shows(page, 'footnotes');
+    await shows(page, 'side-annotations');
     expect(await page.evaluate(() => window.scrollY)).toBe(scrollY);
-    await expect(tile(page, 'Footnotes')).toHaveAttribute('aria-pressed', 'true');
+    await expect(tile(page, 'Side annotations')).toHaveAttribute('aria-pressed', 'true');
     await expect(dot(page, 'Annotations')).toHaveAttribute('aria-current', 'false');
-    await expect(dot(page, 'Footnotes')).toHaveAttribute('aria-current', 'true');
+    await expect(dot(page, 'Side annotations')).toHaveAttribute('aria-current', 'true');
     // The next dot's fill starts a fresh 7s transition from 0.
     await expect(fill()).toHaveCSS('transition-duration', '7s');
     expect(await fill().evaluate((el) => (el as HTMLElement).style.width)).toBe('100%');
@@ -84,7 +84,7 @@ test.describe('rotation', () => {
     await press();
     await expect(rotation).toHaveAccessibleName('Pause');
     await page.clock.runFor(interval);
-    await shows(page, 'footnotes');
+    await shows(page, 'side-annotations');
   });
 
   test('pauses while the pointer is over the carousel or focus is in it', async ({ page }) => {
@@ -93,14 +93,14 @@ test.describe('rotation', () => {
     await shows(page, 'annotations');
     await page.mouse.move(0, 0);
     await page.clock.runFor(interval);
-    await shows(page, 'footnotes');
+    await shows(page, 'side-annotations');
     await tile(page, 'Focus').focus();
     await page.clock.runFor(interval * 2);
-    await shows(page, 'footnotes');
+    await shows(page, 'side-annotations');
     await page.locator('h1').click();
     await page.mouse.move(0, 0);
     await page.clock.runFor(interval);
-    await shows(page, 'inline-callouts');
+    await shows(page, 'footnotes');
   });
 
   test('selecting a feature stops the rotation, and so does using an example', async ({ page }) => {
@@ -217,11 +217,11 @@ test('works with the keyboard, and the dots use a roving tabindex and arrow keys
   await shows(page, 'annotations');
   await expect(dot(page, 'Annotations')).toHaveAttribute('tabindex', '0');
   await page.keyboard.press('ArrowRight');
-  await shows(page, 'footnotes');
-  await expect(dot(page, 'Footnotes')).toBeFocused();
-  await expect(dot(page, 'Footnotes')).toHaveAttribute('tabindex', '0');
+  await shows(page, 'side-annotations');
+  await expect(dot(page, 'Side annotations')).toBeFocused();
+  await expect(dot(page, 'Side annotations')).toHaveAttribute('tabindex', '0');
   await expect(dot(page, 'Annotations')).toHaveAttribute('tabindex', '-1');
-  expect(await css(dot(page, 'Footnotes'), 'outlineStyle')).not.toBe('none');
+  expect(await css(dot(page, 'Side annotations'), 'outlineStyle')).not.toBe('none');
   await page.keyboard.press('ArrowLeft');
   await shows(page, 'annotations');
   await page.keyboard.press('End');
@@ -264,7 +264,8 @@ test('has no accessibility violations apart from the fade', async ({ page }) => 
   const contrast = violations.find((v) => v.id === 'color-contrast');
   const other = violations.filter((v) => v.id !== 'color-contrast');
   expect(other.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`)).toEqual([]);
-  for (const node of contrast?.nodes ?? []) expect(node.html).toMatch(/scb-focus-out|scb-mention/);
+  // Axe reports the token, so the class of a dimmed line shows in the selector, not in the token's HTML.
+  for (const node of contrast?.nodes ?? []) expect(`${node.target} ${node.html}`).toMatch(/scb-focus-out|scb-mention/);
 });
 
 test('scrolls the chosen example into view only as far as it needs to', async ({ page }) => {

@@ -1,4 +1,3 @@
-import { readdirSync, readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { unlisted } from '../src/sidebar.mjs';
 import { clipboard, css, sitePages } from './helpers.ts';
@@ -61,16 +60,21 @@ test('every page links to its Markdown version and its share card, and llms.txt 
   }
 });
 
-test('the agent skill page has every skill file, on the page and in its Markdown', async ({ page, request }) => {
+test('the agent skill page gives the install command and links to the skill, on the page and in its Markdown', async ({
+  page,
+  request,
+}) => {
   oneProject();
-  const skill = new URL('../../skills/starlight-codeblocks/', import.meta.url);
-  const files = ['SKILL.md', ...readdirSync(new URL('references/', skill)).map((file) => `references/${file}`)];
+  const source = 'https://github.com/ewels/starlight-codeblocks/tree/main/skills/starlight-codeblocks';
   const markdown = await (await request.get('./agent-skill.md')).text();
+  expect(markdown).toContain('npx skills add ewels/starlight-codeblocks');
+  expect(markdown).toContain(`- [Agent skill source](${source}):`);
+  expect(markdown).not.toMatch(/^<[A-Z]/m);
   await page.goto('./agent-skill/');
-  for (const file of files) {
-    expect(markdown).toContain(readFileSync(new URL(file, skill), 'utf8').trim());
-    await expect(page.locator('.expressive-code .title', { hasText: new RegExp(`^${file}$`) })).toHaveCount(1);
-  }
+  await expect(page.locator('.expressive-code', { hasText: 'npx skills add ewels/starlight-codeblocks' })).toHaveCount(
+    1,
+  );
+  await expect(page.locator(`a[href="${source}"]`).first()).toBeVisible();
 });
 
 test.describe('page actions', () => {

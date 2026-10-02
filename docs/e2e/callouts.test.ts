@@ -93,7 +93,7 @@ test('on a desktop, the arrow points at its text, and a bubble moves left instea
 
 test('between two marked lines, the callout has the same background and bar as the lines', async ({ page }) => {
   for (const meta of ['{1-2}', 'error={1-2}']) {
-    const block = await inject(page, [`\`\`\`js ${meta}`, 'a()', '// [!callout] Note', 'b()', '```']);
+    const block = await inject(page, [`\`\`\`js ${meta}`, 'a()', '// [!callout] Note', 'b()', 'c()', '```']);
     const line = block.locator('.ec-line').first();
     const callout = block.locator('.scb-callout');
     const background = await css(callout, 'backgroundColor');
@@ -103,4 +103,9 @@ test('between two marked lines, the callout has the same background and bar as t
     const bar = await css(line.locator('.code'), 'borderInlineStartColor');
     expect(await css(callout, 'backgroundImage'), meta).toContain(bar);
   }
+  // With a state on every line, the block draws the tint once, under the callout too.
+  const all = await inject(page, ['```js error={1-2}', 'a()', '// [!callout] Note', 'b()', '```']);
+  expect(await css(all.locator('.scb-callout'), 'backgroundColor')).toBe('rgba(0, 0, 0, 0)');
+  expect(await css(all.locator('.scb-callout'), 'backgroundImage')).toBe('none');
+  expect(await css(all.locator('pre'), 'backgroundImage')).not.toBe('none');
 });

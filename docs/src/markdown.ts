@@ -183,6 +183,9 @@ export function pageMarkdown(entry: Entry) {
     }
     if (/^(import|export) /.test(line)) throw new Error(`No Markdown version of this line in ${entry.id}: ${line}`);
     const tag = line.match(/^(\s*)<(\/?)([A-Z]\w*)(.*?)(\/?)>$/);
+    if (!tag && /^\s*<[A-Z]\w*(\s[^>]*)?$/.test(line)) {
+      throw new Error(`Put each component tag on one line in ${entry.id}: ${line.trim()}`);
+    }
     if (!tag) {
       if (line.trim() !== '' || out.at(-1)?.trim() !== '') out.push(absoluteLinks(line));
       continue;

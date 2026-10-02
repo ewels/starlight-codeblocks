@@ -133,7 +133,9 @@ pre:has(.${cls()}) { container-type: inline-size; }
   --scb-callout-bg: var(--scbStateBg);
   --scb-callout-bar: var(--scbStateBar);
   --scb-callout-bar-wd: ${cssVar('codeblocksLineStates.barWidth')};
-}`;
+}
+/* A state on every line tints the block itself. */
+pre.${PREFIX}-state-all .${cls('-on')} { background: none; }`;
     },
     hooks: {
       postprocessRenderedBlock(context) {
