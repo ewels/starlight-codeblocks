@@ -1,12 +1,13 @@
 # Make code easier to read
 
-Six features make a block, or the code in the prose, easier to read. None of them changes the copied text.
+Seven features make a block, or the code in the prose, easier to read. None of them changes the copied text.
 
 - If lines are needed to run the code but not to understand it, hide them with hidden lines.
 - If the whole file matters but readers scan it, cap it with an expandable block.
 - If every line matters but a few matter more, use focus, in [draw-attention.md](draw-attention.md).
 - If the exact whitespace changes the meaning, show it with visible whitespace.
 - If brackets nest deeply on dense lines, colour them with colourised brackets.
+- If code has CSS colours, colour swatches show them. They start on their own.
 - If code is inside a sentence, colour it with inline code highlighting.
 - If the reader compares one before and one after of a few lines, use a diff in one block. Word-level diff starts on its own.
 
@@ -87,6 +88,26 @@ Use for lines with several levels of nested brackets. `()`, `[]` and `{}` cycle 
 - The colours need no JavaScript. The outline on hover needs JavaScript.
 - Option: `brackets.languages` (default `[]`) turns the colours on for every block in those languages, such as `['js', 'json']`. A name also covers the other names of its language (`js` covers `javascript`).
 - Limits: the plugin finds strings and comments with the comment syntax of the language, not a full parser.
+
+## Colour swatches
+
+Docs: https://ewels.github.io/starlight-codeblocks/features/colour-swatches/
+
+Starts on its own in every block. A small swatch in the colour goes before each CSS colour: hex, `rgb()`, `hsl()`, `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, `color()` and colour names. Hovering tints the colour text. Clicking a colour copies it.
+
+| Syntax | Where |
+|---|---|
+| `swatches=false` | Code block fence line. Turns off the swatches for one block. |
+| `swatches` | Code block fence line. Turns on the swatches for a block outside `swatches.languages`. |
+
+- In stylesheets, every colour in a declaration value gets a swatch. ID selectors, classes, variables and `url(#id)` do not.
+- In other languages, a colour gets a swatch only in quotes or after `:`, `=` or `,`. Colour names need quotes.
+- A colour function with `var()` or `calc()` in it has no swatch.
+- The swatches copy no text. Copy needs JavaScript; the swatches do not.
+- Options: `swatches.languages` (default `'all'`) and `swatches.formats` (default every format) choose what gets a swatch.
+- Options: `swatches.shape` (`'square'`, `'rounded'` or `'circle'`, default `'rounded'`) and `swatches.size` (a CSS length, default `'0.8em'`).
+- Options: `swatches.hover` and `swatches.copy` (default `true`), and `swatches.prose` (default `false`). With `swatches.prose`, colours in the text of a page, and inline code that is one colour, also get a swatch.
+- A docs example about another feature with colours in it: add `swatches=false` so that it shows only its own feature.
 
 ## Inline code highlighting
 

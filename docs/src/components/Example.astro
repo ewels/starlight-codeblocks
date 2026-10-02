@@ -25,6 +25,8 @@ const live = Astro.slots.has('default');
 const blocks = [...code.matchAll(/^(`{3,}|~{3,})([^\s`]*)[ \t]*(.*)\n([\s\S]*?)\n?^\1[ \t]*$/gm)].map(
   ([, , lang, meta, body]) => ({ lang, meta: `${meta} ${hiddenAttributes}`.trim(), code: body }),
 );
+// The source shows what authors write, so colours in it get no swatches.
+const sourceMeta = keepTrailingWhitespace(code.trim(), 'swatches=false');
 if (!live && blocks.length === 0) throw new Error(`<Example> found no fenced code block in:\n${code}`);
 ---
 
@@ -39,7 +41,7 @@ if (!live && blocks.length === 0) throw new Error(`<Example> found no fenced cod
         </TabItem>
         <TabItem label="Source">
           <div class="pane source not-content">
-            <Code code={code.trim()} lang="md" meta={keepTrailingWhitespace(code.trim(), '')} />
+            <Code code={code.trim()} lang="md" meta={sourceMeta} />
           </div>
         </TabItem>
       </Tabs>
@@ -52,7 +54,7 @@ if (!live && blocks.length === 0) throw new Error(`<Example> found no fenced cod
       </div>
       <div class="pane source not-content">
         <p class="label">You write</p>
-        <Code code={code.trim()} lang="md" meta={keepTrailingWhitespace(code.trim(), '')} />
+        <Code code={code.trim()} lang="md" meta={sourceMeta} />
       </div>
     </div>
   )

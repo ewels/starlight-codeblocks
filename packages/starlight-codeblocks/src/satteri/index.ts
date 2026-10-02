@@ -1,7 +1,7 @@
 import { relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MetaOptions } from '@expressive-code/core';
-import type { Code, Link, Nodes } from 'mdast';
+import type { Code, InlineCode, Link, Nodes, Text } from 'mdast';
 import type {
   MdastNode,
   MdastPluginDefinition,
@@ -13,6 +13,7 @@ import { encodeVariant, SWITCHER_META } from '../expressive-code/code-switcher.t
 import { commentSyntaxFor } from '../expressive-code/comments.ts';
 import { bundledLanguage } from '../expressive-code/core.ts';
 import { parseNotation } from '../expressive-code/notation.ts';
+import { findColours, SWATCH, type SwatchSettings, wholeColour } from '../expressive-code/swatches.ts';
 import { withTrailingWhitespace } from '../expressive-code/whitespace.ts';
 import type { ResolvedOptions } from '../options.ts';
 import { inlineCode } from './inline-code.ts';
@@ -109,9 +110,56 @@ function codeSwitcher(node: ContainerDirective, file: string): MdastNode {
   } as unknown as MdastNode;
 }
 
+const swatchHast = (colour: string) => ({
+  className: [`${SWATCH}-text`],
+  dataScbColour: colour,
+  dataScbSwatches: '',
+  style: `--scb-swatch: ${colour}`,
+});
+const chipHast = { className: [SWATCH], ariaHidden: 'true' };
+
+/** The text with a swatch before each colour, or `undefined` when it has none. */
+function proseSwatches(node: Text, { formats }: SwatchSettings) {
+  const matches = findColours(node.value, 'prose', formats);
+  if (matches.length === 0) return;
+  const nodes: unknown[] = [];
+  let at = 0;
+  for (const { start, end, colour } of matches) {
+    if (start > at) nodes.push({ type: 'text', value: node.value.slice(at, start) });
+    nodes.push({
+      type: 'scbSwatch',
+      data: { hName: 'span', hProperties: swatchHast(colour) },
+      children: [
+        { type: 'scbSwatchChip', data: { hName: 'span', hProperties: chipHast }, children: [] },
+        { type: 'text', value: colour },
+      ],
+    });
+    at = end;
+  }
+  if (at < node.value.length) nodes.push({ type: 'text', value: node.value.slice(at) });
+  return nodes;
+}
+
+/** Inline code that is one colour, as a `code` element with a swatch inside. */
+function inlineSwatch(node: InlineCode, { formats }: SwatchSettings) {
+  const colour = wholeColour(node.value, formats);
+  if (!colour) return;
+  const chip = { type: 'element', tagName: 'span', properties: chipHast, children: [] };
+  const text = { type: 'text', value: node.value };
+  return {
+    type: 'inlineCode',
+    value: node.value,
+    data: {
+      hName: 'code',
+      hChildren: [{ type: 'element', tagName: 'span', properties: swatchHast(colour), children: [chip, text] }],
+    },
+  } as InlineCode;
+}
+
 /** The Sätteri plugins for syntax outside code blocks, one instance for each document. */
 export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPluginEntry[] {
   const defaultLanguage = options.inlineHighlighting ? options.inlineHighlighting.defaultLanguage : false;
+  const prose = options.swatches !== false && options.swatches.prose ? options.swatches : undefined;
   return [
     ({ fileURL }: PluginFactoryContext): MdastPluginDefinition => {
       const file = fileName(fileURL);
@@ -152,8 +200,16 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
         containerDirective(node) {
           if (options.codeSwitcher && node.name === 'code-switcher') return codeSwitcher(node, file);
         },
-        ...(options.inlineHighlighting && {
-          inlineCode: (node, ctx) => inlineCode(node, ctx, warn, defaultLanguage) as never,
+        ...((options.inlineHighlighting || prose) && {
+          inlineCode: async (node, ctx) =>
+            ((options.inlineHighlighting && (await inlineCode(node, ctx, warn, defaultLanguage))) ||
+              (prose && inlineSwatch(node, prose))) as never,
+        }),
+        ...(prose && {
+          text(node, ctx) {
+            const nodes = proseSwatches(node, prose);
+            if (nodes) ctx.replaceNode(node, nodes as never);
+          },
         }),
       };
     },

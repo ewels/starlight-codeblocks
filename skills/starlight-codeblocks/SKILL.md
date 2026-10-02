@@ -1,12 +1,12 @@
 ---
 name: starlight-codeblocks
-description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, inline code highlighting, code links, API auto-linking, line permalinks, the code switcher, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
+description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, colour swatches, inline code highlighting, code links, API auto-linking, line permalinks, the code switcher, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
 license: MIT
 ---
 
 # starlight-codeblocks
 
-starlight-codeblocks is a Starlight plugin. It adds 24 features to the code blocks that Expressive Code renders. A feature starts only when a code block uses its attribute or its directive, so the plugin does not change existing pages. A few features apply to every block of a type: they are in [Features that start on their own](#features-that-start-on-their-own).
+starlight-codeblocks is a Starlight plugin. It adds 25 features to the code blocks that Expressive Code renders. A feature starts only when a code block uses its attribute or its directive, so the plugin does not change existing pages. A few features apply to every block of a type: they are in [Features that start on their own](#features-that-start-on-their-own).
 
 Full docs: https://ewels.github.io/starlight-codeblocks/. Each page has a Markdown version at the same address with `.md` at the end. https://ewels.github.io/starlight-codeblocks/llms-full.txt has every page in one file.
 
@@ -78,6 +78,7 @@ Use scrollycoding when prose explains the code step by step as the reader scroll
 | A long file that readers scan | Expandable block: `expandable` or `expandable={N}` | Shows the first lines, with a button that shows the rest. |
 | Indentation or tabs change the meaning (Make, Python, YAML) | Visible whitespace: `whitespace` or `whitespace="all"` | Shows spaces and tabs as faint glyphs. |
 | Deep nesting on dense lines | Colourised brackets: `brackets` | Colours bracket pairs by depth. |
+| CSS colours in code | Colour swatches: on by default, `swatches=false` | A swatch of each colour before its value. |
 | Code inside a sentence of prose | Inline code highlighting: `` `code{:lang}` `` | Syntax colours for inline code. |
 | An edit to a few lines, before and after in one block | A `diff` block, `ins={}` and `del={}`, or `[!code ++]` and `[!code --]` | Word-level diff then highlights the changed words. It starts on its own. |
 
@@ -156,6 +157,7 @@ These features need no attribute. Know them, because they can change a block tha
 - API auto-linking links names in every `py`, `python`, `pycon`, `nextflow` and `nf` block. Turn it off for a block with `apiLinks=false`.
 - Smart shell copy applies to every block with a terminal frame and a line that starts with a prompt (`$ ` or `> ` by default). It also applies to every `pycon` block with a line that starts with `>>> `. It applies to a `python` or `py` block if the first line starts with `>>> `.
 - Colourised brackets apply to every block in the languages in `brackets.languages`, if the site sets that option.
+- Colour swatches apply to every block with a CSS colour in it. Turn them off for a block with `swatches=false`.
 - Expandable blocks apply to every block longer than `expandable.auto` lines, if the site sets that option. Turn it off for a block with `expandable=false`.
 - Inline code highlighting applies to all inline code, if the site sets `inlineHighlighting.defaultLanguage`. Keep one piece plain with `{:txt}`.
 

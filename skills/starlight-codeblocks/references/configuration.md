@@ -29,6 +29,7 @@ codeblocks({
 | `wordDiff` | `minSimilarity`: from 0 to 1, default `0.4` | Word-level diff |
 | `whitespace` | None | Visible whitespace |
 | `brackets` | `languages`: default `[]` | Colourised brackets |
+| `swatches` | `languages`: default `'all'`. `formats`: default every format. `shape`: `'square'`, `'rounded'` or `'circle'`, default `'rounded'`. `size`: default `'0.8em'`. `hover`, `copy`: default `true`. `prose`: default `false` | Colour swatches |
 | `codeLinks` | None | Code links |
 | `apiLinks` | `adapters`: default `[python(), nextflow()]` | API auto-linking |
 | `expandable` | `lines`: default `12`. `auto`: a line count, default `false` | Expandable blocks |

@@ -21,11 +21,11 @@ test('gives the card outside code blocks the variables of each theme, with every
 
 test('the page loader imports the card module from the assets folder, under the site base or the assets prefix', () => {
   const script = apiCardLoader('/docs/', '_astro') ?? '';
-  expect(script).toMatch(/^const url = "\/docs\/_astro\/scb-api-links\.[\w-]+\.js";$/m);
+  expect(script).toMatch(/^\s*const url = "\/docs\/_astro\/scb-api-links\.[\w-]+\.js";$/m);
   expect(script).toContain('import(/* @vite-ignore */ url)');
   expect(script).toContain("document.querySelector('[data-scb-api-links]')");
   expect(apiCardLoader('https://cdn.example.com/', '_astro')).toMatch(
-    /^const url = "https:\/\/cdn\.example\.com\/_astro\/scb-api-links\./m,
+    /^\s*const url = "https:\/\/cdn\.example\.com\/_astro\/scb-api-links\./m,
   );
   expect(jsAssetsPrefix(undefined)).toBeUndefined();
   expect(jsAssetsPrefix('https://cdn.example.com')).toBe('https://cdn.example.com');

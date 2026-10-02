@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/logotype.svg" width="800" alt="starlight-codeblocks">
 </h1>
 
-A Starlight plugin that adds 24 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
+A Starlight plugin that adds 25 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
 
 Using an agent? [Point it at the bundled skill](https://ewels.github.io/starlight-codeblocks/agent-skill/).
 
@@ -265,6 +265,23 @@ Colour matching brackets by nesting depth, so readers can match the pairs on a d
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/colourised-brackets.png" alt="Four lines of JavaScript. The nested brackets of the call that starts on the second line have a different colour for each depth.">
 
 [Colourised brackets documentation](https://ewels.github.io/starlight-codeblocks/features/colourised-brackets/)
+
+</details>
+
+<details>
+<summary>Colour swatches</summary>
+
+Show a small swatch of each CSS colour next to its value. Readers can click a colour to copy it. Swatches start on their own.
+
+````md
+```css
+.button { background: rebeccapurple; }
+```
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/colour-swatches.png" alt="A CSS block. A small square in each colour comes before the values #ffffff, rebeccapurple and a semi-transparent rgb() colour.">
+
+[Colour swatches documentation](https://ewels.github.io/starlight-codeblocks/features/colour-swatches/)
 
 </details>
 

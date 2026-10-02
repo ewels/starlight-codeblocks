@@ -92,6 +92,7 @@ const features = [
   { slug: 'word-level-diff' },
   { slug: 'visible-whitespace' },
   { slug: 'colourised-brackets' },
+  { slug: 'colour-swatches' },
   {
     slug: 'code-links',
     run: async (page, rec) => {

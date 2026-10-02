@@ -5,6 +5,7 @@ import type { ExpressiveCodePlugin } from '@expressive-code/core';
 import { AstroError } from 'astro/errors';
 import { CARD_CSS_ID } from './api-card-page.ts';
 import { createPlugins, PLUGIN_PREFIX } from './expressive-code/index.ts';
+import { SWATCH_CSS_ID } from './expressive-code/swatches.ts';
 import { codeblocksIntegration } from './integration.ts';
 import { type CodeblocksOptions, resolveOptions } from './options.ts';
 import { getRegistry, setRegistry } from './registry.ts';
@@ -42,6 +43,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
         const pageCss = [
           ...(options.inlineHighlighting ? [INLINE_CSS_ID] : []),
           ...(options.apiLinks ? [CARD_CSS_ID] : []),
+          ...(options.swatches !== false && options.swatches.prose ? [SWATCH_CSS_ID] : []),
         ];
         const css = pageCss.length > 0 ? { customCss: [...(config.customCss ?? []), ...pageCss] } : {};
         // astro-expressive-code expands tabs to two spaces before any plugin hook runs, which breaks

@@ -3,6 +3,7 @@ import type { AstroIntegration } from 'astro';
 import { apiCardPageStyles, CARD_CSS_ID } from './api-card-page.ts';
 import { readClientModules } from './client-modules.ts';
 import { runtimeFileName, runtimeModules } from './expressive-code/runnable.ts';
+import { proseSwatchStyles, SWATCH_CSS_ID } from './expressive-code/swatches.ts';
 import type { ResolvedOptions } from './options.ts';
 import { mdastPlugins } from './satteri/index.ts';
 import { INLINE_CSS_ID, inlineStyles } from './satteri/inline-code.ts';
@@ -46,11 +47,17 @@ export function codeblocksIntegration({ options, ecConfigOverride }: Integration
         const plugins = clientModulePlugins(config.build.assets);
         if (ecConfigOverride) plugins.push(ecConfigPlugin(ecConfigOverride.file));
         if (options.inlineHighlighting) plugins.push(cssPlugin(INLINE_CSS_ID, inlineStyles));
+        // Astro applies `assetsPrefix` only to the build; dev serves the assets under the base.
+        const base = (command === 'build' ? jsAssetsPrefix(config.build.assetsPrefix) : undefined) ?? config.base;
         if (options.apiLinks) {
           plugins.push(cssPlugin(CARD_CSS_ID, apiCardPageStyles));
-          // Astro applies `assetsPrefix` only to the build; dev serves the assets under the base.
-          const prefix = command === 'build' ? jsAssetsPrefix(config.build.assetsPrefix) : undefined;
-          const script = apiCardLoader(prefix ?? config.base, config.build.assets);
+          const script = apiCardLoader(base, config.build.assets);
+          if (script) injectScript('page', script);
+        }
+        if (options.swatches !== false && options.swatches.prose) {
+          const swatches = options.swatches;
+          plugins.push(cssPlugin(SWATCH_CSS_ID, () => proseSwatchStyles(swatches)));
+          const script = swatches.copy && pageLoader('swatches', base, config.build.assets);
           if (script) injectScript('page', script);
         }
         if (options.runnable) {
@@ -94,21 +101,27 @@ export function jsAssetsPrefix(prefix: string | Record<string, string | undefine
 }
 
 /**
- * Imports the API card module on pages with API links outside code blocks, where the loader in
+ * Imports the module of `feature` on pages that use it outside code blocks, where the loader in
  * `ec.<hash>.js` is missing. The loader there imports the same URL, so a page with both gets one module.
  */
-export function apiCardLoader(base: string, assetsDir: string) {
-  const module = readClientModules().find((m) => m.feature === 'api-links');
+export function pageLoader(feature: string, base: string, assetsDir: string) {
+  const module = readClientModules().find((m) => m.feature === feature);
   if (!module) return undefined;
   const url = `${base.replace(/\/$/, '')}/${assetsDir}/${module.fileName}`;
   // A variable, so that Vite does not try to resolve the URL in dev, which fails the whole page script.
-  return `const url = ${JSON.stringify(url)};
-const load = () => {
-  if (document.querySelector('[data-scb-api-links]')) import(/* @vite-ignore */ url).then((m) => m.default?.());
-};
-load();
-document.addEventListener('astro:page-load', load);`;
+  // A block, because Astro joins the page scripts of every loader into one module.
+  return `{
+  const url = ${JSON.stringify(url)};
+  const load = () => {
+    if (document.querySelector('[data-scb-${feature}]')) import(/* @vite-ignore */ url).then((m) => m.default?.());
+  };
+  load();
+  document.addEventListener('astro:page-load', load);
+}`;
 }
+
+/** The loader for API cards on links outside code blocks. */
+export const apiCardLoader = (base: string, assetsDir: string) => pageLoader('api-links', base, assetsDir);
 
 /** Serves the feature modules next to `ec.<hash>.js` in dev, and emits them there in the build. */
 export function clientModulePlugins(assetsDir: string): VitePlugin[] {

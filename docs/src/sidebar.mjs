@@ -31,6 +31,7 @@ export const sidebar = [
       'features/expandable-blocks',
       'features/visible-whitespace',
       'features/colourised-brackets',
+      'features/colour-swatches',
       'features/inline-code-highlighting',
       'features/word-level-diff',
     ],

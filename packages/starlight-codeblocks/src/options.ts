@@ -1,5 +1,6 @@
 import { nextflow } from './adapters/nextflow.ts';
 import { python } from './adapters/python.ts';
+import { type SwatchFormat, type SwatchShape, swatchFormats } from './expressive-code/swatches.ts';
 
 export interface LineStateDefinition {
   label: string;
@@ -80,6 +81,17 @@ export interface CodeblocksOptions {
   wordDiff?: false | { minSimilarity?: number };
   whitespace?: false;
   brackets?: false | { languages?: string[] };
+  swatches?:
+    | false
+    | {
+        languages?: 'all' | string[];
+        formats?: SwatchFormat[];
+        shape?: SwatchShape;
+        size?: string;
+        hover?: boolean;
+        copy?: boolean;
+        prose?: boolean;
+      };
   codeLinks?: false;
   apiLinks?: false | { adapters?: ApiLinkAdapter[] };
   expandable?: false | { lines?: number; auto?: number | false };
@@ -146,7 +158,7 @@ const oneOf =
 
 // Attributes and directives of other features, which a custom state name would clash with.
 const reservedStateNames = new Set(
-  'title frame mark ins del collapse wrap lang focus hidden hide highlight whitespace brackets expandable playground id placeholder annotations footnotes label prefix step runnable note warn'.split(
+  'title frame mark ins del collapse wrap lang focus hidden hide highlight whitespace brackets swatches expandable playground id placeholder annotations footnotes label prefix step runnable note warn'.split(
     ' ',
   ),
 );
@@ -278,6 +290,58 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         default: [],
         description: 'Languages that get colourised brackets in every block.',
         valid: isStringArray,
+      },
+    },
+  },
+  swatches: {
+    description: 'Shows a swatch of the colour before each CSS colour in code.',
+    page: 'features/colour-swatches',
+    fields: {
+      languages: {
+        type: "'all' | string[]",
+        default: 'all',
+        description:
+          'Languages that get swatches. `swatches` on the fence line turns them on for one block of another language.',
+        valid: (value) => value === 'all' || isStringArray(value),
+      },
+      formats: {
+        type: `Array<${swatchFormats.map((format) => `'${format}'`).join(' | ')}>`,
+        default: [...swatchFormats],
+        description:
+          'The kinds of colour that get swatches. `rgb` also covers `rgba()`, and `hsl` covers `hsla()`. `named` is the CSS colour names, such as `rebeccapurple`.',
+        valid: (value) =>
+          Array.isArray(value) && value.every((format) => swatchFormats.includes(format as SwatchFormat)),
+      },
+      shape: {
+        type: "'square' | 'rounded' | 'circle'",
+        default: 'rounded',
+        description: 'The shape of each swatch.',
+        valid: oneOf('square', 'rounded', 'circle'),
+      },
+      size: {
+        type: 'string',
+        default: '0.8em',
+        description: 'The width and height of each swatch, as a CSS length such as `10px` or `0.8em`.',
+        valid: (value) => isString(value) && /^(?:\d+(?:\.\d+)?|\.\d+)(?:px|em|rem|ch|ex|lh)$/.test(value),
+      },
+      hover: {
+        type: 'boolean',
+        default: true,
+        description: 'Tint the colour text in its own colour, and enlarge the swatch, when the mouse cursor is on it.',
+        valid: (value) => typeof value === 'boolean',
+      },
+      copy: {
+        type: 'boolean',
+        default: true,
+        description: 'Copy the colour when the reader clicks it.',
+        valid: (value) => typeof value === 'boolean',
+      },
+      prose: {
+        type: 'boolean',
+        default: false,
+        description:
+          'Also show swatches in the text of Markdown pages, and in inline code that is one colour. Named colours get a swatch only in inline code.',
+        valid: (value) => typeof value === 'boolean',
       },
     },
   },

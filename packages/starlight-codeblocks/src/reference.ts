@@ -82,6 +82,18 @@ export const attributesReference: AttributeDoc[] = [
     example: { lang: 'js', meta: 'brackets', code: 'const total = items.map((item) => item.price * (1 + tax));' },
   },
   {
+    name: 'swatches',
+    syntax: ['swatches', 'swatches=false'],
+    description:
+      'Shows a swatch before each CSS colour. Swatches are on for every block by default, and `swatches=false` turns them off for one block. With `swatches.languages` set, `swatches` turns them on for a block of another language.',
+    page: 'features/colour-swatches',
+    example: {
+      lang: 'css',
+      meta: 'swatches=false',
+      code: '.button {\n  color: #ffffff;\n  background: rebeccapurple;\n}',
+    },
+  },
+  {
     name: 'wordDiff',
     syntax: ['wordDiff=false'],
     description: 'Turns off word-level diff for the block. Changed lines keep their whole-line tints.',

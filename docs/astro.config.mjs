@@ -34,6 +34,7 @@ export default defineConfig({
           // Markdown blocks on this site show the source that authors write, so their directives must stay as text.
           notation: { comments: { md: [], markdown: [], mdx: [] } },
           shellCopy: { prompts: ['$ ', '> ', 'PS> '] },
+          swatches: { prose: true },
           playgrounds: {
             pythontutor: {
               label: 'Open in Python Tutor',

@@ -1,0 +1,122 @@
+---
+title: Colour swatches
+description: Show a small swatch of each CSS colour next to its value, so readers see the colour without a colour picker.
+---
+
+import { LinkCard } from '@astrojs/starlight/components';
+import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
+
+A hex value such as `#ff5f1f` tells most readers little about the colour. The plugin puts a small swatch before each CSS colour in a code block, in the colour itself. Swatches are on for every code block, so you do not add an attribute.
+
+export const basic = `
+\`\`\`css
+.button {
+  color: #ffffff;
+  background: rebeccapurple;
+  border: 1px solid rgb(102 51 153 / 50%);
+}
+\`\`\`
+`;
+
+<Example code={basic} />
+
+Each value keeps its text, and the swatch comes before it. Hover over a colour to tint it in its own colour. Click a colour to copy it.
+
+## Syntax
+
+| Syntax | Where |
+|---|---|
+| `swatches=false` | Code block fence line |
+| `swatches` | Code block fence line |
+
+## Examples
+
+### Colours in other languages
+
+Outside stylesheets, the plugin finds colours only where they look like values: in quotes, or after a `:`, `=` or `,`. A comment such as `// TODO #add` keeps its text:
+
+export const js = `
+\`\`\`js
+// TODO #add a dark theme
+const theme = {
+  text: '#1e1e2e',
+  accent: 'tomato',
+};
+\`\`\`
+`;
+
+<Example code={js} layout="tabs" />
+
+### Turn off swatches for one block
+
+Add `swatches=false` to the fence line. The fence line is the first line of the code block, with the language:
+
+export const off = `
+\`\`\`css swatches=false
+:root { --accent: #ff5f1f; }
+\`\`\`
+`;
+
+<Example code={off} layout="tabs" />
+
+### Colours in the prose
+
+With the `swatches.prose` option, colours in the text of a page also get a swatch. This site turns it on:
+
+export const prose = `
+The brand colour is #ff5f1f. Use \`rebeccapurple\` for links.
+`;
+
+<Example code={prose} layout="tabs">
+
+The brand colour is #ff5f1f. Use `rebeccapurple` for links.
+
+</Example>
+
+## Behaviour
+
+- Colours:
+  - Hex colours with three, four, six or eight digits, and the CSS colour names, such as `rebeccapurple`.
+  - The colour functions `rgb()`, `rgba()`, `hsl()`, `hsla()`, `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()` and `color()`.
+  - A colour function gets a swatch only when it has numbers in it. `rgb(var(--r), 0, 0)` has no swatch, because the plugin cannot know its colour.
+  - A colour with transparency shows a checkerboard through the swatch.
+- What is not a colour:
+  - In CSS, Sass, Less and Stylus blocks, ID selectors such as `#bad { }` and classes such as `.red`.
+  - Variables such as `$green` and `--blue`, and SVG references such as `url(#fade)`.
+  - In other languages, colour names that are not in quotes, such as `paint(red)`.
+  - In other languages, hex that does not look like a value, such as `// TODO #add`.
+  - In the prose, issue numbers such as #123, tags such as #cafe, and colour names such as red that are not inline code.
+- Hover and copy:
+  - Hovering over a colour tints its text in its own colour and enlarges the swatch.
+  - Clicking a colour copies its value, and **Copied** shows next to it. A colour is a button, so you can also move to it with Tab and press Enter or Space.
+  - The swatches copy no text. The copy button and a selection copy the code as written.
+- Without JavaScript:
+  - The swatches and the hover tint work without JavaScript. Copy needs JavaScript, and without it a colour is plain text.
+
+## Options
+
+<Options />
+
+To show swatches for hex colours only, as circles, in CSS blocks only:
+
+```js title="astro.config.mjs"
+codeblocks({
+  swatches: { formats: ['hex'], shape: 'circle', languages: ['css'] },
+});
+```
+
+With `swatches.languages` set, add `swatches` to the fence line of a block of another language to turn on its swatches.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
+
+## Limitations
+
+- The plugin finds colours with patterns, not a CSS parser. A rare value can get a swatch that it does not need. Add `swatches=false` to that block.
+- A colour that comes from a variable, such as `var(--accent)`, has no swatch.
+- A swatch adds width to its line, so a column of values after it moves to the right.
+
+## Related
+
+- [Colourised brackets](/starlight-codeblocks/features/colourised-brackets/): colour bracket pairs by depth, for dense lines with nested calls.
+- [Inline code highlighting](/starlight-codeblocks/features/inline-code-highlighting/): give inline code in the prose the syntax colours of the code blocks.

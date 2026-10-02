@@ -20,6 +20,7 @@ import { pluginPlaceholders } from './placeholders.ts';
 import { pluginPlayground } from './playground.ts';
 import { pluginRunnable } from './runnable.ts';
 import { pluginShellCopy } from './shell-copy.ts';
+import { pluginSwatches } from './swatches.ts';
 import { pluginWalkthrough } from './walkthrough.ts';
 import { pluginWhitespace } from './whitespace.ts';
 import { pluginWordDiff } from './word-diff.ts';
@@ -45,6 +46,7 @@ export {
   pluginPlayground,
   pluginRunnable,
   pluginShellCopy,
+  pluginSwatches,
   pluginWalkthrough,
   pluginWhitespace,
   pluginWordDiff,
@@ -78,6 +80,7 @@ export function createPlugins(options: ResolvedOptions, base?: string): Expressi
     ...(options.brackets
       ? [pluginBrackets({ ...options.brackets, comments: options.notation ? options.notation.comments : {} })]
       : []),
+    ...(options.swatches ? [pluginSwatches(options.swatches)] : []),
     ...(options.shellCopy ? [pluginShellCopy(options.shellCopy)] : []),
     ...(options.codeLinks ? [pluginCodeLinks({ base })] : []),
     ...(options.apiLinks ? [pluginApiLinks({ ...options.apiLinks, base })] : []),
