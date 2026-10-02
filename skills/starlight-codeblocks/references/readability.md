@@ -93,12 +93,13 @@ Use for lines with several levels of nested brackets. `()`, `[]` and `{}` cycle 
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/colour-swatches/
 
-Starts on its own in every block. A small swatch in the colour goes before each CSS colour: hex, `rgb()`, `hsl()`, `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, `color()` and colour names. Hovering tints the colour text. Clicking a colour copies it.
+Starts on its own in every block. A small swatch in the colour goes before each CSS colour: hex, `rgb()`, `hsl()`, `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, `color()` and colour names. Hovering shows the colour text on a chip in its own colour. Clicking a colour copies it.
 
 | Syntax | Where |
 |---|---|
 | `swatches=false` | Code block fence line. Turns off the swatches for one block. |
 | `swatches` | Code block fence line. Turns on the swatches for a block outside `swatches.languages`. |
+| `swatches.shape="square"`, `swatches.shape="rounded"`, `swatches.shape="circle"` | Code block fence line. Sets the shape for one block. |
 
 - In stylesheets, every colour in a declaration value gets a swatch. ID selectors, classes, variables and `url(#id)` do not.
 - In other languages, a colour gets a swatch only in quotes or after `:`, `=` or `,`. Colour names need quotes.

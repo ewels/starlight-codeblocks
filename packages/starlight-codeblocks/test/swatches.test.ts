@@ -108,6 +108,24 @@ test('shape, size and hover change the styles', async () => {
   expect(await baseStyles()).toMatch(/swatch-text:is\(:hover/);
 });
 
+test('swatches.shape sets the shape for one block, and a bad value warns', async () => {
+  expect((await render(block('css swatches.shape="circle"', 'a { color: #fff; }'))).html).toContain(
+    'data-scb-swatch-shape="circle"',
+  );
+  const bad = await render(block('css swatches.shape="star"', 'a { color: #fff; }'));
+  expect(bad.html).not.toContain('data-scb-swatch-shape');
+  expect(bad.warnings).toEqual([expect.stringContaining('`swatches.shape="star"` must be')]);
+  expect(await baseStyles()).toContain("[data-scb-swatch-shape='circle'] .scb-swatch{border-radius:50%}");
+});
+
+test('the hover chip is solid, with a darker border and readable text', async () => {
+  const css = await baseStyles();
+  expect(css).toContain('.scb-swatch-text::before');
+  expect(css).toContain("content:'Click to copy'");
+  expect(css).toContain('oklch(from var(--scb-swatch) calc(l * 0.7) c h)');
+  expect(css).not.toMatch(/color-mix\(in srgb,var\(--scb-swatch\) \d+%/);
+});
+
 test('validates the options', () => {
   expect(resolveOptions().swatches).toMatchObject({ languages: 'all', shape: 'rounded', prose: false, copy: true });
   expect(() => resolveOptions({ swatches: { shape: 'star' as never } })).toThrow(/swatches.shape/);

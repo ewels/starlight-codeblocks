@@ -1,7 +1,7 @@
 import { type AnnotationRenderOptions, ExpressiveCodeAnnotation } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { type CodeblocksPlugin, languageId } from './core.ts';
+import { blockSetting, type CodeblocksPlugin, languageId } from './core.ts';
 import { PREFIX } from './styles.ts';
 
 export const swatchFormats = ['hex', 'rgb', 'hsl', 'hwb', 'lab', 'lch', 'oklab', 'oklch', 'color', 'named'] as const;
@@ -123,7 +123,7 @@ export function wholeColour(text: string, formats: readonly SwatchFormat[]) {
 }
 
 export const SWATCH = `${PREFIX}-swatch`;
-const SHAPES: Record<SwatchShape, string> = { square: '1px', rounded: '25%', circle: '50%' };
+const SHAPES: Record<SwatchShape, string> = { square: '0', rounded: '25%', circle: '50%' };
 
 /** The hast properties of the element around a colour. The client module reads `data-scb-colour`. */
 export const swatchProperties = (colour: string) => ({
@@ -139,8 +139,12 @@ export const swatchElement = () => h('span', { class: SWATCH, ariaHidden: 'true'
 export function swatchStyles(
   { shape, size, hover }: Pick<SwatchSettings, 'shape' | 'size' | 'hover'>,
   tip: { bg: string; fg: string },
+  /** The surface under the code, which a colour with transparency shows through on hover. */
+  surface: string,
 ) {
-  return `.${SWATCH}-text { border-radius: 3px; transition: background-color 150ms ease-out; }
+  const c = `var(--${PREFIX}-swatch)`;
+  // Its own stacking context, so that the chip under the text never drops behind the code background.
+  return `.${SWATCH}-text { position: relative; z-index: 0; }
 .${SWATCH} {
   display: inline-block;
   box-sizing: border-box;
@@ -153,25 +157,51 @@ export function swatchStyles(
   background: linear-gradient(var(--${PREFIX}-swatch), var(--${PREFIX}-swatch)), repeating-conic-gradient(#808080 0 25%, transparent 0 50%) 0 0 / 50% 50%;
   box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 45%, transparent);
   user-select: none;
-  transition: transform 150ms ease-out;
 }${
     hover
       ? `
-.${SWATCH}-text:is(:hover, :focus-visible) { background-color: color-mix(in srgb, var(--${PREFIX}-swatch) 22%, transparent); }
-.${SWATCH}-text:is(:hover, :focus-visible) > .${SWATCH} { transform: scale(1.2); }`
+/* A chip in the colour, over the text around it, as an annotation marker sits over the code. */
+.${SWATCH}-text::before {
+  content: '';
+  position: absolute;
+  inset: -3px -6px;
+  z-index: -1;
+  border-radius: 5px;
+  background: linear-gradient(${c}, ${c}), ${surface};
+  border: 1px solid oklch(from ${c} calc(l * 0.7) c h);
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+  pointer-events: none;
+}
+/* The text and the chip change together, so the text never flashes before the chip arrives. */
+.${SWATCH}-text * { transition: color 150ms ease-out, box-shadow 150ms ease-out; }
+/* Over the text around it until the chip has faded out. */
+.${SWATCH}-text { transition: color 150ms ease-out, z-index 0s 150ms; }
+.${SWATCH}-text:is(:hover, :focus-visible) { z-index: 1; transition: color 150ms ease-out, z-index 0s; }
+.${SWATCH}-text:is(:hover, :focus-visible)::before { opacity: 1; }
+/* Black or white text, whichever reads on the colour. Token spans set their own colour. */
+.${SWATCH}-text:is(:hover, :focus-visible), .${SWATCH}-text:is(:hover, :focus-visible) * {
+  color: oklch(from ${c} clamp(0, (0.65 - l) * 1000, 1) 0 0) !important;
+}
+.${SWATCH}-text:is(:hover, :focus-visible) > .${SWATCH} { box-shadow: 0 0 0 1px currentColor; }
+@media (prefers-reduced-motion: reduce) {
+  .${SWATCH}-text, .${SWATCH}-text *, .${SWATCH}-text::before { transition: none; }
+}`
       : ''
   }
+${Object.entries(SHAPES)
+  .map(([name, radius]) => `[data-scb-swatch-shape='${name}'] .${SWATCH} { border-radius: ${radius}; }`)
+  .join('\n')}
 /* The client module makes each colour a button. */
 .${SWATCH}-text[role='button'] { cursor: copy; }
-.${SWATCH}-text[data-scb-copied] { position: relative; }
-.${SWATCH}-text[data-scb-copied]::after {
-  content: attr(data-scb-copied);
+.${SWATCH}-text[role='button']::after {
+  content: 'Click to copy';
   /* Beside the colour, not above it: a code block clips anything above its first line. */
   position: absolute;
   inset-block-start: 50%;
-  inset-inline-start: calc(100% + 6px);
+  inset-inline-start: calc(100% + 12px);
   translate: 0 -50%;
-  z-index: 1;
+  z-index: 2;
   padding: 1px 6px;
   border-radius: 4px;
   background: ${tip.bg};
@@ -181,6 +211,20 @@ export function swatchStyles(
   line-height: 1.5;
   white-space: nowrap;
   pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 150ms ease-out, visibility 0s 150ms;
+}
+.${SWATCH}-text[role='button']:is(:hover, :focus-visible)::after {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 150ms ease-out 600ms, visibility 0s 600ms;
+}
+.${SWATCH}-text[data-scb-copied]::after {
+  content: attr(data-scb-copied);
+  opacity: 1;
+  visibility: visible;
+  transition: none;
 }`;
 }
 
@@ -188,7 +232,7 @@ export const SWATCH_CSS_ID = 'virtual:starlight-codeblocks/swatches.css';
 
 /** Styles for swatches in prose, with Starlight's colours for the **Copied** label. Block styles outweigh them in code blocks. */
 export const proseSwatchStyles = (settings: SwatchSettings) =>
-  swatchStyles(settings, { bg: 'var(--sl-color-gray-6)', fg: 'var(--sl-color-white)' });
+  swatchStyles(settings, { bg: 'var(--sl-color-gray-6)', fg: 'var(--sl-color-white)' }, 'var(--sl-color-bg)');
 
 class SwatchAnnotation extends ExpressiveCodeAnnotation {
   constructor(
@@ -211,10 +255,14 @@ export function pluginSwatches(settings: SwatchSettings): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:swatches',
     baseStyles: ({ cssVar }) =>
-      swatchStyles(settings, {
-        bg: cssVar('codeblocks.popoverBackground'),
-        fg: cssVar('codeblocks.popoverForeground'),
-      }),
+      swatchStyles(
+        settings,
+        {
+          bg: cssVar('codeblocks.popoverBackground'),
+          fg: cssVar('codeblocks.popoverForeground'),
+        },
+        cssVar('codeBackground'),
+      ),
     ...(settings.copy && { jsModules: clientJsModules }),
     hooks: {
       annotateCode({ codeBlock }) {
@@ -227,9 +275,18 @@ export function pluginSwatches(settings: SwatchSettings): CodeblocksPlugin {
           }
         }
       },
-      postprocessRenderedBlock({ renderData }) {
-        const pre = select('pre', renderData.blockAst);
-        if (settings.copy && pre && select(`.${SWATCH}-text`, pre)) pre.properties.dataScbSwatches = '';
+      postprocessRenderedBlock(context) {
+        const pre = select('pre', context.renderData.blockAst);
+        if (!pre || !select(`.${SWATCH}-text`, pre)) return;
+        if (settings.copy) pre.properties.dataScbSwatches = '';
+        const shape = blockSetting<SwatchShape | undefined>(
+          context,
+          'swatches.shape',
+          (raw) => (raw in SHAPES ? (raw as SwatchShape) : undefined),
+          undefined,
+          '`"square"`, `"rounded"` or `"circle"`',
+        );
+        if (shape) pre.properties.dataScbSwatchShape = shape;
       },
     },
   };

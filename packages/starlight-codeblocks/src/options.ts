@@ -315,7 +315,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       shape: {
         type: "'square' | 'rounded' | 'circle'",
         default: 'rounded',
-        description: 'The shape of each swatch.',
+        description: 'The shape of each swatch. A code block can set its own on its fence line.',
         valid: oneOf('square', 'rounded', 'circle'),
       },
       size: {

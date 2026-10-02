@@ -24,10 +24,13 @@ test('a click on a colour copies it, and the swatch copies no text', async ({ pa
 
 test('a colour is a button for the keyboard, with a focus ring and the hover tint', async ({ page }) => {
   const colour = example(page).locator('.scb-swatch-text[role="button"]').first();
-  const before = await css(colour, 'backgroundColor');
+  const pseudo = (part: '::before' | '::after', key: 'opacity' | 'content') =>
+    colour.evaluate((el, [p, k]) => getComputedStyle(el, p).getPropertyValue(k), [part, key] as const);
   await colour.focus();
   expect(await css(colour, 'outlineStyle')).toBe('solid');
-  await expect.poll(() => css(colour, 'backgroundColor')).not.toBe(before);
+  await expect.poll(() => pseudo('::before', 'opacity')).toBe('1');
+  await expect.poll(() => pseudo('::after', 'opacity')).toBe('1');
+  expect(await pseudo('::after', 'content')).toBe('"Click to copy"');
   await page.keyboard.press('Enter');
   await expect.poll(() => clipboard(page)).toBe('#ffffff');
 });

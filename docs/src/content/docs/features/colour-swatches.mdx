@@ -21,16 +21,80 @@ export const basic = `
 
 <Example code={basic} />
 
-Each value keeps its text, and the swatch comes before it. Hover over a colour to tint it in its own colour. Click a colour to copy it.
+Each value keeps its text, and the swatch comes before it. Hover over a colour to show it on a chip in its own colour. Click a colour to copy it.
 
 ## Syntax
 
-| Syntax | Where |
+Each attribute goes on the code block fence line.
+
+| Syntax | What it does |
 |---|---|
-| `swatches=false` | Code block fence line |
-| `swatches` | Code block fence line |
+| `swatches=false` | Turns off the swatches for the block. |
+| `swatches` | Turns on the swatches for a block of a language outside `swatches.languages`. |
+| `swatches.shape="square"` | Draws square swatches in the block. |
+| `swatches.shape="rounded"` | Draws swatches with rounded corners in the block. |
+| `swatches.shape="circle"` | Draws round swatches in the block. |
 
 ## Examples
+
+### Every kind of colour
+
+Hex colours, the CSS colour functions and the colour names all get a swatch:
+
+export const formats = `
+\`\`\`css
+:root {
+  --brand: #ff5f1f;
+  --link: rgb(37 99 235);
+  --success: hsl(142deg 71% 45%);
+  --muted: hwb(220 60% 30%);
+  --warm: lab(62% 45 60);
+  --cool: lch(55% 60 260);
+  --mint: oklab(0.8 -0.12 0.04);
+  --violet: oklch(60% 0.2 300);
+  --wide: color(display-p3 0.2 0.7 0.4);
+  --shadow: black;
+}
+\`\`\`
+`;
+
+<Example code={formats} layout="tabs" />
+
+### Swatch shapes
+
+`swatches.shape` sets the shape for one block. The `swatches.shape` option sets it for the site:
+
+export const shapes = `
+\`\`\`css swatches.shape="square"
+.tag { background: #22c55e; }
+\`\`\`
+
+\`\`\`css swatches.shape="rounded"
+.tag { background: #22c55e; }
+\`\`\`
+
+\`\`\`css swatches.shape="circle"
+.tag { background: #22c55e; }
+\`\`\`
+`;
+
+<Example code={shapes} layout="tabs" />
+
+### Colours with transparency
+
+A colour with an alpha value shows a checkerboard through its swatch:
+
+export const alpha = `
+\`\`\`css
+.overlay {
+  background: rgb(15 23 42 / 40%);
+  border-color: #ff5f1f80;
+  box-shadow: 0 4px 12px hsl(0 0% 0% / 0.25);
+}
+\`\`\`
+`;
+
+<Example code={alpha} layout="tabs" />
 
 ### Colours in other languages
 
@@ -88,7 +152,8 @@ The brand colour is #ff5f1f. Use `rebeccapurple` for links.
   - In other languages, hex that does not look like a value, such as `// TODO #add`.
   - In the prose, issue numbers such as #123, tags such as #cafe, and colour names such as red that are not inline code.
 - Hover and copy:
-  - Hovering over a colour tints its text in its own colour and enlarges the swatch.
+  - Hovering over a colour shows it on a chip in its own colour, with a darker border. The text turns black or white, whichever reads on the colour.
+  - After a short pause, **Click to copy** shows next to the colour.
   - Clicking a colour copies its value, and **Copied** shows next to it. A colour is a button, so you can also move to it with Tab and press Enter or Space.
   - The swatches copy no text. The copy button and a selection copy the code as written.
 - Without JavaScript:

@@ -94,6 +94,13 @@ export const attributesReference: AttributeDoc[] = [
     },
   },
   {
+    name: 'swatches.shape',
+    syntax: ['swatches.shape="square"', 'swatches.shape="rounded"', 'swatches.shape="circle"'],
+    description: 'Sets the shape of the swatches in the block. It overrides the `swatches.shape` option for the block.',
+    page: 'features/colour-swatches',
+    example: { lang: 'css', meta: 'swatches.shape="circle"', code: '.badge {\n  background: #2563eb;\n}' },
+  },
+  {
     name: 'wordDiff',
     syntax: ['wordDiff=false'],
     description: 'Turns off word-level diff for the block. Changed lines keep their whole-line tints.',
