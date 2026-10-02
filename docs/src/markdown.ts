@@ -211,6 +211,8 @@ export function pageMarkdown(entry: Entry) {
       const code = strings[props.code ?? ''];
       if (code === undefined) throw new Error(`<${name}> in ${entry.id} uses an unknown export`);
       out.push(fenced(code.trim(), 'md'));
+      const config = props.config && strings[props.config];
+      if (config) out.push('', fenced(config.trim(), 'js title="astro.config.mjs"'));
       if (!selfClosing)
         while (lines[++i]?.trim() !== '</Example>') if (i >= lines.length) throw new Error('Unclosed <Example>');
     } else if (name === 'FeatureCarousel') {

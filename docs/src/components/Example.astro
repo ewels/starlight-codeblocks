@@ -18,15 +18,21 @@ interface Props {
    * `apiLinks=false` to keep another feature out of the example. Live Markdown must include them.
    */
   hiddenAttributes?: string;
+  /** The part of `astro.config.mjs` that the example needs, shown in the source pane after the Markdown. */
+  config?: string;
 }
 
-const { code, layout = 'stack', hiddenAttributes = '' } = Astro.props;
+const { code, layout = 'stack', hiddenAttributes = '', config } = Astro.props;
 const live = Astro.slots.has('default');
 const blocks = [...code.matchAll(/^(`{3,}|~{3,})([^\s`]*)[ \t]*(.*)\n([\s\S]*?)\n?^\1[ \t]*$/gm)].map(
   ([, , lang, meta, body]) => ({ lang, meta: `${meta} ${hiddenAttributes}`.trim(), code: body }),
 );
 // The source shows what authors write, so colours in it get no swatches.
-const sourceMeta = keepTrailingWhitespace(code.trim(), 'swatches=false');
+// With a config, each source block needs a title to tell them apart.
+const sourceMeta = keepTrailingWhitespace(
+  code.trim(),
+  config ? 'swatches=false title="src/content/docs/guide.md"' : 'swatches=false',
+);
 if (!live && blocks.length === 0) throw new Error(`<Example> found no fenced code block in:\n${code}`);
 ---
 
@@ -42,6 +48,7 @@ if (!live && blocks.length === 0) throw new Error(`<Example> found no fenced cod
         <TabItem label="Source">
           <div class="pane source not-content">
             <Code code={code.trim()} lang="md" meta={sourceMeta} />
+            {config && <Code code={config.trim()} lang="js" title="astro.config.mjs" />}
           </div>
         </TabItem>
       </Tabs>
@@ -55,6 +62,7 @@ if (!live && blocks.length === 0) throw new Error(`<Example> found no fenced cod
       <div class="pane source not-content">
         <p class="label">You write</p>
         <Code code={code.trim()} lang="md" meta={sourceMeta} />
+        {config && <Code code={config.trim()} lang="js" title="astro.config.mjs" />}
       </div>
     </div>
   )

@@ -282,14 +282,31 @@ const slug = encodeURIComponent(
 
 </Feature>
 
-<Feature page="features/file-icons">
+<Feature page="features/file-icons" tall>
 
-```json title="package.json"
+The default Seti icons, as in the Starlight file tree:
+
+```js title="src/index.js"
+export const greet = (name) => console.log('Hello', name);
+```
+
+Material Icon Theme, with `fileIcons.set="material"`:
+
+```py title="app.py" fileIcons.set="material"
+print("Hello from Python")
+```
+
+vscode-icons, with `fileIcons.set="vscode-icons"`:
+
+```json title="package.json" fileIcons.set="vscode-icons"
 { "name": "my-site", "type": "module" }
 ```
 
-```ts title="src/content.config.ts"
-export const collections = {};
+Catppuccin, with `fileIcons.set="catppuccin"`:
+
+```dockerfile title="Dockerfile" fileIcons.set="catppuccin"
+FROM node:22-alpine
+CMD ["node", "src/index.js"]
 ```
 
 </Feature>

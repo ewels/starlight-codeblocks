@@ -1,6 +1,6 @@
 ---
 title: File icons
-description: Show the icon of the file type before the title of a code block, with the same icons as the Starlight file tree.
+description: Show the icon of the file type before the title of a code block, with the icons of the Starlight file tree or a coloured icon set.
 ---
 
 import { FileTree, LinkCard } from '@astrojs/starlight/components';
@@ -11,18 +11,62 @@ import Options from '../../../components/Options.astro';
 A code block with a title shows the file name in the title bar. The plugin puts the icon of the file type before that name. It uses the icons of the Starlight `<FileTree>` component, and chooses them with the same rules. A file then looks the same in a tree and in a code block.
 
 export const basic = `
-\`\`\`json title="package.json"
+The default Seti icons, as in the Starlight file tree:
+
+\`\`\`js title="src/index.js"
+export const greet = (name) => console.log('Hello', name);
+\`\`\`
+
+Material Icon Theme, with \`fileIcons.set="material"\`:
+
+\`\`\`py title="app.py" fileIcons.set="material"
+print("Hello from Python")
+\`\`\`
+
+vscode-icons, with \`fileIcons.set="vscode-icons"\`:
+
+\`\`\`json title="package.json" fileIcons.set="vscode-icons"
 { "name": "my-site", "type": "module" }
 \`\`\`
 
-\`\`\`ts title="src/content.config.ts"
-export const collections = {};
+Catppuccin, with \`fileIcons.set="catppuccin"\`:
+
+\`\`\`dockerfile title="Dockerfile" fileIcons.set="catppuccin"
+FROM node:22-alpine
+CMD ["node", "src/index.js"]
 \`\`\`
 `;
 
-<Example code={basic} />
+<Example code={basic}>
 
-File icons are on for every code block with a title, so you do not add an attribute. The plugin finds the icon from the file name in the title. When the title is not a file name, the icon comes from the language of the code block.
+The default Seti icons, as in the Starlight file tree:
+
+```js title="src/index.js"
+export const greet = (name) => console.log('Hello', name);
+```
+
+Material Icon Theme, with `fileIcons.set="material"`:
+
+```py title="app.py" fileIcons.set="material"
+print("Hello from Python")
+```
+
+vscode-icons, with `fileIcons.set="vscode-icons"`:
+
+```json title="package.json" fileIcons.set="vscode-icons"
+{ "name": "my-site", "type": "module" }
+```
+
+Catppuccin, with `fileIcons.set="catppuccin"`:
+
+```dockerfile title="Dockerfile" fileIcons.set="catppuccin"
+FROM node:22-alpine
+CMD ["node", "src/index.js"]
+```
+
+</Example>
+
+File icons are on for every code block with a title, so you do not add an attribute. The plugin finds the icon from the file name in the title. When the title is not a file name, the icon comes from the language of the code block. The `fileIcons.set` attribute changes the icon set for one block, and the `fileIcons.set` option changes it for the site.
 
 ## Syntax
 
@@ -137,7 +181,19 @@ workflow {
 \`\`\`
 `;
 
-<Example code={custom} hiddenAttributes="apiLinks=false" layout="tabs" />
+export const customConfig = `
+import { siNextflow } from 'simple-icons';
+
+codeblocks({
+  fileIcons: {
+    icons: { nextflow: siNextflow.svg },
+    files: { '.nf': 'nextflow', 'nextflow.config': 'nextflow' },
+    languages: { nextflow: { icon: 'nextflow' } },
+  },
+});
+`;
+
+<Example code={custom} config={customConfig} hiddenAttributes="apiLinks=false" layout="tabs" />
 
 ## Behaviour
 

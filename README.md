@@ -288,7 +288,7 @@ Show a small swatch of each CSS colour next to its value. Readers can click a co
 <details>
 <summary>File icons</summary>
 
-Show the icon of the file type before the title of a code block, with the same icons as the Starlight file tree. File icons start on their own.
+Show the icon of the file type before the title of a code block. The icons come from the Starlight file tree or a coloured icon set. File icons start on their own.
 
 ````md
 ```json title="package.json"
@@ -296,7 +296,7 @@ Show the icon of the file type before the title of a code block, with the same i
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/file-icons.png" alt="Two code blocks. The JSON icon comes before the title package.json, and the TypeScript icon before src/content.config.ts.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/file-icons.png" alt="Four code blocks, each with a file icon from a different icon set before its title: src/index.js, app.py, package.json and Dockerfile.">
 
 [File icons documentation](https://ewels.github.io/starlight-codeblocks/features/file-icons/)
 
