@@ -255,7 +255,7 @@ function checkHeight(block: HTMLElement) {
   block.classList.toggle('scb-side-static', notes.offsetHeight > innerHeight - top);
 }
 
-// A block that starts hidden (a code switcher variant, a closed <details>) is 0px tall until it shows.
+// A block that starts hidden (a code tabs block variant, a closed <details>) is 0px tall until it shows.
 const resized = new ResizeObserver((entries) => {
   for (const { target } of entries) checkHeight(target as HTMLElement);
 });

@@ -108,14 +108,24 @@ test.describe('in a copy of the block', () => {
     await expect(steps.locator('[aria-current="step"]:visible')).toHaveAttribute('aria-label', /^Step 1/);
   });
 
-  test('the menu of a code switcher picks a variant in a copy of the block', async ({ page }) => {
-    await page.goto('./features/code-switcher/');
-    const group = output(page).locator('.scb-switcher');
+  test('a tab or the menu of a code tabs block picks a variant in a copy of the block', async ({ page }) => {
+    await page.goto('./features/code-tabs/');
+    await expect(page.locator('[data-scb-code-tabs]:not([data-scb-ready])')).toHaveCount(0);
+    const group = output(page).locator('.scb-tabs');
     const copy = await copyToOverlay(page, group.locator('> .expressive-code:visible'));
-    await copy.getByRole('combobox').selectOption({ label: 'pnpm' });
-    await expect(copy.locator('pre')).toContainText('pnpm');
-    await expect(copy.getByRole('combobox')).toHaveValue('1');
-    await expect(group.locator('> .expressive-code:visible pre')).toContainText('pnpm');
+    await copy.getByRole('tab', { name: 'greet.py' }).click();
+    await expect(copy.locator('pre')).toContainText('sys.argv');
+    await expect(copy.getByRole('tab', { selected: true })).toHaveText('greet.py');
+    await expect(copy.getByRole('tab', { selected: true })).toBeFocused();
+    await expect(group.locator('> .expressive-code:visible pre')).toContainText('sys.argv');
+    await page.locator('.test-overlay').evaluate((el) => el.remove());
+
+    const menuGroup = output(page, 3).locator('.scb-tabs');
+    const menuCopy = await copyToOverlay(page, menuGroup.locator('> .expressive-code:visible'));
+    await menuCopy.getByRole('combobox').selectOption({ label: 'TOML' });
+    await expect(menuCopy.locator('pre')).toContainText('[server]');
+    await expect(menuCopy.getByRole('combobox')).toHaveValue('1');
+    await expect(menuGroup.locator('> .expressive-code:visible pre')).toContainText('[server]');
   });
 });
 

@@ -32,7 +32,7 @@ Choose a feature only when an answer points to one. Most blocks need no change, 
 | A long file where the text is about one part | Focus, hidden lines or an expandable block |
 | Imports and set-up at the top that the text never mentions | Hidden lines |
 | `YOUR_API_KEY`, `<your-project>` or a note such as "replace X with your value" | Fill-in placeholders |
-| `<Tabs>` with one code block in each tab, such as npm, pnpm and Yarn | Code switcher |
+| `<Tabs>` with one code block in each tab, such as npm, pnpm and Yarn | Code tabs |
 | A step-by-step tutorial that shows the same file again and again as it grows | Code walkthrough, or scrollycoding if prose explains each step |
 | A "wrong" and a "right" version of the same code | Line states: `[!code error]` and `[!code success]` |
 | YAML, Python or Makefile code where the text is about indentation | Visible whitespace |

@@ -110,7 +110,7 @@ export interface CodeblocksOptions {
   mentions?: false;
   permalinks?: false;
   placeholders?: false | { storage?: 'local' | 'session' | 'none' };
-  codeSwitcher?: false;
+  codeTabs?: false | { control?: 'tabs' | 'menu' };
   walkthrough?: false;
   scrollycoding?: false;
   inlineHighlighting?: false | { defaultLanguage?: string | false };
@@ -479,9 +479,18 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       },
     },
   },
-  codeSwitcher: {
-    description: 'Combines several variants of a block, with a menu in the title bar.',
-    page: 'features/code-switcher',
+  codeTabs: {
+    description: 'Combines several variants of a block, with tabs or a menu in the title bar.',
+    page: 'features/code-tabs',
+    fields: {
+      control: {
+        type: "'tabs' | 'menu'",
+        default: 'tabs',
+        description:
+          'Editor tabs in the title bar, or a menu on its right. A `:::code-tabs` directive can set its own with `control="…"`.',
+        valid: oneOf('tabs', 'menu'),
+      },
+    },
   },
   walkthrough: {
     description: 'Animates the code between the steps of a `<CodeWalkthrough>` component.',

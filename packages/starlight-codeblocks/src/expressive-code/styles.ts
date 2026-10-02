@@ -324,7 +324,7 @@ pre:focus-visible {
   }
 }
 @media (scripting: none) {
-  .${PREFIX}-needs-js { display: none; }
+  .${PREFIX}-needs-js { display: none !important; }
   /* The minimal bar has nothing left to show. */
   .frame:not(.has-title):not(.is-terminal):has(.${PREFIX}-tools):not(:has(.${PREFIX}-tools > :not(.${PREFIX}-needs-js), .${PREFIX}-steps-head)) .header { display: none; }
 }

@@ -9,7 +9,7 @@ import type {
   MdastVisitorContext,
   PluginFactoryContext,
 } from 'satteri';
-import { encodeVariant, SWITCHER_META } from '../expressive-code/code-switcher.ts';
+import { encodeVariant, TABS_META, type TabsVariant } from '../expressive-code/code-tabs.ts';
 import { commentSyntaxFor } from '../expressive-code/comments.ts';
 import { bundledLanguage } from '../expressive-code/core.ts';
 import { parseNotation } from '../expressive-code/notation.ts';
@@ -82,11 +82,11 @@ function languageName(lang: string | null | undefined) {
   return bundledLanguage(lang)?.name ?? lang;
 }
 
-/** Turns `:::code-switcher{sync="…"}` into a wrapper whose code blocks each carry the variant menu. */
-function codeSwitcher(node: ContainerDirective, file: string): MdastNode {
+/** Turns `:::code-tabs{sync="…" control="…"}` into a wrapper whose code blocks each carry their variant. */
+function codeTabs(node: ContainerDirective, file: string, fallback: TabsVariant['control']): MdastNode {
   const codes = node.children;
   if (codes.length === 0 || codes.some((child) => child.type !== 'code')) {
-    throw new Error(`${file}: \`:::code-switcher\` can contain only fenced code blocks, and needs at least one.`);
+    throw new Error(`${file}: \`:::code-tabs\` can contain only fenced code blocks, and needs at least one.`);
   }
   const labels = (codes as Code[]).map(
     (code) => new MetaOptions(code.meta ?? '').getString('label') ?? languageName(fenceLanguage(code)),
@@ -94,18 +94,29 @@ function codeSwitcher(node: ContainerDirective, file: string): MdastNode {
   const repeated = labels.find((label, i) => labels.indexOf(label) !== i);
   if (repeated !== undefined) {
     throw new Error(
-      `${file}: two variants in a \`:::code-switcher\` have the label "${repeated}". Give each variant a different \`label="…"\`.`,
+      `${file}: two variants in a \`:::code-tabs\` have the label "${repeated}". Give each variant a different \`label="…"\`.`,
+    );
+  }
+  const control = node.attributes?.control ?? fallback;
+  if (control !== 'tabs' && control !== 'menu') {
+    throw new Error(
+      `${file}: \`:::code-tabs\` has \`control="${control}"\`. Use \`control="tabs"\` or \`control="menu"\`.`,
     );
   }
   return {
     type: 'paragraph',
     data: {
       hName: 'div',
-      hProperties: { className: ['scb-switcher'], dataScbCodeSwitcher: node.attributes?.sync ?? '' },
+      hProperties: {
+        className: ['scb-tabs'],
+        dataScbCodeTabs: node.attributes?.sync ?? '',
+        dataScbControl: control,
+        dataScbLabels: JSON.stringify(labels),
+      },
     },
     children: (codes as Code[]).map((code, index) => ({
       ...code,
-      meta: `${code.meta ?? ''} ${SWITCHER_META}="${encodeVariant({ index, labels })}"`.trim(),
+      meta: `${code.meta ?? ''} ${TABS_META}="${encodeVariant({ index, labels, control })}"`.trim(),
     })),
   } as unknown as MdastNode;
 }
@@ -198,7 +209,7 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
           if (checkLinks) checkMentions(events, ctx, warn);
         },
         containerDirective(node) {
-          if (options.codeSwitcher && node.name === 'code-switcher') return codeSwitcher(node, file);
+          if (options.codeTabs && node.name === 'code-tabs') return codeTabs(node, file, options.codeTabs.control);
         },
         ...((options.inlineHighlighting || prose) && {
           inlineCode: async (node, ctx) =>

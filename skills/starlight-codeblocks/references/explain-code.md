@@ -159,7 +159,7 @@ app.listen(3000);
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/code-walkthrough/
 
-Use for a tutorial that shows the same file several times, with changes each time. The versions become one block with numbered steps in the title bar, and **Previous** and **Next** buttons under it. Code that stays moves to its new place, and new code fades in. Do not use for alternatives with no order: use the code switcher.
+Use for a tutorial that shows the same file several times, with changes each time. The versions become one block with numbered steps in the title bar, and **Previous** and **Next** buttons under it. Code that stays moves to its new place, and new code fades in. Do not use for alternatives with no order: use code tabs.
 
 | Syntax | Where |
 |---|---|
@@ -220,7 +220,7 @@ def factorial(n):
 
 - A name is one word, such as `base` or `parse-args`. One line can have more than one tag.
 - A link pairs with the next block in the same section that has the name. A section ends at the next heading. If no block follows, the link pairs with the nearest block before it.
-- In a code switcher, only the variant that shows counts. Tag the same name in each variant, and the link follows the reader's choice.
+- In a code tabs block, only the variant that shows counts. Tag the same name in each variant, and the link follows the reader's choice.
 - A link with no matching block shows as plain text, with a build warning.
 - `starlight-links-validator` reports `#mention:` links as broken. Give it `exclude: linksValidatorExclude`.
 - Option: `mentions: false` turns the feature off.

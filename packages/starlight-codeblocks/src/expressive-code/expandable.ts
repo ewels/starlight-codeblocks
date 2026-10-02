@@ -1,7 +1,7 @@
 import type { ExpressiveCodeBlock } from '@expressive-code/core';
 import { h, type Parents, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { SWITCHER_META } from './code-switcher.ts';
+import { TABS_META } from './code-tabs.ts';
 import { blockSetting, type CodeblocksPlugin } from './core.ts';
 import { PREFIX } from './styles.ts';
 
@@ -10,7 +10,7 @@ const hasCollapse = (codeBlock: ExpressiveCodeBlock) =>
 
 // A bar under a variant or a Run output panel would compete with their own controls.
 const ownLayout = (codeBlock: ExpressiveCodeBlock) =>
-  codeBlock.metaOptions.getString(SWITCHER_META) !== undefined || codeBlock.metaOptions.getBoolean('runnable') === true;
+  codeBlock.metaOptions.getString(TABS_META) !== undefined || codeBlock.metaOptions.getBoolean('runnable') === true;
 
 /** Undoes the `auto` option in `<CodeWalkthrough>` and `<Scrollycoding>`, whose steps must show every line. */
 export function removeAutoExpandable(root: Parents) {

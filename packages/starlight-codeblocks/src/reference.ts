@@ -239,8 +239,8 @@ export const attributesReference: AttributeDoc[] = [
     name: 'label',
     syntax: ['label="<text>"'],
     description:
-      'Names a variant of a code switcher in its menu. It works only on a code block inside a `:::code-switcher` directive.',
-    page: 'features/code-switcher',
+      'Names a variant of a code tabs block. Its tab shows the label if the block has no title, and blocks with the same `sync` key match by label. It works only on a code block inside a `:::code-tabs` directive.',
+    page: 'features/code-tabs',
   },
   {
     name: 'step',

@@ -26,7 +26,7 @@ function clear(link?: Element) {
 
 /**
  * The next block in the link's section with lines for `name`, or else the nearest block before the link.
- * Only blocks that show count: not a hidden code switcher variant, walkthrough step or scrollycoding copy.
+ * Only blocks that show count: not a hidden code tabs variant, walkthrough step or scrollycoding copy.
  */
 function pair(link: Element, name: string) {
   const blocks = [...document.querySelectorAll('[data-scb-mentions]')].filter(

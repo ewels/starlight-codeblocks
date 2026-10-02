@@ -388,24 +388,28 @@ Give a code block line numbers that link to each line, so readers can share a li
 ### Adapt to the reader
 
 <details>
-<summary>Code switcher</summary>
+<summary>Code tabs</summary>
 
-Show one code block with several variants, such as package managers or languages, and a menu in the title bar to switch between them.
+Show several code blocks as one, with editor tabs in the title bar. Use it for the files of a project, or the commands for each package manager.
 
 ````md
-:::code-switcher{sync="pm"}
-```sh label="npm"
-npm install starlight-codeblocks
+:::code-tabs
+```yaml title=".github/workflows/ci.yml"
+name: CI
+on: push
 ```
-```sh label="pnpm"
-pnpm add starlight-codeblocks
+```py title="greet.py"
+print("Hello, world!")
+```
+```js title="greet.js"
+console.log('Hello, world!');
 ```
 :::
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-switcher.webp" alt="An npm install command with a menu in the title bar. The menu changes the command to pnpm and then to Yarn.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/code-tabs.webp" alt="A code block with three file tabs in the title bar: a GitHub Actions workflow, a Python file and a JavaScript file. Selecting a tab shows that file.">
 
-[Code switcher documentation](https://ewels.github.io/starlight-codeblocks/features/code-switcher/)
+[Code tabs documentation](https://ewels.github.io/starlight-codeblocks/features/code-tabs/)
 
 </details>
 

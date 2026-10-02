@@ -50,7 +50,7 @@ Each plugin takes the settings of its option, as the [options reference](/starli
 | `pluginPlayground(playgrounds)` | `playgrounds` | [Open in playground](/starlight-codeblocks/features/open-in-playground/) |
 | `pluginRunnable(settings)` | `runnable` | [Run in the browser](/starlight-codeblocks/features/run-in-the-browser/) |
 | `pluginFileIcons(settings)` | `fileIcons` | [File icons](/starlight-codeblocks/features/file-icons/) |
-| `pluginCodeSwitcher(fileIcons)` | `codeSwitcher` | [Code switcher](/starlight-codeblocks/features/code-switcher/) |
+| `pluginCodeTabs(fileIcons)` | `codeTabs` | [Code tabs](/starlight-codeblocks/features/code-tabs/) |
 | `pluginWalkthrough()` | `walkthrough` | [Code walkthrough](/starlight-codeblocks/features/code-walkthrough/) |
 | `pluginCallouts()` | `callouts` | [Inline callouts](/starlight-codeblocks/features/inline-callouts/) |
 | `pluginAnnotations()` | `annotations` | [Annotations](/starlight-codeblocks/features/annotations/) and [side annotations](/starlight-codeblocks/features/side-annotations/) |
@@ -72,7 +72,7 @@ The order matters. For example, `pluginPlayground()` sends the copied text, so i
 
 Some features need more than an Expressive Code plugin. Without `codeblocks()`, these parts are not there:
 
-- The `:::code-switcher` directive and [inline code highlighting](/starlight-codeblocks/features/inline-code-highlighting/) need the Markdown plugin that `codeblocks()` adds.
+- The `:::code-tabs` directive and [inline code highlighting](/starlight-codeblocks/features/inline-code-highlighting/) need the Markdown plugin that `codeblocks()` adds.
 - The `<CodeWalkthrough>` and `<Scrollycoding>` components need Starlight.
 - `runnable.runtimes` values are URLs that the browser imports as they are, because `codeblocks()` is not there to bundle the runtime modules. There is no built-in Python runtime. Map `python` to the URL of the Pyodide runtime module, such as `https://cdn.jsdelivr.net/npm/starlight-codeblocks/dist/runtimes/pyodide.mjs`.
 - Expressive Code turns each tab into spaces, because `codeblocks()` is not there to set `tabWidth: 0`. Set `tabWidth: 0` in `ec.config.mjs`, so that tabs reach the code blocks unchanged.

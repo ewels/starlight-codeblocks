@@ -83,7 +83,7 @@ Background comes before detail: start from a normal Starlight code block, show t
 | hidden line | a line that `hidden` or `[!code hide]` hides | collapsed line, folded line |
 | marker | the dashed line that shows hidden lines | separator, placeholder |
 | placeholder field | an input that replaces a placeholder | input, variable |
-| variant | one code block in a code switcher | tab, option |
+| variant | one code block in a code tabs block | tab, option |
 | step | one version in a code walkthrough, or one prose step in scrollycoding | slide, stage, frame |
 | adapter | code that resolves names for API auto-linking | plugin, resolver |
 | playground | an external site that runs code | sandbox (unless its name) |

@@ -35,7 +35,7 @@ Paths are under `packages/starlight-codeblocks/src/` unless they start with `doc
 
 - `index.ts`: `codeblocks()`, the Starlight plugin. It validates options (`options.ts`), fills the `globalThis` registry (`registry.ts`) and adds the integration (`integration.ts`).
 - `expressive-code/index.ts`: `createPlugins()`, the preset in order. Core first, notation second; the comments there give the other order constraints. One file per feature, `expressive-code/<name>.ts`. Shared helpers are in `core.ts` and `styles.ts`.
-- `satteri/`: one mdast plugin for the code switcher directive, `{:lang}` inline code, mention link checks and duplicate `id` checks. `remark.ts` runs it on `unified()`; add any context it lacks there, with a case in `test/remark.test.ts`.
+- `satteri/`: one mdast plugin for code tabs directive, `{:lang}` inline code, mention link checks and duplicate `id` checks. `remark.ts` runs it on `unified()`; add any context it lacks there, with a case in `test/remark.test.ts`.
 - `client/<name>.ts`: browser modules, built to `dist/client/scb-<name>.<hash>.js` and loaded by one loader in `jsModules`. `api-card-page.ts` is the exception: a page script and CSS for API cards on links outside code blocks.
 - `components/`: `<CodeWalkthrough>` and `<Scrollycoding>`, shipped as source. They read tokens from EC's rendered HTML and animate with magic-move's renderer.
 - `adapters/` (`python`, `nextflow`) and `runtimes/` (`pyodide`): subpath exports. The docs site has its own in `docs/src/adapters/` and `docs/src/runtimes/`.

@@ -43,7 +43,7 @@ export const sidebar = [
   },
   {
     label: 'Adapt to the reader',
-    items: ['features/code-switcher', 'features/fill-in-placeholders'],
+    items: ['features/code-tabs', 'features/fill-in-placeholders'],
   },
   {
     label: 'Copy and run',

@@ -2,7 +2,7 @@ import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-s
 import { expect, test } from 'vitest';
 import { scrollycoding } from '../src/components/scrolly.ts';
 import { codeWalkthrough, plainSteps } from '../src/components/steps.ts';
-import { encodeVariant, SWITCHER_META } from '../src/expressive-code/code-switcher.ts';
+import { encodeVariant, TABS_META } from '../src/expressive-code/code-tabs.ts';
 import type { CodeblocksOptions } from '../src/options.ts';
 import { baseStyles, block, render } from './render.ts';
 
@@ -38,7 +38,7 @@ test.each<[string, number, CodeblocksOptions]>([
   ['js', 40, {}],
   ['js', 10, auto],
   ['js expandable=false', 20, auto],
-  [`js ${SWITCHER_META}="${encodeVariant({ index: 0, labels: ['JS', 'TS'] })}"`, 20, auto],
+  [`js ${TABS_META}="${encodeVariant({ index: 0, labels: ['JS', 'TS'], control: 'tabs' })}"`, 20, auto],
   ['py runnable', 20, auto],
   ['js collapse={2-5}', 20, auto],
 ])('does not cap %s with %i lines', async (fence, n, options) => {

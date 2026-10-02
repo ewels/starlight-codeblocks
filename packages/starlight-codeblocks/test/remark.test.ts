@@ -14,13 +14,11 @@ async function md(markdown: string, options = {}) {
   return { html: code, warnings };
 }
 
-test('turns a code switcher into a wrapper whose blocks carry the menu', async () => {
+test('turns code tabs into a wrapper whose blocks carry their variant', async () => {
   const { html } = await md(
-    [':::code-switcher{sync="pm"}', '```sh', 'npm i x', '```', '```sh label="pnpm"', 'pnpm add x', '```', ':::'].join(
-      '\n',
-    ),
+    [':::code-tabs{sync="pm"}', '```sh', 'npm i x', '```', '```sh label="pnpm"', 'pnpm add x', '```', ':::'].join('\n'),
   );
-  expect(html).toContain('<div class="scb-switcher" data-scb-code-switcher="pm">');
+  expect(html).toContain('<div class="scb-tabs" data-scb-code-tabs="pm" data-scb-control="tabs"');
   expect(html.match(/<pre><code class="language-sh">/g)).toHaveLength(2);
   expect(html).not.toContain(':::');
 });
@@ -57,7 +55,7 @@ test('warns about two blocks with the same id', async () => {
 
 test('changes nothing with the features off', async () => {
   const source = 'See [it](#mention:x) and `x`{:js}.';
-  const off = { mentions: false, inlineHighlighting: false, codeSwitcher: false, permalinks: false };
+  const off = { mentions: false, inlineHighlighting: false, codeTabs: false, permalinks: false };
   const plain = await createMarkdownProcessor({ syntaxHighlight: false, remarkPlugins: [remarkDirective] });
   const expected = (await plain.render(source, { fileURL: new URL('file:///site/page.md') })).code;
   expect((await md(source, off)).html).toBe(expected);

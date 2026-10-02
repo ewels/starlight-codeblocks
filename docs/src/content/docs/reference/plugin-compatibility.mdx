@@ -87,7 +87,7 @@ app.listen(3000);
 
 Directives in code comments work as in Markdown. Markdoc has its own parser, so the features that read the text outside a block do not run in `.mdoc` files:
 
-- the code switcher
+- code tabs
 - inline code highlighting
 - the check of code mention links
 - the check for duplicate block ids
@@ -107,7 +107,7 @@ export default defineConfig({
 });
 ```
 
-Starlight adds [`remark-directive`](https://github.com/remarkjs/remark-directive) for `unified()`, which the code switcher needs. Sätteri stays the default of Astro 7, so keep it unless another plugin needs `unified()`.
+Starlight adds [`remark-directive`](https://github.com/remarkjs/remark-directive) for `unified()`, which code tabs need. Sätteri stays the default of Astro 7, so keep it unless another plugin needs `unified()`.
 
 ## Tested plugins
 

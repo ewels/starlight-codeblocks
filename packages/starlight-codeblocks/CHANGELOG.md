@@ -23,7 +23,7 @@ The first release. It adds these features to Starlight code blocks, on top of Ex
 - Code mentions
 - Line permalinks
 - Fill-in placeholders
-- Code switcher
+- Code tabs
 - Code walkthrough
 - Scrollycoding
 - Inline code highlighting

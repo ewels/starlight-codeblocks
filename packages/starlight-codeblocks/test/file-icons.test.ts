@@ -111,7 +111,7 @@ test('options are validated', () => {
   expect(() => resolveOptions({ fileIcons: { languages: { py: { size: 1 } as never } } })).toThrow();
 });
 
-test('the code switcher menu uses the same language icons, custom ones included', async () => {
+test('the code tabs menu uses the same language icons, custom ones included', async () => {
   const icons = await fileIconResolver({
     icons: { nextflow: 'M0 0h1v1H0z' },
     languages: { nextflow: { icon: 'nextflow' } },

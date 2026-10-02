@@ -11,7 +11,7 @@ export function reveal(el: Element, block: ScrollLogicalPosition) {
   return off;
 }
 
-/** Opens a line that a tab panel, a collapsible section, an expandable block, hidden lines, a walkthrough step or a code switcher variant hide. The last four listen for `beforematch`. */
+/** Opens a line that a tab panel, a collapsible section, an expandable block, hidden lines, a walkthrough step or a code tabs block variant hide. The last four listen for `beforematch`. */
 export function unhide(line: HTMLElement) {
   for (
     let p = line.closest('[role="tabpanel"][hidden]');

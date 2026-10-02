@@ -27,11 +27,16 @@ test('open in playground: the links and the form button do not print', async ({ 
   for (const control of await controls.all()) await expect(control).toBeHidden();
 });
 
-test('code switcher: the menu does not print, and the selected variant does', async ({ page }) => {
-  await page.goto('./features/code-switcher/');
-  const block = output(page);
-  await expect(block.locator('.scb-switcher-menu').first()).toBeHidden();
-  await expect(block.locator('.expressive-code:not([hidden]) pre').first()).toBeVisible();
+test('code tabs: the other tabs and the menu do not print, and the selected variant prints with its tab', async ({
+  page,
+}) => {
+  await page.goto('./features/code-tabs/');
+  await expect(page.locator('[data-scb-code-tabs]:not([data-scb-ready])')).toHaveCount(0);
+  const block = output(page).locator('.expressive-code:not([hidden])').first();
+  await expect(block.getByRole('tab', { selected: true })).toBeVisible();
+  await expect(block.getByRole('tab', { selected: false }).first()).toBeHidden();
+  await expect(block.locator('pre')).toBeVisible();
+  await expect(output(page, 3).locator('.scb-tabs-menu').first()).toBeHidden();
 });
 
 test('code walkthrough: every step prints with its label, without the step buttons', async ({ page }) => {

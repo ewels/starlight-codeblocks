@@ -56,7 +56,7 @@ Use when a full file is the clearest example, but a reader who scans the page do
 - Find in the page still finds text in the collapsed lines, in browsers that support `hidden="until-found"`.
 - Without JavaScript, and when the page prints, the block shows in full.
 - Option: `expandable.lines` (default `12`) sets the count for the bare `expandable` attribute.
-- Option: `expandable.auto` (default `false`) makes every block with more lines than this number expandable, at `expandable.lines`. It skips the variants of a code switcher, runnable blocks, blocks with Expressive Code's `collapse` and the blocks in `<CodeWalkthrough>` and `<Scrollycoding>`.
+- Option: `expandable.auto` (default `false`) makes every block with more lines than this number expandable, at `expandable.lines`. It skips the variants of a code tabs block, runnable blocks, blocks with Expressive Code's `collapse` and the blocks in `<CodeWalkthrough>` and `<Scrollycoding>`.
 
 ## Visible whitespace
 
@@ -132,7 +132,7 @@ Starts on its own in every block with a title in an editor frame. An icon of the
 - Options: `fileIcons.style` (default `'plain'`). `fileIcons.languages` sets `icon`, `colour` and `style` for each language, such as `{ python: { colour: '#3776ab' } }`.
 - Options: `fileIcons.languages.<lang>.icon` is an icon name or SVG markup, such as `siNextflow.svg` from `simple-icons`.
 - Options: `fileIcons.icons` adds icons by name, as SVG markup or 24 by 24 path data. `fileIcons.files` maps a file name, an extension such as `.nf`, or a path pattern such as `docs/**/*.md` to an icon name.
-- The code switcher menu uses the same icon for each language, custom icons too.
+- Code tabs show the icon of each file on its tab. A tab with only a `label` gets an icon only from `icon="..."`. The code tabs menu uses the same icon for each language, custom icons too.
 - A docs example about another feature with a title: add `icon=false` if the icon distracts from the feature.
 
 ## Inline code highlighting

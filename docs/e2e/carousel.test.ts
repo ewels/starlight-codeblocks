@@ -247,7 +247,7 @@ test('fits a phone screen', async ({ page }) => {
   await expect(page.locator('.carousel .dots')).toBeVisible();
   const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(await overflow()).toBeLessThanOrEqual(0);
-  for (const name of ['Side annotations', 'Scrollycoding', 'Code switcher']) {
+  for (const name of ['Side annotations', 'Scrollycoding', 'Code tabs']) {
     await tile(page, name).click();
     expect(await overflow()).toBeLessThanOrEqual(0);
   }

@@ -6,7 +6,7 @@ import { pluginApiLinks } from './api-links.ts';
 import { pluginBrackets } from './brackets.ts';
 import { pluginCallouts } from './callouts.ts';
 import { pluginCodeLinks } from './code-links.ts';
-import { pluginCodeSwitcher } from './code-switcher.ts';
+import { pluginCodeTabs } from './code-tabs.ts';
 import { pluginCore } from './core.ts';
 import { pluginExpandable } from './expandable.ts';
 import { pluginFileIcons } from './file-icons.ts';
@@ -33,7 +33,7 @@ export {
   pluginBrackets,
   pluginCallouts,
   pluginCodeLinks,
-  pluginCodeSwitcher,
+  pluginCodeTabs,
   pluginCore,
   pluginExpandable,
   pluginFileIcons,
@@ -95,7 +95,7 @@ export function createPlugins(options: ResolvedOptions, base?: string): Expressi
     ...(options.playgrounds ? [pluginPlayground(options.playgrounds)] : []),
     ...(options.runnable ? [pluginRunnable(options.runnable)] : []),
     ...(options.fileIcons ? [pluginFileIcons(options.fileIcons)] : []),
-    ...(options.codeSwitcher ? [pluginCodeSwitcher(options.fileIcons || {})] : []),
+    ...(options.codeTabs ? [pluginCodeTabs(options.fileIcons || {})] : []),
     // Also with the walkthrough off: the step label is how a block names its step without the stepper.
     pluginWalkthrough(),
     // After hidden lines, so that a callout sits between a hidden lines marker and its line.

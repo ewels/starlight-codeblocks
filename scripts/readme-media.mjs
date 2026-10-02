@@ -162,14 +162,13 @@ const features = [
     },
   },
   {
-    slug: 'code-switcher',
+    slug: 'code-tabs',
     run: async (page, rec) => {
-      await page.locator('[data-scb-code-switcher]:not([data-scb-ready])').waitFor({ state: 'detached' });
-      const menu = () => pane(page).locator('.scb-switcher > .expressive-code:visible').getByRole('combobox');
+      await page.locator('[data-scb-code-tabs]:not([data-scb-ready])').waitFor({ state: 'detached' });
+      const tab = (name) => pane(page).locator('.scb-tabs > .expressive-code:visible').getByRole('tab', { name });
       await rec.hold(1200);
-      await rec.point(menu());
-      for (const label of ['pnpm', 'Yarn']) {
-        await menu().selectOption({ label });
+      for (const name of ['greet.py', 'greet.js']) {
+        await rec.click(tab(name));
         await rec.hold(1400);
       }
     },

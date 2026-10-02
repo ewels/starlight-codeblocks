@@ -38,7 +38,7 @@ codeblocks({
 | `mentions` | None | Code mentions |
 | `permalinks` | None | Line permalinks |
 | `placeholders` | `storage`: `'local'`, `'session'` or `'none'`, default `'local'` | Fill-in placeholders |
-| `codeSwitcher` | None | Code switcher |
+| `codeTabs` | None | Code tabs |
 | `walkthrough` | None | Code walkthrough |
 | `scrollycoding` | None | Scrollycoding |
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
@@ -128,8 +128,8 @@ Docs: https://ewels.github.io/starlight-codeblocks/reference/plugin-compatibilit
 
 - Sätteri, the default Markdown processor of Astro 7, needs no set-up.
 - With `markdown: { processor: unified() }`, every feature works. The plugin adds its own remark plugin. Keep Sätteri unless another plugin needs `unified()`.
-- In Markdoc (`.mdoc`) files, give the fence line attributes in a `meta` attribute: `` ```js {% title="app.js" meta="focus={2}" %} ``. Directives work. The code switcher, inline code highlighting, the check of code mention links and the check for duplicate block ids do not run.
-- The `<Code>` component of Starlight gets the features inside a block. Give attributes in its `meta` prop. The code switcher does not work around it.
+- In Markdoc (`.mdoc`) files, give the fence line attributes in a `meta` attribute: `` ```js {% title="app.js" meta="focus={2}" %} ``. Directives work. Code tabs, inline code highlighting, the check of code mention links and the check for duplicate block ids do not run.
+- The `<Code>` component of Starlight gets the features inside a block. Give attributes in its `meta` prop. Code tabs do not work around it.
 
 ## Sites without Starlight
 
@@ -143,6 +143,6 @@ export default {
 };
 ```
 
-If the site has a `base`, give it as the second argument, `pluginCodeblocks(options, { base: '/docs' })`, so that links in code that start with `/` get it. The code switcher, inline code highlighting, `<CodeWalkthrough>` and `<Scrollycoding>` need Starlight. The features inside code blocks work on every site. Set `tabWidth: 0` in the Expressive Code options, so that tabs reach the code blocks unchanged.
+If the site has a `base`, give it as the second argument, `pluginCodeblocks(options, { base: '/docs' })`, so that links in code that start with `/` get it. Code tabs, inline code highlighting, `<CodeWalkthrough>` and `<Scrollycoding>` need Starlight. The features inside code blocks work on every site. Set `tabWidth: 0` in the Expressive Code options, so that tabs reach the code blocks unchanged.
 
 `runnable.runtimes` values are then URLs that the browser imports as they are. There is no built-in Python runtime. Map `python` to the URL of the Pyodide runtime module, such as `https://cdn.jsdelivr.net/npm/starlight-codeblocks/dist/runtimes/pyodide.mjs`. The single plugins, such as `pluginFocus()`, are in https://ewels.github.io/starlight-codeblocks/reference/expressive-code-plugins/

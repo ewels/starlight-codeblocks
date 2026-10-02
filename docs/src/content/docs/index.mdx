@@ -380,17 +380,29 @@ logging:
 
 </Feature>
 
-<Feature page="features/code-switcher">
+<Feature page="features/code-tabs">
 
-:::code-switcher{sync="pm"}
-```sh frame="code" label="npm"
-npm install starlight-codeblocks
+:::code-tabs
+```yaml title=".github/workflows/ci.yml" apiLinks=false
+name: CI
+on: push
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: python greet.py
+      - run: node greet.js
 ```
-```sh frame="code" label="pnpm"
-pnpm add starlight-codeblocks
+```py title="greet.py" apiLinks=false
+import sys
+
+name = sys.argv[1] if len(sys.argv) > 1 else "world"
+print(f"Hello, {name}!")
 ```
-```sh frame="code" label="Yarn"
-yarn add starlight-codeblocks
+```js title="greet.js" apiLinks=false
+const name = process.argv[2] ?? 'world';
+console.log(`Hello, ${name}!`);
 ```
 :::
 
@@ -455,7 +467,7 @@ print(f"mean {mean(reads):.0f}, sd {stdev(reads):.1f}")
 
 Add the package to the site:
 
-:::code-switcher{sync="pm"}
+:::code-tabs{sync="pm"}
 ```sh label="npm"
 npm install starlight-codeblocks
 ```

@@ -1,6 +1,6 @@
 ---
 name: starlight-codeblocks
-description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, colour swatches, file icons, inline code highlighting, code links, API auto-linking, line permalinks, the code switcher, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
+description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, colour swatches, file icons, inline code highlighting, code links, API auto-linking, line permalinks, code tabs, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
 license: MIT
 ---
 
@@ -55,7 +55,7 @@ Find the goal, then use the feature in the same row. Each reference file has the
 
 Use one note style in a block. Annotations and side annotations use the same directive, so a change between them is only the fence line. The fence line is the first line of the code block, with the language.
 
-Use scrollycoding when prose explains the code step by step as the reader scrolls. Use code walkthrough when readers step through the versions of a file with buttons. For versions that are alternatives, not steps in an order, use the code switcher.
+Use scrollycoding when prose explains the code step by step as the reader scrolls. Use code walkthrough when readers step through the versions of a file with buttons. For versions that are alternatives, not steps in an order, use code tabs.
 
 ### Draw attention
 
@@ -101,11 +101,11 @@ Hidden lines remove chosen lines. Expandable blocks cut a block at a line count.
 
 | Goal | Use | Why |
 |---|---|---|
-| The same task in versions, and each version is one code block (npm, pnpm, Yarn) | Code switcher: `:::code-switcher{sync="pm"}` with `label="..."` on each block | A menu in the title bar. Works in `.md` and `.mdx`. |
+| The same task in versions, and each version is one code block (npm, pnpm, Yarn) | Code tabs: `:::code-tabs{sync="pm"}` with `label="..."` on each block | Tabs in the title bar, or a menu with `control="menu"`. Works in `.md` and `.mdx`. |
 | Each version needs prose, a list or more than one code block | Starlight `<Tabs>` with `syncKey` (MDX only) | Tabs can hold any content. |
 | A value that each reader must change, such as `YOUR_TOKEN` | Fill-in placeholders: `placeholder="YOUR_TOKEN"` | Fields in the code. The value fills every block and the copied code. |
 
-A code switcher `sync` key and a `<Tabs>` `syncKey` do not switch together. Use one of the two for each kind of choice on a site.
+A code tabs block `sync` key and a `<Tabs>` `syncKey` do not switch together. Use one of the two for each kind of choice on a site.
 
 ### Copy and run
 
@@ -168,15 +168,15 @@ If a page shows one feature, keep the others out of its examples with these attr
 ## Gotchas
 
 - `<CodeWalkthrough>` and `<Scrollycoding>` work in MDX files only. Import them with `import { CodeWalkthrough, Scrollycoding, Step } from 'starlight-codeblocks/components';`. Put an empty line after the opening tag and before the closing tag.
-- A `:::code-switcher` directive can contain only code blocks. A paragraph inside it fails the build.
+- A `:::code-tabs` directive can contain only code blocks. A paragraph inside it fails the build.
 - For inline code highlighting, put the suffix inside the backticks: `` `res.ok{:js}` ``. MDX reads `` `res.ok`{:js} `` as a JavaScript expression and the build fails.
 - A directive with an unknown name, or of a feature that is off, stays in the code and logs a build warning. Read the build warnings after every change: each gives the file, the block and the line.
 - Each `id` for line permalinks must be unique on the page, and must not match a heading id.
 - Hidden lines still run in the copied code, in playgrounds and with `runnable`. Code for a playground or the **Run in browser** button must be complete.
 - Fill-in placeholder values stay in the browser's `localStorage` by default. For secrets such as API tokens, set `placeholders: { storage: 'session' }`.
-- In Markdoc (`.mdoc`) files, put attributes in a `meta` attribute: `` ```js {% meta="focus={2}" %} ``. The code switcher and inline code highlighting do not work there.
+- In Markdoc (`.mdoc`) files, put attributes in a `meta` attribute: `` ```js {% meta="focus={2}" %} ``. Code tabs and inline code highlighting do not work there.
 - The `<Code>` component of Starlight gets every feature inside a block. Give the attributes in its `meta` prop.
-- In blocks from VitePress, put a space between the language and a range: `js {1,3}`. Use `"word"` on the fence line in place of `[!code word:...]`. Use `:::code-switcher` with `label="..."` in place of `::: code-group`.
+- In blocks from VitePress, put a space between the language and a range: `js {1,3}`. Use `"word"` on the fence line in place of `[!code word:...]`. Use `:::code-tabs` with `label="..."` in place of `::: code-group`.
 
 ## Check the result
 

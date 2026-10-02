@@ -1,4 +1,6 @@
 const parts = [
+  // Before the title, which is a tab in it.
+  '.header .scb-tabs-list',
   '.header .title',
   '.header > .sr-only',
   '.scb-steps-head',
