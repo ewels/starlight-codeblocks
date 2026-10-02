@@ -149,7 +149,7 @@ test('a button or a dot shows its example, announces it and marks itself, and th
   await expect(page.locator('.carousel .slide:not([data-current])').first()).toBeHidden();
   await expect(page.locator('.carousel .tile[aria-pressed="true"]')).toHaveCount(1);
   await expect(tile(page, 'Word-level diff')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('.carousel [data-status]')).toHaveText('Word-level diff, 16 of 24');
+  await expect(page.locator('.carousel [data-status]')).toHaveText('Word-level diff, 17 of 25');
   // The current button differs by more than colour.
   expect(await css(tile(page, 'Word-level diff'), 'fontWeight')).toBe('600');
   expect(await css(tile(page, 'Footnotes'), 'fontWeight')).toBe('400');
@@ -159,7 +159,7 @@ test('a button or a dot shows its example, announces it and marks itself, and th
   await expect(dot(page, 'Focus')).toHaveAttribute('aria-current', 'true');
   await expect(dot(page, 'Word-level diff')).toHaveAttribute('aria-current', 'false');
   await expect(tile(page, 'Focus')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('.carousel [data-status]')).toHaveText(/^Focus, \d+ of 24$/);
+  await expect(page.locator('.carousel [data-status]')).toHaveText(/^Focus, \d+ of 25$/);
   await expect(page.locator('.carousel .rotation')).toHaveAccessibleName('Play');
 });
 
@@ -173,8 +173,8 @@ test('the buttons are a flat list in sidebar order, in even columns, with one do
   await page.goto('./');
   await expect(page.locator('.carousel .group-label')).toHaveCount(0);
   const tiles = page.locator('.carousel .tile');
-  await expect(tiles).toHaveCount(24);
-  await expect(page.locator('.carousel .tile svg[aria-hidden], .carousel .tile [aria-hidden] svg')).toHaveCount(24);
+  await expect(tiles).toHaveCount(25);
+  await expect(page.locator('.carousel .tile svg[aria-hidden], .carousel .tile [aria-hidden] svg')).toHaveCount(25);
   const tileIds = await tiles.evaluateAll((els) => els.map((el) => el.getAttribute('data-feature')));
   expect(tileIds).toEqual(sidebarIds.filter((id) => tileIds.includes(id)));
 
@@ -188,9 +188,9 @@ test('the buttons are a flat list in sidebar order, in even columns, with one do
   expect(boxes.every(([x], i) => i === 0 || x >= (boxes[i - 1]?.[0] ?? 0))).toBe(true);
   for (const column of columns) expect(column).toEqual((columns[0] ?? []).slice(0, column.length));
   // The phone viewport (360px) is too narrow for the auto column width, so it's forced to two.
-  if (phone()) expect(lengths).toEqual([12, 12]);
+  if (phone()) expect(lengths).toEqual([13, 12]);
 
-  await expect(page.locator('.carousel .dot')).toHaveCount(24);
+  await expect(page.locator('.carousel .dot')).toHaveCount(25);
   const order = await page.locator('.carousel .controls > *').evaluateAll((els) => els.map((el) => el.className));
   expect(order.at(-1)).toContain('rotation');
 });
@@ -315,7 +315,7 @@ test.describe('without JavaScript', () => {
       'href',
       '/starlight-codeblocks/features/focus/',
     );
-    await expect(page.locator('.carousel a.tile')).toHaveCount(24);
+    await expect(page.locator('.carousel a.tile')).toHaveCount(25);
     const docsLink = page.getByRole('link', { name: 'Read docs : Annotations' });
     await expect(docsLink).toBeVisible();
     await expect(docsLink).toHaveAttribute('href', '/starlight-codeblocks/features/annotations/');

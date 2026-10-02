@@ -101,6 +101,43 @@ export const attributesReference: AttributeDoc[] = [
     example: { lang: 'css', meta: 'swatches.shape="circle"', code: '.badge {\n  background: #2563eb;\n}' },
   },
   {
+    name: 'icon',
+    syntax: ['icon="<name>"', 'icon=false', 'no-icon'],
+    description:
+      'Sets the file icon before the title: a built-in icon, such as `react`, or a name from the `fileIcons.icons` option. `icon=false` and `no-icon` remove it.',
+    page: 'features/file-icons',
+    example: { lang: 'js', meta: 'title="vite.config.js" icon="vite"', code: 'export default {};' },
+  },
+  {
+    name: 'fileIcons.set',
+    syntax: [
+      'fileIcons.set="seti"',
+      'fileIcons.set="material"',
+      'fileIcons.set="vscode-icons"',
+      'fileIcons.set="catppuccin"',
+    ],
+    description:
+      'Takes the file icon from the Seti icons, Material Icon Theme, vscode-icons or Catppuccin. It overrides the `fileIcons.set` option for the block. A coloured set needs its `@iconify-json` package.',
+    page: 'features/file-icons',
+    example: { lang: 'json', meta: 'title="package.json" fileIcons.set="material"', code: '{ "name": "my-site" }' },
+  },
+  {
+    name: 'fileIcons.style',
+    syntax: ['fileIcons.style="plain"', 'fileIcons.style="tile"'],
+    description:
+      'Shows the file icon alone, or on a square with rounded corners. It overrides the `fileIcons.style` option for the block.',
+    page: 'features/file-icons',
+    example: { lang: 'py', meta: 'title="app.py" fileIcons.style="tile"', code: 'print("Hello")' },
+  },
+  {
+    name: 'fileIcons.colour',
+    syntax: ['fileIcons.colour="<colour>"'],
+    description:
+      'Sets the colour of the file icon, or of the square in the `tile` style, as a CSS colour such as `#3776ab`.',
+    page: 'features/file-icons',
+    example: { lang: 'py', meta: 'title="app.py" fileIcons.colour="#3776ab"', code: 'print("Hello")' },
+  },
+  {
     name: 'wordDiff',
     syntax: ['wordDiff=false'],
     description: 'Turns off word-level diff for the block. Changed lines keep their whole-line tints.',
@@ -396,6 +433,30 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
         description: 'The width of annotation notes. Hover cards are 20px wider. Both stay 12px inside the window.',
       },
       popoverFontSize: { description: 'The text size of annotation notes and hover cards.' },
+    },
+  },
+  codeblocksFileIcons: {
+    page: 'features/file-icons',
+    settings: {
+      size: { description: 'The width and height of a file icon in the `plain` style.' },
+      darkVariantDisplay: {
+        description: 'The `display` of an icon that the set has a light variant of.',
+        derived: '`block` in dark themes, `none` in light themes.',
+      },
+      lightVariantDisplay: {
+        description: 'The `display` of the light variant of an icon.',
+        derived: '`none` in dark themes, `block` in light themes.',
+      },
+      foreground: {
+        description: 'The colour of a file icon in the `plain` style. By default, the colour of the title.',
+      },
+      tileSize: { description: 'The width and height of the square in the `tile` style.' },
+      tileRadius: { description: 'The corner radius of the square in the `tile` style.' },
+      tileBackground: { description: 'The colour of the square in the `tile` style.', derived: accent },
+      tileForeground: {
+        description: 'The colour of the icon on the square in the `tile` style.',
+        derived: '`accentForeground`.',
+      },
     },
   },
   codeblocksFocus: {

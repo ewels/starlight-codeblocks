@@ -30,7 +30,7 @@ async function renderSteps(blocks = steps, plugins: ExpressiveCodePlugin[] = [])
 test('the plugin shows the step label after the title, or first without one, even with the feature off', async () => {
   const { html, copyText } = await render(steps[0]);
   expect(html).toContain(
-    '<span class="title">server.js</span><span class="scb-steps-head"><span class="scb-steps-label">Create the app</span></span>',
+    'server.js</span><span class="scb-steps-head"><span class="scb-steps-label">Create the app</span></span>',
   );
   expect(copyText).toBe('const app = express();\n\napp.listen(3000);');
   expect((await render(block('step="Start"', 'a()'))).html).toContain(

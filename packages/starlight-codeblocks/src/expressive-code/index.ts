@@ -9,6 +9,7 @@ import { pluginCodeLinks } from './code-links.ts';
 import { pluginCodeSwitcher } from './code-switcher.ts';
 import { pluginCore } from './core.ts';
 import { pluginExpandable } from './expandable.ts';
+import { pluginFileIcons } from './file-icons.ts';
 import { pluginFocus } from './focus.ts';
 import { pluginFootnotes } from './footnotes.ts';
 import { pluginHiddenLines } from './hidden-lines.ts';
@@ -35,6 +36,7 @@ export {
   pluginCodeSwitcher,
   pluginCore,
   pluginExpandable,
+  pluginFileIcons,
   pluginFocus,
   pluginFootnotes,
   pluginHiddenLines,
@@ -92,7 +94,8 @@ export function createPlugins(options: ResolvedOptions, base?: string): Expressi
     // After shell copy, which changes the copied text that the playground gets, and after placeholders.
     ...(options.playgrounds ? [pluginPlayground(options.playgrounds)] : []),
     ...(options.runnable ? [pluginRunnable(options.runnable)] : []),
-    ...(options.codeSwitcher ? [pluginCodeSwitcher()] : []),
+    ...(options.fileIcons ? [pluginFileIcons(options.fileIcons)] : []),
+    ...(options.codeSwitcher ? [pluginCodeSwitcher(options.fileIcons || {})] : []),
     // Also with the walkthrough off: the step label is how a block names its step without the stepper.
     pluginWalkthrough(),
     // After hidden lines, so that a callout sits between a hidden lines marker and its line.

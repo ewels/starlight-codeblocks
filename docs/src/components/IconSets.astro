@@ -1,0 +1,65 @@
+---
+import { iconSetNames, iconSetTables } from './icon-sets.ts';
+
+interface Props {
+  /** `top` for common files, `languages` for every Shiki language, `files` for file names with their own icons. */
+  rows?: keyof typeof iconSetTables;
+}
+
+const { rows = 'top' } = Astro.props;
+const label = rows === 'languages' ? 'Language' : 'File';
+---
+
+<table class="icon-sets">
+  <thead>
+    <tr>
+      <th scope="col">{label}</th>
+      {iconSetNames.map((name) => <th scope="col">{name}</th>)}
+    </tr>
+  </thead>
+  <tbody>
+    {
+      iconSetTables[rows].map((row) => (
+        <tr>
+          <th scope="row">
+            {row.label}
+            {row.title && row.label !== row.title && <code>{row.title}</code>}
+          </th>
+          {row.icons.map((icon) => (
+            <td title={icon.name}>
+              <span class="icons not-content" set:html={icon.html} />
+              <span class="sr-only">{icon.name}</span>
+            </td>
+          ))}
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+
+<style>
+  .icon-sets th[scope='row'] {
+    font-weight: 400;
+  }
+  .icon-sets th[scope='row'] code {
+    margin-inline-start: 0.5em;
+    font-size: var(--sl-text-xs);
+  }
+  .icon-sets td {
+    text-align: center;
+    vertical-align: middle;
+  }
+  .icons {
+    display: block;
+  }
+  .icon-sets :global(.set-icon) {
+    display: block;
+    width: calc(1.25rem * var(--scale, 1));
+    height: calc(1.25rem * var(--scale, 1));
+    margin-inline: auto;
+  }
+  :global(:root[data-theme='light']) .icon-sets :global([data-variant='dark']),
+  :global(:root:not([data-theme='light'])) .icon-sets :global([data-variant='light']) {
+    display: none;
+  }
+</style>

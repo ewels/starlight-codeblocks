@@ -30,6 +30,7 @@ codeblocks({
 | `whitespace` | None | Visible whitespace |
 | `brackets` | `languages`: default `[]` | Colourised brackets |
 | `swatches` | `languages`: default `'all'`. `formats`: default every format. `shape`: `'square'`, `'rounded'` or `'circle'`, default `'rounded'`. `size`: default `'0.8em'`. `hover`, `copy`: default `true`. `prose`: default `false` | Colour swatches |
+| `fileIcons` | `set`: `'seti'`, `'material'`, `'vscode-icons'` or `'catppuccin'`, default `'seti'`. A coloured set needs its package, such as `@iconify-json/vscode-icons`. `style`: `'plain'` or `'tile'`, default `'plain'`. `languages`: `icon`, `colour` and `style` for each language. `files`: icon names by file name, extension or path pattern. `icons`: custom icons by name | File icons |
 | `codeLinks` | None | Code links |
 | `apiLinks` | `adapters`: default `[python(), nextflow()]` | API auto-linking |
 | `expandable` | `lines`: default `12`. `auto`: a line count, default `false` | Expandable blocks |

@@ -2,7 +2,7 @@ import type { ExpressiveCodeBlock } from '@expressive-code/core';
 import { h } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { addTitleBarControl, type CodeblocksPlugin } from './core.ts';
-import { languageIcon } from './language-icons.ts';
+import { type FileIconSettings, fileIconResolver } from './file-icons.ts';
 import { PREFIX } from './styles.ts';
 
 /** The fence line attribute that the `:::code-switcher` directive adds to each variant. */
@@ -19,9 +19,9 @@ const MENU = `${PREFIX}-switcher-menu`;
 const FIELD = `${PREFIX}-switcher-field`;
 const CODE_ICON = 'M8 5.5 1.5 12 8 18.5M16 5.5l6.5 6.5-6.5 6.5';
 
-const icon = (className: string, d: string, stroke: boolean) =>
+const icon = (className: string, d: string) =>
   h('svg', { class: className, viewBox: '0 0 24 24', ariaHidden: 'true', focusable: 'false' }, [
-    h('path', stroke ? { d, fill: 'none', stroke: 'currentColor', strokeWidth: '2.5' } : { d, fill: 'currentColor' }),
+    h('path', { d, fill: 'none', stroke: 'currentColor', strokeWidth: '2.5' }),
   ]);
 
 function readVariant(codeBlock: ExpressiveCodeBlock | undefined) {
@@ -29,8 +29,12 @@ function readVariant(codeBlock: ExpressiveCodeBlock | undefined) {
   return raw ? (JSON.parse(decodeURIComponent(raw)) as SwitcherVariant) : undefined;
 }
 
-/** Adds the variant menu to the title bar of each block in a `:::code-switcher` directive. */
-export function pluginCodeSwitcher(): CodeblocksPlugin {
+/**
+ * Adds the variant menu to the title bar of each block in a `:::code-switcher` directive, with the icon of the
+ * language. `fileIcons` takes the settings of the `fileIcons` option, for custom icons.
+ */
+export function pluginCodeSwitcher(fileIcons: Partial<FileIconSettings> = {}): CodeblocksPlugin {
+  let icons: ReturnType<typeof fileIconResolver> | undefined;
   return {
     name: 'starlight-codeblocks:code-switcher',
     baseStyles: ({ cssVar }) => `
@@ -60,21 +64,32 @@ export function pluginCodeSwitcher(): CodeblocksPlugin {
 }`,
     jsModules: clientJsModules,
     hooks: {
-      postprocessRenderedBlock({ codeBlock, renderData }) {
+      async postprocessRenderedBlock({ codeBlock, renderData }) {
         const variant = readVariant(codeBlock);
         if (!variant) return;
+        icons ??= fileIconResolver(fileIcons);
         const { index, labels } = variant;
-        const path = languageIcon(codeBlock.language);
+        const resolved = await icons;
+        const name = resolved.forLanguage(codeBlock.language);
+        const svg = name ? resolved.svg(name) : undefined;
+        if (svg) {
+          svg.properties = {
+            class: `${PREFIX}-switcher-icon`,
+            ariaHidden: 'true',
+            focusable: 'false',
+            ...svg.properties,
+          };
+        }
         addTitleBarControl(
           renderData.blockAst,
           h('span', { class: `${FIELD} ${PREFIX}-no-print ${PREFIX}-needs-js` }, [
-            icon(`${PREFIX}-switcher-icon`, path ?? CODE_ICON, !path),
+            svg ?? icon(`${PREFIX}-switcher-icon`, CODE_ICON),
             h(
               'select',
               { class: `${PREFIX}-btn ${MENU}`, ariaLabel: 'Variant' },
               labels.map((label, i) => h('option', { value: String(i), selected: i === index }, label)),
             ),
-            icon(`${PREFIX}-switcher-chevron`, 'm6 9 6 6 6-6', true),
+            icon(`${PREFIX}-switcher-chevron`, 'm6 9 6 6 6-6'),
           ]),
         );
       },

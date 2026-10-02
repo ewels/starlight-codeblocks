@@ -1,0 +1,244 @@
+---
+title: File icons
+description: Show the icon of the file type before the title of a code block, with the same icons as the Starlight file tree.
+---
+
+import { FileTree, LinkCard } from '@astrojs/starlight/components';
+import Example from '../../../components/Example.astro';
+import IconSets from '../../../components/IconSets.astro';
+import Options from '../../../components/Options.astro';
+
+A code block with a title shows the file name in the title bar. The plugin puts the icon of the file type before that name. It uses the icons of the Starlight `<FileTree>` component, and chooses them with the same rules. A file then looks the same in a tree and in a code block.
+
+export const basic = `
+\`\`\`json title="package.json"
+{ "name": "my-site", "type": "module" }
+\`\`\`
+
+\`\`\`ts title="src/content.config.ts"
+export const collections = {};
+\`\`\`
+`;
+
+<Example code={basic} />
+
+File icons are on for every code block with a title, so you do not add an attribute. The plugin finds the icon from the file name in the title. When the title is not a file name, the icon comes from the language of the code block.
+
+## Syntax
+
+Each attribute goes on the code block fence line. The fence line is the first line of the code block, with the language.
+
+| Syntax | Where |
+|---|---|
+| `icon="<name>"` | Code block fence line. Sets the icon by name, such as `react`. |
+| `icon=false` or `no-icon` | Code block fence line. Removes the icon. |
+| `fileIcons.set="seti"` | Code block fence line. Takes the icon from the one-colour Seti icons. |
+| `fileIcons.set="material"` | Code block fence line. Takes the icon from the coloured Material Icon Theme icons. |
+| `fileIcons.set="vscode-icons"` | Code block fence line. Takes the icon from the coloured vscode-icons icons. |
+| `fileIcons.set="catppuccin"` | Code block fence line. Takes the icon from the coloured Catppuccin icons. |
+| `fileIcons.style="plain"` | Code block fence line. Shows the icon alone. |
+| `fileIcons.style="tile"` | Code block fence line. Shows the icon on a square with rounded corners. |
+| `fileIcons.colour="<colour>"` | Code block fence line. Sets a CSS colour for the icon, or for the square of a tile. |
+
+## Examples
+
+### Coloured icons
+
+The `material`, `vscode-icons` and `catppuccin` sets have coloured icons, each with its own rules for file names. [Icon sets](#icon-sets) lists the package that each set needs:
+
+export const coloured = `
+\`\`\`json title="package.json" fileIcons.set="material"
+{ "name": "my-site", "type": "module" }
+\`\`\`
+
+\`\`\`json title="package.json" fileIcons.set="vscode-icons"
+{ "name": "my-site", "type": "module" }
+\`\`\`
+
+\`\`\`json title="package.json" fileIcons.set="catppuccin"
+{ "name": "my-site", "type": "module" }
+\`\`\`
+
+\`\`\`py title="app.py" fileIcons.set="catppuccin" fileIcons.style="tile"
+print("Hello")
+\`\`\`
+`;
+
+<Example code={coloured} layout="tabs" />
+
+Some icons have a variant for light themes, and the block shows the variant for its theme. In a tile, a coloured icon sits on a neutral square.
+
+### GitHub files
+
+Files in a `.github` folder and `.gitattributes` get the GitHub icon, from the whole path in the title:
+
+export const github = `
+\`\`\`yaml title=".github/workflows/test.yml"
+on: [push, pull_request]
+\`\`\`
+`;
+
+<Example code={github} layout="tabs" />
+
+### Icons in a tile
+
+The `tile` style puts the icon on a square in the accent colour of the theme. With a custom colour, the icon is black or white, whichever reads on the square:
+
+export const tile = `
+\`\`\`py title="app.py" fileIcons.style="tile"
+print("Hello")
+\`\`\`
+
+\`\`\`py title="app.py" fileIcons.style="tile" fileIcons.colour="#3776ab"
+print("Hello")
+\`\`\`
+
+\`\`\`js title="app.js" fileIcons.style="tile" fileIcons.colour="#f7df1e"
+console.log('Hello');
+\`\`\`
+`;
+
+<Example code={tile} layout="tabs" />
+
+### Set the icon
+
+`icon` sets the icon by name. The names are the names of the Starlight icons, with or without the `seti:` prefix:
+
+export const named = `
+\`\`\`js title="App" icon="react"
+export const App = () => <h1>Hello</h1>;
+\`\`\`
+`;
+
+<Example code={named} layout="tabs" />
+
+### Colour an icon
+
+`fileIcons.colour` takes a CSS colour. Use `light-dark()` to give a different colour in the dark and the light theme:
+
+export const colour = `
+\`\`\`toml title="Cargo.toml" fileIcons.colour="light-dark(#f74c00, #b33600)"
+[package]
+name = "hello"
+\`\`\`
+`;
+
+<Example code={colour} layout="tabs" />
+
+### Custom icons
+
+The `fileIcons.icons` option adds icons by name. This site adds the Nextflow icon from Simple Icons, and links it to the `.nf` extension and the `nextflow` language:
+
+export const custom = `
+\`\`\`nextflow title="main.nf"
+workflow {
+    Channel.of('Hello').view()
+}
+\`\`\`
+`;
+
+<Example code={custom} hiddenAttributes="apiLinks=false" layout="tabs" />
+
+## Behaviour
+
+- How the plugin finds the icon:
+  - First, the `icon` attribute.
+  - Then the rules of the `fileIcons.files` option, on the whole path in the title.
+  - Then the GitHub rules: `.github/**` and `.gitattributes`.
+  - Then the file name at the end of the title, as `<FileTree>` finds it. The full name comes first, such as `Dockerfile`.
+  - Then the extension of the file name, such as `.test.ts` and then `.ts`.
+  - Then the language of the code block, such as `py` or `python`.
+  - Then the default file icon.
+- Where icons show:
+  - In the title of an editor frame. Terminal frames and code blocks with no title get no icon.
+  - The [code switcher](/starlight-codeblocks/features/code-switcher/) menu shows the icon of each language, custom icons too.
+- Colours:
+  - A `plain` icon has the colour of the title text.
+  - A `tile` has the accent colour of the theme, with the icon in the text colour for that accent.
+  - A colour from the site or the code block replaces both.
+  - A coloured icon keeps its colours. A colour from the site or the code block draws it in that one colour.
+- Screen readers:
+  - The icon is decorative. Screen readers read the title only.
+
+These file names, in a `<FileTree>`, show the same icons as the code blocks above:
+
+<FileTree>
+
+- package.json
+- app.py
+- Cargo.toml
+- src/
+  - content.config.ts
+
+</FileTree>
+
+## Icon sets
+
+The `fileIcons.set` option sets the icons for the whole site. Each coloured set needs one package, which you add to the site:
+
+| Set | Icons | Package |
+|---|---|---|
+| `seti` | The one-colour icons of the Starlight `<FileTree>`. The default. | None |
+| `material` | [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme) | `@iconify-json/material-icon-theme` |
+| `vscode-icons` | [vscode-icons](https://github.com/vscode-icons/vscode-icons) | `@iconify-json/vscode-icons` |
+| `catppuccin` | [Catppuccin Icons](https://github.com/catppuccin/vscode-icons), in Macchiato colours, and Latte colours in light themes | `@iconify-json/catppuccin` |
+
+```sh
+npm install @iconify-json/vscode-icons
+```
+
+The plugin has the file name rules of each set, so a site downloads only the icons of the set that it uses. These files show the icon of each set:
+
+<IconSets />
+
+<LinkCard title="All file icons" description="See the icon of every language and file name in each set." href="/starlight-codeblocks/features/file-icons/all/" />
+
+## Options
+
+<Options />
+
+To use tiles on the whole site, with the brand colour of Python and an icon for a custom language:
+
+```js title="astro.config.mjs"
+import { siNextflow } from 'simple-icons';
+
+codeblocks({
+  fileIcons: {
+    style: 'tile',
+    icons: { nextflow: siNextflow.svg },
+    files: { '.nf': 'nextflow', 'nextflow.config': 'nextflow', 'docs/**/*.md': 'info' },
+    languages: {
+      python: { colour: '#3776ab' },
+      nextflow: { icon: 'nextflow', colour: `#${siNextflow.hex}` },
+    },
+  },
+});
+```
+
+A key in `fileIcons.files` with a `/` or a `*` is a path pattern. `*` matches inside one folder, and `**` matches across folders.
+
+For one language, the icon in `fileIcons.languages` can be SVG markup, with no name in `fileIcons.icons`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  fileIcons: { languages: { nextflow: { icon: siNextflow.svg } } },
+});
+```
+
+An icon in `fileIcons.icons` is SVG markup, or the path data of a 24 by 24 icon. An icon with no `fill` takes the colour of the icon. An icon with its own colours keeps them.
+
+The size and the default colours are style settings in the `codeblocksFileIcons` group.
+
+<LinkCard title="Style settings" description="See the size and colour settings of file icons." href="/starlight-codeblocks/reference/style-settings/" />
+
+## Limitations
+
+- The icons are the Seti icons of Starlight. Some file types have no icon of their own and get the default file icon. Add an icon with `fileIcons.icons`.
+- A custom icon with its own colours keeps them in the `tile` style.
+- `<FileTree>` sees only the file name, so it shows the YAML icon for a file in `.github/workflows`, where a code block shows the GitHub icon.
+- The coloured sets have no GitHub icon, so GitHub files get the Seti icon in every set.
+- The plugin carries the rules of each coloured set at one version. An icon that a newer version adds has no rule until the plugin updates its rules.
+
+## Related
+
+- [Code switcher](/starlight-codeblocks/features/code-switcher/): show the same code in several languages, with the icon of each language in the menu.

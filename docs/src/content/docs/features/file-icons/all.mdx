@@ -1,0 +1,20 @@
+---
+title: All file icons
+description: The icon of every language and file name in each icon set of the file icons feature.
+---
+
+import IconSets from '../../../../components/IconSets.astro';
+
+This page shows the icon that each set of [file icons](/starlight-codeblocks/features/file-icons/) gives a code block. A row is left out when every set shows its default file icon. A coloured set has rules for many more file names than these, so the icons here are a selection.
+
+## Languages
+
+A code block with a title that is not a file name gets the icon of its language:
+
+<IconSets rows="languages" />
+
+## File names
+
+A code block with one of these file names as its title gets its icon from the name:
+
+<IconSets rows="files" />

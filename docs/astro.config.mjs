@@ -1,5 +1,6 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
+import { siNextflow } from 'simple-icons';
 import codeblocks, { linksValidatorExclude } from 'starlight-codeblocks';
 import { nextflow } from 'starlight-codeblocks/adapters/nextflow';
 import { python } from 'starlight-codeblocks/adapters/python';
@@ -35,6 +36,11 @@ export default defineConfig({
           notation: { comments: { md: [], markdown: [], mdx: [] } },
           shellCopy: { prompts: ['$ ', '> ', 'PS> '] },
           swatches: { prose: true },
+          fileIcons: {
+            icons: { nextflow: siNextflow.svg },
+            files: { '.nf': 'nextflow', 'nextflow.config': 'nextflow' },
+            languages: { nextflow: { icon: 'nextflow' } },
+          },
           playgrounds: {
             pythontutor: {
               label: 'Open in Python Tutor',

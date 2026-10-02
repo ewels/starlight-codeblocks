@@ -1,6 +1,7 @@
 import { type CollectionEntry, getCollection } from 'astro:content';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { iconSetNames, iconSetTables } from './components/icon-sets.ts';
 import {
   adapterOptions,
   attributes,
@@ -71,6 +72,15 @@ function optionsMarkdown(entries: OptionEntry[], all: boolean) {
 }
 
 const component: Record<string, (props: Record<string, string>, id: string) => string> = {
+  IconSets: ({ rows = 'top' }) =>
+    [
+      `| ${rows === 'languages' ? 'Language' : 'File'} | ${iconSetNames.join(' | ')} |`,
+      `|---|${iconSetNames.map(() => '---|').join('')}`,
+      ...iconSetTables[rows as keyof typeof iconSetTables].map(
+        ({ label, title, icons }) =>
+          `| ${label}${!title || label === title ? '' : ` \`${title}\``} | ${icons.map(({ name }) => `\`${name}\``).join(' | ')} |`,
+      ),
+    ].join('\n'),
   Options: ({ adapter }, id) =>
     adapter
       ? optionsMarkdown(adapterOptions[adapter as keyof typeof adapterOptions], false)
@@ -192,7 +202,7 @@ export function pageMarkdown(entry: Entry) {
     }
     const [, indent = '', closing, name = '', rest = '', selfClosing] = tag;
     const props = attrs(rest);
-    if (closing || ['Tabs', 'Steps', 'Scrollycoding', 'CardGrid'].includes(name)) continue;
+    if (closing || ['Tabs', 'Steps', 'Scrollycoding', 'CardGrid', 'FileTree'].includes(name)) continue;
     if (name === 'Step') {
       out.push(absoluteLinks(line.replace(/<\/?Step[^>]*>/g, '').trim()), '');
       continue;

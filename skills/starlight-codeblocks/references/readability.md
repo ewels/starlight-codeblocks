@@ -8,6 +8,7 @@ Seven features make a block, or the code in the prose, easier to read. None of t
 - If the exact whitespace changes the meaning, show it with visible whitespace.
 - If brackets nest deeply on dense lines, colour them with colourised brackets.
 - If code has CSS colours, colour swatches show them. They start on their own.
+- If a block has a file name as its title, file icons show its file type. They start on their own.
 - If code is inside a sentence, colour it with inline code highlighting.
 - If the reader compares one before and one after of a few lines, use a diff in one block. Word-level diff starts on its own.
 
@@ -109,6 +110,30 @@ Starts on its own in every block. A small swatch in the colour goes before each 
 - Options: `swatches.shape` (`'square'`, `'rounded'` or `'circle'`, default `'rounded'`) and `swatches.size` (a CSS length, default `'0.8em'`).
 - Options: `swatches.hover` and `swatches.copy` (default `true`), and `swatches.prose` (default `false`). With `swatches.prose`, colours in the text of a page, and inline code that is one colour, also get a swatch.
 - A docs example about another feature with colours in it: add `swatches=false` so that it shows only its own feature.
+
+## File icons
+
+Docs: https://ewels.github.io/starlight-codeblocks/features/file-icons/
+
+Starts on its own in every block with a title in an editor frame. An icon of the file type goes before the title. The plugin finds it from the title as Starlight's `<FileTree>` does: the full file name, then the extension, then the language of the block. Terminal frames and blocks with no title get no icon.
+
+| Syntax | Where |
+|---|---|
+| `icon="<name>"` | Code block fence line. Sets the icon by name, such as `react`, `seti:vue` or a name in `fileIcons.icons`. |
+| `icon=false`, `no-icon` | Code block fence line. Removes the icon. |
+| `fileIcons.set="seti"`, `fileIcons.set="material"`, `fileIcons.set="vscode-icons"`, `fileIcons.set="catppuccin"` | Code block fence line. One-colour Seti icons, or a coloured set. |
+| `fileIcons.style="plain"`, `fileIcons.style="tile"` | Code block fence line. The icon alone, or on a square with rounded corners. |
+| `fileIcons.colour="<colour>"` | Code block fence line. A CSS colour for the icon, or for the square of a tile. |
+
+- The default icons are the Seti icons of `<FileTree>`. The names are Starlight's, with or without `seti:`.
+- Option `fileIcons.set` picks the icons: `'seti'` (default, one colour), or the coloured `'material'`, `'vscode-icons'` or `'catppuccin'`. A coloured set needs its package: `@iconify-json/material-icon-theme`, `@iconify-json/vscode-icons` or `@iconify-json/catppuccin`.
+- Files in `.github/` and `.gitattributes` get the GitHub icon, from the whole path in the title.
+- An icon has the colour of the title. A tile has the accent colour. A tile in a custom colour gets a black or white icon, whichever reads on it.
+- Options: `fileIcons.style` (default `'plain'`). `fileIcons.languages` sets `icon`, `colour` and `style` for each language, such as `{ python: { colour: '#3776ab' } }`.
+- Options: `fileIcons.languages.<lang>.icon` is an icon name or SVG markup, such as `siNextflow.svg` from `simple-icons`.
+- Options: `fileIcons.icons` adds icons by name, as SVG markup or 24 by 24 path data. `fileIcons.files` maps a file name, an extension such as `.nf`, or a path pattern such as `docs/**/*.md` to an icon name.
+- The code switcher menu uses the same icon for each language, custom icons too.
+- A docs example about another feature with a title: add `icon=false` if the icon distracts from the feature.
 
 ## Inline code highlighting
 

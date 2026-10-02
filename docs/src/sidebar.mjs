@@ -32,6 +32,7 @@ export const sidebar = [
       'features/visible-whitespace',
       'features/colourised-brackets',
       'features/colour-swatches',
+      'features/file-icons',
       'features/inline-code-highlighting',
       'features/word-level-diff',
     ],
@@ -82,4 +83,4 @@ export const carouselGroups = sidebar
   .filter(({ ids }) => ids.length > 0);
 
 /** Pages that the sidebar and `llms.txt` leave out, such as demos that a feature page links to. */
-export const unlisted = ['features/side-annotations/wide', 'features/scrollycoding/wide'];
+export const unlisted = ['features/side-annotations/wide', 'features/scrollycoding/wide', 'features/file-icons/all'];

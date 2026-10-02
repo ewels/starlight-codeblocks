@@ -1,5 +1,7 @@
 import { nextflow } from './adapters/nextflow.ts';
 import { python } from './adapters/python.ts';
+import type { FileIconLanguage, FileIconSet, FileIconStyle } from './expressive-code/file-icons.ts';
+import { fileIconSets, isCssColour } from './expressive-code/file-icons.ts';
 import { type SwatchFormat, type SwatchShape, swatchFormats } from './expressive-code/swatches.ts';
 
 export interface LineStateDefinition {
@@ -91,6 +93,15 @@ export interface CodeblocksOptions {
         hover?: boolean;
         copy?: boolean;
         prose?: boolean;
+      };
+  fileIcons?:
+    | false
+    | {
+        set?: FileIconSet;
+        style?: FileIconStyle;
+        languages?: Record<string, FileIconLanguage>;
+        files?: Record<string, string>;
+        icons?: Record<string, string>;
       };
   codeLinks?: false;
   apiLinks?: false | { adapters?: ApiLinkAdapter[] };
@@ -342,6 +353,55 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         description:
           'Also show swatches in the text of Markdown pages, and in inline code that is one colour. Named colours get a swatch only in inline code.',
         valid: (value) => typeof value === 'boolean',
+      },
+    },
+  },
+  fileIcons: {
+    description: 'Shows the icon of the file type before the title of a code block.',
+    page: 'features/file-icons',
+    off: '`icon` attributes then have no effect.',
+    fields: {
+      set: {
+        type: fileIconSets.map((set) => `'${set}'`).join(' | '),
+        default: 'seti',
+        description:
+          'The icons: the one-colour Seti icons of the Starlight file tree, or the coloured icons of Material Icon Theme, vscode-icons or Catppuccin. A coloured set needs its `@iconify-json` package, such as `@iconify-json/vscode-icons`.',
+        valid: oneOf(...fileIconSets),
+      },
+      style: {
+        type: "'plain' | 'tile'",
+        default: 'plain',
+        description:
+          'The icon alone, or the icon on a square with rounded corners. A language or a code block can set its own.',
+        valid: oneOf('plain', 'tile'),
+      },
+      languages: {
+        type: "Record<string, { icon?: string; colour?: string; style?: 'plain' | 'tile' }>",
+        default: {},
+        description:
+          'Settings for the blocks of each language: the icon when the title gives none, as an icon name or SVG markup, a CSS colour for the icon or the tile, and the style.',
+        valid: isRecordOf(
+          (language) =>
+            isObject(language) &&
+            Object.keys(language).every((key) => ['icon', 'colour', 'style'].includes(key)) &&
+            (language.icon === undefined || isString(language.icon)) &&
+            (language.colour === undefined || (isString(language.colour) && isCssColour(language.colour))) &&
+            (language.style === undefined || oneOf('plain', 'tile')(language.style)),
+        ),
+      },
+      files: {
+        type: 'Record<string, string>',
+        default: {},
+        description:
+          'Icon names by file name, such as `nextflow.config`, by extension, such as `.nf`, or by path pattern, such as `.github/**`. A `*` matches within one folder, and `**` across folders. They come before the built-in rules.',
+        valid: isRecordOf(isString),
+      },
+      icons: {
+        type: 'Record<string, string>',
+        default: {},
+        description:
+          'Custom icons by name: SVG markup, or the path data of a 24 by 24 icon. A custom name replaces a built-in icon of the same name.',
+        valid: isRecordOf((icon) => isString(icon) && icon.trim() !== ''),
       },
     },
   },

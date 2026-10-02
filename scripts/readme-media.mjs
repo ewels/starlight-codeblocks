@@ -93,6 +93,7 @@ const features = [
   { slug: 'visible-whitespace' },
   { slug: 'colourised-brackets' },
   { slug: 'colour-swatches' },
+  { slug: 'file-icons' },
   {
     slug: 'code-links',
     run: async (page, rec) => {

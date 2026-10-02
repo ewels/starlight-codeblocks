@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/logotype.svg" width="800" alt="starlight-codeblocks">
 </h1>
 
-A Starlight plugin that adds 25 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
+A Starlight plugin that adds 26 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
 
 Using an agent? [Point it at the bundled skill](https://ewels.github.io/starlight-codeblocks/agent-skill/).
 
@@ -282,6 +282,23 @@ Show a small swatch of each CSS colour next to its value. Readers can click a co
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/colour-swatches.png" alt="A CSS block. A small square in each colour comes before the values #ffffff, rebeccapurple and a semi-transparent rgb() colour.">
 
 [Colour swatches documentation](https://ewels.github.io/starlight-codeblocks/features/colour-swatches/)
+
+</details>
+
+<details>
+<summary>File icons</summary>
+
+Show the icon of the file type before the title of a code block, with the same icons as the Starlight file tree. File icons start on their own.
+
+````md
+```json title="package.json"
+{ "name": "my-site" }
+```
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/file-icons.png" alt="Two code blocks. The JSON icon comes before the title package.json, and the TypeScript icon before src/content.config.ts.">
+
+[File icons documentation](https://ewels.github.io/starlight-codeblocks/features/file-icons/)
 
 </details>
 

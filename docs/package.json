@@ -12,6 +12,9 @@
   "dependencies": {
     "@astrojs/starlight": "0.42.4",
     "@expressive-code/plugin-collapsible-sections": "0.44.2",
+    "@iconify-json/catppuccin": "1.2.17",
+    "@iconify-json/material-icon-theme": "1.2.70",
+    "@iconify-json/vscode-icons": "1.2.83",
     "astro": "7.3.5",
     "astro-og-canvas": "0.13.2",
     "canvaskit-wasm": "0.42.0",
@@ -26,6 +29,7 @@
     "@shikijs/themes": "4.4.3",
     "lucide-static": "1.48.0",
     "sharp": "0.35.5",
+    "shiki": "4.4.3",
     "simple-icons": "16.33.0",
     "typescript": "6.0.3"
   }

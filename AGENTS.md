@@ -1,6 +1,6 @@
 # Agent instructions
 
-`starlight-codeblocks` is a Starlight plugin that adds 25 code block features on top of Expressive Code (EC), which renders every code block in Starlight. `packages/starlight-codeblocks/` is the plugin, `docs/` its Starlight docs site (it uses the plugin through `workspace:*`, and defines each feature's syntax and behaviour), and `skills/starlight-codeblocks/` an agent skill for people who use the plugin.
+`starlight-codeblocks` is a Starlight plugin that adds 26 code block features on top of Expressive Code (EC), which renders every code block in Starlight. `packages/starlight-codeblocks/` is the plugin, `docs/` its Starlight docs site (it uses the plugin through `workspace:*`, and defines each feature's syntax and behaviour), and `skills/starlight-codeblocks/` an agent skill for people who use the plugin.
 
 - `.agents/DECISIONS.md`: design decisions and the rejected options. Search it before you change existing behaviour.
 - `.agents/WRITING-STYLE.md`: how the docs read, the feature page template and the glossary.
