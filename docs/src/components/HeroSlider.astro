@@ -106,7 +106,7 @@ const diff = 'title="app.py" del={8} ins={9}';
     const steps: Record<string, number> = { ArrowLeft: -5, ArrowDown: -5, ArrowRight: 5, ArrowUp: 5, PageDown: -20, PageUp: 20 };
     handle.addEventListener('keydown', (event) => {
       const next =
-        event.key === 'Home' ? 0 : event.key === 'End' ? 100 : event.key in steps ? pos + (steps[event.key] ?? 0) : null;
+        event.key === 'Home' ? 0 : event.key === 'End' ? 100 : event.key in steps ? Math.round(pos) + (steps[event.key] ?? 0) : null;
       if (next === null) return;
       event.preventDefault();
       stop();
