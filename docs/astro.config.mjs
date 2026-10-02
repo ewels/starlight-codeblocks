@@ -39,7 +39,7 @@ export default defineConfig({
           fileIcons: {
             icons: { nextflow: siNextflow.svg },
             files: { '.nf': 'nextflow', 'nextflow.config': 'nextflow' },
-            languages: { nextflow: { icon: 'nextflow' } },
+            languages: { nextflow: { icon: 'nextflow', colour: '#31C9AC' } },
           },
           playgrounds: {
             pythontutor: {

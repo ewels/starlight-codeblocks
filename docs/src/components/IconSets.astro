@@ -14,7 +14,7 @@ const label = rows === 'languages' ? 'Language' : 'File';
   <thead>
     <tr>
       <th scope="col">{label}</th>
-      {iconSetNames.map((name) => <th scope="col">{name}</th>)}
+      {iconSetNames.map((name) => <th scope="col">{name.replace('Catppuccin', 'Catppuc\u00adcin')}</th>)}
     </tr>
   </thead>
   <tbody>
@@ -51,6 +51,30 @@ const label = rows === 'languages' ? 'Language' : 'File';
   }
   .icons {
     display: block;
+  }
+  /* Five columns fit a phone only with a fixed layout, and names that wrap. */
+  @media (max-width: 50rem) {
+    .icon-sets {
+      table-layout: fixed;
+      width: 100%;
+    }
+    .icon-sets thead th {
+      font-size: 0.6875rem;
+    }
+    .icon-sets thead th:not(:first-child) {
+      width: 3.5rem;
+    }
+    .icon-sets th,
+    .icon-sets td {
+      padding-inline: 0.25rem;
+    }
+    .icon-sets th[scope='row'] {
+      overflow-wrap: anywhere;
+    }
+    .icon-sets th[scope='row'] code {
+      display: block;
+      margin-inline-start: 0;
+    }
   }
   .icon-sets :global(.set-icon) {
     display: block;

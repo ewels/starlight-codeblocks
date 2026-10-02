@@ -115,7 +115,7 @@ Starts on its own in every block. A small swatch in the colour goes before each 
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/file-icons/
 
-Starts on its own in every block with a title in an editor frame. An icon of the file type goes before the title. The plugin finds it from the title as Starlight's `<FileTree>` does: the full file name, then the extension, then the language of the block. Terminal frames and blocks with no title get no icon.
+Starts on its own in every block with a title in an editor frame. An icon of the file type goes before the title. The plugin finds it from the title path, with the rules of the icon set, then from the language of the block. The default Seti set uses the rules of Starlight's `<FileTree>`: the full file name, then the extension. Terminal frames and blocks with no title get no icon.
 
 | Syntax | Where |
 |---|---|
@@ -125,7 +125,7 @@ Starts on its own in every block with a title in an editor frame. An icon of the
 | `fileIcons.style="plain"`, `fileIcons.style="tile"` | Code block fence line. The icon alone, or on a square with rounded corners. |
 | `fileIcons.colour="<colour>"` | Code block fence line. A CSS colour for the icon, or for the square of a tile. |
 
-- The default icons are the Seti icons of `<FileTree>`. The names are Starlight's, with or without `seti:`.
+- The default icons are the Seti icons of `<FileTree>`, with Starlight's names, with or without `seti:`. Each coloured set has its own names. A Seti name works in every set.
 - Option `fileIcons.set` picks the icons: `'seti'` (default, one colour), or the coloured `'material'`, `'vscode-icons'` or `'catppuccin'`. A coloured set needs its package: `@iconify-json/material-icon-theme`, `@iconify-json/vscode-icons` or `@iconify-json/catppuccin`.
 - Files in `.github/` and `.gitattributes` get the GitHub icon, from the whole path in the title.
 - An icon has the colour of the title. A tile has the accent colour. A tile in a custom colour gets a black or white icon, whichever reads on it.

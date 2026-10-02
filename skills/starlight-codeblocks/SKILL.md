@@ -79,7 +79,7 @@ Use scrollycoding when prose explains the code step by step as the reader scroll
 | Indentation or tabs change the meaning (Make, Python, YAML) | Visible whitespace: `whitespace` or `whitespace="all"` | Shows spaces and tabs as faint glyphs. |
 | Deep nesting on dense lines | Colourised brackets: `brackets` | Colours bracket pairs by depth. |
 | CSS colours in code | Colour swatches: on by default, `swatches=false` | A swatch of each colour before its value. |
-| Readers must see the file type of a titled block | File icons: on by default, `icon="<name>"`, `icon=false` | The icon of the file type before the title, as in `<FileTree>`. |
+| Readers must see the file type of a titled block | File icons: on by default, `icon="<name>"`, `icon=false` | The icon of the file type before the title: the `<FileTree>` icons by default, or a coloured set with `fileIcons.set`. |
 | Code inside a sentence of prose | Inline code highlighting: `` `code{:lang}` `` | Syntax colours for inline code. |
 | An edit to a few lines, before and after in one block | A `diff` block, `ins={}` and `del={}`, or `[!code ++]` and `[!code --]` | Word-level diff then highlights the changed words. It starts on its own. |
 

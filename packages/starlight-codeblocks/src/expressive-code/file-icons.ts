@@ -246,7 +246,7 @@ function svgElement(source: string): Element | undefined {
     svg.children = svg.children.filter((node) => node.type !== 'element' || node.tagName !== 'title');
     svg.properties.viewBox ??= '0 0 24 24';
     svg.properties.fill ??= 'currentColor';
-    for (const key of ['width', 'height', 'class', 'className', 'style', 'xmlns']) delete svg.properties[key];
+    for (const key of ['width', 'height', 'class', 'className', 'style', 'xmlns', 'role']) delete svg.properties[key];
     return svg;
   }
   const children = markup.startsWith('<')

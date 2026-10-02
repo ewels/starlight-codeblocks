@@ -8,7 +8,7 @@ import Example from '../../../components/Example.astro';
 import IconSets from '../../../components/IconSets.astro';
 import Options from '../../../components/Options.astro';
 
-A code block with a title shows the file name in the title bar. The plugin puts the icon of the file type before that name. It uses the icons of the Starlight `<FileTree>` component, and chooses them with the same rules. A file then looks the same in a tree and in a code block.
+A code block with a title shows the file name in the title bar. The plugin puts the icon of the file type before that name. By default, it uses the icons of the Starlight `<FileTree>` component, and chooses them with the same rules. A file then looks the same in a tree and in a code block. Three sets of coloured icons are also available.
 
 export const basic = `
 The default Seti icons, as in the Starlight file tree:
@@ -146,7 +146,7 @@ console.log('Hello');
 
 ### Set the icon
 
-`icon` sets the icon by name. The names are the names of the Starlight icons, with or without the `seti:` prefix:
+`icon` sets the icon by name. In the Seti set, the names are the names of the Starlight icons, with or without the `seti:` prefix. Each coloured set has its own names, which [All file icons](/starlight-codeblocks/features/file-icons/all/) shows when you hover over an icon. A Seti name works in every set:
 
 export const named = `
 \`\`\`js title="App" icon="react"
@@ -171,7 +171,7 @@ name = "hello"
 
 ### Custom icons
 
-The `fileIcons.icons` option adds icons by name. This site adds the Nextflow icon from Simple Icons, and links it to the `.nf` extension and the `nextflow` language:
+The `fileIcons.icons` option adds icons by name. This site adds the Nextflow icon from Simple Icons, links it to the `.nf` extension and the `nextflow` language, and gives it the Nextflow green:
 
 export const custom = `
 \`\`\`nextflow title="main.nf"
@@ -188,7 +188,7 @@ codeblocks({
   fileIcons: {
     icons: { nextflow: siNextflow.svg },
     files: { '.nf': 'nextflow', 'nextflow.config': 'nextflow' },
-    languages: { nextflow: { icon: 'nextflow' } },
+    languages: { nextflow: { icon: 'nextflow', colour: '#31C9AC' } },
   },
 });
 `;
@@ -201,8 +201,8 @@ codeblocks({
   - First, the `icon` attribute.
   - Then the rules of the `fileIcons.files` option, on the whole path in the title.
   - Then the GitHub rules: `.github/**` and `.gitattributes`.
-  - Then the file name at the end of the title, as `<FileTree>` finds it. The full name comes first, such as `Dockerfile`.
-  - Then the extension of the file name, such as `.test.ts` and then `.ts`.
+  - Then the rules of the icon set. The Seti set reads the file name at the end of the title, as `<FileTree>` does.
+  - In the Seti set, the full name comes first, such as `Dockerfile`. Then the extension, such as `.test.ts` and then `.ts`.
   - Then the language of the code block, such as `py` or `python`.
   - Then the default file icon.
 - Where icons show:
@@ -216,15 +216,16 @@ codeblocks({
 - Screen readers:
   - The icon is decorative. Screen readers read the title only.
 
-These file names, in a `<FileTree>`, show the same icons as the code blocks above:
+With the default Seti set, a file in a `<FileTree>` has the same icon as a code block with that file name as its title:
 
 <FileTree>
 
 - package.json
 - app.py
 - Cargo.toml
+- Dockerfile
 - src/
-  - content.config.ts
+  - index.js
 
 </FileTree>
 
@@ -265,7 +266,7 @@ codeblocks({
     files: { '.nf': 'nextflow', 'nextflow.config': 'nextflow', 'docs/**/*.md': 'info' },
     languages: {
       python: { colour: '#3776ab' },
-      nextflow: { icon: 'nextflow', colour: `#${siNextflow.hex}` },
+      nextflow: { icon: 'nextflow', colour: '#31C9AC' },
     },
   },
 });
@@ -289,7 +290,7 @@ The size and the default colours are style settings in the `codeblocksFileIcons`
 
 ## Limitations
 
-- The icons are the Seti icons of Starlight. Some file types have no icon of their own and get the default file icon. Add an icon with `fileIcons.icons`.
+- Each set has icons only for the file types that it knows. Other files get the default file icon of the set. Add an icon with `fileIcons.icons`.
 - A custom icon with its own colours keeps them in the `tile` style.
 - `<FileTree>` sees only the file name, so it shows the YAML icon for a file in `.github/workflows`, where a code block shows the GitHub icon.
 - The coloured sets have no GitHub icon, so GitHub files get the Seti icon in every set.

@@ -104,7 +104,7 @@ export const attributesReference: AttributeDoc[] = [
     name: 'icon',
     syntax: ['icon="<name>"', 'icon=false', 'no-icon'],
     description:
-      'Sets the file icon before the title: a built-in icon, such as `react`, or a name from the `fileIcons.icons` option. `icon=false` and `no-icon` remove it.',
+      'Sets the file icon before the title: an icon of the icon set, a Seti icon such as `react`, or a name from the `fileIcons.icons` option. `icon=false` and `no-icon` remove it.',
     page: 'features/file-icons',
     example: { lang: 'js', meta: 'title="vite.config.js" icon="vite"', code: 'export default {};' },
   },
