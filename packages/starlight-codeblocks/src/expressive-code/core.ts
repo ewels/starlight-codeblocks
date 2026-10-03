@@ -75,6 +75,7 @@ const decorations = [
   'steps-stepper',
   'steps-controls',
   'run-output',
+  'run-start',
   'permalink',
 ]
   .map((name) => `.${PREFIX}-${name}`)

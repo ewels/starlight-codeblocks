@@ -105,7 +105,7 @@ print(mean([1520, 1610, 1480]))
 - Standard output and standard error show in the output panel. A run stops after the timeout. The download of the runtime and of imported packages does not count towards the timeout.
 - A Python session with `>>>` prompts runs its commands only, as in the Python REPL: the output shows the value of each expression.
 - `runnable.button` puts the button under the block (default), in the title bar, or both.
-- For code that cannot run in the browser, such as a command line tool, write its output after an `[!output]` comment. The button prints it instead of running the code, one line every `outputDelay` ms (default `200`; `0` prints it at once). The output lines leave the code and the copied text. `[!output end]` ends the output; without it, the output goes to the end of the block. `[!wait <ms>]` at the end of an output line changes the wait after it. The block needs no `runnable` attribute and no runtime. `runnable.output="…"` on the fence line does the same, with `\n` for new lines.
+- For code that cannot run in the browser, such as a command line tool, write its output after an `[!output]` comment. The button prints it instead of running the code, one line every `outputDelay` ms (default `200`; `0` prints it at once). The output lines leave the code and the copied text. `[!output end]` ends the output; without it, the output goes to the end of the block. `[!wait <ms>]` at the end of an output line changes the wait after it. The block needs no `runnable` attribute and no runtime. A block with only output shows the button in the middle of the empty code area. `runnable.output="…"` on the fence line does the same, with `\n` for new lines.
 
 ````md
 ```sh

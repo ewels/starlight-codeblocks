@@ -105,6 +105,21 @@ Hola mundo!
 
 <Example code={scripted} layout="tabs" />
 
+### Output only
+
+A block with only output shows the button in the middle of the empty code area. The button fades out when a reader clicks it, and the output takes its place:
+
+export const outputOnly = `
+\`\`\`sh
+# [!output]
+Pulling nextflow-io/hello ...
+ downloaded from https://github.com/nextflow-io/hello.git # [!wait 1000]
+Hello world!
+\`\`\`
+`;
+
+<Example code={outputOnly} layout="tabs" />
+
 ### The button in the title bar
 
 `runnable.button="title"` puts the button in the title bar, as the copy button is. `both` shows the button in both places:
@@ -130,6 +145,7 @@ print(sorted(["chr2", "chr10", "chr1"], key=lambda c: int(c[3:])))
   - The panel shows "Running…", then the lines of output, with `outputDelay` milliseconds (200 by default) before each line. With `0`, all the lines show at once. `[!wait]` changes the wait after one line.
   - Scripted output shows as standard output. The button does not run the code, and the block needs no runtime.
   - The output lines are not part of the code that readers see or copy.
+  - A block with only output has no copy button. Its **Run code** button is in the middle of the empty code area, and fades out on the first click. Keyboard focus then moves to the output.
 - Output:
   - The output panel has the label "Output". Standard output shows in green. Standard error shows in red, with a bar at its start, so the colour is not the only difference.
 - Keyboard and screen readers:

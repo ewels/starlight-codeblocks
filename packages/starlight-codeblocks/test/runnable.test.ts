@@ -173,6 +173,19 @@ test('[!output] takes the lines after it out of the code, up to [!output end] or
   expect(badWait.warnings.join('\n')).toContain('`[!wait]` needs milliseconds, on a line of `[!output]`.');
 });
 
+test('a block with only output has the button in its code area, and no copy button', async () => {
+  const { html, warnings } = await render(block('sh', '# [!output]', 'Hello'));
+  expect(html).toContain('class="frame is-terminal scb-run-empty"');
+  expect(html).toContain(
+    '<pre data-language="sh"><code></code><button type="button" class="scb-run scb-run-start scb-no-print scb-needs-js" data-scb-run-again="Run again">Run code</button></pre>',
+  );
+  expect(html).not.toContain('class="copy"');
+  expect(html).not.toContain('scb-run-controls');
+  expect(warnings).toEqual([]);
+  const title = await render(block('sh runnable.button=title', '# [!output]', 'Hello'));
+  expect(title.html).not.toContain('scb-run-start');
+});
+
 test('blocks without runnable render the same with the feature off', async () => {
   const plain = block('js title="a.js"', 'console.log(1)');
   expect((await render(plain, js)).html).toBe((await render(plain, { runnable: false })).html);

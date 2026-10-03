@@ -110,6 +110,18 @@ async function click(event: MouseEvent) {
   const buttons = figure.querySelectorAll<HTMLElement>('.scb-run');
   for (const b of buttons) b.setAttribute('aria-disabled', 'true');
   try {
+    const start = figure.querySelector<HTMLElement>('.scb-run-start');
+    if (start && !figure.hasAttribute('data-scb-run-started')) {
+      start.classList.add('scb-run-fading');
+      const fade = Number.parseFloat(getComputedStyle(start).transitionDuration) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, fade || 0));
+      const focused = start === document.activeElement;
+      figure.setAttribute('data-scb-run-started', '');
+      if (focused) {
+        panel.tabIndex = -1;
+        panel.focus();
+      }
+    }
     await run(figure, panel);
   } finally {
     for (const b of buttons) {

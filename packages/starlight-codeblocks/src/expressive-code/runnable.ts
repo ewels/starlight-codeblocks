@@ -1,5 +1,5 @@
 import { AttachedPluginData, mix, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
-import { h, select } from '@expressive-code/core/hast';
+import { getClassNames, h, select } from '@expressive-code/core/hast';
 import { encodeCode } from '../client/shared/copy.ts';
 import { clientJsModules } from '../client-modules.ts';
 import { getRegistry } from '../registry.ts';
@@ -115,7 +115,7 @@ export function pluginRunnable({
 .${cls('-stdout')} + .${cls('-stderr')} { margin-top: 0.4rem; }
 .${cls('')}[aria-disabled='true'] { opacity: 0.6; cursor: progress; }
 .${cls('-controls')} { display: flex; justify-content: center; padding-block-start: 12px; }
-.${cls('-controls')} > .${cls('')} {
+.${cls('-controls')} > .${cls('')}, .${cls('-start')} {
   box-sizing: border-box;
   min-height: 2rem;
   padding: 0.25rem 0.9rem;
@@ -126,7 +126,15 @@ export function pluginRunnable({
   font: 600 0.8125rem/1.3 ${cssVar('uiFontFamily')};
   cursor: pointer;
 }
-.${cls('-controls')} > .${cls('')}:hover:not([aria-disabled='true']) { border-color: ${cssVar('codeblocks.accent')}; }
+.${cls('-empty')} > pre { display: grid; place-items: center; min-height: 6rem; }
+.${cls('-empty')} > pre > code { display: none; }
+.${cls('-empty')}[data-scb-run-started] > pre { display: none; }
+.${cls('-empty')}[data-scb-run-started] > .${cls('-output')}:not(:empty) { border-top: ${cssVar('borderWidth')} solid ${cssVar('borderColor')}; }
+.${cls('-start')}.${cls('-fading')} { opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .${cls('-start')} { transition: opacity 0.25s ease-out; }
+}
+.${cls('-controls')} > .${cls('')}:hover:not([aria-disabled='true']), .${cls('-start')}:hover:not([aria-disabled='true']) { border-color: ${cssVar('codeblocks.accent')}; }
 @media (scripting: none) {
   .${cls('-controls')} { display: none; }
 }
@@ -210,8 +218,18 @@ export function pluginRunnable({
             );
           if (where !== 'below') addTitleBarControl(renderData.blockAst, runButton(`${PREFIX}-btn `));
           figure.children.push(h('div', { class: cls('-output'), ariaLive: 'polite' }));
-          if (where !== 'title')
-            figure.children.push(h('div', { class: `${cls('-controls')} ${PREFIX}-no-print` }, [runButton('')]));
+          if (where === 'title') return;
+          const pre = select('pre', figure);
+          if (scripted !== undefined && !codeBlock.code.trim() && pre) {
+            // Only output: the button takes the place of the code, and nothing is left to copy.
+            figure.properties.className = [...((figure.properties.className as string[]) ?? []), cls('-empty')];
+            figure.children = figure.children.filter(
+              (child) => !(child.type === 'element' && getClassNames(child).includes('copy')),
+            );
+            pre.children.push(runButton(`${cls('-start')} `));
+            return;
+          }
+          figure.children.push(h('div', { class: `${cls('-controls')} ${PREFIX}-no-print` }, [runButton('')]));
         };
         if (scripted !== undefined) {
           figure.properties.dataScbRunnable = '';

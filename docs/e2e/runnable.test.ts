@@ -6,7 +6,8 @@ const JS = 1;
 const ERROR = 2;
 const LOOP = 3;
 const SCRIPTED = 4;
-const TITLE = 5;
+const OUTPUT_ONLY = 5;
+const TITLE = 6;
 
 const oneProject = () =>
   test.skip(test.info().project.name !== 'desktop-dark', 'Slow or needs the network, so one project is enough.');
@@ -135,6 +136,18 @@ test('scripted output prints a line at a time, and runs no runtime', async ({ pa
   await expect(stdout).toHaveText(/Launching hello\.nf[\s\S]*Hola mundo!$/, { timeout: 8_000 });
   await expect(button).toHaveText('Run again');
   expect(requests.filter((u) => u.includes('scb-runtime-'))).toEqual([]);
+});
+
+test('an output-only block has the button in its code area, which fades out on click', async ({ page }) => {
+  const block = example(page, OUTPUT_ONLY);
+  const start = block.locator('pre .scb-run-start');
+  await expect(start).toBeVisible();
+  await expect(block.locator('.copy, .scb-run-controls')).toHaveCount(0);
+  await start.focus();
+  await page.keyboard.press('Enter');
+  await expect(block.locator('pre')).toBeHidden();
+  await expect(block.locator('.scb-run-output')).toBeFocused();
+  await expect(block.locator('.scb-run-stdout')).toHaveText(/Hello world!$/, { timeout: 5_000 });
 });
 
 test('without JavaScript, the Run button is hidden', async ({ browser }) => {
