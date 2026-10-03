@@ -372,9 +372,9 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     fields: {
       set: {
         type: fileIconSets.map((set) => `'${set}'`).join(' | '),
-        default: 'seti',
+        default: 'vscode-icons',
         description:
-          'The icons: the one-colour Seti icons of the Starlight file tree, or the coloured icons of Material Icon Theme, vscode-icons or Catppuccin. A coloured set needs its `@iconify-json` package, such as `@iconify-json/vscode-icons`.',
+          'The icons: the coloured icons of vscode-icons, Material Icon Theme or Catppuccin, or the one-colour Seti icons of the Starlight file tree. Material and Catppuccin need their `@iconify-json` package, such as `@iconify-json/catppuccin`.',
         valid: oneOf(...fileIconSets),
       },
       style: {

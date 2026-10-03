@@ -32,9 +32,6 @@ importers:
       '@iconify-json/material-icon-theme':
         specifier: 1.2.70
         version: 1.2.70
-      '@iconify-json/vscode-icons':
-        specifier: 1.2.83
-        version: 1.2.83
       astro:
         specifier: 7.3.5
         version: 7.3.5(@astrojs/markdown-remark@7.3.1(supports-color@10.2.2))(@types/node@24.13.6)(yaml@2.9.1)
@@ -90,6 +87,9 @@ importers:
       '@expressive-code/plugin-frames':
         specifier: ^0.44.2
         version: 0.44.2
+      '@iconify-json/vscode-icons':
+        specifier: ^1.2.83
+        version: 1.2.83
       '@shikijs/magic-move':
         specifier: ^4.4.3
         version: 4.4.3(shiki@4.4.3)
@@ -130,9 +130,6 @@ importers:
       '@iconify-json/material-icon-theme':
         specifier: 1.2.70
         version: 1.2.70
-      '@iconify-json/vscode-icons':
-        specifier: 1.2.83
-        version: 1.2.83
       '@types/mdast':
         specifier: 4.0.4
         version: 4.0.4

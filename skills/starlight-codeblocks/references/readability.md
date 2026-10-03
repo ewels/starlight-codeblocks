@@ -115,20 +115,20 @@ Starts on its own in every block. A small swatch in the colour goes before each 
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/file-icons/
 
-Starts on its own in every block with a title in an editor frame. An icon of the file type goes before the title. The plugin finds it from the title path, with the rules of the icon set, then from the language of the block. The default Seti set uses the rules of Starlight's `<FileTree>`: the full file name, then the extension. Terminal frames and blocks with no title get no icon.
+Starts on its own in every block with a title in an editor frame. An icon of the file type goes before the title. The plugin finds it from the title path, with the rules of the icon set, then from the language of the block. The Seti set uses the rules of Starlight's `<FileTree>`: the full file name, then the extension. Terminal frames and blocks with no title get no icon.
 
 | Syntax | Where |
 |---|---|
 | `icon="<name>"` | Code block fence line. Sets the icon by name, such as `react`, `seti:vue` or a name in `fileIcons.icons`. |
 | `icon=false`, `no-icon` | Code block fence line. Removes the icon. |
-| `fileIcons.set="seti"`, `fileIcons.set="material"`, `fileIcons.set="vscode-icons"`, `fileIcons.set="catppuccin"` | Code block fence line. One-colour Seti icons, or a coloured set. |
+| `fileIcons.set="vscode-icons"`, `fileIcons.set="material"`, `fileIcons.set="catppuccin"`, `fileIcons.set="seti"` | Code block fence line. A coloured set, or the one-colour Seti icons. |
 | `fileIcons.style="plain"`, `fileIcons.style="tile"` | Code block fence line. The icon alone, or on a square with rounded corners. |
 | `fileIcons.colour="<colour>"` | Code block fence line. A CSS colour for the icon, or for the square of a tile. |
 
-- The default icons are the Seti icons of `<FileTree>`, with Starlight's names, with or without `seti:`. Each coloured set has its own names. A Seti name works in every set.
-- Option `fileIcons.set` picks the icons: `'seti'` (default, one colour), or the coloured `'material'`, `'vscode-icons'` or `'catppuccin'`. A coloured set needs its package: `@iconify-json/material-icon-theme`, `@iconify-json/vscode-icons` or `@iconify-json/catppuccin`.
+- The default icons are the coloured vscode-icons. Each coloured set has its own names. The Seti icons of `<FileTree>` have Starlight's names, with or without `seti:`. A Seti name works in every set.
+- Option `fileIcons.set` picks the icons: the coloured `'vscode-icons'` (default), `'material'` or `'catppuccin'`, or `'seti'` (one colour). Material and Catppuccin need their package: `@iconify-json/material-icon-theme` or `@iconify-json/catppuccin`.
 - Files in `.github/` and `.gitattributes` get the GitHub icon, from the whole path in the title.
-- An icon has the colour of the title. A tile has the accent colour. A tile in a custom colour gets a black or white icon, whichever reads on it.
+- A coloured icon keeps its colours, on a neutral square in a tile. A Seti icon has the colour of the title, and its tile has the accent colour. A tile in a custom colour gets a black or white icon, whichever reads on it.
 - Options: `fileIcons.style` (default `'plain'`). `fileIcons.languages` sets `icon`, `colour` and `style` for each language, such as `{ python: { colour: '#3776ab' } }`.
 - Options: `fileIcons.languages.<lang>.icon` is an icon name or SVG markup, such as `siNextflow.svg` from `simple-icons`.
 - Options: `fileIcons.icons` adds icons by name, as SVG markup or 24 by 24 path data. `fileIcons.files` maps a file name, an extension such as `.nf`, or a path pattern such as `docs/**/*.md` to an icon name.

@@ -3,11 +3,17 @@ import { pathToFileURL } from 'node:url';
 import { expect, test } from 'vitest';
 import { fileIconResolver } from '../src/expressive-code/file-icons.ts';
 import { definitions, icons } from '../src/expressive-code/file-icons-data.ts';
-import { resolveOptions } from '../src/options.ts';
-import { baseStyles, block, render } from './render.ts';
+import { type CodeblocksOptions, resolveOptions } from '../src/options.ts';
+import { baseStyles, block, render as renderAny } from './render.ts';
 
 const icon = (html: string) => html.match(/<svg class="scb-file-icon"[^>]*>/)?.[0];
 const iconName = (html: string) => icon(html)?.match(/data-scb-file-icon-name="([^"]+)"/)?.[1];
+// Most tests are about the rules of Starlight's <FileTree>, so they use the Seti set.
+const render = (markdown: string, options: CodeblocksOptions = {}) =>
+  renderAny(markdown, {
+    ...options,
+    fileIcons: options.fileIcons === false ? false : { set: 'seti', ...options.fileIcons },
+  });
 const pathD = (name: string) => icons[name]?.match(/d="([^"]+)"/)?.[1];
 
 test('the vendored icons and rules match the installed Starlight', async () => {
@@ -41,6 +47,12 @@ test('the icon goes first in the title, with the block unchanged otherwise', asy
   const off = await render(block('py title="app.py"', 'print(1)'), { fileIcons: false });
   expect(icon(off.html)).toBeUndefined();
   expect(html.replace(/<svg class="scb-file-icon".*?<\/svg>/, '')).toBe(off.html);
+});
+
+test('vscode-icons is the default set', async () => {
+  const { html } = await renderAny(block('json title="package.json"', 'x'));
+  expect(iconName(html)).toBe('file-type-npm');
+  expect(icon(html)).toContain('data-scb-file-icon-coloured');
 });
 
 test('no icon without a title, in terminal frames, or with icon=false', async () => {
@@ -102,7 +114,13 @@ test('custom icons, file names and languages', async () => {
 });
 
 test('options are validated', () => {
-  expect(resolveOptions().fileIcons).toEqual({ set: 'seti', style: 'plain', languages: {}, files: {}, icons: {} });
+  expect(resolveOptions().fileIcons).toEqual({
+    set: 'vscode-icons',
+    style: 'plain',
+    languages: {},
+    files: {},
+    icons: {},
+  });
   expect(() => resolveOptions({ fileIcons: { set: 'vscode' as never } })).toThrow('fileIcons.set');
   expect(() => resolveOptions({ fileIcons: { style: 'round' as never } })).toThrow('fileIcons.style');
   expect(() => resolveOptions({ fileIcons: { languages: { py: { colour: 'red; x: y' } } } })).toThrow(
@@ -113,6 +131,7 @@ test('options are validated', () => {
 
 test('the code tabs menu uses the same language icons, custom ones included', async () => {
   const icons = await fileIconResolver({
+    set: 'seti',
     icons: { nextflow: 'M0 0h1v1H0z' },
     languages: { nextflow: { icon: 'nextflow' } },
   });
@@ -140,7 +159,10 @@ test('GitHub files get the GitHub icon, from the path in the title', async () =>
 });
 
 test('`files` takes path patterns, with `*` inside one folder and `**` across folders', async () => {
-  const icons = await fileIconResolver({ files: { 'docs/*.md': 'book', 'config/**': 'config', '.github/**': 'git' } });
+  const icons = await fileIconResolver({
+    set: 'seti',
+    files: { 'docs/*.md': 'book', 'config/**': 'config', '.github/**': 'git' },
+  });
   expect(icons.forFileName('docs/intro.md')).toBe('book');
   expect(icons.forFileName('docs/guides/intro.md')).toBe('seti:markdown');
   expect(icons.forFileName('src/config/a/b.json')).toBe('config');

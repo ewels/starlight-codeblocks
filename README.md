@@ -288,7 +288,7 @@ Show a small swatch of each CSS colour next to its value. Readers can click a co
 <details>
 <summary>File icons</summary>
 
-Show the icon of the file type before the title of a code block. The icons come from the Starlight file tree or a coloured icon set. File icons start on their own.
+Show the icon of the file type before the title of a code block. The icons come from vscode-icons by default, another coloured icon set, or the Starlight file tree. File icons start on their own.
 
 ````md
 ```json title="package.json"

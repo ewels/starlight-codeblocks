@@ -260,7 +260,7 @@ function svgElement(source: string): Element | undefined {
  * then the rules of the icon set. A name that the set does not have falls back to a Seti icon.
  */
 export async function fileIconResolver({
-  set = 'seti',
+  set = 'vscode-icons',
   languages = {},
   files = {},
   icons: siteIcons = {},

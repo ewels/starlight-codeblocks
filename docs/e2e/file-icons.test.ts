@@ -6,12 +6,11 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('the icon sits before the title, hidden from screen readers and from the selection', async ({ page }) => {
-  const icon = page.locator('.scb-file-icon[data-scb-file-icon-name="javascript"]').first();
-  await expect(icon).toBeVisible();
+  const title = page.locator('.title', { hasText: /^src\/index\.js$/ }).first();
+  const icon = title.locator('.scb-file-icon:visible');
+  await expect(icon).toHaveCount(1);
   await expect(icon).toHaveAttribute('aria-hidden', 'true');
   expect(await css(icon, 'userSelect')).toBe('none');
-  const title = icon.locator('..');
-  expect(await title.textContent()).toBe('src/index.js');
 });
 
 for (const theme of ['dark', 'light']) {

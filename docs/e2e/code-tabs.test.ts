@@ -15,7 +15,7 @@ test('a tab shows its file, with focus on its tab, and the copy button copies it
   await load(page);
   const tabs = visible(page, 0).getByRole('tablist', { name: 'Variant' }).getByRole('tab');
   await expect(tabs).toHaveText(['.github/workflows/ci.yml', 'greet.py', 'greet.js']);
-  await expect(tabs.locator('svg')).toHaveCount(3);
+  await expect(tabs.locator('svg:visible')).toHaveCount(3);
   await expect(selected(page, 0)).toHaveText('.github/workflows/ci.yml');
   await visible(page, 0).getByRole('tab', { name: 'greet.py' }).click();
   await expect(visible(page, 0)).toHaveCount(1);

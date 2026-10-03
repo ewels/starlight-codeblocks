@@ -8,10 +8,10 @@ import Example from '../../../components/Example.astro';
 import IconSets from '../../../components/IconSets.astro';
 import Options from '../../../components/Options.astro';
 
-A code block with a title shows the file name in the title bar. The plugin puts the icon of the file type before that name. By default, it uses the icons of the Starlight `<FileTree>` component, and chooses them with the same rules. A file then looks the same in a tree and in a code block. Three sets of coloured icons are also available.
+A code block with a title shows the file name in the title bar. The plugin puts the icon of the file type before that name. By default, it uses the coloured icons of vscode-icons, the icon theme of VS Code. Two other coloured sets are available. The one-colour Seti set makes a file look the same as in the Starlight `<FileTree>` component.
 
 export const basic = `
-The default Seti icons, as in the Starlight file tree:
+The default vscode-icons:
 
 \`\`\`js title="src/index.js"
 export const greet = (name) => console.log('Hello', name);
@@ -23,9 +23,9 @@ Material Icon Theme, with \`fileIcons.set="material"\`:
 print("Hello from Python")
 \`\`\`
 
-vscode-icons, with \`fileIcons.set="vscode-icons"\`:
+The Seti icons of the Starlight file tree, with \`fileIcons.set="seti"\`:
 
-\`\`\`json title="package.json" fileIcons.set="vscode-icons"
+\`\`\`json title="package.json" fileIcons.set="seti"
 { "name": "my-site", "type": "module" }
 \`\`\`
 
@@ -39,7 +39,7 @@ CMD ["node", "src/index.js"]
 
 <Example code={basic}>
 
-The default Seti icons, as in the Starlight file tree:
+The default vscode-icons:
 
 ```js title="src/index.js"
 export const greet = (name) => console.log('Hello', name);
@@ -51,9 +51,9 @@ Material Icon Theme, with `fileIcons.set="material"`:
 print("Hello from Python")
 ```
 
-vscode-icons, with `fileIcons.set="vscode-icons"`:
+The Seti icons of the Starlight file tree, with `fileIcons.set="seti"`:
 
-```json title="package.json" fileIcons.set="vscode-icons"
+```json title="package.json" fileIcons.set="seti"
 { "name": "my-site", "type": "module" }
 ```
 
@@ -76,9 +76,9 @@ Each attribute goes on the code block fence line. The fence line is the first li
 |---|---|
 | `icon="<name>"` | Code block fence line. Sets the icon by name, such as `react`. |
 | `icon=false` or `no-icon` | Code block fence line. Removes the icon. |
-| `fileIcons.set="seti"` | Code block fence line. Takes the icon from the one-colour Seti icons. |
-| `fileIcons.set="material"` | Code block fence line. Takes the icon from the coloured Material Icon Theme icons. |
 | `fileIcons.set="vscode-icons"` | Code block fence line. Takes the icon from the coloured vscode-icons icons. |
+| `fileIcons.set="material"` | Code block fence line. Takes the icon from the coloured Material Icon Theme icons. |
+| `fileIcons.set="seti"` | Code block fence line. Takes the icon from the one-colour Seti icons. |
 | `fileIcons.set="catppuccin"` | Code block fence line. Takes the icon from the coloured Catppuccin icons. |
 | `fileIcons.style="plain"` | Code block fence line. Shows the icon alone. |
 | `fileIcons.style="tile"` | Code block fence line. Shows the icon on a square with rounded corners. |
@@ -88,7 +88,7 @@ Each attribute goes on the code block fence line. The fence line is the first li
 
 ### Coloured icons
 
-The `material`, `vscode-icons` and `catppuccin` sets have coloured icons, each with its own rules for file names. [Icon sets](#icon-sets) lists the package that each set needs:
+The `vscode-icons`, `material` and `catppuccin` sets have coloured icons, each with its own rules for file names. [Icon sets](#icon-sets) lists the package that each set needs:
 
 export const coloured = `
 \`\`\`json title="package.json" fileIcons.set="material"
@@ -126,18 +126,18 @@ on: [push, pull_request]
 
 ### Icons in a tile
 
-The `tile` style puts the icon on a square in the accent colour of the theme. With a custom colour, the icon is black or white, whichever reads on the square:
+The `tile` style puts a one-colour icon, such as a Seti icon, on a square in the accent colour of the theme. With a custom colour, the icon is black or white, whichever reads on the square:
 
 export const tile = `
-\`\`\`py title="app.py" fileIcons.style="tile"
+\`\`\`py title="app.py" fileIcons.set="seti" fileIcons.style="tile"
 print("Hello")
 \`\`\`
 
-\`\`\`py title="app.py" fileIcons.style="tile" fileIcons.colour="#3776ab"
+\`\`\`py title="app.py" fileIcons.set="seti" fileIcons.style="tile" fileIcons.colour="#3776ab"
 print("Hello")
 \`\`\`
 
-\`\`\`js title="app.js" fileIcons.style="tile" fileIcons.colour="#f7df1e"
+\`\`\`js title="app.js" fileIcons.set="seti" fileIcons.style="tile" fileIcons.colour="#f7df1e"
 console.log('Hello');
 \`\`\`
 `;
@@ -216,7 +216,7 @@ codeblocks({
 - Screen readers:
   - The icon is decorative. Screen readers read the title only.
 
-With the default Seti set, a file in a `<FileTree>` has the same icon as a code block with that file name as its title:
+With the Seti set, a file in a `<FileTree>` has the same icon as a code block with that file name as its title:
 
 <FileTree>
 
@@ -231,17 +231,17 @@ With the default Seti set, a file in a `<FileTree>` has the same icon as a code 
 
 ## Icon sets
 
-The `fileIcons.set` option sets the icons for the whole site. Each coloured set needs one package, which you add to the site:
+The `fileIcons.set` option sets the icons for the whole site. vscode-icons and Seti come with the plugin. Material and Catppuccin each need one package, which you add to the site:
 
 | Set | Icons | Package |
 |---|---|---|
-| `seti` | The one-colour icons of the Starlight `<FileTree>`. The default. | None |
+| `vscode-icons` | [vscode-icons](https://github.com/vscode-icons/vscode-icons). The default. | None |
 | `material` | [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme) | `@iconify-json/material-icon-theme` |
-| `vscode-icons` | [vscode-icons](https://github.com/vscode-icons/vscode-icons) | `@iconify-json/vscode-icons` |
 | `catppuccin` | [Catppuccin Icons](https://github.com/catppuccin/vscode-icons), in Macchiato colours, and Latte colours in light themes | `@iconify-json/catppuccin` |
+| `seti` | The one-colour icons of the Starlight `<FileTree>` | None |
 
 ```sh
-npm install @iconify-json/vscode-icons
+npm install @iconify-json/catppuccin
 ```
 
 The plugin has the file name rules of each set, so a site downloads only the icons of the set that it uses. These files show the icon of each set:

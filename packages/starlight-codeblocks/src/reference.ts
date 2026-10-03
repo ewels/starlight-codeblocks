@@ -117,7 +117,7 @@ export const attributesReference: AttributeDoc[] = [
       'fileIcons.set="catppuccin"',
     ],
     description:
-      'Takes the file icon from the Seti icons, Material Icon Theme, vscode-icons or Catppuccin. It overrides the `fileIcons.set` option for the block. A coloured set needs its `@iconify-json` package.',
+      'Takes the file icon from vscode-icons, Material Icon Theme, Catppuccin or the Seti icons. It overrides the `fileIcons.set` option for the block. Material and Catppuccin need their `@iconify-json` package.',
     page: 'features/file-icons',
     example: { lang: 'json', meta: 'title="package.json" fileIcons.set="material"', code: '{ "name": "my-site" }' },
   },
