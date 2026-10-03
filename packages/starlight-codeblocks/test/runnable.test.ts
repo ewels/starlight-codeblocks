@@ -12,12 +12,12 @@ afterEach(() => setRegistry(undefined));
 
 const js = { runnable: { runtimes: { javascript: '/runtimes/js.js' } } };
 
-test('runnable adds a Run in browser button to the title bar and an empty live output panel', async () => {
+test('runnable adds a Run code button under the block, after an empty live output panel', async () => {
   const { html, copyText, warnings } = await render(block('js runnable', 'console.log(1)'), js);
-  expect(html).toMatch(
-    /<figcaption class="header"><span class="scb-tools"><button type="button" class="scb-btn scb-run scb-no-print scb-needs-js" data-scb-run-again="Run again">Run in browser<\/button><\/span><\/figcaption>/,
+  expect(html).toContain(
+    '<div class="scb-run-output" aria-live="polite"></div><div class="scb-run-controls scb-no-print"><button type="button" class="scb-run scb-no-print scb-needs-js" data-scb-run-again="Run again">Run code</button></div></figure>',
   );
-  expect(html).toContain('<div class="scb-run-output" aria-live="polite"></div></figure>');
+  expect(html).not.toContain('scb-tools');
   expect(html).toContain('data-scb-runnable="/runtimes/js.js" data-scb-runnable-name="JavaScript"');
   expect(html).toContain('data-scb-runnable-timeout="10000"');
   expect(html).not.toContain('data-scb-code');
@@ -37,8 +37,43 @@ test('runnable adds a Run in browser button to the title bar and an empty live o
   expect(own.html).toContain('data-scb-runnable-timeout="500"');
   const bad = await render(block('js runnable runnable.timeout=0 runnable.label=" "', 'x'), js);
   expect(bad.html).toContain('data-scb-runnable-timeout="10000"');
-  expect(bad.html).toContain('>Run in browser</button>');
+  expect(bad.html).toContain('>Run code</button>');
   expect(bad.warnings).toHaveLength(2);
+});
+
+test('runnable.button puts the button in the title bar, under the block, or both', async () => {
+  const titleButton =
+    '<span class="scb-tools"><button type="button" class="scb-run scb-btn scb-no-print scb-needs-js" data-scb-run-again="Run again">Run code</button></span>';
+  const title = await render(block('js runnable', 'x'), { runnable: { ...js.runnable, button: 'title' } });
+  expect(title.html).toContain(titleButton);
+  expect(title.html).not.toContain('scb-run-controls');
+  const both = await render(block('js runnable runnable.button=both', 'x'), js);
+  expect(both.html).toContain(titleButton);
+  expect(both.html).toContain('scb-run-controls');
+  const bad = await render(block('js runnable runnable.button=top', 'x'), js);
+  expect(bad.html).not.toContain('scb-tools');
+  expect(bad.warnings).toEqual([
+    'src/content/docs/example.md, js code block: `runnable.button=top` must be one of `below`, `title`, `both`. The block uses the site setting.',
+  ]);
+});
+
+test('runnable.output prints scripted output with no runtime, at the line delay', async () => {
+  const { html, copyText, warnings } = await render(
+    block('sh runnable.output="Pulling…\\nDone \\"ok\\"" runnable.outputDelay=0', 'nextflow run hello'),
+  );
+  expect(html).toContain(
+    'data-scb-runnable="" data-scb-runnable-output="Pulling…\x7FDone &#x22;ok&#x22;" data-scb-runnable-delay="0"',
+  );
+  expect(html).toContain('scb-run-controls');
+  expect(html).not.toContain('data-scb-runnable-name');
+  expect(copyText).toBe('nextflow run hello');
+  expect(warnings).toEqual([]);
+  const site = await render(block('sh runnable.output="x"', 'y'), { runnable: { outputDelay: 50 } });
+  expect(site.html).toContain('data-scb-runnable-delay="50"');
+  expect((await render(block('sh runnable.output="x"', 'y'))).html).toContain('data-scb-runnable-delay="400"');
+  const bad = await render(block('sh runnable.output="x" runnable.outputDelay=-1', 'y'));
+  expect(bad.html).toContain('data-scb-runnable-delay="400"');
+  expect(bad.warnings).toHaveLength(1);
 });
 
 test('finds the runtime by the language name or its alias, for a pycon session too', async () => {
@@ -123,14 +158,17 @@ test('blocks without runnable render the same with the feature off', async () =>
   const plain = block('js title="a.js"', 'console.log(1)');
   expect((await render(plain, js)).html).toBe((await render(plain, { runnable: false })).html);
   expect((await render(block('js runnable', 'x'), { runnable: false })).html).not.toContain('scb-run');
+  expect((await render(block('sh runnable.output="x"', 'y'), { runnable: false })).html).not.toContain('scb-run');
 });
 
-test('output and error colours meet 4.5:1 in the dark and the light theme', async () => {
+test('output and error colours meet 4.5:1, and the button border 3:1, in the dark and the light theme', async () => {
   for (const v of await variants([pluginCore(), pluginRunnable()])) {
     for (const key of ['outputForeground', 'errorForeground']) {
       const colour = v.get(`codeblocksRunnable.${key}`);
       expect(getColorContrast(colour, v.get('codeBackground')), `${key}, ${v.name}`).toBeGreaterThanOrEqual(4.5);
     }
+    const border = v.get('codeblocksRunnable.buttonBorder');
+    expect(getColorContrast(border, v.get('codeBackground')), v.name).toBeGreaterThanOrEqual(3);
   }
 });
 

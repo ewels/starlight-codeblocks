@@ -1,13 +1,13 @@
 ---
 title: Run in the browser
-description: Add a Run in browser button that runs the example in the browser and shows the output under the block.
+description: Add a Run code button that runs the example in the browser and shows the output under the block.
 ---
 
 import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
-A code block in Starlight shows code, but readers must copy it to a terminal to see what it does. The `runnable` attribute adds a **Run in browser** button to the title bar. The button runs the code in the browser and shows the output under the block.
+A code block in Starlight shows code, but readers must copy it to a terminal to see what it does. The `runnable` attribute adds a **Run code** button under the block. The button runs the code in the browser and shows the output above the button.
 
 export const basic = `
 \`\`\`py runnable
@@ -20,7 +20,7 @@ print(f"mean {mean(reads):.0f}, sd {stdev(reads):.1f}")
 
 <Example code={basic} hiddenAttributes="apiLinks=false" />
 
-Click **Run in browser**. The first time, the browser downloads Python (Pyodide, a build of Python for the browser), which takes a few seconds. The output panel shows "Loading the Python runtime…" until it is ready, then the output of the code.
+Click **Run code**. The first time, the browser downloads Python (Pyodide, a build of Python for the browser), which takes a few seconds. The output panel shows "Loading the Python runtime…" until it is ready, then the output of the code.
 
 ## Syntax
 
@@ -29,8 +29,12 @@ Click **Run in browser**. The first time, the browser downloads Python (Pyodide,
 | `runnable` | Code block fence line |
 | `runnable.label="<text>"`, `runnable.againLabel="<text>"` | Code block fence line |
 | `runnable.timeout=<ms>` | Code block fence line |
+| `runnable.button="below"`, `runnable.button="title"`, `runnable.button="both"` | Code block fence line |
+| `runnable.output="<text>"`, `runnable.outputDelay=<ms>` | Code block fence line |
 
 The language of the block chooses the runtime. The plugin has a runtime for Python, and a site can add runtimes for other languages in the configuration. A language name or its alias works: `py` and `python` both use the Python runtime. Sites without Starlight add the Python runtime themselves, as in [Without Starlight](/starlight-codeblocks/reference/expressive-code-plugins/#without-starlight).
+
+With `runnable.output`, the button runs nothing. It prints the text that you write, a line at a time, as if the code ran. Use it for code that cannot run in the browser, such as a command line tool. `\n` in the text starts a new line. The block needs no runtime, so it works in every language.
 
 ## Examples
 
@@ -75,14 +79,42 @@ while (!ready) {}
 
 <Example code={loop} layout="tabs" />
 
+### Scripted output
+
+This command cannot run in the browser, so the block has the output that the command prints. The lines show one at a time, 400 milliseconds apart:
+
+export const scripted = `
+\`\`\`sh runnable.output="N E X T F L O W  ~  version 25.04.0\\nLaunching hello.nf [nice_curie] DSL2\\nexecutor >  local (3)\\n[4e/8a1f2c] sayHello (3) | 3 of 3 ✔\\nHello world!\\nBonjour le monde!\\nHola mundo!"
+nextflow run hello.nf
+\`\`\`
+`;
+
+<Example code={scripted} layout="tabs" />
+
+### The button in the title bar
+
+`runnable.button="title"` puts the button in the title bar, as the copy button is. `both` shows the button in both places:
+
+export const title = `
+\`\`\`py runnable runnable.button="title"
+print(sorted(["chr2", "chr10", "chr1"], key=lambda c: int(c[3:])))
+\`\`\`
+`;
+
+<Example code={title} layout="tabs" hiddenAttributes="apiLinks=false" />
+
 ## Behaviour
 
 - Running code:
-  - The runtime loads only when a reader clicks **Run in browser** for the first time. A page with runnable blocks loads a small script, and no runtime.
+  - The button is under the block, in the style of the [code walkthrough](/starlight-codeblocks/features/code-walkthrough/) buttons. The `button` option moves it to the title bar, or shows it in both places.
+  - The runtime loads only when a reader clicks **Run code** for the first time. A page with runnable blocks loads a small script, and no runtime.
   - After the first run, the button reads **Run again**. Each run replaces the output of the run before it. The `label` and `againLabel` options change the two texts, for example for a site in another language.
   - The code that runs is the copied text of the block. Directives are removed, and hidden lines are kept. The values that readers type into [fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/) are part of it too. For a Python session with `>>>` prompts, only the commands run, as **Copy commands** copies them. They run as in the Python REPL, so the output shows the value of each expression.
   - The Python runtime runs in a web worker, so the page stays responsive while code runs. Each run starts with no names from earlier runs, and `__name__` is `"__main__"`.
   - A run stops after 10 seconds, with a message in the panel. The download of the runtime and of the packages that the code imports does not count towards this time.
+- Scripted output:
+  - The panel shows "Running…", then the lines of `runnable.output`, with `outputDelay` milliseconds (400 by default) before each line. With `0`, all the lines show at once.
+  - Scripted output shows as standard output. The button does not run the code, and the block needs no runtime.
 - Output:
   - The output panel has the label "Output". Standard output shows in green. Standard error shows in red, with a bar at its start, so the colour is not the only difference.
 - Keyboard and screen readers:
@@ -123,5 +155,5 @@ The guide to [adding a runtime](/starlight-codeblocks/extend/add-a-runtime/) sho
 ## Related
 
 - [Open in playground](/starlight-codeblocks/features/open-in-playground/): send the code to an online playground, for languages that cannot run in the browser.
-- [Hidden lines](/starlight-codeblocks/features/hidden-lines/): keep the code complete for the **Run in browser** button, while readers see only the part you explain.
+- [Hidden lines](/starlight-codeblocks/features/hidden-lines/): keep the code complete for the **Run code** button, while readers see only the part you explain.
 - [Add a runtime](/starlight-codeblocks/extend/add-a-runtime/): the interface for runtimes, with a complete JavaScript runtime.

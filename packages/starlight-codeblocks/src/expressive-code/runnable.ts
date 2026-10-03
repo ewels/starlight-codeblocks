@@ -1,4 +1,4 @@
-import { PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
+import { mix, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { encodeCode } from '../client/shared/copy.ts';
 import { clientJsModules } from '../client-modules.ts';
@@ -13,13 +13,15 @@ import {
   warn,
 } from './core.ts';
 import { pythonSessionPrompts } from './shell-copy.ts';
-import { onCode, PREFIX, themeColour } from './styles.ts';
+import { onCode, PREFIX, solidCodeBackground, solidCodeForeground, themeColour } from './styles.ts';
 
 export interface RunnableStyleSettings {
   /** Standard output. Needs 4.5:1 on the code background. */
   outputForeground: UnresolvedStyleValue;
   /** Standard error and run errors. Needs 4.5:1 on the code background. */
   errorForeground: UnresolvedStyleValue;
+  /** The border of the button under the block. Needs 3:1 on the code background. */
+  buttonBorder: UnresolvedStyleValue;
 }
 
 declare module '@expressive-code/core' {
@@ -33,6 +35,8 @@ const styleSettings = new PluginStyleSettings({
     codeblocksRunnable: {
       outputForeground: (context) => onCode(context, themeColour(context, 'terminal.ansiGreen'), 4.5),
       errorForeground: (context) => onCode(context, themeColour(context, 'terminal.ansiRed'), 4.5),
+      buttonBorder: (context) =>
+        onCode(context, mix(solidCodeForeground(context), solidCodeBackground(context), 0.5), 3),
     },
   },
 });
@@ -44,7 +48,12 @@ interface RunnableSettings {
   timeout?: number;
   label?: string;
   againLabel?: string;
+  button?: RunButton;
+  outputDelay?: number;
 }
+
+export const runButtons = ['below', 'title', 'both'] as const;
+export type RunButton = (typeof runButtons)[number];
 
 /**
  * The runtime modules by language. Without `codeblocks()`, nothing bundles the modules, so the
@@ -60,15 +69,21 @@ export const runtimeFileName = (language: string) => `scb-runtime-${language.rep
 
 const cls = (suffix: string) => `${PREFIX}-run${suffix}`;
 
-/** Adds a Run button to `runnable` blocks, and an output panel under the code. */
 /** Any text but blank, for `blockSetting()`. */
 const text = (raw: string) => (raw.trim() ? raw : undefined);
+
+const milliseconds = (min: number) => (raw: string) =>
+  /^\d+$/.test(raw) && Number(raw) >= min && Number(raw) <= 2 ** 31 - 1 ? Number(raw) : undefined;
+
+/** Adds a Run button to `runnable` blocks, and an output panel under the code. */
 
 export function pluginRunnable({
   runtimes,
   timeout = 10000,
-  label = 'Run in browser',
+  label = 'Run code',
   againLabel = 'Run again',
+  button = 'below',
+  outputDelay = 400,
 }: RunnableSettings = {}): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:runnable',
@@ -96,14 +111,72 @@ export function pluginRunnable({
 }
 .${cls('-stdout')} + .${cls('-stderr')} { margin-top: 0.4rem; }
 .${cls('')}[aria-disabled='true'] { opacity: 0.6; cursor: progress; }
+.${cls('-controls')} { display: flex; justify-content: center; padding-block-start: 12px; }
+.${cls('-controls')} > .${cls('')} {
+  box-sizing: border-box;
+  min-height: 2rem;
+  padding: 0.25rem 0.9rem;
+  border: 1px solid ${cssVar('codeblocksRunnable.buttonBorder')};
+  border-radius: 999px;
+  background: ${cssVar('codeBackground')};
+  color: ${cssVar('codeForeground')};
+  font: 600 0.8125rem/1.3 ${cssVar('uiFontFamily')};
+  cursor: pointer;
+}
+.${cls('-controls')} > .${cls('')}:hover:not([aria-disabled='true']) { border-color: ${cssVar('codeblocks.accent')}; }
+@media (scripting: none) {
+  .${cls('-controls')} { display: none; }
+}
 `,
     jsModules: clientJsModules,
     hooks: {
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
-        if (!codeBlock.metaOptions.getBoolean('runnable')) return;
+        const scripted = codeBlock.metaOptions.getString('runnable.output');
+        if (!codeBlock.metaOptions.getBoolean('runnable') && scripted === undefined) return;
         const figure = select('figure', renderData.blockAst);
         if (!figure) return;
+        const buttonText = blockSetting(context, 'runnable.label', text, label, 'some text');
+        const again = blockSetting(context, 'runnable.againLabel', text, againLabel, 'some text');
+        const where = blockSetting(
+          context,
+          'runnable.button',
+          (raw) => ((runButtons as readonly string[]).includes(raw) ? (raw as RunButton) : undefined),
+          button,
+          `one of ${runButtons.map((b) => `\`${b}\``).join(', ')}`,
+        );
+        const addButtons = () => {
+          const runButton = (extra: string) =>
+            h(
+              'button',
+              {
+                type: 'button',
+                class: `${cls('')} ${extra}${PREFIX}-no-print ${PREFIX}-needs-js`,
+                dataScbRunAgain: again,
+              },
+              buttonText,
+            );
+          if (where !== 'below') addTitleBarControl(renderData.blockAst, runButton(`${PREFIX}-btn `));
+          figure.children.push(h('div', { class: cls('-output'), ariaLive: 'polite' }));
+          if (where !== 'title')
+            figure.children.push(h('div', { class: `${cls('-controls')} ${PREFIX}-no-print` }, [runButton('')]));
+        };
+        if (scripted !== undefined) {
+          figure.properties.dataScbRunnable = '';
+          // A fence line holds one line, so `\n` stands for a line break.
+          figure.properties.dataScbRunnableOutput = encodeCode(scripted.replace(/\\n/g, '\n'));
+          figure.properties.dataScbRunnableDelay = String(
+            blockSetting(
+              context,
+              'runnable.outputDelay',
+              milliseconds(0),
+              outputDelay,
+              'a whole number of milliseconds',
+            ),
+          );
+          addButtons();
+          return;
+        }
         const registry = getRegistry();
         const modules = runtimeModules(runtimes, !!registry);
         // Shiki has no pycon, but a pycon session runs on the Python runtime.
@@ -124,7 +197,7 @@ export function pluginRunnable({
           blockSetting(
             context,
             'runnable.timeout',
-            (raw) => (/^\d+$/.test(raw) && Number(raw) > 0 && Number(raw) <= 2 ** 31 - 1 ? Number(raw) : undefined),
+            milliseconds(1),
             timeout,
             'a whole number of milliseconds, from 1 to 2147483647',
           ),
@@ -138,19 +211,7 @@ export function pluginRunnable({
               [...session].map(([line, prompt]) => line.text.slice(prompt.length)).join('\n'),
             );
         }
-        addTitleBarControl(
-          renderData.blockAst,
-          h(
-            'button',
-            {
-              type: 'button',
-              class: `${PREFIX}-btn ${cls('')} ${PREFIX}-no-print ${PREFIX}-needs-js`,
-              dataScbRunAgain: blockSetting(context, 'runnable.againLabel', text, againLabel, 'some text'),
-            },
-            blockSetting(context, 'runnable.label', text, label, 'some text'),
-          ),
-        );
-        figure.children.push(h('div', { class: cls('-output'), ariaLive: 'polite' }));
+        addButtons();
       },
     },
   };

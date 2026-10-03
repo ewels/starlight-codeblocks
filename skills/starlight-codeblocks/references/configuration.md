@@ -42,7 +42,7 @@ codeblocks({
 | `walkthrough` | None | Code walkthrough |
 | `scrollycoding` | None | Scrollycoding |
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
-| `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run in browser'`. `againLabel`: default `'Run again'` | Run in the browser |
+| `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run code'`. `againLabel`: default `'Run again'`. `button`: `'below'` (default), `'title'` or `'both'`. `outputDelay`: default `400` ms | Run in the browser |
 
 ### Options for one block
 
@@ -67,6 +67,8 @@ Put a setting on the fence line, with its name from `codeblocks()`, to change it
 - `runnable.label="<text>"`
 - `runnable.againLabel="<text>"`
 - `runnable.timeout=<ms>`
+- `runnable.button="below"`, `runnable.button="title"`, `runnable.button="both"`
+- `runnable.output="<text>"`, `runnable.outputDelay=<ms>`
 
 A bad value gives a build warning, and the block uses the site setting. Options for the whole site (states, comment syntaxes, adapters, playgrounds, runtimes) have no fence line form.
 

@@ -1,12 +1,12 @@
 ---
 title: Add a runtime
-description: Add a runtime for another language, so that the Run in browser button can run its code blocks in the browser.
+description: Add a runtime for another language, so that the Run code button can run its code blocks in the browser.
 ---
 
 import { Code } from '@astrojs/starlight/components';
 import runtimeSource from '../../../runtimes/javascript.ts?raw';
 
-The **Run in browser** button of [run in the browser](/starlight-codeblocks/features/run-in-the-browser/) gives the code of a block to a runtime. The plugin has a runtime for Python. A site can add a runtime for any other language in the `runnable.runtimes` option.
+The **Run code** button of [run in the browser](/starlight-codeblocks/features/run-in-the-browser/) gives the code of a block to a runtime. The plugin has a runtime for Python. A site can add a runtime for any other language in the `runnable.runtimes` option.
 
 ## The interface
 
@@ -24,7 +24,7 @@ interface Runtime {
 | `load()` | Downloads and starts the runtime, and gets the packages that `code` needs. The plugin calls it with the code before each run, so it must return at once when the runtime and the packages are ready. The timeout does not apply to it. |
 | `run()` | Runs the copied text of the block, and returns its standard output and standard error as text. |
 
-The browser imports the module when a reader clicks **Run in browser** for the first time, and calls `load()` at once. Import the `Runtime` type from `starlight-codeblocks` to check a module in TypeScript.
+The browser imports the module when a reader clicks **Run code** for the first time, and calls `load()` at once. Import the `Runtime` type from `starlight-codeblocks` to check a module in TypeScript.
 
 When the block is a session with prompts, `code` is its commands and `session` is `true`. Run the commands as the language's REPL does, so that the output shows the value of each expression, as the block does.
 
@@ -50,7 +50,7 @@ codeblocks({
 });
 ```
 
-A code block with ` ```js runnable ` now has the **Run in browser** button. The key is the language name, and its aliases work too: `js` and `javascript` both use this runtime. A path that starts with `.` is from the project root. Any other path is a package path, such as `starlight-codeblocks/runtimes/pyodide`.
+A code block with ` ```js runnable ` now has the **Run code** button. The key is the language name, and its aliases work too: `js` and `javascript` both use this runtime. A path that starts with `.` is from the project root. Any other path is a package path, such as `starlight-codeblocks/runtimes/pyodide`.
 
 ## Change the Pyodide URL
 

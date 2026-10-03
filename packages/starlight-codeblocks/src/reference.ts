@@ -257,8 +257,7 @@ export const attributesReference: AttributeDoc[] = [
   {
     name: 'runnable',
     syntax: ['runnable'],
-    description:
-      'Adds a **Run in browser** button, which runs the code in the browser and shows the output under the block.',
+    description: 'Adds a **Run code** button, which runs the code in the browser and shows the output under the block.',
     page: 'features/run-in-the-browser',
     example: { lang: 'py', meta: 'runnable', code: 'print(sum([1, 2, 3]))' },
   },
@@ -281,6 +280,28 @@ export const attributesReference: AttributeDoc[] = [
     name: 'runnable.timeout',
     syntax: ['runnable.timeout=<ms>'],
     description: 'Milliseconds before a run stops. It overrides the `runnable.timeout` option for the block.',
+    page: 'features/run-in-the-browser',
+  },
+  {
+    name: 'runnable.button',
+    syntax: ['runnable.button="below"', 'runnable.button="title"', 'runnable.button="both"'],
+    description:
+      'Puts the button under the block, in the title bar, or both. It overrides the `runnable.button` option for the block.',
+    page: 'features/run-in-the-browser',
+  },
+  {
+    name: 'runnable.output',
+    syntax: ['runnable.output="<text>"'],
+    description:
+      'Output that the button prints instead of running the code, a line at a time. `\\n` starts a new line. The block needs no runtime.',
+    page: 'features/run-in-the-browser',
+    example: { lang: 'sh', meta: 'runnable.output="Downloading…\\nDone."', code: 'nextflow run hello' },
+  },
+  {
+    name: 'runnable.outputDelay',
+    syntax: ['runnable.outputDelay=<ms>'],
+    description:
+      'Milliseconds between the lines of `runnable.output`. `0` prints them all at once. It overrides the `runnable.outputDelay` option for the block.',
     page: 'features/run-in-the-browser',
   },
   {
@@ -660,6 +681,10 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       errorForeground: {
         description: 'Standard error and run errors. Needs 4.5:1 contrast on the code background.',
         derived: fromTheme('terminal.ansiRed', '4.5:1'),
+      },
+      buttonBorder: {
+        description: 'The border of the button under the block. Needs 3:1 contrast on the code background.',
+        derived: '`codeForeground` mixed 50% towards the code background, with 3:1 contrast on it.',
       },
     },
   },

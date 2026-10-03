@@ -114,7 +114,16 @@ export interface CodeblocksOptions {
   walkthrough?: false;
   scrollycoding?: false;
   inlineHighlighting?: false | { defaultLanguage?: string | false };
-  runnable?: false | { runtimes?: Record<string, string>; timeout?: number; label?: string; againLabel?: string };
+  runnable?:
+    | false
+    | {
+        runtimes?: Record<string, string>;
+        timeout?: number;
+        label?: string;
+        againLabel?: string;
+        button?: 'below' | 'title' | 'both';
+        outputDelay?: number;
+      };
 }
 
 /** The default export of a runtime module, which runs code for the Run button. */
@@ -535,7 +544,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       },
       label: {
         type: 'string',
-        default: 'Run in browser',
+        default: 'Run code',
         description: 'The text of the button. A code block can set its own on its fence line.',
         valid: (value) => isString(value) && value.trim() !== '',
       },
@@ -544,6 +553,20 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         default: 'Run again',
         description: 'The text of the button after the first run. A code block can set its own on its fence line.',
         valid: (value) => isString(value) && value.trim() !== '',
+      },
+      button: {
+        type: "'below' | 'title' | 'both'",
+        default: 'below',
+        description:
+          'Where the button goes: under the block, in the title bar, or both. A code block can set its own on its fence line.',
+        valid: oneOf('below', 'title', 'both'),
+      },
+      outputDelay: {
+        type: 'number',
+        default: 400,
+        description:
+          'Milliseconds between the lines of scripted output (`runnable.output`), so that it prints as if the code ran. `0` prints it all at once. A code block can set its own on its fence line.',
+        valid: (value) => typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 2 ** 31 - 1,
       },
     },
   },

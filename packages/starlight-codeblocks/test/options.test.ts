@@ -11,7 +11,14 @@ test('turns every feature on with defaults, in new objects on each call', () => 
   expect(options.expandable).toEqual({ lines: 12, auto: false });
   expect(options.inlineHighlighting).toEqual({ defaultLanguage: false });
   expect(options.playgrounds).toEqual({});
-  expect(options.runnable).toEqual({ runtimes: {}, timeout: 10000, label: 'Run in browser', againLabel: 'Run again' });
+  expect(options.runnable).toEqual({
+    runtimes: {},
+    timeout: 10000,
+    label: 'Run code',
+    againLabel: 'Run again',
+    button: 'below',
+    outputDelay: 400,
+  });
   if (options.shellCopy) options.shellCopy.prompts.push('% ');
   expect(resolveOptions().shellCopy).toEqual({ prompts: ['$ ', '> '] });
 });
@@ -55,6 +62,8 @@ test('rejects options that are not valid, with an OptionsError that names the op
     [{ runnable: { timeout: 2 ** 31 } }, '`runnable.timeout`'],
     [{ runnable: { label: ' ' } }, '`runnable.label`'],
     [{ runnable: { againLabel: 3 } }, '`runnable.againLabel`'],
+    [{ runnable: { button: 'top' } }, '`runnable.button`'],
+    [{ runnable: { outputDelay: -1 } }, '`runnable.outputDelay`'],
     [{ apiLinks: { adapters: [{ name: 'x', languages: ['js'] }] } }, '`apiLinks.adapters`'],
   ];
   for (const [options, message] of cases) {

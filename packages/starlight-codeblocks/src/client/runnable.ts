@@ -32,7 +32,24 @@ function seconds(ms: number) {
   return `${s} second${s === 1 ? '' : 's'}`;
 }
 
+/** Prints the output that the author wrote, a line at a time, as if the code ran. */
+async function replay(figure: HTMLElement, panel: HTMLElement, output: string) {
+  const delay = Number(figure.dataset.scbRunnableDelay) || 0;
+  const lines = decodeCode(output).split('\n');
+  if (!delay) return show(panel, line('pre', 'scb-run-stdout', lines.join('\n')));
+  show(panel, status('Running…'));
+  const pre = line('pre', 'scb-run-stdout', '');
+  for (const [i, text] of lines.entries()) {
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    if (i) pre.append('\n');
+    else show(panel, pre);
+    pre.append(text);
+  }
+}
+
 async function run(figure: HTMLElement, panel: HTMLElement) {
+  const output = figure.dataset.scbRunnableOutput;
+  if (output !== undefined) return replay(figure, panel, output);
   const url = new URL(figure.dataset.scbRunnable as string, document.baseURI).href;
   const name = figure.dataset.scbRunnableName;
   const timeout = Number(figure.dataset.scbRunnableTimeout) || 10000;
@@ -88,18 +105,21 @@ async function click(event: MouseEvent) {
   const panel = figure?.querySelector<HTMLElement>('.scb-run-output');
   // aria-disabled, not disabled, so that the button keeps the keyboard focus.
   if (!button || !figure || !panel || button.getAttribute('aria-disabled') === 'true') return;
-  button.setAttribute('aria-disabled', 'true');
+  const buttons = figure.querySelectorAll<HTMLElement>('.scb-run');
+  for (const b of buttons) b.setAttribute('aria-disabled', 'true');
   try {
     await run(figure, panel);
   } finally {
-    button.removeAttribute('aria-disabled');
-    button.textContent = button.dataset.scbRunAgain ?? 'Run again';
+    for (const b of buttons) {
+      b.removeAttribute('aria-disabled');
+      b.textContent = b.dataset.scbRunAgain ?? 'Run again';
+    }
   }
 }
 
 let ready = false;
 
-/** Runs a `runnable` block with its language's runtime, which loads on the first click. */
+/** Runs a `runnable` block with its language's runtime, which loads on the first click, or prints its scripted output. */
 export default function initRunnable() {
   if (ready) return;
   ready = true;

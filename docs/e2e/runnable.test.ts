@@ -5,6 +5,8 @@ const PYTHON = 0;
 const JS = 1;
 const ERROR = 2;
 const LOOP = 3;
+const SCRIPTED = 4;
+const TITLE = 5;
 
 const oneProject = () =>
   test.skip(test.info().project.name !== 'desktop-dark', 'Slow or needs the network, so one project is enough.');
@@ -26,7 +28,7 @@ test('Run loads no runtime until selected, then shows stdout and stderr, and doe
   const panel = block.locator('.scb-run-output');
   const stdout = panel.locator('.scb-run-stdout');
   const stderr = panel.locator('.scb-run-stderr');
-  await expect(button).toHaveText('Run in browser');
+  await expect(button).toHaveText('Run code');
   await expect(panel).toBeEmpty();
   await expect(panel).toHaveAttribute('aria-live', 'polite');
   await button.click();
@@ -111,12 +113,36 @@ test('runs Python with Pyodide in a web worker, shows its errors, and a stop end
   expect(result).toEqual({ stopped: 'stopped', again: { stdout: '42', stderr: '' } });
 });
 
+test('the button sits under the block, or in the title bar with runnable.button', async ({ page }) => {
+  await expect(example(page, JS).locator('.scb-run-controls .scb-run')).toBeVisible();
+  await expect(example(page, JS).locator('.header .scb-run')).toHaveCount(0);
+  const title = example(page, TITLE);
+  await expect(title.locator('.header .scb-run')).toBeVisible();
+  await expect(title.locator('.scb-run-controls')).toHaveCount(0);
+});
+
+test('scripted output prints a line at a time, and runs no runtime', async ({ page }) => {
+  const requests: string[] = [];
+  page.on('request', (r) => requests.push(r.url()));
+  const block = example(page, SCRIPTED);
+  const button = block.locator('.scb-run');
+  const stdout = block.locator('.scb-run-stdout');
+  await button.click();
+  await expect(button).toHaveAttribute('aria-disabled', 'true');
+  await expect(stdout).toHaveText(/^N E X T F L O W/);
+  await expect(stdout).not.toContainText('Hola mundo!');
+  await expect(stdout).toHaveText(/Launching hello\.nf[\s\S]*Hola mundo!$/, { timeout: 5_000 });
+  await expect(button).toHaveText('Run again');
+  expect(requests.filter((u) => u.includes('scb-runtime-'))).toEqual([]);
+});
+
 test('without JavaScript, the Run button is hidden', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto('./features/run-in-the-browser/');
   const block = example(page, JS);
   await expect(block.locator('.scb-run')).toBeHidden();
+  await expect(block.locator('.scb-run-controls')).toBeHidden();
   await expect(block.locator('.header')).toBeHidden();
   await context.close();
 });

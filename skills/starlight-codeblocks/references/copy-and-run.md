@@ -4,7 +4,7 @@ Three features help readers use the code outside the page.
 
 - If a block shows a terminal session with prompts and output, write the prompts. Smart shell copy starts on its own.
 - If the language has an online playground, add a playground button.
-- If the code is Python, or a language with a runtime on the site, add a **Run in browser** button.
+- If the code is Python, or a language with a runtime on the site, add a **Run code** button. For code that cannot run in the browser, a **Run code** button can print output that you write.
 
 All three use the copied text of the block: directives removed, hidden lines kept and placeholder values filled in. The code must be complete.
 
@@ -84,11 +84,13 @@ Use when an online playground can run the language. A title bar button opens the
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/run-in-the-browser/
 
-Use for short Python examples that readers can run in the page. A **Run in browser** button runs the code in the browser and shows the output under the block. Python runs with Pyodide, which loads only when a reader clicks **Run in browser**. The Python runtime has no standard input, so `input()` fails.
+Use for short Python examples that readers can run in the page. A **Run code** button under the block runs the code in the browser and shows the output above the button. Python runs with Pyodide, which loads only when a reader clicks **Run code**. The Python runtime has no standard input, so `input()` fails.
 
 | Syntax | Where |
 |---|---|
 | `runnable` | Code block fence line |
+| `runnable.button="below"`, `runnable.button="title"`, `runnable.button="both"` | Code block fence line |
+| `runnable.output="<text>"`, `runnable.outputDelay=<ms>` | Code block fence line |
 
 ````md
 ```py runnable
@@ -100,6 +102,8 @@ print(mean([1520, 1610, 1480]))
 - The language of the block chooses the runtime. `py` and `python` use the built-in Python runtime. Sites without Starlight must add a Python runtime URL to `runnable.runtimes`.
 - Standard output and standard error show in the output panel. A run stops after the timeout. The download of the runtime and of imported packages does not count towards the timeout.
 - A Python session with `>>>` prompts runs its commands only, as in the Python REPL: the output shows the value of each expression.
+- `runnable.button` puts the button under the block (default), in the title bar, or both.
+- `runnable.output` prints the text you write instead of running the code, one line every `outputDelay` ms (default `400`; `0` prints it at once). `\n` starts a new line. It needs no runtime, so use it for commands that cannot run in the browser: ` ```sh runnable.output="Pulling…\nDone." `.
 - Packages outside the standard library must be part of Pyodide. The runtime installs them from the `import` lines.
-- Options: `runnable.timeout` (default `10000` ms) and `runnable.runtimes`, a map of language to a runtime module (a package path or a path from the project root). Guide: https://ewels.github.io/starlight-codeblocks/extend/add-a-runtime/
+- Options: `runnable.timeout` (default `10000` ms), `runnable.button` and `runnable.outputDelay` set the defaults for blocks. `runnable.runtimes` is a map of language to a runtime module (a package path or a path from the project root). Guide: https://ewels.github.io/starlight-codeblocks/extend/add-a-runtime/
 - Limits: Pyodide loads from the jsDelivr CDN and runs its worker from a `blob:` URL, so a Content Security Policy must allow both. Without JavaScript, the button is hidden.
