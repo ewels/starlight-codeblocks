@@ -80,9 +80,9 @@ Use when an online playground can run the language. A title bar button opens the
 - The button works without JavaScript.
 - Limits: one playground for each block. Test each custom playground once in a browser. Guide: https://ewels.github.io/starlight-codeblocks/extend/add-a-playground/
 
-## Run in the browser
+## Run code
 
-Docs: https://ewels.github.io/starlight-codeblocks/features/run-in-the-browser/
+Docs: https://ewels.github.io/starlight-codeblocks/features/run-code/
 
 Use for short Python examples that readers can run in the page. A **Run code** button under the block runs the code in the browser and shows the output above the button. Python runs with Pyodide, which loads only when a reader clicks **Run code**. The Python runtime has no standard input, so `input()` fails.
 
@@ -90,6 +90,8 @@ Use for short Python examples that readers can run in the page. A **Run code** b
 |---|---|
 | `runnable` | Code block fence line |
 | `runnable.button="below"`, `runnable.button="title"`, `runnable.button="both"` | Code block fence line |
+| `[!output]`, `[!output end]` | Comment in the code, on its own line |
+| `[!wait <ms>]` | Comment at the end of a line of output |
 | `runnable.output="<text>"`, `runnable.outputDelay=<ms>` | Code block fence line |
 
 ````md
@@ -103,7 +105,16 @@ print(mean([1520, 1610, 1480]))
 - Standard output and standard error show in the output panel. A run stops after the timeout. The download of the runtime and of imported packages does not count towards the timeout.
 - A Python session with `>>>` prompts runs its commands only, as in the Python REPL: the output shows the value of each expression.
 - `runnable.button` puts the button under the block (default), in the title bar, or both.
-- `runnable.output` prints the text you write instead of running the code, one line every `outputDelay` ms (default `400`; `0` prints it at once). `\n` starts a new line. It needs no runtime, so use it for commands that cannot run in the browser: ` ```sh runnable.output="Pulling…\nDone." `.
+- For code that cannot run in the browser, such as a command line tool, write its output after an `[!output]` comment. The button prints it instead of running the code, one line every `outputDelay` ms (default `200`; `0` prints it at once). The output lines leave the code and the copied text. `[!output end]` ends the output; without it, the output goes to the end of the block. `[!wait <ms>]` at the end of an output line changes the wait after it. The block needs no `runnable` attribute and no runtime. `runnable.output="…"` on the fence line does the same, with `\n` for new lines.
+
+````md
+```sh
+nextflow run hello.nf
+# [!output]
+Launching hello.nf # [!wait 1500]
+Hello world!
+```
+````
 - Packages outside the standard library must be part of Pyodide. The runtime installs them from the `import` lines.
 - Options: `runnable.timeout` (default `10000` ms), `runnable.button` and `runnable.outputDelay` set the defaults for blocks. `runnable.runtimes` is a map of language to a runtime module (a package path or a path from the project root). Guide: https://ewels.github.io/starlight-codeblocks/extend/add-a-runtime/
 - Limits: Pyodide loads from the jsDelivr CDN and runs its worker from a `blob:` URL, so a Content Security Policy must allow both. Without JavaScript, the button is hidden.

@@ -258,7 +258,7 @@ export const attributesReference: AttributeDoc[] = [
     name: 'runnable',
     syntax: ['runnable'],
     description: 'Adds a **Run code** button, which runs the code in the browser and shows the output under the block.',
-    page: 'features/run-in-the-browser',
+    page: 'features/run-code',
     example: { lang: 'py', meta: 'runnable', code: 'print(sum([1, 2, 3]))' },
   },
   {
@@ -266,7 +266,7 @@ export const attributesReference: AttributeDoc[] = [
     syntax: ['runnable.label="<text>"'],
     description:
       'The text of the button of a `runnable` block. It overrides the `runnable.label` option for the block.',
-    page: 'features/run-in-the-browser',
+    page: 'features/run-code',
     example: { lang: 'py', meta: 'runnable runnable.label="Try it"', code: 'print(sum([1, 2, 3]))' },
   },
   {
@@ -274,27 +274,27 @@ export const attributesReference: AttributeDoc[] = [
     syntax: ['runnable.againLabel="<text>"'],
     description:
       'The text of the button after the first run. It overrides the `runnable.againLabel` option for the block.',
-    page: 'features/run-in-the-browser',
+    page: 'features/run-code',
   },
   {
     name: 'runnable.timeout',
     syntax: ['runnable.timeout=<ms>'],
     description: 'Milliseconds before a run stops. It overrides the `runnable.timeout` option for the block.',
-    page: 'features/run-in-the-browser',
+    page: 'features/run-code',
   },
   {
     name: 'runnable.button',
     syntax: ['runnable.button="below"', 'runnable.button="title"', 'runnable.button="both"'],
     description:
       'Puts the button under the block, in the title bar, or both. It overrides the `runnable.button` option for the block.',
-    page: 'features/run-in-the-browser',
+    page: 'features/run-code',
   },
   {
     name: 'runnable.output',
     syntax: ['runnable.output="<text>"'],
     description:
       'Output that the button prints instead of running the code, a line at a time. `\\n` starts a new line. The block needs no runtime.',
-    page: 'features/run-in-the-browser',
+    page: 'features/run-code',
     example: { lang: 'sh', meta: 'runnable.output="Downloading…\\nDone."', code: 'nextflow run hello' },
   },
   {
@@ -302,7 +302,7 @@ export const attributesReference: AttributeDoc[] = [
     syntax: ['runnable.outputDelay=<ms>'],
     description:
       'Milliseconds between the lines of `runnable.output`. `0` prints them all at once. It overrides the `runnable.outputDelay` option for the block.',
-    page: 'features/run-in-the-browser',
+    page: 'features/run-code',
   },
   {
     name: 'focus.style',
@@ -672,7 +672,7 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
     },
   },
   codeblocksRunnable: {
-    page: 'features/run-in-the-browser',
+    page: 'features/run-code',
     settings: {
       outputForeground: {
         description: 'Standard output. Needs 4.5:1 contrast on the code background.',

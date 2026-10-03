@@ -35,12 +35,14 @@ function seconds(ms: number) {
 /** Prints the output that the author wrote, a line at a time, as if the code ran. */
 async function replay(figure: HTMLElement, panel: HTMLElement, output: string) {
   const delay = Number(figure.dataset.scbRunnableDelay) || 0;
+  const waits: Record<number, number> = JSON.parse(figure.dataset.scbRunnableWaits ?? '{}');
   const lines = decodeCode(output).split('\n');
-  if (!delay) return show(panel, line('pre', 'scb-run-stdout', lines.join('\n')));
+  if (!delay && !figure.dataset.scbRunnableWaits) return show(panel, line('pre', 'scb-run-stdout', lines.join('\n')));
   show(panel, status('Running…'));
   const pre = line('pre', 'scb-run-stdout', '');
   for (const [i, text] of lines.entries()) {
-    await new Promise((resolve) => setTimeout(resolve, delay));
+    const ms = i ? (waits[i - 1] ?? delay) : delay;
+    if (ms) await new Promise((resolve) => setTimeout(resolve, ms));
     if (i) pre.append('\n');
     else show(panel, pre);
     pre.append(text);

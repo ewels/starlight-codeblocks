@@ -17,7 +17,7 @@ test('turns every feature on with defaults, in new objects on each call', () => 
     label: 'Run code',
     againLabel: 'Run again',
     button: 'below',
-    outputDelay: 400,
+    outputDelay: 200,
   });
   if (options.shellCopy) options.shellCopy.prompts.push('% ');
   expect(resolveOptions().shellCopy).toEqual({ prompts: ['$ ', '> '] });

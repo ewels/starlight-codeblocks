@@ -1,5 +1,5 @@
 ---
-title: Run in the browser
+title: Run code
 description: Add a Run code button that runs the example in the browser and shows the output under the block.
 ---
 
@@ -30,11 +30,17 @@ Click **Run code**. The first time, the browser downloads Python (Pyodide, a bui
 | `runnable.label="<text>"`, `runnable.againLabel="<text>"` | Code block fence line |
 | `runnable.timeout=<ms>` | Code block fence line |
 | `runnable.button="below"`, `runnable.button="title"`, `runnable.button="both"` | Code block fence line |
+| `[!output]`, `[!output end]` | Comment in the code, on its own line |
+| `[!wait <ms>]` | Comment at the end of a line of output |
 | `runnable.output="<text>"`, `runnable.outputDelay=<ms>` | Code block fence line |
 
 The language of the block chooses the runtime. The plugin has a runtime for Python, and a site can add runtimes for other languages in the configuration. A language name or its alias works: `py` and `python` both use the Python runtime. Sites without Starlight add the Python runtime themselves, as in [Without Starlight](/starlight-codeblocks/reference/expressive-code-plugins/#without-starlight).
 
-With `runnable.output`, the button runs nothing. It prints the text that you write, a line at a time, as if the code ran. Use it for code that cannot run in the browser, such as a command line tool. `\n` in the text starts a new line. The block needs no runtime, so it works in every language.
+For code that cannot run in the browser, such as a command line tool, write its output in the block. The lines after `[!output]` are the output. They leave the code, and the button prints them a line at a time, as if the code ran. `[!output end]` ends the output, for code after it. Without it, the output goes to the end of the block.
+
+The block needs no `runnable` attribute and no runtime, so it works in every language. `[!wait <ms>]` on a line of output waits that long before the next line.
+
+`runnable.output` on the fence line does the same, with `\n` for each new line.
 
 ## Examples
 
@@ -81,11 +87,19 @@ while (!ready) {}
 
 ### Scripted output
 
-This command cannot run in the browser, so the block has the output that the command prints. The lines show one at a time, 400 milliseconds apart:
+This command cannot run in the browser, so the block has the output that the command prints. The lines show one at a time, 200 milliseconds apart, with a longer wait while the task runs:
 
 export const scripted = `
-\`\`\`sh runnable.output="N E X T F L O W  ~  version 25.04.0\\nLaunching hello.nf [nice_curie] DSL2\\nexecutor >  local (3)\\n[4e/8a1f2c] sayHello (3) | 3 of 3 ✔\\nHello world!\\nBonjour le monde!\\nHola mundo!"
+\`\`\`sh
 nextflow run hello.nf
+# [!output]
+N E X T F L O W  ~  version 25.04.0
+Launching hello.nf [nice_curie] DSL2
+executor >  local (3) # [!wait 1500]
+[4e/8a1f2c] sayHello (3) | 3 of 3 ✔
+Hello world!
+Bonjour le monde!
+Hola mundo!
 \`\`\`
 `;
 
@@ -113,8 +127,9 @@ print(sorted(["chr2", "chr10", "chr1"], key=lambda c: int(c[3:])))
   - The Python runtime runs in a web worker, so the page stays responsive while code runs. Each run starts with no names from earlier runs, and `__name__` is `"__main__"`.
   - A run stops after 10 seconds, with a message in the panel. The download of the runtime and of the packages that the code imports does not count towards this time.
 - Scripted output:
-  - The panel shows "Running…", then the lines of `runnable.output`, with `outputDelay` milliseconds (400 by default) before each line. With `0`, all the lines show at once.
+  - The panel shows "Running…", then the lines of output, with `outputDelay` milliseconds (200 by default) before each line. With `0`, all the lines show at once. `[!wait]` changes the wait after one line.
   - Scripted output shows as standard output. The button does not run the code, and the block needs no runtime.
+  - The output lines are not part of the code that readers see or copy.
 - Output:
   - The output panel has the label "Output". Standard output shows in green. Standard error shows in red, with a bar at its start, so the colour is not the only difference.
 - Keyboard and screen readers:

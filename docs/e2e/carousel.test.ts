@@ -225,8 +225,8 @@ test('works with the keyboard, and the dots use a roving tabindex and arrow keys
   await page.keyboard.press('ArrowLeft');
   await shows(page, 'annotations');
   await page.keyboard.press('End');
-  await shows(page, 'run-in-the-browser');
-  await expect(dot(page, 'Run in the browser')).toBeFocused();
+  await shows(page, 'run-code');
+  await expect(dot(page, 'Run code')).toBeFocused();
 });
 
 test('does not rotate or animate under reduced motion', async ({ page }) => {

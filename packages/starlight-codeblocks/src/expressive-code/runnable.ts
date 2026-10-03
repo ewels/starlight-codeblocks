@@ -1,4 +1,4 @@
-import { mix, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
+import { AttachedPluginData, mix, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { encodeCode } from '../client/shared/copy.ts';
 import { clientJsModules } from '../client-modules.ts';
@@ -12,6 +12,7 @@ import {
   languageId,
   warn,
 } from './core.ts';
+import { getDirectives } from './notation.ts';
 import { pythonSessionPrompts } from './shell-copy.ts';
 import { onCode, PREFIX, solidCodeBackground, solidCodeForeground, themeColour } from './styles.ts';
 
@@ -72,6 +73,8 @@ const cls = (suffix: string) => `${PREFIX}-run${suffix}`;
 /** Any text but blank, for `blockSetting()`. */
 const text = (raw: string) => (raw.trim() ? raw : undefined);
 
+const scriptedData = new AttachedPluginData<{ text?: string; waits: Record<number, number> }>(() => ({ waits: {} }));
+
 const milliseconds = (min: number) => (raw: string) =>
   /^\d+$/.test(raw) && Number(raw) >= min && Number(raw) <= 2 ** 31 - 1 ? Number(raw) : undefined;
 
@@ -83,7 +86,7 @@ export function pluginRunnable({
   label = 'Run code',
   againLabel = 'Run again',
   button = 'below',
-  outputDelay = 400,
+  outputDelay = 200,
 }: RunnableSettings = {}): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:runnable',
@@ -129,10 +132,59 @@ export function pluginRunnable({
 }
 `,
     jsModules: clientJsModules,
+    directives: {
+      output: {
+        docs: {
+          description:
+            'Starts the output that the **Run code** button prints instead of running the code. `[!output end]` ends it; without it, the output goes to the end of the block. The block needs no `runnable` and no runtime.',
+          args: 'Optional. `end`.',
+          example: { lang: 'sh', code: 'nextflow run hello.nf\n# [!output]\nHello world!' },
+          page: 'features/run-code',
+        },
+      },
+      wait: {
+        docs: {
+          description: 'Milliseconds to wait after this line of `[!output]`, before the next line prints.',
+          args: 'Milliseconds.',
+          example: { lang: 'sh', code: 'make\n# [!output]\nCompiling… # [!wait 2000]\nDone.' },
+          page: 'features/run-code',
+        },
+      },
+    },
     hooks: {
+      preprocessCode(context) {
+        const { codeBlock } = context;
+        const marks = getDirectives(codeBlock, 'output');
+        if (marks.length === 0) return;
+        for (const mark of marks.filter((d) => d.args.length > 1 || (d.args[0] ?? 'end') !== 'end'))
+          warn(context, '`[!output]` takes nothing or `end`.', mark.sourceLine);
+        const lines = codeBlock.getLines();
+        const startMark = marks.find((d) => d.args.length === 0);
+        const from = startMark?.lines[0] ? lines.indexOf(startMark.lines[0]) : -1;
+        if (from === -1) {
+          warn(context, '`[!output end]` needs an `[!output]` line before it.');
+          return;
+        }
+        const endLine = marks
+          .filter((d) => d.args[0] === 'end')
+          .map((d) => (d.lines[0] ? lines.indexOf(d.lines[0]) : lines.length))
+          .find((i) => i > from);
+        const output = lines.slice(from, endLine ?? lines.length);
+        const data = scriptedData.getOrCreateFor(codeBlock);
+        data.text = output.map((line) => line.text).join('\n');
+        for (const wait of getDirectives(codeBlock, 'wait')) {
+          const index = wait.lines[0] ? output.indexOf(wait.lines[0]) : -1;
+          const ms = milliseconds(0)(wait.args[0] ?? '');
+          if (index === -1 || ms === undefined || wait.args.length !== 1)
+            warn(context, '`[!wait]` needs milliseconds, on a line of `[!output]`.', wait.sourceLine);
+          else data.waits[index] = ms;
+        }
+        for (const line of output.reverse()) codeBlock.deleteLine(codeBlock.getLines().indexOf(line));
+      },
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
-        const scripted = codeBlock.metaOptions.getString('runnable.output');
+        const { text: fromDirectives, waits } = scriptedData.getOrCreateFor(codeBlock);
+        const scripted = codeBlock.metaOptions.getString('runnable.output') ?? fromDirectives;
         if (!codeBlock.metaOptions.getBoolean('runnable') && scripted === undefined) return;
         const figure = select('figure', renderData.blockAst);
         if (!figure) return;
@@ -165,6 +217,7 @@ export function pluginRunnable({
           figure.properties.dataScbRunnable = '';
           // A fence line holds one line, so `\n` stands for a line break.
           figure.properties.dataScbRunnableOutput = encodeCode(scripted.replace(/\\n/g, '\n'));
+          if (Object.keys(waits).length > 0) figure.properties.dataScbRunnableWaits = JSON.stringify(waits);
           figure.properties.dataScbRunnableDelay = String(
             blockSetting(
               context,

@@ -524,7 +524,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
   },
   runnable: {
     description: 'Adds a button that runs the code in the browser.',
-    page: 'features/run-in-the-browser',
+    page: 'features/run-code',
     off: '`runnable` attributes then have no effect.',
     fields: {
       runtimes: {
@@ -563,7 +563,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       },
       outputDelay: {
         type: 'number',
-        default: 400,
+        default: 200,
         description:
           'Milliseconds between the lines of scripted output (`runnable.output`), so that it prints as if the code ran. `0` prints it all at once. A code block can set its own on its fence line.',
         valid: (value) => typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 2 ** 31 - 1,

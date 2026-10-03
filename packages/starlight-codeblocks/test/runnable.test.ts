@@ -70,9 +70,9 @@ test('runnable.output prints scripted output with no runtime, at the line delay'
   expect(warnings).toEqual([]);
   const site = await render(block('sh runnable.output="x"', 'y'), { runnable: { outputDelay: 50 } });
   expect(site.html).toContain('data-scb-runnable-delay="50"');
-  expect((await render(block('sh runnable.output="x"', 'y'))).html).toContain('data-scb-runnable-delay="400"');
+  expect((await render(block('sh runnable.output="x"', 'y'))).html).toContain('data-scb-runnable-delay="200"');
   const bad = await render(block('sh runnable.output="x" runnable.outputDelay=-1', 'y'));
-  expect(bad.html).toContain('data-scb-runnable-delay="400"');
+  expect(bad.html).toContain('data-scb-runnable-delay="200"');
   expect(bad.warnings).toHaveLength(1);
 });
 
@@ -152,6 +152,25 @@ test('the Vite plugin emits each runtime as a chunk in the client build, and ser
     'resolved:/site/src/js.ts',
   );
   expect(await serve?.resolveId?.call({ resolve }, '/_astro/other.js')).toBeUndefined();
+});
+
+test('[!output] takes the lines after it out of the code, up to [!output end] or the end', async () => {
+  const toEnd = await render(block('sh', 'nextflow run hello.nf', '# [!output]', 'Pulling # [!wait 1500]', 'Done'));
+  expect(toEnd.html).toContain(
+    'data-scb-runnable="" data-scb-runnable-output="Pulling\x7FDone" data-scb-runnable-waits="{&#x22;0&#x22;:1500}" data-scb-runnable-delay="200"',
+  );
+  expect(toEnd.html).toContain('scb-run-controls');
+  expect(toEnd.copyText).toBe('nextflow run hello.nf');
+  expect(toEnd.warnings).toEqual([]);
+  const ended = await render(block('sh', 'make', '# [!output]', 'built', '# [!output end]', 'make test'));
+  expect(ended.html).toContain('data-scb-runnable-output="built"');
+  expect(ended.html).not.toContain('data-scb-runnable-waits');
+  expect(ended.copyText).toBe('make\nmake test');
+  const bad = await render(block('sh', 'make', '# [!output end]', 'x # [!wait soon]'));
+  expect(bad.html).not.toContain('scb-run');
+  expect(bad.warnings.join('\n')).toContain('`[!output end]` needs an `[!output]` line before it.');
+  const badWait = await render(block('sh', 'make # [!wait 5]', '# [!output]', 'x'));
+  expect(badWait.warnings.join('\n')).toContain('`[!wait]` needs milliseconds, on a line of `[!output]`.');
 });
 
 test('blocks without runnable render the same with the feature off', async () => {

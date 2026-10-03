@@ -1,6 +1,6 @@
 ---
 name: starlight-codeblocks
-description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, colour swatches, file icons, inline code highlighting, code links, API auto-linking, line permalinks, code tabs, fill-in placeholders, smart shell copy, open in playground and run in the browser. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
+description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, colour swatches, file icons, inline code highlighting, code links, API auto-linking, line permalinks, code tabs, fill-in placeholders, smart shell copy, open in playground and run code. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
 license: MIT
 ---
 
@@ -115,7 +115,7 @@ A code tabs block `sync` key and a `<Tabs>` `syncKey` do not switch together. Us
 |---|---|---|
 | A terminal session with prompts and output | Smart shell copy: start commands with `$ ` | Starts on its own. **Copy commands** copies the commands only. |
 | Readers try the code in an online playground | Open in playground: `playground="typescript"` or `playground="rust"` | A title bar button that opens the playground with the code. |
-| Readers run Python in the page | Run in the browser: `runnable` | A **Run code** button and an output panel. Other languages need a runtime, or scripted output with `runnable.output`. |
+| Readers run Python in the page | Run code: `runnable` | A **Run code** button and an output panel. Other languages need a runtime, or scripted output after an `[!output]` comment. |
 
 ## Syntax rules
 

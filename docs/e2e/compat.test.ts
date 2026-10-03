@@ -55,7 +55,7 @@ test.describe('in a copy of the block', () => {
   });
 
   test('the Run button runs a copy of the block', async ({ page }) => {
-    await page.goto('./features/run-in-the-browser/');
+    await page.goto('./features/run-code/');
     const copy = await copyToOverlay(page, example(page, 1));
     await copy.locator('.scb-run').click();
     await expect(copy.locator('.scb-run-stdout')).toBeVisible();

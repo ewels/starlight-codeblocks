@@ -42,7 +42,7 @@ codeblocks({
 | `walkthrough` | None | Code walkthrough |
 | `scrollycoding` | None | Scrollycoding |
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
-| `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run code'`. `againLabel`: default `'Run again'`. `button`: `'below'` (default), `'title'` or `'both'`. `outputDelay`: default `400` ms | Run in the browser |
+| `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run code'`. `againLabel`: default `'Run again'`. `button`: `'below'` (default), `'title'` or `'both'`. `outputDelay`: default `200` ms | Run code |
 
 ### Options for one block
 

@@ -12,7 +12,7 @@ const oneProject = () =>
   test.skip(test.info().project.name !== 'desktop-dark', 'Slow or needs the network, so one project is enough.');
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('./features/run-in-the-browser/');
+  await page.goto('./features/run-code/');
 });
 
 test('Run loads no runtime until selected, then shows stdout and stderr, and does not print', async ({ page }) => {
@@ -127,11 +127,12 @@ test('scripted output prints a line at a time, and runs no runtime', async ({ pa
   const block = example(page, SCRIPTED);
   const button = block.locator('.scb-run');
   const stdout = block.locator('.scb-run-stdout');
+  await expect(block.locator('pre')).toHaveText('nextflow run hello.nf');
   await button.click();
   await expect(button).toHaveAttribute('aria-disabled', 'true');
   await expect(stdout).toHaveText(/^N E X T F L O W/);
   await expect(stdout).not.toContainText('Hola mundo!');
-  await expect(stdout).toHaveText(/Launching hello\.nf[\s\S]*Hola mundo!$/, { timeout: 5_000 });
+  await expect(stdout).toHaveText(/Launching hello\.nf[\s\S]*Hola mundo!$/, { timeout: 8_000 });
   await expect(button).toHaveText('Run again');
   expect(requests.filter((u) => u.includes('scb-runtime-'))).toEqual([]);
 });
@@ -139,7 +140,7 @@ test('scripted output prints a line at a time, and runs no runtime', async ({ pa
 test('without JavaScript, the Run button is hidden', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await page.goto('./features/run-in-the-browser/');
+  await page.goto('./features/run-code/');
   const block = example(page, JS);
   await expect(block.locator('.scb-run')).toBeHidden();
   await expect(block.locator('.scb-run-controls')).toBeHidden();

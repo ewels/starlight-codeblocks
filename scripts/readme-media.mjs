@@ -203,7 +203,7 @@ const features = [
   { slug: 'side-annotations' },
   { slug: 'inline-code-highlighting' },
   {
-    slug: 'run-in-the-browser',
+    slug: 'run-code',
     run: async (page, rec) => {
       await rec.hold(1000);
       await rec.click(block(page).locator('.scb-run'));

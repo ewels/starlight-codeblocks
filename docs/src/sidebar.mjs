@@ -47,7 +47,7 @@ export const sidebar = [
   },
   {
     label: 'Copy and run',
-    items: ['features/smart-shell-copy', 'features/open-in-playground', 'features/run-in-the-browser'],
+    items: ['features/smart-shell-copy', 'features/open-in-playground', 'features/run-code'],
   },
   {
     label: 'Extend',
