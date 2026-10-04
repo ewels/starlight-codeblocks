@@ -1,4 +1,4 @@
-import type { Runtime } from 'starlight-codeblocks';
+import type { Runtime } from '../options.ts';
 
 // The worker has no access to the page. console.log, info, warn and error go to the output panel.
 const source = `
@@ -39,24 +39,28 @@ onmessage = async ({ data: code }) => {
   done();
 };`;
 
-const url = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
+let url: string | undefined;
+
+/** Runs JavaScript in a new web worker, which ends when the top-level code is done or the signal aborts. */
+export function runJavaScript(code: string, { signal }: { signal: AbortSignal }) {
+  url ??= URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
+  const worker = new Worker(url);
+  return new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+    signal.addEventListener('abort', () => {
+      worker.terminate();
+      reject(signal.reason);
+    });
+    worker.onmessage = ({ data }) => {
+      worker.terminate();
+      resolve(data);
+    };
+    worker.postMessage(code);
+  });
+}
 
 const runtime: Runtime = {
   async load() {},
-  run(code, { signal }) {
-    const worker = new Worker(url);
-    return new Promise((resolve, reject) => {
-      signal.addEventListener('abort', () => {
-        worker.terminate();
-        reject(signal.reason);
-      });
-      worker.onmessage = ({ data }) => {
-        worker.terminate();
-        resolve(data);
-      };
-      worker.postMessage(code);
-    });
-  },
+  run: runJavaScript,
 };
 
 export default runtime;

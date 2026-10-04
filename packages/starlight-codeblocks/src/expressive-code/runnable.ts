@@ -42,7 +42,11 @@ const styleSettings = new PluginStyleSettings({
   },
 });
 
-const PYODIDE_RUNTIME = 'starlight-codeblocks/runtimes/pyodide';
+const BUILT_IN = {
+  python: 'starlight-codeblocks/runtimes/pyodide',
+  javascript: 'starlight-codeblocks/runtimes/javascript',
+  typescript: 'starlight-codeblocks/runtimes/typescript',
+};
 
 interface RunnableSettings {
   runtimes?: Record<string, string>;
@@ -58,11 +62,11 @@ export type RunButton = (typeof runButtons)[number];
 
 /**
  * The runtime modules by language. Without `codeblocks()`, nothing bundles the modules, so the
- * values are URLs as written and there is no built-in Python runtime.
+ * values are URLs as written and there are no built-in runtimes.
  */
 export function runtimeModules(runtimes: Record<string, string> | undefined, bundled: boolean): Record<string, string> {
   const site = Object.fromEntries(Object.entries(runtimes ?? {}).map(([lang, path]) => [languageId(lang), path]));
-  return bundled ? { python: PYODIDE_RUNTIME, ...site } : site;
+  return bundled ? { ...BUILT_IN, ...site } : site;
 }
 
 /** The file name of a bundled runtime module, in Astro's assets folder. */
@@ -273,6 +277,14 @@ export function pluginRunnable({
             'a whole number of milliseconds, from 1 to 2147483647',
           ),
         );
+        const packages = blockSetting(
+          context,
+          'runnable.packages',
+          (raw) => raw.trim().split(/\s+/).join(' ') || undefined,
+          '',
+          'one or more package names',
+        );
+        if (packages) figure.properties.dataScbRunnablePackages = packages;
         keepCopiedText(renderData.blockAst, codeBlock.code);
         // With smart shell copy off, nothing else has taken the prompts and output out of a session.
         if (!select('.scb-shell-copy', figure)) {

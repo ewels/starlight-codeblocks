@@ -118,13 +118,19 @@ test('with codeblocks(), the block points at the bundled module in the assets fo
   );
 });
 
-test('the built-in Python runtime comes only with codeblocks(), and site runtimes can replace it', () => {
-  expect(runtimeModules({ js: './a.ts' }, false)).toEqual({ javascript: './a.ts' });
-  expect(runtimeModules({ js: './a.ts' }, true)).toEqual({
+test('the built-in runtimes come only with codeblocks(), and site runtimes can replace them', () => {
+  const builtIn = {
     python: 'starlight-codeblocks/runtimes/pyodide',
+    javascript: 'starlight-codeblocks/runtimes/javascript',
+    typescript: 'starlight-codeblocks/runtimes/typescript',
+  };
+  expect(runtimeModules({ js: './a.ts' }, false)).toEqual({ javascript: './a.ts' });
+  expect(runtimeModules(undefined, true)).toEqual(builtIn);
+  expect(runtimeModules({ js: './a.ts', py: './py.ts' }, true)).toEqual({
+    ...builtIn,
     javascript: './a.ts',
+    python: './py.ts',
   });
-  expect(runtimeModules({ py: './py.ts' }, true)).toEqual({ python: './py.ts' });
   expect(runtimeFileName('c++')).toBe('scb-runtime-c__.js');
 });
 
@@ -184,6 +190,16 @@ test('a block with only output has the button in its code area, and no copy butt
   expect(warnings).toEqual([]);
   const title = await render(block('sh runnable.button=title', '# [!output]', 'Hello'));
   expect(title.html).not.toContain('scb-run-start');
+});
+
+test('runnable.packages lists the packages to install, with single spaces', async () => {
+  const { html, warnings } = await render(block('py runnable runnable.packages=" python-slugify   tabulate "', 'x'), {
+    runnable: { runtimes: { python: '/py.js' } },
+  });
+  expect(html).toContain('data-scb-runnable-packages="python-slugify tabulate"');
+  expect(warnings).toEqual([]);
+  const none = await render(block('py runnable', 'x'), { runnable: { runtimes: { python: '/py.js' } } });
+  expect(none.html).not.toContain('data-scb-runnable-packages');
 });
 
 test('blocks without runnable render the same with the feature off', async () => {

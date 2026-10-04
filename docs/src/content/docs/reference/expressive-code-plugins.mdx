@@ -74,7 +74,7 @@ Some features need more than an Expressive Code plugin. Without `codeblocks()`, 
 
 - The `:::code-tabs` directive and [inline code highlighting](/starlight-codeblocks/features/inline-code-highlighting/) need the Markdown plugin that `codeblocks()` adds.
 - The `<CodeWalkthrough>` and `<Scrollycoding>` components need Starlight.
-- `runnable.runtimes` values are URLs that the browser imports as they are, because `codeblocks()` is not there to bundle the runtime modules. There is no built-in Python runtime. Map `python` to the URL of the Pyodide runtime module, such as `https://cdn.jsdelivr.net/npm/starlight-codeblocks/dist/runtimes/pyodide.mjs`.
+- `runnable.runtimes` values are URLs that the browser imports as they are, because `codeblocks()` is not there to bundle the runtime modules. There are no built-in runtimes. Map each language to the URL of its runtime module, such as `https://cdn.jsdelivr.net/npm/starlight-codeblocks/dist/runtimes/pyodide.mjs`. The JavaScript and TypeScript runtimes are `javascript.mjs` and `typescript.mjs` in the same folder.
 - Expressive Code turns each tab into spaces, because `codeblocks()` is not there to set `tabWidth: 0`. Set `tabWidth: 0` in `ec.config.mjs`, so that tabs reach the code blocks unchanged.
 
 The client scripts of interactive features load inline on each page that needs them, so the features work without a change to the build.

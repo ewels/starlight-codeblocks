@@ -16,27 +16,56 @@ def _scb_session(src, g):
 _scb_session
 `;
 
+// Top-level imports that are neither in the standard library nor installed.
+const missingSource = `
+import importlib.util, sys
+from pyodide.code import find_imports
+def _scb_missing(src):
+    try:
+        names = find_imports(src)
+    except SyntaxError:
+        return []
+    return [n for n in names if n not in sys.stdlib_module_names and importlib.util.find_spec(n) is None]
+_scb_missing
+`;
+
 // Runs in the worker. Runs wait in a queue, because stdout and stderr belong to the whole interpreter.
 // Each run gets fresh globals, so that one block's names do not leak into the next.
 const workerSource = `
 let ready;
 let interactive;
+let missing;
 let queue = Promise.resolve();
 onmessage = ({ data }) => {
   queue = queue.then(() => handle(data));
 };
-const handle = async ({ id, url, code, session, prepare }) => {
+const install = async (py, names) => {
+  await py.loadPackage('micropip');
+  await py.pyimport('micropip').install(names);
+};
+const handle = async ({ id, url, code, session, prepare, packages = [] }) => {
   try {
     ready ??= import(url + 'pyodide.mjs')
       .then((m) => m.loadPyodide({ indexURL: url }))
       .then((py) => {
         interactive = py.runPython(${JSON.stringify(sessionSource)});
+        missing = py.runPython(${JSON.stringify(missingSource)});
         return py;
       });
     const py = await ready;
     if (prepare !== undefined) {
       // A package that does not install shows up as an import error when the code runs.
       await py.loadPackagesFromImports(prepare).catch(() => {});
+      if (packages.length > 0) {
+        try {
+          await install(py, packages);
+        } catch (e) {
+          return postMessage({ id, error: 'The packages did not install. ' + String(e?.message ?? e).trim().split('\\n').at(-1) });
+        }
+      }
+      // Pure Python packages that Pyodide does not have come from PyPI, under their import name.
+      const names = missing(prepare).toJs();
+      if (names.length > 0) await install(py, names).catch(() => {});
       return postMessage({ id });
     }
     const decoder = new TextDecoder();
@@ -66,7 +95,7 @@ const handle = async ({ id, url, code, session, prepare }) => {
   }
 };`;
 
-type Message = { code: string; session: boolean } | { prepare: string };
+type Message = { code: string; session: boolean; packages: string[] } | { prepare: string; packages: string[] };
 
 interface Reply {
   id: number;
@@ -79,6 +108,8 @@ interface Reply {
 export function pyodide({ url = PYODIDE_URL }: { url?: string } = {}): Runtime {
   let worker: Worker | undefined;
   let next = 0;
+  // The packages of each block, so that a new worker after a stop can install them again.
+  const wanted = new Map<string, string[]>();
   const pending = new Map<
     number,
     { message: Message; resolve: (reply: Reply) => void; reject: (reason: unknown) => void }
@@ -123,7 +154,7 @@ export function pyodide({ url = PYODIDE_URL }: { url?: string } = {}): Runtime {
     call.reject(reason);
     for (const [other, { message }] of pending) {
       // The new worker has none of the packages that the old one loaded for this run.
-      if ('code' in message) send(next++, { prepare: message.code });
+      if ('code' in message) send(next++, { prepare: message.code, packages: message.packages });
       send(other, message);
     }
   }
@@ -139,11 +170,12 @@ export function pyodide({ url = PYODIDE_URL }: { url?: string } = {}): Runtime {
   }
 
   return {
-    load: async (code) => {
-      await call({ prepare: code });
+    load: async (code, { packages = [] } = {}) => {
+      wanted.set(code, packages);
+      await call({ prepare: code, packages });
     },
     run: async (code, { signal, session = false }) => {
-      const { stdout = '', stderr = '' } = await call({ code, session }, signal);
+      const { stdout = '', stderr = '' } = await call({ code, session, packages: wanted.get(code) ?? [] }, signal);
       return { stdout, stderr };
     },
   };

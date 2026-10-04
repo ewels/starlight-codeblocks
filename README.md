@@ -466,7 +466,7 @@ Add a title bar button that opens the example in an online playground, with the 
 <details>
 <summary>Run code</summary>
 
-Add a Run code button that runs the example in the browser and shows the output under the block. Python runs with Pyodide, which loads only when a reader clicks **Run code**.
+Add a Run code button that runs the example in the browser and shows the output under the block. Python, JavaScript and TypeScript work with no set-up. Python runs with Pyodide, which loads only when a reader clicks **Run code**, and installs the packages that the code imports.
 
 ````md
 ```py runnable

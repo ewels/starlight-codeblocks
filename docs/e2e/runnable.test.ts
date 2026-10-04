@@ -3,11 +3,14 @@ import { css, example } from './helpers.ts';
 
 const PYTHON = 0;
 const JS = 1;
-const ERROR = 2;
-const LOOP = 3;
-const SCRIPTED = 4;
-const OUTPUT_ONLY = 5;
-const TITLE = 6;
+const TS = 2;
+const PYPI = 3;
+const PACKAGES = 4;
+const ERROR = 5;
+const LOOP = 6;
+const SCRIPTED = 7;
+const OUTPUT_ONLY = 8;
+const TITLE = 9;
 
 const oneProject = () =>
   test.skip(test.info().project.name !== 'desktop-dark', 'Slow or needs the network, so one project is enough.');
@@ -112,6 +115,25 @@ test('runs Python with Pyodide in a web worker, shows its errors, and a stop end
     return { stopped, again };
   });
   expect(result).toEqual({ stopped: 'stopped', again: { stdout: '42', stderr: '' } });
+});
+
+test('runs TypeScript after removing the types, with no set-up', async ({ page }) => {
+  const block = example(page, TS);
+  await block.locator('.scb-run').click();
+  await expect(block.locator('.scb-run-stdout')).toHaveText('2 samples, 3130 reads');
+  await expect(block.locator('.scb-run-stderr')).toHaveCount(0);
+});
+
+test('installs Python packages from PyPI, by import name or from runnable.packages', async ({ page }) => {
+  oneProject();
+  test.setTimeout(240_000);
+  const pypi = example(page, PYPI);
+  await pypi.locator('.scb-run').click();
+  await expect(pypi.locator('.scb-run-stdout')).toContainText('Sample', { timeout: 180_000 });
+  await expect(pypi.locator('.scb-run-stdout')).toContainText('1610');
+  const named = example(page, PACKAGES);
+  await named.locator('.scb-run').click();
+  await expect(named.locator('.scb-run-stdout')).toHaveText('hello-world-run-code', { timeout: 120_000 });
 });
 
 test('the button sits under the block, or in the title bar with runnable.button', async ({ page }) => {

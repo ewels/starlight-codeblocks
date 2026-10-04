@@ -283,6 +283,18 @@ export const attributesReference: AttributeDoc[] = [
     page: 'features/run-code',
   },
   {
+    name: 'runnable.packages',
+    syntax: ['runnable.packages="<name> <name>"'],
+    description:
+      'Python packages to install from Pyodide or PyPI before the code runs, separated by spaces. Use it when the package name is not the import name.',
+    page: 'features/run-code',
+    example: {
+      lang: 'py',
+      meta: 'runnable runnable.packages="python-slugify"',
+      code: 'from slugify import slugify\nprint(slugify("Hello, World!"))',
+    },
+  },
+  {
     name: 'runnable.button',
     syntax: ['runnable.button="below"', 'runnable.button="title"', 'runnable.button="both"'],
     description:

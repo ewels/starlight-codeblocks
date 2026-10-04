@@ -4,9 +4,9 @@ description: Add a runtime for another language, so that the Run code button can
 ---
 
 import { Code } from '@astrojs/starlight/components';
-import runtimeSource from '../../../runtimes/javascript.ts?raw';
+import runtimeSource from '../../../../../packages/starlight-codeblocks/src/runtimes/javascript.ts?raw';
 
-The **Run code** button of [run code](/starlight-codeblocks/features/run-code/) gives the code of a block to a runtime. The plugin has a runtime for Python. A site can add a runtime for any other language in the `runnable.runtimes` option.
+The **Run code** button of [run code](/starlight-codeblocks/features/run-code/) gives the code of a block to a runtime. The plugin has runtimes for Python, JavaScript and TypeScript. A site can add a runtime for any other language in the `runnable.runtimes` option, or replace a built-in one.
 
 ## The interface
 
@@ -14,14 +14,14 @@ A runtime is a module whose default export has two functions:
 
 ```ts
 interface Runtime {
-  load(code: string): Promise<void>;
+  load(code: string, options?: { packages?: string[] }): Promise<void>;
   run(code: string, options: { signal: AbortSignal; session?: boolean }): Promise<{ stdout: string; stderr: string }>;
 }
 ```
 
 | Function | Description |
 |---|---|
-| `load()` | Downloads and starts the runtime, and gets the packages that `code` needs. The plugin calls it with the code before each run, so it must return at once when the runtime and the packages are ready. The timeout does not apply to it. |
+| `load()` | Downloads and starts the runtime, and gets the packages that `code` needs. `packages` holds the names in the block's `runnable.packages` attribute. The plugin calls it with the code before each run, so it must return at once when the runtime and the packages are ready. The timeout does not apply to it. |
 | `run()` | Runs the copied text of the block, and returns its standard output and standard error as text. |
 
 The browser imports the module when a reader clicks **Run code** for the first time, and calls `load()` at once. Import the `Runtime` type from `starlight-codeblocks` to check a module in TypeScript.
@@ -30,27 +30,29 @@ When the block is a session with prompts, `code` is its commands and `session` i
 
 The `signal` of `run()` aborts when the run takes longer than `runnable.timeout`. The runtime must then stop the code and reject the promise. The plugin shows the timeout message, and calls `load()` again before the next run.
 
-## Add the JavaScript runtime of this site
+## An example: the JavaScript runtime
 
-This site runs JavaScript in a web worker. Each run gets a new worker, which the runtime ends when the top-level code is done or the signal aborts. The output of a timer or a callback that the code does not `await` is lost, because the worker is gone when it runs:
+The built-in JavaScript runtime is a complete example. It runs the code in a web worker. Each run gets a new worker, which the runtime ends when the top-level code is done or the signal aborts. The output of a timer or a callback that the code does not `await` is lost, because the worker is gone when it runs:
 
-<Code code={runtimeSource} lang="ts" title="src/runtimes/javascript.ts" />
+<Code code={runtimeSource} lang="ts" title="starlight-codeblocks/src/runtimes/javascript.ts" />
 
-To add a runtime like this one to a site:
+## Add a runtime to a site
 
-1. Save the module in the project, for example as `src/runtimes/javascript.ts`.
+1. Save the module in the project, for example as `src/runtimes/ruby.ts`.
 2. Open `astro.config.mjs`.
 3. Add the language and the path of the module to `runnable.runtimes`.
 
 ```js title="astro.config.mjs"
 codeblocks({
   runnable: {
-    runtimes: { javascript: './src/runtimes/javascript.ts' },
+    runtimes: { ruby: './src/runtimes/ruby.ts' },
   },
 });
 ```
 
-A code block with ` ```js runnable ` now has the **Run code** button. The key is the language name, and its aliases work too: `js` and `javascript` both use this runtime. A path that starts with `.` is from the project root. Any other path is a package path, such as `starlight-codeblocks/runtimes/pyodide`.
+A code block with ` ```ruby runnable ` now has the **Run code** button. The key is the language name, and its aliases work too: `rb` and `ruby` both use this runtime. A path that starts with `.` is from the project root. Any other path is a package path, such as `starlight-codeblocks/runtimes/pyodide`.
+
+A runtime for `python`, `javascript` or `typescript` replaces the built-in one. The built-in runtimes are `starlight-codeblocks/runtimes/pyodide`, `starlight-codeblocks/runtimes/javascript` and `starlight-codeblocks/runtimes/typescript`. A site runtime can import them, for example to run JavaScript after it compiles another language.
 
 ## Change the Pyodide URL
 
@@ -72,4 +74,4 @@ Then map `python` to it in `runnable.runtimes`, as for any other runtime. The UR
 - Download nothing when the module is imported. Start downloads in `load()`.
 - Give each run a clean state, so that the result of a block does not depend on the blocks that ran before it.
 - Test the runtime in a browser, with an error, an endless loop and a block with no output.
-- Without `codeblocks()`, a site that adds the Expressive Code plugins itself has no build step for runtimes. The values of `runnable.runtimes` are then URLs of JavaScript modules, and there is no Python runtime unless the site adds one.
+- Without `codeblocks()`, a site that adds the Expressive Code plugins itself has no build step for runtimes. The values of `runnable.runtimes` are then URLs of JavaScript modules, and there are no built-in runtimes unless the site adds them.

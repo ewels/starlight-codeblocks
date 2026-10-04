@@ -6,15 +6,24 @@ const clientModules = readdirSync('src/client').filter((f) => f.endsWith('.ts'))
 
 export default defineConfig([
   {
-    entry: [
-      'src/index.ts',
-      'src/expressive-code/index.ts',
-      'src/adapters/python.ts',
-      'src/adapters/nextflow.ts',
-      'src/runtimes/pyodide.ts',
-    ],
+    entry: ['src/index.ts', 'src/expressive-code/index.ts', 'src/adapters/python.ts', 'src/adapters/nextflow.ts'],
     format: 'esm',
     dts: true,
+  },
+  {
+    entry: {
+      'runtimes/pyodide': 'src/runtimes/pyodide.ts',
+      'runtimes/javascript': 'src/runtimes/javascript.ts',
+      'runtimes/typescript': 'src/runtimes/typescript.ts',
+    },
+    platform: 'browser',
+    format: 'esm',
+    fixedExtension: true,
+    minify: true,
+    dts: true,
+    // Sites without codeblocks() import runtimes from a CDN, so each one carries its dependencies, such as Sucrase.
+    deps: { alwaysBundle: [/.*/] },
+    clean: false,
   },
   ...clientModules.map(
     (file): UserConfig => ({

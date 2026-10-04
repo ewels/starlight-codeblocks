@@ -115,7 +115,7 @@ A code tabs block `sync` key and a `<Tabs>` `syncKey` do not switch together. Us
 |---|---|---|
 | A terminal session with prompts and output | Smart shell copy: start commands with `$ ` | Starts on its own. **Copy commands** copies the commands only. |
 | Readers try the code in an online playground | Open in playground: `playground="typescript"` or `playground="rust"` | A title bar button that opens the playground with the code. |
-| Readers run Python in the page | Run code: `runnable` | A **Run code** button and an output panel. Other languages need a runtime, or scripted output after an `[!output]` comment. |
+| Readers run Python, JavaScript or TypeScript in the page | Run code: `runnable` | A **Run code** button and an output panel. Other languages need a runtime, or scripted output after an `[!output]` comment. |
 
 ## Syntax rules
 

@@ -128,8 +128,11 @@ export interface CodeblocksOptions {
 
 /** The default export of a runtime module, which runs code for the Run button. */
 export interface Runtime {
-  /** Downloads and starts the runtime, and anything that `code` needs, such as its packages. Not timed. */
-  load(code: string): Promise<void>;
+  /**
+   * Downloads and starts the runtime, and anything that `code` needs, such as its packages. Not timed.
+   * `packages` are the names in the block's `runnable.packages` attribute.
+   */
+  load(code: string, options?: { packages?: string[] }): Promise<void>;
   /** `session` is true when `code` is the commands of a session with prompts, which run as a REPL runs them. */
   run(code: string, options: { signal: AbortSignal; session?: boolean }): Promise<{ stdout: string; stderr: string }>;
 }
@@ -530,9 +533,9 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       runtimes: {
         type: 'Record<string, string>',
         default: {},
-        defaultText: "`{ python: 'starlight-codeblocks/runtimes/pyodide' }`",
+        defaultText: '`python`, `javascript` and `typescript`',
         description:
-          'Runtime modules by language: a package path, or a path from the project root. The site entries are added to the built-in Python runtime, or replace it.',
+          'Runtime modules by language: a package path, or a path from the project root. The site entries are added to the built-in Python, JavaScript and TypeScript runtimes, or replace them.',
         valid: isRecordOf(isString),
       },
       timeout: {

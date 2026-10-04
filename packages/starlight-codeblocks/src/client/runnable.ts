@@ -67,7 +67,7 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
       runtimes.set(url, module);
     }
     runtime = await module;
-    await runtime.load(code);
+    await runtime.load(code, { packages: figure.dataset.scbRunnablePackages?.split(' ') ?? [] });
     loaded.add(url);
   } catch (e) {
     runtimes.delete(url);
