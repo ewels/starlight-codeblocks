@@ -34,6 +34,8 @@ Each attribute goes on the code block fence line.
 | `swatches.shape="square"` | Draws square swatches in the block. |
 | `swatches.shape="rounded"` | Draws swatches with rounded corners in the block. |
 | `swatches.shape="circle"` | Draws round swatches in the block. |
+| `swatches.match="all"` | Shows a swatch for every hex colour and colour function in the block. |
+| `swatches.match="value"` | Shows a swatch only for colours that look like values in the block. |
 
 ## Examples
 
@@ -112,6 +114,19 @@ const theme = {
 
 <Example code={js} layout="tabs" />
 
+### Every colour in a block
+
+Some languages put colours where they do not look like values, such as after a `|`. Add `swatches.match="all"` to show a swatch for every hex colour and colour function:
+
+export const all = `
+\`\`\`text swatches.match="all"
+%%metro line: main | Main | #4caf50
+%%metro line: qc | Quality Control | #2196f3 | dashed
+\`\`\`
+`;
+
+<Example code={all} layout="tabs" />
+
 ### Turn off swatches for one block
 
 Add `swatches=false` to the fence line. The fence line is the first line of the code block, with the language:
@@ -149,7 +164,8 @@ The brand colour is #ff5f1f. Use `rebeccapurple` for links.
   - In CSS, Sass, Less and Stylus blocks, ID selectors such as `#bad { }` and classes such as `.red`.
   - Variables such as `$green` and `--blue`, and SVG references such as `url(#fade)`.
   - In other languages, colour names that are not in quotes, such as `paint(red)`.
-  - In other languages, hex that does not look like a value, such as `// TODO #add`.
+  - In other languages, hex that does not look like a value, such as `// TODO #add`. The `swatches.delimiters` option adds text, such as `|`, that can come before or after a value.
+  - With `swatches.match="all"`, issue numbers such as #123 and words such as #add that are not in quotes.
   - In the prose, issue numbers such as #123, tags such as #cafe, and colour names such as red that are not inline code.
 - Hover and copy:
   - Hovering over a colour shows it on a chip in its own colour, with a darker border. The text turns black or white, whichever reads on the colour.
@@ -172,6 +188,21 @@ codeblocks({
 ```
 
 With `swatches.languages` set, add `swatches` to the fence line of a block of another language to turn on its swatches.
+
+To find colours after and before a `|` in Mermaid blocks only, and every colour in `metro` blocks:
+
+```js title="astro.config.mjs"
+codeblocks({
+  swatches: {
+    byLanguage: {
+      mermaid: { delimiters: { before: ['|'], after: ['|'] } },
+      metro: { match: 'all' },
+    },
+  },
+});
+```
+
+The `swatches.match` and `swatches.delimiters` options set the same for every language. A language in `swatches.byLanguage` uses its own settings in place of them.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 

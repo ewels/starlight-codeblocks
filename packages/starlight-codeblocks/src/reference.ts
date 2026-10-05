@@ -101,6 +101,14 @@ export const attributesReference: AttributeDoc[] = [
     example: { lang: 'css', meta: 'swatches.shape="circle"', code: '.badge {\n  background: #2563eb;\n}' },
   },
   {
+    name: 'swatches.match',
+    syntax: ['swatches.match="all"', 'swatches.match="value"'],
+    description:
+      'Sets which colours get a swatch in the block. `"all"` shows a swatch for every hex colour and colour function. It overrides the `swatches.match` option for the block.',
+    page: 'features/colour-swatches',
+    example: { lang: 'text', meta: 'swatches.match="all"', code: 'line: main | Main | #4caf50' },
+  },
+  {
     name: 'icon',
     syntax: ['icon="<name>"', 'icon=false', 'no-icon'],
     description:
