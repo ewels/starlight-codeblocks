@@ -5,9 +5,11 @@ const END = 'scb-annotation-end';
 const WAIT = 'scb-annotation-wait';
 const stops = new WeakMap<Element, () => void>();
 
-/** The right edge of a line's code text, without its markers and popovers. */
-function textEnd(line: Element) {
-  let right = Number.NEGATIVE_INFINITY;
+const intersects = (a: DOMRect, b: DOMRect) =>
+  a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+
+/** True when the box covers a glyph of the line's code text, not counting its markers and popovers. */
+function coversText(line: Element, box: DOMRect) {
   const range = document.createRange();
   const walker = document.createTreeWalker(line, NodeFilter.SHOW_TEXT);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
@@ -15,13 +17,13 @@ function textEnd(line: Element) {
     if (!end || node.parentElement?.closest('.scb-annotation, .scb-float')) continue;
     range.setStart(node, 0);
     range.setEnd(node, end);
-    right = Math.max(right, range.getBoundingClientRect().right);
+    for (const r of range.getClientRects()) {
+      // A glyph box reaches past the ink of most glyphs, so the note may cover its top and bottom quarter.
+      if (intersects(new DOMRect(r.x, r.y + r.height / 4, r.width, r.height / 2), box)) return true;
+    }
   }
-  return right;
+  return false;
 }
-
-const intersects = (a: DOMRect, b: DOMRect) =>
-  a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 
 /** True when the box, beside the marker, stays in the visible block and the viewport and covers no code or other marker. */
 function fitsBeside(popover: HTMLElement, pre: HTMLElement) {
@@ -36,10 +38,7 @@ function fitsBeside(popover: HTMLElement, pre: HTMLElement) {
   ) {
     return false;
   }
-  for (const line of pre.querySelectorAll('.ec-line')) {
-    const r = line.getBoundingClientRect();
-    if (r.bottom > box.top && r.top < box.bottom && textEnd(line) > box.left) return false;
-  }
+  for (const line of pre.querySelectorAll('.ec-line')) if (coversText(line, box)) return false;
   for (const marker of pre.querySelectorAll('button.scb-annotation')) {
     if (marker !== popover.previousElementSibling && intersects(marker.getBoundingClientRect(), box)) return false;
   }
