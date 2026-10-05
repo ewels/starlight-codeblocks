@@ -121,7 +121,7 @@ These come from reading the installed source. Check them again after a major upg
 
 ## Rules
 
-- Every commit passes `pnpm lint`, `pnpm test` and `pnpm docs:build` with no warnings. Run `pnpm lint:docs` before each push. CI runs the full e2e suite, so locally run only the specs for what you changed. For a visual change, check a screenshot in the dark and the light theme. Screenshots and experiments go in a scratch folder.
+- Every commit passes `pnpm lint`, `pnpm test` and `pnpm docs:build` with no warnings. Run `pnpm lint:docs` before each push. For a visual change, check a screenshot in the dark and the light theme. Screenshots and experiments go in a scratch folder.
 - Accessibility is WCAG 2.2 AA in both Starlight themes:
   - Every interaction works with a keyboard, with a visible focus indicator.
   - Colour never carries meaning alone.

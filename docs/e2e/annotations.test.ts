@@ -51,7 +51,7 @@ test('a marker opens its note, and a selection outside closes it', async ({ page
   const note = block.locator('.scb-annotation-popover').first();
   await expect(note).toBeHidden();
   await open(block, 1);
-  await expect(note).toHaveText('1Uses ubuntu GitHub Actions runner');
+  await expect(note).toHaveText('1Uses the Ubuntu GitHub Actions runner.');
   if (reduced()) expect(await css(note, 'animationName')).toBe('none');
   await page.mouse.click(5, 5);
   await expect(note).toBeHidden();
@@ -252,7 +252,7 @@ test('prints the notes as a numbered list under the block, and a marker keeps it
   await expect(block.locator('.scb-annotation-list')).toBeHidden();
   await page.emulateMedia({ media: 'print' });
   await expect(block.locator('.scb-annotation-list li')).toHaveText([
-    'Uses ubuntu GitHub Actions runner',
+    'Uses the Ubuntu GitHub Actions runner.',
     'Installs uv and caches its downloads between runs.',
   ]);
   await expect(marker).toBeVisible();

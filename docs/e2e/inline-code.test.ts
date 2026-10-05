@@ -26,7 +26,7 @@ test('draws chips on the code block background, in the colours of the theme, and
   page,
 }) => {
   const code = page.locator('.example .pane.output').first().locator('code.scb-inline').first();
-  await expect(code).toHaveText('codeblocks()');
+  await expect(code).toHaveText('[] + {}');
   expect(await background(code)).toBe(await background(page.locator('.example .expressive-code pre').first()));
   const plain = page.locator('.sl-markdown-content p code', { hasText: /^py$/ });
   expect(await background(plain)).not.toBe(await background(code));
