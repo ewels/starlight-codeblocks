@@ -16,6 +16,8 @@ The first release. It adds these features to Starlight code blocks, on top of Ex
 - Word-level diff
 - Visible whitespace
 - Colourised brackets
+- Colour swatches
+- File icons
 - Code links
 - API auto-linking, with adapters for Python and Nextflow
 - Expandable blocks
@@ -27,4 +29,4 @@ The first release. It adds these features to Starlight code blocks, on top of Ex
 - Code walkthrough
 - Scrollycoding
 - Inline code highlighting
-- Run in the browser, with a Pyodide runtime for Python
+- Run code, with runtimes for Python (Pyodide, with packages from PyPI), JavaScript and TypeScript, and scripted output for code that cannot run in the browser
