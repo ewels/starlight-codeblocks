@@ -1,6 +1,6 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, type Locator, type Page, test } from '@playwright/test';
 import { render } from '../../packages/starlight-codeblocks/test/render.ts';
-import { css, example } from './helpers.ts';
+import { clipboard, css, example } from './helpers.ts';
 
 /** The bubble's box, and the x of the middle of its arrow. */
 const arrow = (el: Element) => {
@@ -50,6 +50,37 @@ test('shows the note in a bubble above its line, inside the block, with its arro
   const chip = block.locator('.scb-callout-bubble code').first();
   expect(await css(chip, 'fontFamily')).toBe(await css(block.locator('.ec-line').first(), 'fontFamily'));
   expect(await css(chip, 'borderTopLeftRadius')).toBe('3px');
+});
+
+test('a drag in a bubble selects and copies its text, and a drag across the code leaves the bubble out', async ({
+  page,
+}) => {
+  const block = example(page);
+  const drag = async (from: Locator, to: Locator) => {
+    const a = await from.boundingBox();
+    const b = await to.boundingBox();
+    if (!a || !b) throw new Error('No box');
+    // The first line of text, and inside the viewport on a phone, where the bubble wraps and the code scrolls.
+    await page.mouse.move(a.x + 2, a.y + Math.min(8, a.height / 2));
+    await page.mouse.down();
+    await page.mouse.move(b.x + Math.min(b.width, 250) - 2, b.y + Math.min(8, b.height / 2), { steps: 5 });
+    await page.mouse.up();
+    await page.keyboard.press('ControlOrMeta+c');
+    return page.evaluate(() => getSelection()?.toString() ?? '');
+  };
+
+  const bubble = block.locator('.scb-callout-text');
+  expect(await drag(bubble, bubble)).toContain('Lets controller');
+  expect(await clipboard(page)).toContain('Lets controller');
+
+  const lines = block.locator('.ec-line');
+  const selected = await drag(lines.first(), lines.nth(1));
+  expect(selected).toContain('AbortController');
+  expect(selected).toContain('const res');
+  expect(selected).not.toContain('cancel');
+  const copied = await clipboard(page);
+  expect(copied).toContain('AbortController');
+  expect(copied).not.toContain('cancel');
 });
 
 test('on a desktop, the arrow points at its text, and a bubble moves left instead of wrapping', async ({

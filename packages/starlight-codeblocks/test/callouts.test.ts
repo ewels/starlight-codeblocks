@@ -13,6 +13,8 @@ test('renders a callout above its line, pointing at the middle of the match', as
   expect(html).not.toContain('[!callout');
   expect(copyText).toBe('const a = 1;\nfetch(url, { signal });');
   expect(warnings).toEqual([]);
+  expect(html).toContain('data-scb-callouts=""');
+  expect((await render(block('js', 'fetch(url);'))).html).not.toContain('data-scb-callouts');
 });
 
 test('calloutMiddle points at the first character that is not whitespace, counting tabs and the shell prompt', async () => {

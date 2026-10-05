@@ -157,7 +157,7 @@ function copy(event: ClipboardEvent) {
   const common = range.commonAncestorContainer;
   const el = common instanceof Element ? common : common.parentElement;
   const pre = el?.closest('[data-scb-placeholders]')?.querySelector<HTMLElement>('pre');
-  if (!pre?.contains(common) || !pre.querySelector(FIELD)) return;
+  if (!pre?.contains(common) || !pre.querySelector(FIELD) || el?.closest('.scb-callout')) return;
   event.clipboardData.setData('text/plain', selectedText(pre, range));
   event.preventDefault();
 }

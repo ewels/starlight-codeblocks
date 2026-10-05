@@ -1,5 +1,6 @@
 import { type ExpressiveCodeLine, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { type Element, h, select, selectAll, toText } from '@expressive-code/core/hast';
+import { clientJsModules } from '../client-modules.ts';
 import { type CodeblocksPlugin, insertBefore, lineElement } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
@@ -73,6 +74,7 @@ export function pluginCallouts(): CodeblocksPlugin {
       },
     },
     styleSettings,
+    jsModules: clientJsModules,
     baseStyles: ({ cssVar }) => {
       const x = `(var(--scb-gutter, 0px) + ${cssVar('codePaddingInline')} + var(--scb-callout-mid) * 1ch)`;
       return `
@@ -96,6 +98,10 @@ pre:has(.${cls()}) { container-type: inline-size; }
   color: ${cssVar('codeblocksCallouts.foreground')};
   border: 1px solid ${cssVar('codeblocksCallouts.border')};
   border-radius: ${cssVar('codeblocksCallouts.radius')};
+}
+.${cls('-bubble')}[data-scb-callout-select] {
+  user-select: text;
+  -webkit-user-select: text;
 }
 /* On the bubble, so it cannot point past the bubble's end. The bubble keeps the code font size, so 1ch here is the code's. */
 .${cls('-bubble')}::after {
@@ -142,6 +148,7 @@ pre.${PREFIX}-state-all .${cls('-on')} { background: none; }`;
         const callouts = getRenderedDirectives(context, 'callout');
         const code = select('pre > code', context.renderData.blockAst);
         if (callouts.length === 0 || !code) return;
+        (select('pre', context.renderData.blockAst) as Element).properties.dataScbCallouts = '';
         const lines = selectAll('.ec-line', code);
         for (const directive of callouts) {
           const line = directive.lines[0] as ExpressiveCodeLine;
