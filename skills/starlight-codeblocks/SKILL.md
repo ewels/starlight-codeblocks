@@ -170,7 +170,7 @@ If a page shows one feature, keep the others out of its examples with these attr
 - `<CodeWalkthrough>` and `<Scrollycoding>` work in MDX files only. Import them with `import { CodeWalkthrough, Scrollycoding, Step } from 'starlight-codeblocks/components';`. Put an empty line after the opening tag and before the closing tag.
 - A `:::code-tabs` directive can contain only code blocks. A paragraph inside it fails the build.
 - For inline code highlighting, put the suffix inside the backticks: `` `res.ok{:js}` ``. MDX reads `` `res.ok`{:js} `` as a JavaScript expression and the build fails.
-- A directive with an unknown name, or of a feature that is off, stays in the code and logs a build warning. Read the build warnings after every change: each gives the file, the block and the line.
+- A directive with an unknown name, or of a feature that is off, stays in the code and logs a build warning. So does a directive outside a comment that the block's language reads. Read the build warnings after every change: each gives the file, the block and the line.
 - Each `id` for line permalinks must be unique on the page, and must not match a heading id.
 - Hidden lines still run in the copied code, in playgrounds and with `runnable`. Code for a playground or the **Run code** button must be complete.
 - Fill-in placeholder values stay in the browser's `localStorage` by default. For secrets such as API tokens, set `placeholders: { storage: 'session' }`.

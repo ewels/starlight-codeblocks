@@ -104,6 +104,31 @@ test('warns about unknown directives with the file and line, and keeps them', as
   expect((await render(block('constructor', 'a() // [!code focus]'))).html).toContain('[!code focus]');
 });
 
+test('warns about a directive that is not in a comment the block reads, and keeps it', async () => {
+  const mdx = await render(
+    block('mdx', '<!-- [!callout /import/] Import the component once. -->', "import X from 'x'"),
+  );
+  expect(mdx.copyText).toBe("<!-- [!callout /import/] Import the component once. -->\nimport X from 'x'");
+  expect(mdx.warnings).toEqual([
+    'src/content/docs/example.md, mdx code block, line 1: `[!callout /import/]` is not in a comment that this block reads. Use `{/* */}`. It shows as text.',
+  ]);
+  expect((await render(block('py', 'x = 1 // [!code focus]'))).warnings).toEqual([
+    'src/content/docs/example.md, py code block, line 1: `[!code focus]` is not in a comment that this block reads. Use `#`. It shows as text.',
+  ]);
+});
+
+test.each([
+  ['py', 'x = 1  # [!code focus]', {}],
+  ['js', 'a() // [\\!code focus]', {}],
+  ['py', 'x = 1 // [\\!code focus]', {}],
+  ['js', 'const s = "[!code focus]"', {}],
+  ['md', '> [!NOTE]', {}],
+  ['txt', 'a() # [!code focus]', {}],
+  ['mdx', '<!-- [!code focus] -->', { notation: { comments: { mdx: [] } } }],
+])('does not warn about %s %j', async (lang, line, options) => {
+  expect((await render(block(lang, line), options)).warnings).toEqual([]);
+});
+
 test('works with diff syntax and diff-prefixed directive lines', async () => {
   const diff = await render(block('diff lang="js"', '-a() // [!code focus]', '+b() // [!code ++]'));
   expect(diff.copyText).toBe('a()\nb()');
