@@ -101,9 +101,11 @@ Starts on its own in every block. A small swatch in the colour goes before each 
 | `swatches=false` | Code block fence line. Turns off the swatches for one block. |
 | `swatches` | Code block fence line. Turns on the swatches for a block outside `swatches.languages`. |
 | `swatches.shape="square"`, `swatches.shape="rounded"`, `swatches.shape="circle"` | Code block fence line. Sets the shape for one block. |
+| `swatches.match="all"`, `swatches.match="value"` | Code block fence line. `"all"` shows a swatch for every hex colour and colour function in one block. |
 
 - In stylesheets, every colour in a declaration value gets a swatch. ID selectors, classes, variables and `url(#id)` do not.
 - In other languages, a colour gets a swatch only in quotes or after `:`, `=` or `,`. Colour names need quotes.
+- For a language that puts colours after other text, such as `| #4caf50 |`: set `swatches.delimiters` (`{ before: ['|'], after: ['|'] }`), or `swatches.match: 'all'`. `swatches.byLanguage` sets both per language, such as `{ mermaid: { match: 'all' } }`. In `'all'` mode, `#123` and `#add` still get no swatch.
 - A colour function with `var()` or `calc()` in it has no swatch.
 - The swatches copy no text. Copy needs JavaScript; the swatches do not.
 - Options: `swatches.languages` (default `'all'`) and `swatches.formats` (default every format) choose what gets a swatch.

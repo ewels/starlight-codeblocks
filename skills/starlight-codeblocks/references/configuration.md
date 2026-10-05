@@ -29,8 +29,8 @@ codeblocks({
 | `wordDiff` | `minSimilarity`: from 0 to 1, default `0.4` | Word-level diff |
 | `whitespace` | None | Visible whitespace |
 | `brackets` | `languages`: default `[]` | Colourised brackets |
-| `swatches` | `languages`: default `'all'`. `formats`: default every format. `shape`: `'square'`, `'rounded'` or `'circle'`, default `'rounded'`. `size`: default `'0.8em'`. `hover`, `copy`: default `true`. `prose`: default `false` | Colour swatches |
 | `fileIcons` | `set`: `'vscode-icons'`, `'material'`, `'catppuccin'` or `'seti'`, default `'vscode-icons'`. Material and Catppuccin need their package, such as `@iconify-json/catppuccin`. `style`: `'plain'` or `'tile'`, default `'plain'`. `languages`: `icon`, `colour` and `style` for each language. `files`: icon names, or `false` for no icon, by file name, extension or path pattern. `icons`: custom icons by name | File icons |
+| `swatches` | `languages`: default `'all'`. `formats`: default every format. `shape`: `'square'`, `'rounded'` or `'circle'`, default `'rounded'`. `size`: default `'0.8em'`. `hover`, `copy`: default `true`. `prose`: default `false`. `match`: `'value'` or `'all'`, default `'value'`. `delimiters`: `{ before?, after? }` lists of extra text around a value. `byLanguage`: `match` and `delimiters` per language | Colour swatches |
 | `codeLinks` | None | Code links |
 | `apiLinks` | `adapters`: default `[python(), nextflow()]` | API auto-linking |
 | `expandable` | `lines`: default `12`. `auto`: a line count, default `false` | Expandable blocks |
@@ -65,6 +65,7 @@ Put a setting on the fence line, with its name from `codeblocks()`, to change it
 - `placeholders.storage="session"`
 - `placeholders.storage="none"`
 - `swatches.shape="square"`, `swatches.shape="rounded"`, `swatches.shape="circle"`
+- `swatches.match="all"`, `swatches.match="value"`
 - `fileIcons.set="<set>"`, `fileIcons.style="plain"`, `fileIcons.style="tile"`, `fileIcons.colour="<colour>"`
 - `runnable.label="<text>"`
 - `runnable.againLabel="<text>"`

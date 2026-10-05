@@ -2,7 +2,14 @@ import { nextflow } from './adapters/nextflow.ts';
 import { python } from './adapters/python.ts';
 import type { FileIconLanguage, FileIconSet, FileIconStyle } from './expressive-code/file-icons.ts';
 import { fileIconSets, isCssColour } from './expressive-code/file-icons.ts';
-import { type SwatchFormat, type SwatchShape, swatchFormats } from './expressive-code/swatches.ts';
+import {
+  type SwatchDelimiters,
+  type SwatchFormat,
+  type SwatchMatch,
+  type SwatchMatching,
+  type SwatchShape,
+  swatchFormats,
+} from './expressive-code/swatches.ts';
 
 export interface LineStateDefinition {
   label: string;
@@ -93,6 +100,9 @@ export interface CodeblocksOptions {
         hover?: boolean;
         copy?: boolean;
         prose?: boolean;
+        match?: SwatchMatch;
+        delimiters?: SwatchDelimiters;
+        byLanguage?: Record<string, SwatchMatching>;
       };
   fileIcons?:
     | false
@@ -178,6 +188,11 @@ const oneOf =
   (...values: string[]) =>
   (value: unknown) =>
     values.includes(value as string);
+const isDelimiters = (value: unknown) =>
+  isObject(value) &&
+  Object.entries(value).every(
+    ([key, list]) => ['before', 'after'].includes(key) && isStringArray(list) && !(list as string[]).includes(''),
+  );
 
 // Attributes and directives of other features, which a custom state name would clash with.
 const reservedStateNames = new Set(
@@ -365,6 +380,33 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         description:
           'Also show swatches in the text of Markdown pages, and in inline code that is one colour. Named colours get a swatch only in inline code.',
         valid: (value) => typeof value === 'boolean',
+      },
+      match: {
+        type: "'value' | 'all'",
+        default: 'value',
+        description:
+          'Outside stylesheets, `value` shows a swatch only for a colour that looks like a value. `all` shows a swatch for every hex colour and colour function. A code block can set its own on its fence line.',
+        valid: oneOf('value', 'all'),
+      },
+      delimiters: {
+        type: '{ before?: string[]; after?: string[] }',
+        default: {},
+        description:
+          'More text that can come before or after a colour that looks like a value, such as `|`. They add to the built-in delimiters.',
+        valid: isDelimiters,
+      },
+      byLanguage: {
+        type: "Record<string, { match?: 'value' | 'all'; delimiters?: { before?: string[]; after?: string[] } }>",
+        default: {},
+        description:
+          'A `match` and `delimiters` for the blocks of each language. They replace the site settings for that language.',
+        valid: isRecordOf(
+          (language) =>
+            isObject(language) &&
+            Object.keys(language).every((key) => ['match', 'delimiters'].includes(key)) &&
+            (language.match === undefined || oneOf('value', 'all')(language.match)) &&
+            (language.delimiters === undefined || isDelimiters(language.delimiters)),
+        ),
       },
     },
   },

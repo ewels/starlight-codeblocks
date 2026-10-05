@@ -1,6 +1,6 @@
 import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 import { expect, test } from 'vitest';
-import { findColours, swatchFormats, wholeColour } from '../src/expressive-code/swatches.ts';
+import { findColours, swatchFormats, swatchMatcher, wholeColour } from '../src/expressive-code/swatches.ts';
 import { resolveOptions } from '../src/options.ts';
 import { mdastPlugins } from '../src/satteri/index.ts';
 import { remarkFromSatteri } from '../src/satteri/remark.ts';
@@ -49,6 +49,26 @@ test('in other code, finds only colours that look like values', () => {
   expect(found('const red = tan; paint(red); rgb(r, g, b);', 'code')).toEqual([]);
   expect(found('color: #ccc', 'code')).toEqual(['#ccc']);
   expect(found('page.html#facade', 'code')).toEqual([]);
+});
+
+const metro = ['%%metro line: main | Main | #4CAF50', '%%metro line: qc | Quality Control | #2196F3 | dashed'];
+
+test('extra delimiters and all mode find colours that do not look like values', () => {
+  const code = (text: string, matching: Parameters<typeof swatchMatcher>[0]) =>
+    findColours(text, 'code', all, swatchMatcher(matching)).map((m) => m.colour);
+  expect(metro.flatMap((line) => found(line, 'code'))).toEqual([]);
+  const pipes = { delimiters: { before: ['|'], after: ['|'] } };
+  expect(metro.flatMap((line) => code(line, pipes))).toEqual(['#4CAF50', '#2196F3']);
+  expect(code('a | #fff b', pipes)).toEqual([]);
+  expect(code('mix(#fff -> #000)', { delimiters: { after: ['->'] } })).toEqual(['#fff']);
+  expect(metro.flatMap((line) => code(line, { match: 'all' }))).toEqual(['#4CAF50', '#2196F3']);
+  expect(code('fill #1e1e2e then hsl(0 0% 0%) and #0f0', { match: 'all' })).toEqual([
+    '#1e1e2e',
+    'hsl(0 0% 0%)',
+    '#0f0',
+  ]);
+  expect(code('// TODO #add the red tan button, see #123 and #4567', { match: 'all' })).toEqual([]);
+  expect(code(".red { a: '#123' }", { match: 'all' })).toEqual(['#123']);
 });
 
 test('in prose, skips issue numbers, tags and colour names', () => {
@@ -100,6 +120,29 @@ test('swatches=false, the option, languages and copy each turn parts off', async
   expect((await render(css, { swatches: { copy: false } })).html).not.toContain('data-scb-swatches');
 });
 
+test('match and delimiters apply per site, per language and per block', async () => {
+  const count = async (markdown: string, options = {}) =>
+    (await render(markdown, options)).html.match(/class="scb-swatch-text"/g)?.length ?? 0;
+  const metroBlock = block('metro', ...metro);
+  const pipes = { delimiters: { before: ['|'], after: ['|'] } };
+  expect(await count(metroBlock)).toBe(0);
+  expect(await count(metroBlock, { swatches: pipes })).toBe(2);
+  expect(await count(metroBlock, { swatches: { match: 'all' } })).toBe(2);
+  expect(await count(metroBlock, { swatches: { byLanguage: { metro: pipes } } })).toBe(2);
+  expect(await count(metroBlock, { swatches: { byLanguage: { metro: { match: 'all' } } } })).toBe(2);
+  expect(await count(block('yaml', 'a: x | #fff'), { swatches: { byLanguage: { metro: pipes } } })).toBe(0);
+  expect(await count(metroBlock, { swatches: { match: 'all', byLanguage: { metro: { match: 'value' } } } })).toBe(0);
+  const { html, copyText, warnings } = await render(block('metro swatches.match="all"', ...metro));
+  expect(html.match(/class="scb-swatch-text"/g)).toHaveLength(2);
+  expect(copyText).toBe(metro.join('\n'));
+  // Only the warning that `metro` has no grammar.
+  expect(warnings).toEqual([expect.stringContaining('language could not be found')]);
+  expect(await count(block('metro swatches.match="value"', ...metro), { swatches: { match: 'all' } })).toBe(0);
+  const bad = await render(block('metro swatches.match="every"', ...metro));
+  expect(bad.warnings).toContainEqual(expect.stringContaining('`swatches.match="every"` must be'));
+  expect(await count(block('md swatches.match="all"', 'Fixed in #123, see #add.'))).toBe(0);
+});
+
 test('shape, size and hover change the styles', async () => {
   const css = await baseStyles({ swatches: { shape: 'circle', size: '10px', hover: false } });
   expect(css).toContain('border-radius:50%');
@@ -127,7 +170,24 @@ test('the hover chip is solid, with a darker border and readable text', async ()
 });
 
 test('validates the options', () => {
-  expect(resolveOptions().swatches).toMatchObject({ languages: 'all', shape: 'rounded', prose: false, copy: true });
+  expect(resolveOptions().swatches).toMatchObject({
+    languages: 'all',
+    shape: 'rounded',
+    prose: false,
+    copy: true,
+    match: 'value',
+    delimiters: {},
+    byLanguage: {},
+  });
+  expect(() => resolveOptions({ swatches: { match: 'some' as never } })).toThrow(/swatches.match/);
+  expect(() => resolveOptions({ swatches: { delimiters: { before: '|' as never } } })).toThrow(/swatches.delimiters/);
+  expect(() => resolveOptions({ swatches: { delimiters: { after: [''] } } })).toThrow(/swatches.delimiters/);
+  expect(() => resolveOptions({ swatches: { byLanguage: { metro: { mode: 'all' } as never } } })).toThrow(
+    /swatches.byLanguage/,
+  );
+  expect(() =>
+    resolveOptions({ swatches: { match: 'all', byLanguage: { metro: { delimiters: { before: ['|'] } } } } }),
+  ).not.toThrow();
   expect(() => resolveOptions({ swatches: { shape: 'star' as never } })).toThrow(/swatches.shape/);
   expect(() => resolveOptions({ swatches: { size: '10' } })).toThrow(/swatches.size/);
   expect(() => resolveOptions({ swatches: { formats: ['cmyk' as never] } })).toThrow(/swatches.formats/);

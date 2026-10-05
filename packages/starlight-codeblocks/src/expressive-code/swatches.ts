@@ -7,6 +7,15 @@ import { PREFIX } from './styles.ts';
 export const swatchFormats = ['hex', 'rgb', 'hsl', 'hwb', 'lab', 'lch', 'oklab', 'oklch', 'color', 'named'] as const;
 export type SwatchFormat = (typeof swatchFormats)[number];
 export type SwatchShape = 'square' | 'rounded' | 'circle';
+export type SwatchMatch = 'value' | 'all';
+export interface SwatchDelimiters {
+  before?: string[];
+  after?: string[];
+}
+export interface SwatchMatching {
+  match?: SwatchMatch;
+  delimiters?: SwatchDelimiters;
+}
 
 export interface SwatchSettings {
   languages: 'all' | string[];
@@ -16,6 +25,9 @@ export interface SwatchSettings {
   hover: boolean;
   copy: boolean;
   prose: boolean;
+  match: SwatchMatch;
+  delimiters: SwatchDelimiters;
+  byLanguage: Record<string, SwatchMatching>;
 }
 
 /**
@@ -58,8 +70,31 @@ export interface ColourMatch {
 
 const QUOTES = `'"\``;
 
+interface Matcher {
+  all: boolean;
+  before: RegExp;
+  after: RegExp;
+}
+
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const anyOf = (defaults: string, extra: string[] = []) => [defaults, ...extra.map(escapeRegExp)].join('|');
+
+/** How `code` matches colours: all of them, or only values, with the site's extra delimiters. */
+export const swatchMatcher = ({ match, delimiters }: SwatchMatching = {}): Matcher => ({
+  all: match === 'all',
+  before: new RegExp(String.raw`(?:${anyOf('[:=,(]', delimiters?.before)})\s*$`),
+  after: new RegExp(String.raw`^\s*(?:${anyOf(String.raw`[,;)}\]]|$`, delimiters?.after)})`),
+});
+
+const valueMatcher = swatchMatcher();
+
 /** Finds CSS colours in one line of `text`. See `SwatchContext` for how careful each context is. */
-export function findColours(text: string, context: SwatchContext, formats: readonly SwatchFormat[]): ColourMatch[] {
+export function findColours(
+  text: string,
+  context: SwatchContext,
+  formats: readonly SwatchFormat[],
+  matcher = valueMatcher,
+): ColourMatch[] {
   const matches: ColourMatch[] = [];
   for (const match of text.matchAll(PATTERN)) {
     const colour = match[0];
@@ -76,26 +111,36 @@ export function findColours(text: string, context: SwatchContext, formats: reado
     // An SVG fragment, such as `url(#fade)`.
     if (/url\(\s*['"]?$/i.test(before)) continue;
     const quoted = QUOTES.includes(prev) && next === prev;
-    if (format === 'hex' && !keepHex(colour, context, quoted, before, text.slice(end))) continue;
+    if (format === 'hex' && !keepHex(colour, context, quoted, before, text.slice(end), matcher)) continue;
     if (format === 'named' && !keepNamed(context, quoted, before, text.slice(end))) continue;
-    if (format !== 'hex' && format !== 'named' && context === 'code' && !looksLikeValue(prev, before)) continue;
+    const isFunction = format !== 'hex' && format !== 'named';
+    if (isFunction && context === 'code' && !matcher.all && !looksLikeValue(prev, before, matcher)) continue;
     matches.push({ start, end, colour });
   }
   return matches;
 }
 
-/** After a quote, a bracket, or a `:`, `=` or `,`, as in `color: #fff` or `fill="#fff"`. */
-const looksLikeValue = (prev: string, before: string) => /['"`([]/.test(prev) || /[:=,(]\s*$/.test(before);
+/** After a quote, a bracket, a `:`, `=` or `,`, or an extra delimiter, as in `color: #fff` or `fill="#fff"`. */
+const looksLikeValue = (prev: string, before: string, matcher: Matcher) =>
+  /['"`([]/.test(prev) || matcher.before.test(before);
 
-function keepHex(colour: string, context: SwatchContext, quoted: boolean, before: string, after: string) {
+function keepHex(
+  colour: string,
+  context: SwatchContext,
+  quoted: boolean,
+  before: string,
+  after: string,
+  matcher: Matcher,
+) {
   const digits = colour.slice(1);
   const onlyDigits = /^\d+$/.test(digits);
   // `#123` and `#1234` are issue and pull request numbers.
   if (onlyDigits && digits.length <= 4 && !quoted) return context === 'stylesheet';
   if (context === 'stylesheet') return !/^[^;()]*\{/.test(after);
-  // Not `// TODO #add`, which a comment can hold in any language.
+  // Not `// TODO #add`, which a comment can hold in any language. In all mode, short hex needs a digit.
+  if (context === 'code' && matcher.all) return quoted || digits.length >= 6 || /\d/.test(digits);
   if (context === 'code')
-    return quoted || (looksLikeValue(before.at(-1) ?? '', before) && /^\s*([,;)}\]]|$)/.test(after));
+    return quoted || (looksLikeValue(before.at(-1) ?? '', before, matcher) && matcher.after.test(after));
   // In prose, `#add`, `#cafe` and `#123456` are tags or numbers more often than colours.
   return quoted || (!onlyDigits && (digits.length >= 6 || /\d/.test(digits)));
 }
@@ -252,6 +297,7 @@ class SwatchAnnotation extends ExpressiveCodeAnnotation {
 /** Shows a swatch before each CSS colour in code. `swatches=false` turns it off for one block. */
 export function pluginSwatches(settings: SwatchSettings): CodeblocksPlugin {
   const ids = settings.languages === 'all' ? undefined : new Set(settings.languages.map(languageId));
+  const byLanguage = new Map(Object.entries(settings.byLanguage).map(([name, value]) => [languageId(name), value]));
   return {
     name: 'starlight-codeblocks:swatches',
     baseStyles: ({ cssVar }) =>
@@ -265,12 +311,23 @@ export function pluginSwatches(settings: SwatchSettings): CodeblocksPlugin {
       ),
     ...(settings.copy && { jsModules: clientJsModules }),
     hooks: {
-      annotateCode({ codeBlock }) {
-        const on = codeBlock.metaOptions.getBoolean('swatches') ?? (!ids || ids.has(languageId(codeBlock.language)));
+      annotateCode(hookContext) {
+        const { codeBlock } = hookContext;
+        const id = languageId(codeBlock.language);
+        const on = codeBlock.metaOptions.getBoolean('swatches') ?? (!ids || ids.has(id));
         if (!on) return;
         const context = blockContext(codeBlock.language);
+        const language = byLanguage.get(id);
+        const match = blockSetting(
+          hookContext,
+          'swatches.match',
+          (raw) => (raw === 'value' || raw === 'all' ? raw : undefined),
+          language?.match ?? settings.match,
+          '`"value"` or `"all"`',
+        );
+        const matcher = swatchMatcher({ match, delimiters: language?.delimiters ?? settings.delimiters });
         for (const line of codeBlock.getLines()) {
-          for (const { start, end, colour } of findColours(line.text, context, settings.formats)) {
+          for (const { start, end, colour } of findColours(line.text, context, settings.formats, matcher)) {
             line.addAnnotation(new SwatchAnnotation(colour, { columnStart: start, columnEnd: end }));
           }
         }
