@@ -372,7 +372,7 @@ run = json.loads(Path("run.json").read_text())
 <details>
 <summary>Line permalinks</summary>
 
-Give a code block line numbers that link to each line, so readers can share a link to the exact lines they mean.
+Give a code block line numbers that link to each line, so readers can share a link to the exact lines they mean. Shift-click to select multiple lines.
 
 ````md
 ```yaml id="cfg"
