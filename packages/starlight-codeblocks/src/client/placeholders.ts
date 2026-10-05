@@ -123,8 +123,10 @@ function change(text: string, value: string) {
 function selectedText(pre: HTMLElement, range: Range) {
   const hidden = (el: Element) => {
     if (!el.checkVisibility()) return true;
+    // The nearest element that sets user-select decides, so a selectable callout bubble counts.
     for (let e: Element | null = el; e && e !== pre; e = e.parentElement) {
-      if (getComputedStyle(e).userSelect === 'none') return true;
+      const select = getComputedStyle(e).userSelect;
+      if (select !== 'auto') return select === 'none';
     }
     return false;
   };
@@ -157,7 +159,7 @@ function copy(event: ClipboardEvent) {
   const common = range.commonAncestorContainer;
   const el = common instanceof Element ? common : common.parentElement;
   const pre = el?.closest('[data-scb-placeholders]')?.querySelector<HTMLElement>('pre');
-  if (!pre?.contains(common) || !pre.querySelector(FIELD)) return;
+  if (!pre?.contains(common) || !pre.querySelector(FIELD) || el?.closest('.scb-callout')) return;
   event.clipboardData.setData('text/plain', selectedText(pre, range));
   event.preventDefault();
 }
