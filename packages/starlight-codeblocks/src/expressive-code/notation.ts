@@ -201,11 +201,24 @@ export function parseLine(
   const unchanged = { text, removed: false, directives: [] };
   // A `[!word]` in code or in a string, such as a Markdown alert, comes before the comment that holds the directives.
   let comment: ReturnType<typeof findComment>;
-  for (const token of scanTokens(text)) {
+  const tokens = scanTokens(text);
+  for (const token of tokens) {
     comment = findComment(text, token.start, syntaxes);
     if (comment) break;
   }
-  if (!comment) return unchanged;
+  if (!comment) {
+    // A string can show a directive on purpose, and `[\!` only unescapes inside a comment.
+    for (const token of tokens) {
+      if (token.escaped || inString(text, token.start, token.start, [])) continue;
+      if ('problem' in interpret(token, specs, sourceLine)) continue;
+      const use = syntaxes.map(({ open, close }) => `\`${close ? `${open} ${close}` : open}\``).join(' or ');
+      report(
+        `\`${text.slice(token.start, token.end)}\` is not in a comment that this block reads. Use ${use}. It shows as text.`,
+        sourceLine,
+      );
+    }
+    return unchanged;
+  }
   const [start, bodyStart, bodyEnd, end] = comment;
   const body = text.slice(bodyStart, bodyEnd);
   // Expressive Code strips a diff prefix only later, so `+ // [!code …]` still holds only directives.

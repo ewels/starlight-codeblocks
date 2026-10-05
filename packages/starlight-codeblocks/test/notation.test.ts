@@ -55,9 +55,17 @@ describe('parseLine', () => {
     '/* a */ x = "[!code focus]"',
     'const s = "// [!code focus]"',
     'const a = "http://x", b = "[!code focus]";',
-    'fetch("http://x") [!code focus]',
+    'arr[!flag]',
   ])('leaves %j unchanged', (input) => {
     expect(parse(input)).toMatchObject({ text: input, directives: [], problems: [] });
+  });
+
+  test('reports a known directive outside a comment, and keeps it', () => {
+    expect(parse('fetch("http://x") [!code focus]')).toMatchObject({
+      text: 'fetch("http://x") [!code focus]',
+      directives: [],
+      problems: ['`[!code focus]` is not in a comment that this block reads. Use `//` or `/* */`. It shows as text.'],
+    });
   });
 
   test('reads a count, a message, a name and literal text, and ends a message at the next directive', () => {

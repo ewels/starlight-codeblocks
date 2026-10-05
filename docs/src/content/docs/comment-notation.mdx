@@ -261,9 +261,10 @@ The build logs a warning with the file, the code block and the line when:
 
 - a directive has an unknown name, or the feature it belongs to is off;
 - the `/<text>/` of a directive has no match on its target line;
-- a directive on its own line has no line below it.
+- a directive on its own line has no line below it;
+- a directive is not in a comment that the block reads, such as `<!-- -->` in an `mdx` block. A directive in a string does not give this warning.
 
-The directive then has no effect. An unknown directive stays in the code as written, so you can see it on the page.
+The directive then has no effect. An unknown directive, or one outside a comment, stays in the code as written, so you can see it on the page.
 
 ## Options
 
