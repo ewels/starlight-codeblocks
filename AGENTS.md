@@ -19,7 +19,7 @@ pnpm build              Build the package (tsdown) into packages/starlight-codeb
 pnpm test               Build, then Vitest unit tests and the node:test checks in scripts/
 pnpm lint               Build, then Biome and type checks (tsc, astro check)
 pnpm lint:docs          Writing-style lint for docs/, the READMEs and skills/
-pnpm docs:build         Build the package and the docs site into docs/dist
+pnpm docs:build         Build the package and the docs site into docs/dist, then render the share cards
 pnpm test:e2e           docs:build, then Playwright against astro preview of docs/dist
 pnpm readme:media [slug...]   docs:build, then regenerate the README images in .github/assets/readme/
 ```
@@ -40,6 +40,7 @@ Paths are under `packages/starlight-codeblocks/src/` unless they start with `doc
 - `components/`: `<CodeWalkthrough>` and `<Scrollycoding>`, shipped as source. They read tokens from EC's rendered HTML and animate with magic-move's renderer.
 - `adapters/` (`python`, `nextflow`) and `runtimes/` (`pyodide`, `javascript`, `typescript`): subpath exports. The docs site has its own adapters in `docs/src/adapters/`.
 - `reference.ts`, `optionsReference` and each plugin's `directives`: the data behind the docs reference tables.
+- `scripts/og-cards.mjs`: the share cards in `docs/dist/og/`. It screenshots the first example (else the first code block) of each built page in Chromium and sets it in the card. The home page card is a wall of the feature examples.
 - `docs/src/sidebar.mjs`: the single source for the sidebar, the carousel, `llms.txt` and the Markdown routes. A page not in it fails the build.
 - `docs/src/components/Example.astro`: "Readers see" above "You write". It renders fenced blocks with `<Code>`; for prose, directives or components, put the same Markdown between the tags as a live slot.
 - `skills/starlight-codeblocks/`: at the root so that `npx skills add` finds it. `prepack` copies it into the package; never document the `node_modules` path. Update it with every feature change (`test/skill.test.ts` checks).

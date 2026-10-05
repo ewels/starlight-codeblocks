@@ -26,6 +26,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # docs:build renders the share cards in Chromium.
+      - run: pnpm --filter docs exec playwright install --with-deps chromium
       - run: pnpm docs:build
       - if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
