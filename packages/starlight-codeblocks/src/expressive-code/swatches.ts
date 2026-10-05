@@ -110,7 +110,7 @@ function keepNamed(context: SwatchContext, quoted: boolean, before: string, afte
 }
 
 /** The context for a code block of `language`. */
-export const blockContext = (language: string): SwatchContext =>
+const blockContext = (language: string): SwatchContext =>
   stylesheetLanguages.has(languageId(language)) ? 'stylesheet' : 'code';
 
 /** A whole piece of inline code that is one colour, such as `` `#ff5f1f` `` or `` `rgb(0 0 0 / 50%)` ``. */
@@ -126,17 +126,17 @@ export const SWATCH = `${PREFIX}-swatch`;
 const SHAPES: Record<SwatchShape, string> = { square: '0', rounded: '25%', circle: '50%' };
 
 /** The hast properties of the element around a colour. The client module reads `data-scb-colour`. */
-export const swatchProperties = (colour: string) => ({
+const swatchProperties = (colour: string) => ({
   class: `${SWATCH}-text`,
   dataScbColour: colour,
   style: `--${PREFIX}-swatch: ${colour}`,
 });
 
 /** The swatch before the colour, which copies no text. */
-export const swatchElement = () => h('span', { class: SWATCH, ariaHidden: 'true' });
+const swatchElement = () => h('span', { class: SWATCH, ariaHidden: 'true' });
 
 /** Styles for swatches in code blocks and in prose. `tip` colours the **Copied** label. */
-export function swatchStyles(
+function swatchStyles(
   { shape, size, hover }: Pick<SwatchSettings, 'shape' | 'size' | 'hover'>,
   tip: { bg: string; fg: string },
   /** The surface under the code, which a colour with transparency shows through on hover. */

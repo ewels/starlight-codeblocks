@@ -38,7 +38,7 @@ Paths are under `packages/starlight-codeblocks/src/` unless they start with `doc
 - `satteri/`: one mdast plugin for code tabs directive, `{:lang}` inline code, mention link checks and duplicate `id` checks. `remark.ts` runs it on `unified()`; add any context it lacks there, with a case in `test/remark.test.ts`.
 - `client/<name>.ts`: browser modules, built to `dist/client/scb-<name>.<hash>.js` and loaded by one loader in `jsModules`. `api-card-page.ts` is the exception: a page script and CSS for API cards on links outside code blocks.
 - `components/`: `<CodeWalkthrough>` and `<Scrollycoding>`, shipped as source. They read tokens from EC's rendered HTML and animate with magic-move's renderer.
-- `adapters/` (`python`, `nextflow`) and `runtimes/` (`pyodide`): subpath exports. The docs site has its own in `docs/src/adapters/` and `docs/src/runtimes/`.
+- `adapters/` (`python`, `nextflow`) and `runtimes/` (`pyodide`, `javascript`, `typescript`): subpath exports. The docs site has its own adapters in `docs/src/adapters/`.
 - `reference.ts`, `optionsReference` and each plugin's `directives`: the data behind the docs reference tables.
 - `docs/src/sidebar.mjs`: the single source for the sidebar, the carousel, `llms.txt` and the Markdown routes. A page not in it fails the build.
 - `docs/src/components/Example.astro`: "Readers see" above "You write". It renders fenced blocks with `<Code>`; for prose, directives or components, put the same Markdown between the tags as a live slot.

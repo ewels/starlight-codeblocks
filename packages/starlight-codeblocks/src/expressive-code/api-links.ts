@@ -143,7 +143,7 @@ const loadIcons = () =>
   })));
 
 /** The Simple Icons slug for a link: the adapter's own, or the project at the start of `source`. */
-export async function iconSlug({ icon, source }: SymbolRef) {
+async function iconSlug({ icon, source }: SymbolRef) {
   if (icon === false) return undefined;
   const { paths, slug } = await loadIcons();
   // "Python 3.14 documentation" is the project "Python".

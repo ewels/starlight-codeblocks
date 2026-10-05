@@ -19,7 +19,7 @@ codeblocks({
 | Key | Settings | Feature |
 |---|---|---|
 | `focus` | `style`: `'blur'` or `'dim'`, default `'blur'` | Focus |
-| `lineStates` | `states`: custom states by name, each `{ label, colour: { dark, light } }`. `prefix`: `false` leaves the name out of labels with a message | Line states |
+| `lineStates` | `states`: custom states by name, each `{ label, colour: { dark, light } }`. `prefix`: default `true`. `false` hides the state name on screen | Line states |
 | `notation` | `comments`: comment syntax for each language, added to the built-in map | Comment notation |
 | `callouts` | None | Inline callouts |
 | `annotations` | `style`: `'filled'` or `'outline'`, default `'filled'` | Annotations and side annotations |
@@ -38,11 +38,11 @@ codeblocks({
 | `mentions` | None | Code mentions |
 | `permalinks` | None | Line permalinks |
 | `placeholders` | `storage`: `'local'`, `'session'` or `'none'`, default `'local'` | Fill-in placeholders |
-| `codeTabs` | None | Code tabs |
+| `codeTabs` | `control`: `'tabs'` or `'menu'`, default `'tabs'` | Code tabs |
 | `walkthrough` | None | Code walkthrough |
 | `scrollycoding` | None | Scrollycoding |
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
-| `runnable` | `runtimes`: language to module path. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run code'`. `againLabel`: default `'Run again'`. `button`: `'below'` (default), `'title'` or `'both'`. `outputDelay`: default `200` ms | Run code |
+| `runnable` | `runtimes`: language to module path, added to the built-in Python, JavaScript and TypeScript runtimes, or replacing them. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run code'`. `againLabel`: default `'Run again'`. `button`: `'below'` (default), `'title'` or `'both'`. `outputDelay`: default `200` ms | Run code |
 
 ### Options for one block
 
@@ -64,6 +64,8 @@ Put a setting on the fence line, with its name from `codeblocks()`, to change it
 - `placeholders.storage="local"`
 - `placeholders.storage="session"`
 - `placeholders.storage="none"`
+- `swatches.shape="square"`, `swatches.shape="rounded"`, `swatches.shape="circle"`
+- `fileIcons.set="<set>"`, `fileIcons.style="plain"`, `fileIcons.style="tile"`, `fileIcons.colour="<colour>"`
 - `runnable.label="<text>"`
 - `runnable.againLabel="<text>"`
 - `runnable.timeout=<ms>`

@@ -17,7 +17,7 @@ Use for the files of one example, install commands for each package manager, or 
 |---|---|
 | `:::code-tabs` ... `:::` | Around two or more code blocks. No space after the colons. |
 | `sync="<key>"` | After `:::code-tabs`, in braces |
-| `control="menu"` | After `:::code-tabs`, in braces |
+| `control="tabs"` or `control="menu"` | After `:::code-tabs`, in braces |
 | `label="<text>"` | Code block fence line of each variant |
 
 ````md

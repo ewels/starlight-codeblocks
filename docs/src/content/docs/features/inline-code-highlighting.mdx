@@ -15,18 +15,18 @@ All inline code then gets syntax highlighting, with no extra Markdown syntax.
 </Aside>
 
 export const basic = `
-> In JavaScript, \`[] + {}{:js}\` is \`"[object Object]"{:js}\`.
-> In Python, \`from __future__ import braces{:py}\` raises \`SyntaxError: not a chance{:py}\`.
-> In CSS, \`.modal { z-index: 99999 !important }{:css}\` is a cry for help.
-> In a shell, \`rm -rf node_modules{:sh}\` fixes most things.
+> - In JavaScript, \`[] + {}{:js}\` is \`"[object Object]"{:js}\`.
+> - In Python, \`from __future__ import braces{:py}\` raises \`SyntaxError: not a chance{:py}\`.
+> - In CSS, \`.modal { z-index: 99999 !important }{:css}\` is a cry for help.
+> - In a shell, \`rm -rf node_modules{:sh}\` fixes most things.
 `;
 
 <Example code={basic}>
 
-> In JavaScript, `[] + {}{:js}` is `"[object Object]"{:js}`.
-> In Python, `from __future__ import braces{:py}` raises `SyntaxError: not a chance{:py}`.
-> In CSS, `.modal { z-index: 99999 !important }{:css}` is a cry for help.
-> In a shell, `rm -rf node_modules{:sh}` fixes most things.
+> - In JavaScript, `[] + {}{:js}` is `"[object Object]"{:js}`.
+> - In Python, `from __future__ import braces{:py}` raises `SyntaxError: not a chance{:py}`.
+> - In CSS, `.modal { z-index: 99999 !important }{:css}` is a cry for help.
+> - In a shell, `rm -rf node_modules{:sh}` fixes most things.
 
 </Example>
 
@@ -49,24 +49,6 @@ If possible, use the first syntax, with the suffix inside the backticks. It is t
 MDX reads a `{:js}` after the closing backtick as a JavaScript expression, and the build fails.
 If you need to use this syntax with MDX, write a backslash before it: `` `res.ok`\{:js} ``. Some plugins read `.md` files as MDX too, such as `starlight-versions` and `starlight-md-txt`, so the backslash is needed in `.md` files on those sites. The backslash works in `.md` files on every site.
 </Aside>
-
-## Examples
-
-### The suffix after the backtick
-
-A CSS declaration and a Python expression in a list, with the suffix after the backtick:
-
-export const list = `
-- Hide the element with \`display: none\`{:css}.
-- Round the value with \`round(total / count, 2)\`{:py}.
-`;
-
-<Example code={list} layout="tabs">
-
-- Hide the element with `display: none`\{:css}.
-- Round the value with `round(total / count, 2)`\{:py}.
-
-</Example>
 
 ## Behaviour
 

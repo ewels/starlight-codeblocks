@@ -176,12 +176,12 @@ Readers can type their token into the field. The copy button copies their token,
 
 ### The kitchen sink
 
-This block turns on 15 features at once. It has focus, every line state and a word-level diff. It has annotations, mentions, a callout, a footnote and a code link. On the fence line, it adds a placeholder, hidden lines, visible whitespace, line permalinks and an expandable block. Colourised brackets start on their own.
+This block turns on 15 features at once. It has focus, every line state and a word-level diff. It has annotations, mentions, a callout, a footnote and a code link. On the fence line, it adds a placeholder, hidden lines, visible whitespace, line permalinks, an expandable block and colourised brackets. Its title gets a file icon.
 
 Do not publish a block like this. It shows that each feature keeps its own effect.
 
 export const everything = `
-\`\`\`js title="server.js" id="kitchen-sink" placeholder="YOUR_API_KEY" hidden={1-2} whitespace="all" expandable={12}
+\`\`\`js title="server.js" id="kitchen-sink" placeholder="YOUR_API_KEY" hidden={1-2} whitespace="all" expandable={12} brackets
 import 'dotenv/config';
 import express from 'express';
 
@@ -210,7 +210,7 @@ The [health route](#mention:health) and the [app](#mention:app) are mentions.
 
 <Example code={everything} hiddenAttributes="apiLinks=false">
 
-```js title="server.js" id="kitchen-sink" placeholder="YOUR_API_KEY" hidden={1-2} whitespace="all" expandable={12} apiLinks=false
+```js title="server.js" id="kitchen-sink" placeholder="YOUR_API_KEY" hidden={1-2} whitespace="all" expandable={12} brackets apiLinks=false
 import 'dotenv/config';
 import express from 'express';
 

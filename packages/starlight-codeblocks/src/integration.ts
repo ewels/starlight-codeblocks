@@ -104,7 +104,7 @@ export function jsAssetsPrefix(prefix: string | Record<string, string | undefine
  * Imports the module of `feature` on pages that use it outside code blocks, where the loader in
  * `ec.<hash>.js` is missing. The loader there imports the same URL, so a page with both gets one module.
  */
-export function pageLoader(feature: string, base: string, assetsDir: string) {
+function pageLoader(feature: string, base: string, assetsDir: string) {
   const module = readClientModules().find((m) => m.feature === feature);
   if (!module) return undefined;
   const url = `${base.replace(/\/$/, '')}/${assetsDir}/${module.fileName}`;

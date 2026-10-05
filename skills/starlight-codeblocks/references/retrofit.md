@@ -38,7 +38,7 @@ Choose a feature only when an answer points to one. Most blocks need no change, 
 | YAML, Python or Makefile code where the text is about indentation | Visible whitespace |
 | Names of functions or options in prose, as plain inline code | Inline code highlighting |
 | A link in the prose to the reference of a name in the block | A code link on that name |
-| Python or TypeScript that the reader wants to try | Run code or open in playground |
+| Python, JavaScript or TypeScript that the reader wants to try | Run code or open in playground |
 
 ## Rules
 

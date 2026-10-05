@@ -31,7 +31,7 @@ export default defineConfig({
 });
 ```
 
-A feature starts when a code block uses its attribute or its directive, so existing pages do not change.
+Most features start only when a code block uses their attribute, or a [comment notation](https://ewels.github.io/starlight-codeblocks/comment-notation/) directive such as `# [!code focus]`. A few, such as file icons and colour swatches, apply to every matching block.
 
 The [documentation](https://ewels.github.io/starlight-codeblocks/) has a page for each feature, with live examples, and a reference for every option.
 
@@ -47,7 +47,7 @@ Each section below shows the smallest syntax for a feature and how it looks to r
 Add numbered markers to lines. Each marker opens a note in a popover, so the code stays clean until a reader asks.
 
 ```yaml
-python: ["3.12", "3.13"]  # [!annotate] One job per version, run in parallel.
+runs-on: ubuntu-latest # [!annotate] Uses the Ubuntu GitHub Actions runner.
 ```
 
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/annotations.webp" alt="A YAML block with two numbered markers. The mouse cursor clicks each marker. The first note opens out of its marker, beside the line, and the second opens under its marker.">
@@ -110,6 +110,8 @@ const res = await fetch(url, { signal: controller.signal });
 Explain a code block in prose steps that scroll past it, while the block stays in view and focuses the lines of each step.
 
 ````mdx
+import { Scrollycoding, Step } from 'starlight-codeblocks/components';
+
 <Scrollycoding>
 
 ```js
@@ -133,6 +135,8 @@ Explain a code block in prose steps that scroll past it, while the block stays i
 Step through versions of one code block, and watch the code move from each version to the next, so readers see what changed.
 
 ````mdx
+import { CodeWalkthrough } from 'starlight-codeblocks/components';
+
 <CodeWalkthrough>
 
 ```js step="Create the app"
@@ -246,7 +250,7 @@ Show spaces and tabs as faint glyphs, for the blocks where indentation changes t
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/visible-whitespace.png" alt="A Makefile block with a faint arrow for each tab and a faint dot for each space.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/visible-whitespace.png" alt="A Makefile block with a faint arrow for each tab and a faint dot for each leading space.">
 
 [Visible whitespace documentation](https://ewels.github.io/starlight-codeblocks/features/visible-whitespace/)
 
@@ -308,10 +312,10 @@ Show the icon of the file type before the title of a code block. The icons come 
 Give inline code in the prose the syntax colours of the code blocks, from a language suffix or a default language for the site.
 
 ```md
-> `codeblocks(){:js}` in `astro.config.mjs` adds a set of Expressive Code plugins to the site.
+> - In JavaScript, `[] + {}{:js}` is `"[object Object]"{:js}`.
 ```
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/inline-code-highlighting.png" alt="A quoted paragraph with several pieces of inline code in syntax colours, in JavaScript, shell, TypeScript, CSS, Python and HTML.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/inline-code-highlighting.png" alt="A quoted list of four facts, with inline code in JavaScript, Python, CSS and shell syntax colours.">
 
 [Inline code highlighting documentation](https://ewels.github.io/starlight-codeblocks/features/inline-code-highlighting/)
 

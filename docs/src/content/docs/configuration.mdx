@@ -5,7 +5,7 @@ description: Turn features off, change their settings and change their colours w
 
 import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-With no options, `codeblocks()` turns on every feature. A feature changes a code block only when the block uses its attribute or its directive, so the defaults are safe for an existing site. Pages that use no interactive feature load no JavaScript from the plugin.
+With no options, `codeblocks()` turns on every feature. Most features change a code block only when the block uses their attribute or directive. A few, such as file icons, colour swatches and word-level diff, apply to every matching block. Pages that use no interactive feature load no JavaScript from the plugin.
 
 ## The options object
 

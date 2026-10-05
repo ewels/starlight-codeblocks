@@ -6,7 +6,7 @@ import { styleVariants, themedCss } from './satteri/inline-code.ts';
 export const CARD_CSS_ID = 'virtual:starlight-codeblocks/api-card.css';
 
 /** The class of an API card outside code blocks. Its theme variables come from these page styles, not from a block. */
-export const PAGE_CARD = `${PREFIX}-page`;
+const PAGE_CARD = `${PREFIX}-page`;
 
 const SETTINGS: StyleSettingPath[] = [
   'codeblocks.popoverBackground',

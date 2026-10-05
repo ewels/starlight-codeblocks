@@ -1,6 +1,6 @@
 import type { Runtime } from '../options.ts';
 
-export const PYODIDE_VERSION = '314.0.7';
+const PYODIDE_VERSION = '314.0.7';
 export const PYODIDE_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
 
 // Runs each top-level statement as the Python REPL does, so that expression values are shown.

@@ -65,7 +65,7 @@ function markerSettings(marker: string) {
 }
 
 /** Other names for built-in states, in the attribute and the directive. */
-export const stateAliases: Record<string, string> = { note: 'info', warn: 'warning' };
+const stateAliases: Record<string, string> = { note: 'info', warn: 'warning' };
 
 type Context = Parameters<StyleResolverFn>[0];
 type Resolve = Context['resolveSetting'];

@@ -4,7 +4,7 @@ Three features help readers use the code outside the page.
 
 - If a block shows a terminal session with prompts and output, write the prompts. Smart shell copy starts on its own.
 - If the language has an online playground, add a playground button.
-- If the code is Python, or a language with a runtime on the site, add a **Run code** button. For code that cannot run in the browser, a **Run code** button can print output that you write.
+- If the code is Python, JavaScript or TypeScript, or a language with a runtime on the site, add a **Run code** button. For code that cannot run in the browser, a **Run code** button can print output that you write.
 
 All three use the copied text of the block: directives removed, hidden lines kept and placeholder values filled in. The code must be complete.
 
@@ -102,7 +102,7 @@ print(mean([1520, 1610, 1480]))
 ```
 ````
 
-- The language of the block chooses the runtime. Built in: Python (`py`, `python`, `pycon`), JavaScript (`js`, `mjs`, `cjs`) and TypeScript (`ts`, `mts`, `cts`). TypeScript runs after Sucrase removes the types, and no types are checked. Other languages, and `jsx` or `tsx`, need a site runtime in `runnable.runtimes`. Sites without Starlight must add a runtime URL for each language.
+- The language of the block chooses the runtime. Built in: Python (`py`, `python`, `pycon`), JavaScript (`js`, `javascript`, `mjs`, `cjs`) and TypeScript (`ts`, `typescript`, `mts`, `cts`). TypeScript runs after Sucrase removes the types, and no types are checked. Other languages, and `jsx` or `tsx`, need a site runtime in `runnable.runtimes`. Sites without Starlight must add a runtime URL for each language.
 - JavaScript and TypeScript: `console.log` and `console.info` go to standard output, `console.error` and `console.warn` to standard error. Top-level `await` works; `import` statements do not.
 - Standard output and standard error show in the output panel. A run stops after the timeout. The download of the runtime and of imported packages does not count towards the timeout.
 - A Python session with `>>>` prompts runs its commands only, as in the Python REPL: the output shows the value of each expression.
@@ -118,5 +118,5 @@ Hello world!
 ```
 ````
 - Python packages: the runtime reads the `import` lines and installs Pyodide's packages (NumPy, pandas and about 350 more). It installs any other import from PyPI with micropip, under the import name. PyPI packages must be pure Python. When the package name differs from the import name, name it: ` ```py runnable runnable.packages="python-slugify" ` for `import slugify`. Separate several names with spaces; `name==1.2` pins a version.
-- Options: `runnable.timeout` (default `10000` ms), `runnable.button` and `runnable.outputDelay` set the defaults for blocks. `runnable.runtimes` is a map of language to a runtime module (a package path or a path from the project root). Guide: https://ewels.github.io/starlight-codeblocks/extend/add-a-runtime/
+- Options: `runnable.timeout` (default `10000` ms), `runnable.button` and `runnable.outputDelay` set the defaults for blocks. `runnable.runtimes` is a map of language to a runtime module (a package path or a path from the project root). To wrap or replace a built-in runtime, import it from `starlight-codeblocks/runtimes/pyodide`, `/javascript` or `/typescript`. Guide: https://ewels.github.io/starlight-codeblocks/extend/add-a-runtime/
 - Limits: Pyodide loads from the jsDelivr CDN and packages from PyPI. Every runtime runs its worker from a `blob:` URL. A Content Security Policy must allow all three. Without JavaScript, the button is hidden.

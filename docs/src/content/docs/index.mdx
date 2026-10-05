@@ -1,6 +1,6 @@
 ---
 title: starlight-codeblocks
-description: A Starlight plugin that adds focus, line states, annotations, API links and 20 more features to the code blocks of a site.
+description: A Starlight plugin that adds focus, line states, annotations, API auto-linking and 22 more features to the code blocks of a site.
 template: splash
 hero:
   tagline: |
@@ -32,10 +32,10 @@ import FeatureCarousel from '../../components/FeatureCarousel.astro';
 on: [push, pull_request]
 jobs:
   test:
-    runs-on: ubuntu-latest # [!annotate] Uses ubuntu GitHub Actions runner
+    runs-on: ubuntu-latest # [!annotate] Uses the Ubuntu GitHub Actions runner.
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # Pin sha [!annotate] Installs `uv` and caches its downloads between runs.
+      - uses: astral-sh/setup-uv@v7 # [!annotate] Installs `uv` and caches its downloads between runs.
       - run: uv run pytest
 ```
 
@@ -313,10 +313,10 @@ CMD ["node", "src/index.js"]
 
 <Feature page="features/inline-code-highlighting" tall>
 
-> In JavaScript, `[] + {}{:js}` is `"[object Object]"{:js}`.
-> In Python, `from __future__ import braces{:py}` raises `SyntaxError: not a chance{:py}`.
-> In CSS, `.modal { z-index: 99999 !important }{:css}` is a cry for help.
-> In a shell, `rm -rf node_modules{:sh}` fixes most things.
+> - In JavaScript, `[] + {}{:js}` is `"[object Object]"{:js}`.
+> - In Python, `from __future__ import braces{:py}` raises `SyntaxError: not a chance{:py}`.
+> - In CSS, `.modal { z-index: 99999 !important }{:css}` is a cry for help.
+> - In a shell, `rm -rf node_modules{:sh}` fixes most things.
 
 </Feature>
 

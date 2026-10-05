@@ -57,7 +57,7 @@ interface RunnableSettings {
   outputDelay?: number;
 }
 
-export const runButtons = ['below', 'title', 'both'] as const;
+const runButtons = ['below', 'title', 'both'] as const;
 export type RunButton = (typeof runButtons)[number];
 
 /**
