@@ -119,6 +119,16 @@ These come from reading the installed source. Check them again after a major upg
 - When a feature changes how text looks, test the computed style of the element that draws the glyph. EC's token spans set their own `color`.
 - Commits are signed through 1Password. If signing fails, it is probably locked; do not retry in a loop.
 
+## Releasing
+
+Only a maintainer releases. The npm trusted publisher may only stage a version, so each release needs the maintainer's 2FA.
+
+1. Set `version` in `packages/starlight-codeblocks/package.json` and add a `CHANGELOG.md` entry. Commit, push, and wait for CI to pass.
+2. Create a GitHub release with tag `vX.Y.Z` on that commit and the CHANGELOG entry as notes. `publish.yml` checks that the tag matches the version, runs `pnpm test` and runs `npm stage publish`.
+3. Approve it: `npm stage list starlight-codeblocks`, then `npm stage approve <id>`. `npm stage reject <id>` drops it and frees the version.
+
+A prerelease (`1.1.0-beta.1`) needs `--tag next` on `npm stage publish`.
+
 ## Rules
 
 - Every commit passes `pnpm lint`, `pnpm test` and `pnpm docs:build` with no warnings. Run `pnpm lint:docs` before each push. For a visual change, check a screenshot in the dark and the light theme. Screenshots and experiments go in a scratch folder.
