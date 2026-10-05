@@ -181,6 +181,21 @@ test('the note opens out of its marker with room after the line, and under it ot
   }
 });
 
+test('the note opens out of its marker when only the empty space of a longer line next to it is under the box', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'A phone has no room beside the line.');
+  const block = example(page);
+  const marker = block.getByRole('button', { name: 'Annotation 1' });
+  await marker.evaluate((el) => {
+    const above = el.closest('.ec-line')?.previousElementSibling?.querySelector('.code');
+    above?.append(' # a longer line above');
+  });
+  const { note } = await open(block, 1);
+  await expect(note).toHaveClass(/scb-annotation-end/);
+});
+
 test('with the keyboard, several notes can stay open, the badge shows focus, and Escape closes them', async ({
   page,
 }) => {
