@@ -13,7 +13,8 @@ export const fileIconSets = ['seti', 'material', 'vscode-icons', 'catppuccin'] a
 export type FileIconSet = (typeof fileIconSets)[number];
 
 export interface FileIconLanguage {
-  icon?: string;
+  /** `false` for no icon. */
+  icon?: string | false;
   colour?: string;
   style?: FileIconStyle;
 }
@@ -22,7 +23,8 @@ export interface FileIconSettings {
   set: FileIconSet;
   style: FileIconStyle;
   languages: Record<string, FileIconLanguage>;
-  files: Record<string, string>;
+  /** `false` for no icon. */
+  files: Record<string, string | false>;
   icons: Record<string, string>;
 }
 
@@ -279,7 +281,7 @@ export async function fileIconResolver({
   const byLanguage = new Map(
     Object.entries(languages).map(([lang, settings]) => {
       const id = languageId(lang);
-      if (!settings.icon?.trim().startsWith('<')) return [id, settings];
+      if (typeof settings.icon !== 'string' || !settings.icon.trim().startsWith('<')) return [id, settings];
       icons[`language:${id}`] = settings.icon;
       return [id, { ...settings, icon: `language:${id}` }];
     }),
@@ -287,18 +289,18 @@ export async function fileIconResolver({
 
   const markup = (name: string) => icons[name] ?? iconSet.markup(name) ?? seti.markup(name);
 
-  /** The icon name for the file path in a title, or `undefined`. */
-  function forFileName(title: string) {
+  /** The icon name for the file path in a title, `false` for no icon, or `undefined`. */
+  function forFileName(title: string): string | false | undefined {
     const path = title.trim().replaceAll('\\', '/');
     if (!path) return undefined;
     return rules.find(([matches]) => matches(path))?.[1] ?? iconSet.forPath(path);
   }
 
-  /** The icon name for a code block language, or `undefined`. */
-  function forLanguage(lang: string) {
+  /** The icon name for a code block language, `false` for no icon, or `undefined`. */
+  function forLanguage(lang: string): string | false | undefined {
     const id = languageId(lang.toLowerCase());
     const own = byLanguage.get(id)?.icon;
-    if (own) return own;
+    if (own !== undefined) return own;
     return iconSet.forLanguage([...new Set([lang.toLowerCase(), id, ...(bundledLanguage(id)?.aliases ?? [])])]);
   }
 
@@ -315,7 +317,7 @@ export async function fileIconResolver({
         return svg ? [{ svg, coloured: isColoured(source), set: fromSet ? set : undefined }] : [];
       });
     },
-    /** The icon name for a block, from its title, then its language, then the default of the set. */
+    /** The icon name for a block, from its title, then its language, then the default of the set. `false` stops the search. */
     nameFor: (title: string, language: string) => forFileName(title) ?? forLanguage(language) ?? iconSet.fallback,
     svg: (name: string) => {
       const source = markup(name);
@@ -340,7 +342,7 @@ export function pluginFileIcons(settings: FileIconSettings): CodeblocksPlugin {
           ...Object.values(settings.files),
           ...Object.keys(settings.languages).map((lang) => icons.languageSettings(lang)?.icon),
         ];
-        const unknown = named.find((name) => name !== undefined && !icons.has(name));
+        const unknown = named.find((name) => typeof name === 'string' && !icons.has(name));
         if (unknown) {
           throw new Error(
             `starlight-codeblocks: \`fileIcons\` names the icon "${unknown}", which is not in the \`${set}\` set or in \`fileIcons.icons\`.`,
@@ -427,8 +429,9 @@ ${Object.entries(iconSetScale)
           warn(context, `\`icon="${name}"\` is not a known icon. The block uses the icon of its title or language.`);
           name = undefined;
         }
-        name ??= icons.nameFor(String(codeBlock.props.title ?? ''), codeBlock.language);
-        const variants = icons.svgs(name);
+        const resolved = name ?? icons.nameFor(String(codeBlock.props.title ?? ''), codeBlock.language);
+        if (resolved === false) return;
+        const variants = icons.svgs(resolved);
         if (variants.length === 0) return;
 
         const language = icons.languageSettings(codeBlock.language);
@@ -451,7 +454,7 @@ ${Object.entries(iconSetScale)
           svg.properties = {
             class: ICON,
             dataScbFileIcon: style,
-            dataScbFileIconName: name.replace(/^seti:/, ''),
+            dataScbFileIconName: resolved.replace(/^seti:/, ''),
             ...(variantNames[i] && { dataScbFileIconVariant: variantNames[i] }),
             ...(coloured && { dataScbFileIconColoured: '' }),
             ...(set && { dataScbFileIconSet: set }),

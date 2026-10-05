@@ -69,7 +69,7 @@ const rows = (entries: Entry[], { skipDefaults = false } = {}) =>
       icons: resolvers.map((icons, i) => {
         const set = fileIconSets[i] ?? 'seti';
         const scale = set === 'seti' ? 1 : iconSetScale[set];
-        const name = names[i] ?? '';
+        const name = names[i] || '';
         const svgs = icons.svgs(name);
         const html = svgs
           .map(({ svg, set: from }, variant) => {

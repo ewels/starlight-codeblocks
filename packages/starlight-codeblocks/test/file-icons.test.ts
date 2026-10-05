@@ -113,7 +113,34 @@ test('custom icons, file names and languages', async () => {
   ).rejects.toThrow('"missing"');
 });
 
+test('`false` in `files` or `languages` gives no icon, and `icon="<name>"` still sets one', async () => {
+  const fileIcons = {
+    files: { '.mmd': false as const, 'special.mmd': 'markdown' },
+    languages: { metro: { icon: false as const, colour: '#f00' } },
+  };
+  const iconOf = async (meta: string) => icon((await render(block(meta, 'x'), { fileIcons })).html);
+  expect(await iconOf('txt title="flow.mmd"')).toBeUndefined();
+  // A `false` rule stops the search, so the language gives no icon either.
+  expect(await iconOf('js title="flow.mmd"')).toBeUndefined();
+  expect(iconName((await render(block('txt title="special.mmd"', 'x'), { fileIcons })).html)).toBe('markdown');
+  expect(await iconOf('metro title="Example"')).toBeUndefined();
+  expect(iconName((await render(block('metro title="flow.js"', 'x'), { fileIcons })).html)).toBe('javascript');
+  for (const meta of ['txt title="flow.mmd" icon="react"', 'metro title="Example" icon="react"']) {
+    expect(iconName((await render(block(meta, 'x'), { fileIcons })).html), meta).toBe('react');
+  }
+  expect(await iconOf('js title="a.js" icon=false')).toBeUndefined();
+  expect(iconName((await render(block('js title="a.js"', 'x'), { fileIcons })).html)).toBe('javascript');
+  expect(iconName((await render(block('txt title="flow.mmd"', 'x'))).html)).toBe('default');
+});
+
 test('options are validated', () => {
+  expect(
+    resolveOptions({ fileIcons: { files: { '.mmd': false }, languages: { metro: { icon: false } } } }).fileIcons,
+  ).toMatchObject({ files: { '.mmd': false }, languages: { metro: { icon: false } } });
+  expect(() => resolveOptions({ fileIcons: { files: { '.mmd': true as never } } })).toThrow('fileIcons.files');
+  expect(() => resolveOptions({ fileIcons: { languages: { metro: { icon: true as never } } } })).toThrow(
+    'fileIcons.languages',
+  );
   expect(resolveOptions().fileIcons).toEqual({
     set: 'vscode-icons',
     style: 'plain',

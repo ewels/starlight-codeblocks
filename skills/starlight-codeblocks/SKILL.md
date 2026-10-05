@@ -159,7 +159,7 @@ These features need no attribute. Know them, because they can change a block tha
 - Smart shell copy applies to every block with a terminal frame and a line that starts with a prompt (`$ ` or `> ` by default). It also applies to every `pycon` block with a line that starts with `>>> `. It applies to a `python` or `py` block if the first line starts with `>>> `.
 - Colourised brackets apply to every block in the languages in `brackets.languages`, if the site sets that option.
 - Colour swatches apply to every block with a CSS colour in it. Turn them off for a block with `swatches=false`.
-- File icons apply to every block with a title in an editor frame. Turn them off for a block with `icon=false`.
+- File icons apply to every block with a title in an editor frame. Turn them off for a block with `icon=false`, or for a file type or a language with `false` in `fileIcons.files` or `fileIcons.languages`.
 - Expandable blocks apply to every block longer than `expandable.auto` lines, if the site sets that option. Turn it off for a block with `expandable=false`.
 - Inline code highlighting applies to all inline code, if the site sets `inlineHighlighting.defaultLanguage`. Keep one piece plain with `{:txt}`.
 
