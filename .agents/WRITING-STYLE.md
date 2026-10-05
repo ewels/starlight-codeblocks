@@ -24,7 +24,7 @@ Readers are authors of Starlight sites. They know Markdown, Starlight basics and
 - One to nine as words, 10 and up as numerals; numerals always with units.
 - Code formatting for attributes, directives, options, files, commands and values. UI labels in bold, as they appear: select **Copy commands**.
 - Link text says where it goes. Links between pages are absolute, from `/starlight-codeblocks/`.
-- At most two asides per page, never adjacent. `caution` for wrong output, `danger` only for data or security.
+- At most three asides per page. `tip` for a recommended choice, `caution` for wrong output, `danger` only for data or security.
 - No quizzes, "Summary" or "Next steps" sections. No images of code, no ASCII diagrams.
 
 ## Examples
