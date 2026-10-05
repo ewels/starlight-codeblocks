@@ -123,8 +123,10 @@ function change(text: string, value: string) {
 function selectedText(pre: HTMLElement, range: Range) {
   const hidden = (el: Element) => {
     if (!el.checkVisibility()) return true;
+    // The nearest element that sets user-select decides, so a selectable callout bubble counts.
     for (let e: Element | null = el; e && e !== pre; e = e.parentElement) {
-      if (getComputedStyle(e).userSelect === 'none') return true;
+      const select = getComputedStyle(e).userSelect;
+      if (select !== 'auto') return select === 'none';
     }
     return false;
   };
