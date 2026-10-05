@@ -100,7 +100,7 @@ export interface CodeblocksOptions {
         set?: FileIconSet;
         style?: FileIconStyle;
         languages?: Record<string, FileIconLanguage>;
-        files?: Record<string, string>;
+        files?: Record<string, string | false>;
         icons?: Record<string, string>;
       };
   codeLinks?: false;
@@ -388,25 +388,25 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         valid: oneOf('plain', 'tile'),
       },
       languages: {
-        type: "Record<string, { icon?: string; colour?: string; style?: 'plain' | 'tile' }>",
+        type: "Record<string, { icon?: string | false; colour?: string; style?: 'plain' | 'tile' }>",
         default: {},
         description:
-          'Settings for the blocks of each language: the icon when the title gives none, as an icon name or SVG markup, a CSS colour for the icon or the tile, and the style.',
+          'Settings for the blocks of each language: the icon when the title gives none, as an icon name or SVG markup, or `false` for none, a CSS colour for the icon or the tile, and the style.',
         valid: isRecordOf(
           (language) =>
             isObject(language) &&
             Object.keys(language).every((key) => ['icon', 'colour', 'style'].includes(key)) &&
-            (language.icon === undefined || isString(language.icon)) &&
+            (language.icon === undefined || language.icon === false || isString(language.icon)) &&
             (language.colour === undefined || (isString(language.colour) && isCssColour(language.colour))) &&
             (language.style === undefined || oneOf('plain', 'tile')(language.style)),
         ),
       },
       files: {
-        type: 'Record<string, string>',
+        type: 'Record<string, string | false>',
         default: {},
         description:
-          'Icon names by file name, such as `nextflow.config`, by extension, such as `.nf`, or by path pattern, such as `.github/**`. A `*` matches within one folder, and `**` across folders. They come before the built-in rules.',
-        valid: isRecordOf(isString),
+          'Icon names, or `false` for no icon, by file name, such as `nextflow.config`, by extension, such as `.nf`, or by path pattern, such as `.github/**`. A `*` matches within one folder, and `**` across folders. They come before the built-in rules.',
+        valid: isRecordOf((icon) => icon === false || isString(icon)),
       },
       icons: {
         type: 'Record<string, string>',

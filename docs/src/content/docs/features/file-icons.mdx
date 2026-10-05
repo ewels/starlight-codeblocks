@@ -205,6 +205,8 @@ codeblocks({
   - In the Seti set, the full name comes first, such as `Dockerfile`. Then the extension, such as `.test.ts` and then `.ts`.
   - Then the language of the code block, such as `py` or `python`.
   - Then the default file icon.
+  - A `false` in `fileIcons.files` or `fileIcons.languages` stops the search, and the block gets no icon. The `icon` attribute still sets one.
+  - When two keys of `fileIcons.files` match a title, the later key wins.
 - Where icons show:
   - In the title of an editor frame. Terminal frames and code blocks with no title get no icon.
   - [Code tabs](/starlight-codeblocks/features/code-tabs/) show the icon of each file on its tab. The code tabs menu shows the icon of each language, custom icons too.
@@ -279,6 +281,17 @@ For one language, the icon in `fileIcons.languages` can be SVG markup, with no n
 ```js title="astro.config.mjs"
 codeblocks({
   fileIcons: { languages: { nextflow: { icon: siNextflow.svg } } },
+});
+```
+
+To show no icon for a file type or a language, use `false`. Here, `.mmd` files and `metro` blocks get no icon, but `overview.mmd` gets the Markdown icon. It comes after `.mmd`, so it wins:
+
+```js title="astro.config.mjs"
+codeblocks({
+  fileIcons: {
+    files: { '.mmd': false, 'overview.mmd': 'markdown' },
+    languages: { metro: { icon: false } },
+  },
 });
 ```
 

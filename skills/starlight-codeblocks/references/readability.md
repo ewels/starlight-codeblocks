@@ -131,7 +131,8 @@ Starts on its own in every block with a title in an editor frame. An icon of the
 - A coloured icon keeps its colours, on a neutral square in a tile. A Seti icon has the colour of the title, and its tile has the accent colour. A tile in a custom colour gets a black or white icon, whichever reads on it.
 - Options: `fileIcons.style` (default `'plain'`). `fileIcons.languages` sets `icon`, `colour` and `style` for each language, such as `{ python: { colour: '#3776ab' } }`.
 - Options: `fileIcons.languages.<lang>.icon` is an icon name or SVG markup, such as `siNextflow.svg` from `simple-icons`.
-- Options: `fileIcons.icons` adds icons by name, as SVG markup or 24 by 24 path data. `fileIcons.files` maps a file name, an extension such as `.nf`, or a path pattern such as `docs/**/*.md` to an icon name.
+- Options: `false` in `fileIcons.files` or as `fileIcons.languages.<lang>.icon` gives no icon, such as `{ '.mmd': false }`. `icon="<name>"` on the fence line still sets one.
+- Options: `fileIcons.icons` adds icons by name, as SVG markup or 24 by 24 path data. `fileIcons.files` maps a file name, an extension such as `.nf`, or a path pattern such as `docs/**/*.md` to an icon name. When two keys match, the later key wins.
 - Code tabs show the icon of each file on its tab. A tab with only a `label` gets an icon only from `icon="..."`. The code tabs menu uses the same icon for each language, custom icons too.
 - A docs example about another feature with a title: add `icon=false` if the icon distracts from the feature.
 
