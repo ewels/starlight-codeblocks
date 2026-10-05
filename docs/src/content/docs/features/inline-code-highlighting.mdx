@@ -15,34 +15,18 @@ All inline code then gets syntax highlighting, with no extra Markdown syntax.
 </Aside>
 
 export const basic = `
-> \`codeblocks(){:js}\` in \`astro.config.mjs\` adds a set of Expressive
-> Code plugins to the site. One of them reads a directive on its own
-> comment line, such as \`// [!code focus]{:js}\` or \`# [!code focus]{:sh}\`.
-> It removes the directive from \`codeBlock.code{:ts}\` before the block
-> renders, so the copy button never sees it.
->
-> A different plugin colours the inline code in this sentence. A Sätteri
-> visitor finds the \`{:lang}\` suffix, such as \`background: none{:css}\` or
-> \`sorted(names)[0]{:py}\`, then highlights it with the site's theme and
-> removes the suffix. Interactive features add
-> \`<pre data-scb-expandable="12">{:html}\` to their own blocks, and a
-> loader script imports the matching client module.
+> In JavaScript, \`[] + {}{:js}\` is \`"[object Object]"{:js}\`.
+> In Python, \`from __future__ import braces{:py}\` raises \`SyntaxError: not a chance{:py}\`.
+> In CSS, \`.modal { z-index: 99999 !important }{:css}\` is a cry for help.
+> In a shell, \`rm -rf node_modules{:sh}\` fixes most things.
 `;
 
 <Example code={basic}>
 
-> `codeblocks(){:js}` in `astro.config.mjs` adds a set of Expressive
-> Code plugins to the site. One of them reads a directive on its own
-> comment line, such as `// [!code focus]{:js}` or `# [!code focus]{:sh}`.
-> It removes the directive from `codeBlock.code{:ts}` before the block
-> renders, so the copy button never sees it.
->
-> A different plugin colours the inline code in this sentence. A Sätteri
-> visitor finds the `{:lang}` suffix, such as `background: none{:css}` or
-> `sorted(names)[0]{:py}`, then highlights it with the site's theme and
-> removes the suffix. Interactive features add
-> `<pre data-scb-expandable="12">{:html}` to their own blocks, and a
-> loader script imports the matching client module.
+> In JavaScript, `[] + {}{:js}` is `"[object Object]"{:js}`.
+> In Python, `from __future__ import braces{:py}` raises `SyntaxError: not a chance{:py}`.
+> In CSS, `.modal { z-index: 99999 !important }{:css}` is a cry for help.
+> In a shell, `rm -rf node_modules{:sh}` fixes most things.
 
 </Example>
 
