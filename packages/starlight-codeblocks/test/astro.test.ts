@@ -11,7 +11,10 @@ import { mdastPlugins, restoreDirectives } from '../src/satteri/index.ts';
 
 afterEach(() => setRegistry(undefined));
 
-type Processor = { name: string; options: { features?: { directive?: boolean }; mdastPlugins: unknown[] } };
+type Processor = {
+  name: string;
+  options: { features?: { directive?: boolean }; mdastPlugins: unknown[]; starlightCodeblocks?: string };
+};
 
 async function setup(options: AstroCodeblocksOptions = {}, ecConfig?: string, others: string[] = []) {
   const root = mkdtempSync(join(tmpdir(), 'scb-'));
@@ -55,6 +58,13 @@ test('changes nothing outside code blocks unless the site turns on code tabs or 
   expect(processor.options.features?.directive).toBeUndefined();
   expect(processor.options.mdastPlugins).toHaveLength(1);
   expect(getRegistry()?.options).toMatchObject({ codeTabs: false, inlineHighlighting: false });
+});
+
+test('puts a digest of its options in the hashed Astro config, so that a change clears rendered Markdown', async () => {
+  const digest = async (options: AstroCodeblocksOptions) =>
+    (await setup(options)).processor.options.starlightCodeblocks;
+  expect(await digest({})).toBe(await digest({}));
+  expect(await digest({ footnotes: false })).not.toBe(await digest({}));
 });
 
 test('adds the inline code stylesheet on every page, and never the API card page styles', async () => {
