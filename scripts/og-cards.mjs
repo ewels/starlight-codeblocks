@@ -21,7 +21,7 @@ const logo = readFileSync(`${root}docs/src/assets/logo.svg`, 'utf8').replace(
 function pages(dir = '') {
   return readdirSync(dist + dir, { withFileTypes: true }).flatMap((entry) => {
     if (!entry.isDirectory()) return entry.name === 'index.html' ? [dir.replace(/\/$/, '') || 'index'] : [];
-    if (['og', '_astro', 'pagefind'].includes(entry.name)) return [];
+    if (['og', '_astro', 'pagefind', 'examples'].includes(entry.name)) return [];
     return pages(`${dir}${entry.name}/`);
   });
 }

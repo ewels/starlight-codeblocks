@@ -85,17 +85,7 @@ Keep `codeblocks()` in `astro.config.mjs` as well, and give it the options there
 
 ## Sites without Starlight
 
-Astro sites that use Expressive Code without Starlight add the preset to the Expressive Code plugins. Give the options to `pluginCodeblocks()`:
-
-```js title="ec.config.mjs"
-import { pluginCodeblocks } from 'starlight-codeblocks/expressive-code';
-
-export default {
-  plugins: [pluginCodeblocks({ focus: { style: 'dim' } })],
-};
-```
-
-Code tabs, inline code highlighting and the `<CodeWalkthrough>` and `<Scrollycoding>` components need Starlight. The features inside code blocks work on every site. Set `tabWidth: 0` in the Expressive Code options, so that tabs reach the code blocks unchanged. Blocks with a **Run code** button need a runtime URL for their language, as in [Without Starlight](/starlight-codeblocks/reference/expressive-code-plugins/#without-starlight).
+The plugin also works on an Astro site without Starlight. [Astro without Starlight](/starlight-codeblocks/astro-without-starlight/) gives the set-up.
 
 ## Next steps
 

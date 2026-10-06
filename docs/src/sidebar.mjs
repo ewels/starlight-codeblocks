@@ -4,6 +4,7 @@ export const sidebar = [
     items: [
       { label: 'Introduction', link: '/' },
       'getting-started',
+      'astro-without-starlight',
       'configuration',
       'comment-notation',
       'agent-skill',

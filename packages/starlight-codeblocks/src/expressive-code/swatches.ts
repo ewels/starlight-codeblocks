@@ -275,9 +275,16 @@ ${Object.entries(SHAPES)
 
 export const SWATCH_CSS_ID = 'virtual:starlight-codeblocks/swatches.css';
 
-/** Styles for swatches in prose, with Starlight's colours for the **Copied** label. Block styles outweigh them in code blocks. */
+/**
+ * Styles for swatches in prose, with Starlight's colours for the **Copied** label, or the system colours
+ * on a site without Starlight. Block styles outweigh them in code blocks.
+ */
 export const proseSwatchStyles = (settings: SwatchSettings) =>
-  swatchStyles(settings, { bg: 'var(--sl-color-gray-6)', fg: 'var(--sl-color-white)' }, 'var(--sl-color-bg)');
+  swatchStyles(
+    settings,
+    { bg: 'var(--sl-color-gray-6, CanvasText)', fg: 'var(--sl-color-white, Canvas)' },
+    'var(--sl-color-bg, Canvas)',
+  );
 
 class SwatchAnnotation extends ExpressiveCodeAnnotation {
   constructor(

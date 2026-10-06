@@ -27,7 +27,8 @@ Full docs: https://ewels.github.io/starlight-codeblocks/. Each page has a Markdo
 
 3. If the site has an `ec.config.mjs` file with a `plugins` list, add `pluginCodeblocks()` from `starlight-codeblocks/expressive-code` to that list. Keep `codeblocks()` in `astro.config.mjs`, with all the options. The build stops with a message if you forget this step.
 4. Put `codeblocks()` before any plugin or theme that sets the Starlight `expressiveCode` option.
-5. If the site uses `starlight-links-validator`, give it `exclude: linksValidatorExclude`, imported from `starlight-codeblocks`.
+5. On an Astro site without Starlight, add `codeblocks()` from `starlight-codeblocks/astro` to `integrations` in place of `expressiveCode()`. [references/configuration.md](references/configuration.md) has the set-up.
+6. If the site uses `starlight-links-validator`, give it `exclude: linksValidatorExclude`, imported from `starlight-codeblocks`.
 
 Requirements: Astro 7 or later, Starlight 0.42 or later, Node.js 22.12 or later. The plugin works with Astro's default Markdown processor (Sätteri) and with `unified()`. [references/configuration.md](references/configuration.md) has every option and the set-up for other plugins, Markdoc and sites without Starlight.
 

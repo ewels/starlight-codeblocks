@@ -39,11 +39,7 @@ Each piece of inline code with a suffix gets the colours and the background of t
 | `` `<code>{:<lang>}` `` | Inside the backticks, at the end of the code |
 | `` `<code>`{:<lang>} `` | Directly after the closing backtick |
 
-`<lang>` is a language name or alias that Expressive Code knows, as in a code block: `js`, `py`, `sh`, `css` and others. Languages that the site adds in the `shiki.langs` option of Expressive Code work too. The suffix must follow the code or the backtick with no space between them.
-
-<Aside type="tip">
-If possible, use the first syntax, with the suffix inside the backticks. It is the same syntax as `rehype-pretty-code`, and it is valid in `.md` and `.mdx` files with no change.
-</Aside>
+`<lang>` is a language name or alias that Expressive Code knows, as in a code block: `js`, `py`, `sh`, `css` and others. Languages that the site adds in the `shiki.langs` option of Expressive Code work too. The suffix must follow the code or the backtick with no space between them. If possible, use the first syntax, with the suffix inside the backticks. It is the same syntax as `rehype-pretty-code`, and it is valid in `.md` and `.mdx` files with no change.
 
 <Aside type="caution">
 MDX reads a `{:js}` after the closing backtick as a JavaScript expression, and the build fails.
@@ -67,6 +63,10 @@ If you need to use this syntax with MDX, write a backslash before it: `` `res.ok
   - The highlighting happens at build time, so it works without JavaScript. Pages with no code blocks get the colours too.
 
 ## Options
+
+<Aside>
+On an Astro site without Starlight, inline code highlighting is off until you set `inlineHighlighting: {}` in `codeblocks()`. [Astro without Starlight](/starlight-codeblocks/astro-without-starlight/#options) gives the reason.
+</Aside>
 
 <Options />
 

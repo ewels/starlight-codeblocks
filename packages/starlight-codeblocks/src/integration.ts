@@ -1,7 +1,11 @@
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import type { ExpressiveCodePlugin } from '@expressive-code/core';
 import type { AstroIntegration } from 'astro';
+import { AstroError } from 'astro/errors';
 import { apiCardPageStyles, CARD_CSS_ID } from './api-card-page.ts';
 import { readClientModules } from './client-modules.ts';
+import { PLUGIN_PREFIX } from './expressive-code/index.ts';
 import { runtimeFileName, runtimeModules } from './expressive-code/runnable.ts';
 import { proseSwatchStyles, SWATCH_CSS_ID } from './expressive-code/swatches.ts';
 import type { ResolvedOptions } from './options.ts';
@@ -30,9 +34,15 @@ interface IntegrationOptions {
   options: ResolvedOptions;
   /** Replace the `ec.config.mjs` module that `<Code>` reads, so that it gets the real plugins. */
   ecConfigOverride?: { file: string | undefined };
+  /** Style and load API cards on links outside code blocks, such as those of starlight-pydocs. */
+  apiCardPage?: boolean;
 }
 
-export function codeblocksIntegration({ options, ecConfigOverride }: IntegrationOptions): AstroIntegration {
+export function codeblocksIntegration({
+  options,
+  ecConfigOverride,
+  apiCardPage = true,
+}: IntegrationOptions): AstroIntegration {
   return {
     name: 'starlight-codeblocks',
     hooks: {
@@ -49,7 +59,7 @@ export function codeblocksIntegration({ options, ecConfigOverride }: Integration
         if (options.inlineHighlighting) plugins.push(cssPlugin(INLINE_CSS_ID, inlineStyles));
         // Astro applies `assetsPrefix` only to the build; dev serves the assets under the base.
         const base = (command === 'build' ? jsAssetsPrefix(config.build.assetsPrefix) : undefined) ?? config.base;
-        if (options.apiLinks) {
+        if (options.apiLinks && apiCardPage) {
           plugins.push(cssPlugin(CARD_CSS_ID, apiCardPageStyles));
           const script = apiCardLoader(base, config.build.assets);
           if (script) injectScript('page', script);
@@ -69,6 +79,77 @@ export function codeblocksIntegration({ options, ecConfigOverride }: Integration
       },
     },
   };
+}
+
+/** The site's `ec.config.mjs`, imported fresh, as Expressive Code does. */
+export async function loadEcConfig(root: URL) {
+  const url = new URL('./ec.config.mjs', root);
+  if (!existsSync(url)) return { file: undefined, config: undefined };
+  return { file: fileURLToPath(url), config: (await import(`${url.href}?t=${Date.now()}`)).default };
+}
+
+const isOurs = (plugin: unknown) => (plugin as ExpressiveCodePlugin | undefined)?.name?.startsWith(PLUGIN_PREFIX);
+
+/** A `plugins` list in `ec.config.mjs` replaces the one the plugin adds, so it must hold the preset. */
+export function checkEcConfigPlugins(plugins: unknown[]) {
+  if (plugins.flat(Infinity).some(isOurs)) return;
+  throw new AstroError(
+    'starlight-codeblocks cannot add its Expressive Code plugins, because `ec.config.mjs` has its own `plugins` list.',
+    "Add `pluginCodeblocks()` to `plugins` in `ec.config.mjs`. Import it from 'starlight-codeblocks/expressive-code'.",
+  );
+}
+
+/** The stylesheets for elements outside code blocks, which every page gets. */
+export const pageCssIds = (options: ResolvedOptions, apiCardPage = true) => [
+  ...(options.inlineHighlighting ? [INLINE_CSS_ID] : []),
+  ...(options.apiLinks && apiCardPage ? [CARD_CSS_ID] : []),
+  ...(options.swatches !== false && options.swatches.prose ? [SWATCH_CSS_ID] : []),
+];
+
+/**
+ * Astro serialises the Expressive Code options for `<Code>` and fails on functions.
+ * `<Code>` gets the real plugins from the `ec-config` override instead.
+ */
+export function hideFunctions(plugin: ExpressiveCodePlugin): ExpressiveCodePlugin {
+  const shell = { name: plugin.name };
+  for (const [key, value] of Object.entries(plugin)) {
+    if (key !== 'name') Object.defineProperty(shell, key, { value, enumerable: false });
+  }
+  return shell;
+}
+
+type Shiki = Record<string, unknown> & { langs?: unknown[]; langAlias?: unknown };
+
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
+/**
+ * Merges `shiki` the way astro-expressive-code does, including its fallback to Astro's
+ * `markdown.shikiConfig`, so that inline code gets the grammars and aliases that blocks get.
+ */
+export function mergeEcOptions(
+  ec: { shiki?: unknown },
+  ecConfig: { shiki?: unknown } = {},
+  astroShiki: { langs?: unknown[]; langAlias?: unknown } = {},
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...ec, ...ecConfig };
+  const [a, b] = [ec.shiki, ecConfig.shiki];
+  if (isObject(a) && isObject(b)) {
+    const shiki: Shiki = { ...a };
+    for (const [key, value] of Object.entries(b)) {
+      const prev = shiki[key];
+      if (key === 'langs' && Array.isArray(prev) && Array.isArray(value)) shiki[key] = [...prev, ...value];
+      else if (isObject(prev) && isObject(value)) shiki[key] = { ...prev, ...value };
+      else shiki[key] = value;
+    }
+    merged.shiki = shiki;
+  }
+  if (merged.shiki === false) return merged;
+  const shiki: Shiki = isObject(merged.shiki) ? { ...merged.shiki } : {};
+  if (!shiki.langs && astroShiki.langs) shiki.langs = astroShiki.langs;
+  if (!shiki.langAlias && astroShiki.langAlias) shiki.langAlias = astroShiki.langAlias;
+  merged.shiki = shiki;
+  return merged;
 }
 
 function ecConfigPlugin(file: string | undefined): VitePlugin {

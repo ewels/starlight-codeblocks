@@ -226,3 +226,21 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
     },
   ];
 }
+
+/**
+ * Gives back the source of each directive that no plugin claimed, as Starlight does, so that prose
+ * such as `16:9` keeps its text once a site without Starlight turns on directives for code tabs.
+ */
+export function restoreDirectives(): MdastPluginDefinition {
+  const source = (node: MdastNode, ctx: MdastVisitorContext) =>
+    ctx.source.slice(node.position?.start.offset, node.position?.end.offset);
+  return {
+    name: 'starlight-codeblocks:directives',
+    options: { position: true },
+    textDirective: (node, ctx) => (node.data ? undefined : { type: 'text', value: source(node, ctx) }),
+    leafDirective: (node, ctx) =>
+      node.data ? undefined : { type: 'paragraph', children: [{ type: 'text', value: source(node, ctx) }] },
+    containerDirective: (node) =>
+      node.data ? undefined : { type: 'paragraph', data: { hName: 'div' }, children: [...node.children] },
+  } as MdastPluginDefinition;
+}

@@ -3,7 +3,7 @@ title: Code tabs
 description: Show several code blocks as one, with editor tabs in the title bar, such as the files of a project or the commands for each package manager.
 ---
 
-import { LinkCard, TabItem, Tabs } from '@astrojs/starlight/components';
+import { Aside, LinkCard, TabItem, Tabs } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
@@ -243,6 +243,10 @@ port = 8080
   - The first variant shows, with its own tab. The other tabs and the menu do not show.
 
 ## Options
+
+<Aside>
+On an Astro site without Starlight, code tabs are off until you set `codeTabs: {}` in `codeblocks()`. [Astro without Starlight](/starlight-codeblocks/astro-without-starlight/#options) gives the reason.
+</Aside>
 
 <Options />
 

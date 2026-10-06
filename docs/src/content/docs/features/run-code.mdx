@@ -47,7 +47,7 @@ The language of the block chooses the runtime. Three languages work with no set-
 
 - For other languages, a site adds a runtime in the [`runtimes` option](#options). The guide to [adding a runtime](/starlight-codeblocks/extend/add-a-runtime/) shows how.
 - A site runtime for Python, JavaScript or TypeScript replaces the built-in one.
-- Sites without Starlight add each runtime themselves, as in [Without Starlight](/starlight-codeblocks/reference/expressive-code-plugins/#without-starlight).
+- Sites without `codeblocks()` add each runtime themselves, as in [Without codeblocks()](/starlight-codeblocks/reference/expressive-code-plugins/#without-codeblocks).
 
 In JavaScript and TypeScript, `console.log()` and `console.info()` go to standard output. `console.error()` and `console.warn()` go to standard error. The code runs as the body of an `async` function, so `await` works at the top level. The code cannot use `import` statements.
 

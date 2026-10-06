@@ -1,0 +1,24 @@
+{
+  "name": "example-astro",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "build:docs": "astro build --base /starlight-codeblocks/examples/astro/ --outDir ../../docs/dist/examples/astro",
+    "preview": "astro preview",
+    "typecheck": "astro check --minimumSeverity warning"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "8.0.2",
+    "@fontsource/michroma": "5.3.0",
+    "@shikijs/themes": "4.5.0",
+    "astro": "7.3.5",
+    "astro-expressive-code": "0.44.2",
+    "starlight-codeblocks": "workspace:*"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "typescript": "6.0.3"
+  }
+}

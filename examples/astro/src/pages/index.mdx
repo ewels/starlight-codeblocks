@@ -1,0 +1,84 @@
+---
+layout: ../layouts/Page.astro
+title: starlight-codeblocks on Astro
+---
+
+import { CodeWalkthrough } from 'starlight-codeblocks/components';
+
+Each section below shows one feature.
+
+## Focus and line states
+
+```js title="server.js" focus={3-4}
+import express from 'express';
+
+const app = express();
+app.listen(3000); // [!code warning] Read the port from the environment.
+```
+
+## Annotations and inline callouts
+
+```yaml title="compose.yaml"
+services:
+  web:
+    image: nginx:1.27 # [!annotate] Pin the tag, so that a rebuild gets the same image.
+    ports: # [!callout /ports/] Host port first, then the container port.
+      - '8080:80'
+```
+
+## Code tabs
+
+:::code-tabs{sync="pm"}
+```sh label="npm"
+npm install starlight-codeblocks
+```
+```sh label="pnpm"
+pnpm add starlight-codeblocks
+```
+:::
+
+## Inline code
+
+Call `fetch(url){:js}` and check `res.ok{:js}` before you read the body. Prose with colons, such as a 16:9 ratio, stays as it is.
+
+## Fill-in placeholders
+
+```sh placeholder="YOUR_TOKEN"
+curl -H "Authorization: Bearer YOUR_TOKEN" https://api.example.com/me
+```
+
+## Run code
+
+```js runnable
+const words = ['code', 'blocks', 'in', 'astro'];
+console.log(words.map((word) => word.toUpperCase()).join(' '));
+```
+
+## Code walkthrough
+
+`<CodeWalkthrough>` works in MDX pages on a site without Starlight too.
+
+<CodeWalkthrough>
+
+```js title="server.js" step="Create the app"
+import express from 'express';
+
+const app = express();
+```
+
+```js title="server.js" step="Parse JSON bodies"
+import express from 'express';
+
+const app = express();
+app.use(express.json());
+```
+
+```js title="server.js" step="Start the server"
+import express from 'express';
+
+const app = express();
+app.use(express.json());
+app.listen(3000);
+```
+
+</CodeWalkthrough>
