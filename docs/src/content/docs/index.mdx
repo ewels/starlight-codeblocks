@@ -6,7 +6,7 @@ hero:
   tagline: |
     This plugin adds 26 features to the <a href="https://expressive-code.com">Expressive Code</a> blocks of
     <a href="https://starlight.astro.build">Starlight</a> and <a href="/starlight-codeblocks/install/astro/">Astro</a> sites.
-    Use them to enrich code blocks, they're perfect for docs and training.
+    Use them to enrich code blocks.
     <span class="agent-skill">Using an agent? <a href="/starlight-codeblocks/agent-skill/">Point it at the bundled skill</a>.</span>
   actions:
     - text: Starlight setup
@@ -457,60 +457,6 @@ print(f"mean {mean(reads):.0f}, sd {stdev(reads):.1f}")
 </Feature>
 
 </FeatureCarousel>
-
-## Install
-
-Add the package to the site:
-
-:::code-tabs{sync="pm"}
-```sh label="npm"
-npm install starlight-codeblocks
-```
-```sh label="pnpm"
-pnpm add starlight-codeblocks
-```
-```sh label="Yarn"
-yarn add starlight-codeblocks
-```
-:::
-
-Then add `codeblocks()` to `astro.config.mjs`. On a Starlight site, it goes in the Starlight plugins. On an Astro site without Starlight, it comes from `starlight-codeblocks/astro` and goes in `integrations`. That site also needs the `astro-expressive-code` package.
-
-:::code-tabs{sync="site"}
-```js label="Starlight"
-import { defineConfig } from 'astro/config';
-import starlight from '@astrojs/starlight';
-import codeblocks from 'starlight-codeblocks'; // [!code focus ++] Import the plugin
-
-export default defineConfig({
-  integrations: [
-    starlight({
-      title: 'My docs',
-      plugins: [codeblocks()], // [!code focus ++] Load the plugin
-    }),
-  ],
-});
-```
-```js label="Astro"
-import { defineConfig } from 'astro/config';
-import mdx from '@astrojs/mdx';
-import codeblocks from 'starlight-codeblocks/astro'; // [!code focus ++] Import the integration
-
-export default defineConfig({
-  integrations: [
-    codeblocks(), // [!code focus ++] Load it before mdx()
-    mdx(),
-  ],
-});
-```
-:::
-
-[Starlight setup](/starlight-codeblocks/install/starlight/) and [Astro setup](/starlight-codeblocks/install/astro/) have the full steps.
-
-## Extend and reference
-
-- [Extend](/starlight-codeblocks/extend/write-an-api-link-adapter/): your own API link adapters, playgrounds and runtimes.
-- [Reference](/starlight-codeblocks/reference/options/): every option, attribute, directive and style setting.
 
 ## Using with an agent
 
