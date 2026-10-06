@@ -31,7 +31,7 @@ export default defineConfig({
 });
 ```
 
-On an Astro site without Starlight, add `codeblocks()` from `starlight-codeblocks/astro` to `integrations` instead. The [Astro without Starlight](https://ewels.github.io/starlight-codeblocks/astro-without-starlight/) page gives the details.
+On an Astro site without Starlight, add `codeblocks()` from `starlight-codeblocks/astro` to `integrations` instead. The [Astro setup](https://ewels.github.io/starlight-codeblocks/install/astro/) page gives the details.
 
 Most features start only when a code block uses their attribute, or a [comment notation](https://ewels.github.io/starlight-codeblocks/comment-notation/) directive such as `# [!code focus]`. A few, such as file icons and colour swatches, apply to every matching block.
 

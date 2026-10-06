@@ -5,12 +5,15 @@ template: splash
 hero:
   tagline: |
     This plugin adds 26 features to the <a href="https://expressive-code.com">Expressive Code</a> blocks of
-    <a href="https://starlight.astro.build">Starlight</a> and <a href="/starlight-codeblocks/astro-without-starlight/">Astro</a> sites.
+    <a href="https://starlight.astro.build">Starlight</a> and <a href="/starlight-codeblocks/install/astro/">Astro</a> sites.
     Use them to enrich code blocks, they're perfect for docs and training.
     <span class="agent-skill">Using an agent? <a href="/starlight-codeblocks/agent-skill/">Point it at the bundled skill</a>.</span>
   actions:
-    - text: Get started
-      link: /starlight-codeblocks/getting-started/
+    - text: Starlight setup
+      link: /starlight-codeblocks/install/starlight/
+      icon: right-arrow
+    - text: Astro setup
+      link: /starlight-codeblocks/install/astro/
       icon: right-arrow
     - text: GitHub
       link: https://github.com/ewels/starlight-codeblocks
@@ -471,9 +474,10 @@ yarn add starlight-codeblocks
 ```
 :::
 
-Then add `codeblocks()` to the Starlight plugins in `astro.config.mjs`:
+Then add `codeblocks()` to `astro.config.mjs`. On a Starlight site, it goes in the Starlight plugins. On an Astro site without Starlight, it comes from `starlight-codeblocks/astro` and goes in `integrations`. That site also needs the `astro-expressive-code` package.
 
-```js title="astro.config.mjs"
+:::code-tabs{sync="site"}
+```js label="Starlight"
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import codeblocks from 'starlight-codeblocks'; // [!code focus ++] Import the plugin
@@ -487,8 +491,21 @@ export default defineConfig({
   ],
 });
 ```
+```js label="Astro"
+import { defineConfig } from 'astro/config';
+import mdx from '@astrojs/mdx';
+import codeblocks from 'starlight-codeblocks/astro'; // [!code focus ++] Import the integration
 
-The [getting started](/starlight-codeblocks/getting-started/) page has the full steps.
+export default defineConfig({
+  integrations: [
+    codeblocks(), // [!code focus ++] Load it before mdx()
+    mdx(),
+  ],
+});
+```
+:::
+
+[Starlight setup](/starlight-codeblocks/install/starlight/) and [Astro setup](/starlight-codeblocks/install/astro/) have the full steps.
 
 ## Extend and reference
 
@@ -497,7 +514,7 @@ The [getting started](/starlight-codeblocks/getting-started/) page has the full 
 
 ## Using with an agent
 
-This website is agent-friendly: each page has a Markdown version at the same address with `.md` at the end, such as [getting-started.md](/starlight-codeblocks/getting-started.md).
+This website is agent-friendly: each page has a Markdown version at the same address with `.md` at the end, such as [install/starlight.md](/starlight-codeblocks/install/starlight.md).
 [llms.txt](/starlight-codeblocks/llms.txt) lists every page, and [llms-full.txt](/starlight-codeblocks/llms-full.txt) has every page in one file.
 
 Using an agent? [Point it at the bundled skill](/starlight-codeblocks/agent-skill/). The skill tells the agent which feature suits each use, and how to write it.

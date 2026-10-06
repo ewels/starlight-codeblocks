@@ -1,11 +1,13 @@
 ---
-title: Astro without Starlight
+title: Astro setup
 description: Add the code block features to an Astro site that does not use Starlight.
 ---
 
-import { LinkCard, Steps } from '@astrojs/starlight/components';
+import { LinkCard, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
 
-The plugin also works on Astro sites without Starlight. The `starlight-codeblocks/astro` subpath exports an Astro integration. It adds Expressive Code to the site, with the features of the code blocks.
+This page is for Astro sites that do not use Starlight. For a Starlight site, follow [Starlight setup](/starlight-codeblocks/install/starlight/).
+
+The `starlight-codeblocks/astro` subpath exports an Astro integration. It adds Expressive Code to the site, with the features of the code blocks.
 
 The source of the example site is in [`examples/astro` on GitHub](https://github.com/ewels/starlight-codeblocks/tree/main/examples/astro).
 
@@ -14,7 +16,7 @@ The source of the example site is in [`examples/astro` on GitHub](https://github
 ## Requirements
 
 - Astro 7 or later.
-- `astro-expressive-code` 0.44 or later.
+- [Expressive Code](https://expressive-code.com/) 0.44 or later.
 - Node.js 22.12 or later.
 
 ## Install the integration
@@ -23,9 +25,29 @@ The source of the example site is in [`examples/astro` on GitHub](https://github
 
 1. Add the packages to the site.
 
+   <Tabs syncKey="pm">
+   <TabItem label="npm">
+
    ```sh
    npm install starlight-codeblocks astro-expressive-code
    ```
+
+   </TabItem>
+   <TabItem label="pnpm">
+
+   ```sh
+   pnpm add starlight-codeblocks astro-expressive-code
+   ```
+
+   </TabItem>
+   <TabItem label="Yarn">
+
+   ```sh
+   yarn add starlight-codeblocks astro-expressive-code
+   ```
+
+   </TabItem>
+   </Tabs>
 
 2. Open `astro.config.mjs`.
 
@@ -64,7 +86,7 @@ codeblocks({
 }),
 ```
 
-An `ec.config.mjs` file works as on a Starlight site. Its options replace the options in `expressiveCode`. If the file has a `plugins` list, add `pluginCodeblocks()` to it, as [Getting started](/starlight-codeblocks/getting-started/#sites-with-an-ecconfigmjs-file) shows.
+An `ec.config.mjs` file works as on a Starlight site. Its options replace the options in `expressiveCode`. If the file has a `plugins` list, add `pluginCodeblocks()` to it, as [Starlight setup](/starlight-codeblocks/install/starlight/#sites-with-an-ecconfigmjs-file) shows.
 
 ## Differences from Starlight
 

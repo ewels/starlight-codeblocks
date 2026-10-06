@@ -7,6 +7,10 @@ import { Aside, LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
+<Aside>
+On an Astro site without Starlight, inline code highlighting is off until you set `inlineHighlighting: {}` in `codeblocks()`. See [Astro setup](/starlight-codeblocks/install/astro/#options).
+</Aside>
+
 Starlight shows inline code in the prose in one colour, with no syntax highlighting. A short expression such as a function call is then harder to read than the same code in a block. A `{:lang}` suffix at the end of the inline code gives it the syntax colours of that language. A site can also set a [default language](#a-default-language) for all inline code.
 
 <Aside type="tip">
@@ -63,10 +67,6 @@ If you need to use this syntax with MDX, write a backslash before it: `` `res.ok
   - The highlighting happens at build time, so it works without JavaScript. Pages with no code blocks get the colours too.
 
 ## Options
-
-<Aside>
-On an Astro site without Starlight, inline code highlighting is off until you set `inlineHighlighting: {}` in `codeblocks()`. [Astro without Starlight](/starlight-codeblocks/astro-without-starlight/#options) gives the reason.
-</Aside>
 
 <Options />
 

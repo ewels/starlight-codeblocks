@@ -138,7 +138,7 @@ Docs: https://ewels.github.io/starlight-codeblocks/reference/plugin-compatibilit
 
 ## Sites without Starlight
 
-Docs: https://ewels.github.io/starlight-codeblocks/astro-without-starlight/
+Docs: https://ewels.github.io/starlight-codeblocks/install/astro/
 
 An Astro site without Starlight adds `codeblocks()` from `starlight-codeblocks/astro` to `integrations`, before `mdx()`. It adds Expressive Code itself, so remove `expressiveCode()`. Install `astro-expressive-code` next to the plugin.
 

@@ -1,11 +1,13 @@
 ---
-title: Getting started
+title: Starlight setup
 description: Install starlight-codeblocks and add it to a Starlight site.
 ---
 
 import { Steps, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
 Starlight renders every code block with Expressive Code. The plugin adds its features to those code blocks, so the code blocks you already have keep working. You turn on nothing per page: most features start when a code block uses their attribute or directive. A few, such as file icons and colour swatches, apply to every matching block.
+
+For an Astro site that does not use Starlight, follow [Astro setup](/starlight-codeblocks/install/astro/).
 
 ## Requirements
 
@@ -82,10 +84,6 @@ export default {
 ```
 
 Keep `codeblocks()` in `astro.config.mjs` as well, and give it the options there. `pluginCodeblocks()` with no argument uses the same options. If you forget this step, the build stops with a message that tells you what to add.
-
-## Sites without Starlight
-
-The plugin also works on an Astro site without Starlight. [Astro without Starlight](/starlight-codeblocks/astro-without-starlight/) gives the set-up.
 
 ## Next steps
 

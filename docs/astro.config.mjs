@@ -11,6 +11,10 @@ import { sidebar } from './src/sidebar.mjs';
 export default defineConfig({
   site: 'https://ewels.github.io',
   base: '/starlight-codeblocks',
+  redirects: {
+    '/getting-started': '/starlight-codeblocks/install/starlight/',
+    '/astro-without-starlight': '/starlight-codeblocks/install/astro/',
+  },
   integrations: [
     starlight({
       title: 'starlight-codeblocks',
