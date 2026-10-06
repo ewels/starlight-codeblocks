@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- Astro: `starlight-codeblocks/astro` adds every feature to Astro sites without Starlight (#14)
+- Docs: an example Astro site, and separate install pages for Starlight and Astro (#14)
+- Integration: a change to the options clears cached Markdown pages (#13)
+
 ## 1.0.1
 
 - Swatches: `match` and `delimiters` options (#6)
