@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { ExpressiveCodePlugin } from '@expressive-code/core';
@@ -49,8 +50,14 @@ export function codeblocksIntegration({
       'astro:config:setup'({ command, config, updateConfig, injectScript, logger }) {
         // The shapes `isSatteriProcessor()` and `isUnifiedProcessor()` check, without depending on either package.
         const processor = config.markdown.processor as
-          | { name?: string; options?: { mdastPlugins?: unknown[]; remarkPlugins?: unknown[] } }
+          | {
+              name?: string;
+              options?: { mdastPlugins?: unknown[]; remarkPlugins?: unknown[]; starlightCodeblocks?: string };
+            }
           | undefined;
+        // The content layer keeps rendered Markdown until its digest of the Astro config changes. That digest
+        // skips integrations and functions but covers these options, which both processors otherwise ignore.
+        if (processor?.options) processor.options.starlightCodeblocks = optionsDigest(options);
         if (processor?.name === 'unified') {
           processor.options?.remarkPlugins?.push(remarkFromSatteri(mdastPlugins(options, logger)));
         } else processor?.options?.mdastPlugins?.push(...mdastPlugins(options, logger));
@@ -80,6 +87,12 @@ export function codeblocksIntegration({
     },
   };
 }
+
+const optionsDigest = (options: ResolvedOptions) =>
+  createHash('sha256')
+    .update(JSON.stringify(options, (_, value) => (typeof value === 'function' ? String(value) : value)))
+    .digest('base64url')
+    .slice(0, 16);
 
 /** The site's `ec.config.mjs`, imported fresh, as Expressive Code does. */
 export async function loadEcConfig(root: URL) {
