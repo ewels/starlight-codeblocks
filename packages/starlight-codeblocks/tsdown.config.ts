@@ -6,7 +6,13 @@ const clientModules = readdirSync('src/client').filter((f) => f.endsWith('.ts'))
 
 export default defineConfig([
   {
-    entry: ['src/index.ts', 'src/expressive-code/index.ts', 'src/adapters/python.ts', 'src/adapters/nextflow.ts'],
+    entry: [
+      'src/index.ts',
+      'src/astro.ts',
+      'src/expressive-code/index.ts',
+      'src/adapters/python.ts',
+      'src/adapters/nextflow.ts',
+    ],
     format: 'esm',
     dts: true,
   },

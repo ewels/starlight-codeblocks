@@ -3,9 +3,13 @@ title: Code tabs
 description: Show several code blocks as one, with editor tabs in the title bar, such as the files of a project or the commands for each package manager.
 ---
 
-import { LinkCard, TabItem, Tabs } from '@astrojs/starlight/components';
+import { Aside, LinkCard, TabItem, Tabs } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
+
+<Aside>
+On an Astro site without Starlight, code tabs are off until you set `codeTabs: {}` in `codeblocks()`. See [Astro setup](/starlight-codeblocks/install/astro/#options).
+</Aside>
 
 Examples often come in several files, or in versions for each package manager or language. Stacked one after the other, they fill the page with code that most readers skip. Code tabs show them as one block, with a tab for each block in the title bar, as in a code editor.
 
@@ -82,7 +86,7 @@ Each code block is a variant. A tab shows the `title` of its variant. A variant 
 
 ### Package managers
 
-A tab with no `title` shows the `label`, with no file icon. Blocks with the same `sync` key switch together, on this page and on the other pages of the site. Select **pnpm**, and the install command on the [home page](/starlight-codeblocks/) changes too:
+A tab with no `title` shows the `label`, with no file icon. Blocks with the same `sync` key switch together, on this page and on the other pages of the site. Select **pnpm**, and every other block with `sync="pm"` changes too:
 
 export const packageManagers = `
 :::code-tabs{sync="pm"}

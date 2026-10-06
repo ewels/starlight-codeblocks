@@ -138,16 +138,22 @@ Docs: https://ewels.github.io/starlight-codeblocks/reference/plugin-compatibilit
 
 ## Sites without Starlight
 
-An Astro site with Expressive Code and no Starlight gives the options to `pluginCodeblocks()` in `ec.config.mjs`:
+Docs: https://ewels.github.io/starlight-codeblocks/install/astro/
+
+An Astro site without Starlight adds `codeblocks()` from `starlight-codeblocks/astro` to `integrations`, before `mdx()`. It adds Expressive Code itself, so remove `expressiveCode()`. Install `astro-expressive-code` next to the plugin.
 
 ```js
-import { pluginCodeblocks } from 'starlight-codeblocks/expressive-code';
+import mdx from '@astrojs/mdx';
+import { defineConfig } from 'astro/config';
+import codeblocks from 'starlight-codeblocks/astro';
 
-export default {
-  plugins: [pluginCodeblocks({ focus: { style: 'dim' } })],
-};
+export default defineConfig({
+  integrations: [codeblocks({ expressiveCode: { themes: ['github-dark', 'github-light'] } }), mdx()],
+});
 ```
 
-If the site has a `base`, give it as the second argument, `pluginCodeblocks(options, { base: '/docs' })`, so that links in code that start with `/` get it. Code tabs, inline code highlighting, `<CodeWalkthrough>` and `<Scrollycoding>` need Starlight. The features inside code blocks work on every site. Set `tabWidth: 0` in the Expressive Code options, so that tabs reach the code blocks unchanged.
+It takes the same options as on Starlight, plus `expressiveCode` for the options of `astro-expressive-code`. Code tabs and inline code highlighting are off until the site sets `codeTabs: {}` and `inlineHighlighting: {}`, because they change Markdown outside the code blocks. API cards show on links in code blocks only. Side annotations and scrollycoding stay inside the content column. With `unified()`, code tabs need `remark-directive` in its `remarkPlugins`.
 
-`runnable.runtimes` values are then URLs that the browser imports as they are. There are no built-in runtimes. Map each language to the URL of its runtime module, such as `https://cdn.jsdelivr.net/npm/starlight-codeblocks/dist/runtimes/pyodide.mjs`. The JavaScript and TypeScript runtimes are `javascript.mjs` and `typescript.mjs` in the same folder. The single plugins, such as `pluginFocus()`, are in https://ewels.github.io/starlight-codeblocks/reference/expressive-code-plugins/
+A site that keeps its own `expressiveCode()` gives the options to `pluginCodeblocks()` in `ec.config.mjs`, with `tabWidth: 0`. If the site has a `base`, give it as the second argument, `pluginCodeblocks(options, { base: '/docs' })`. Code tabs and inline code highlighting then do not work.
+
+Without `codeblocks()`, `runnable.runtimes` values are URLs that the browser imports as they are, and there are no built-in runtimes. Map each language to the URL of its runtime module, such as `https://cdn.jsdelivr.net/npm/starlight-codeblocks/dist/runtimes/pyodide.mjs`. The JavaScript and TypeScript runtimes are `javascript.mjs` and `typescript.mjs` in the same folder. The single plugins, such as `pluginFocus()`, are in https://ewels.github.io/starlight-codeblocks/reference/expressive-code-plugins/

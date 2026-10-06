@@ -1,0 +1,118 @@
+---
+title: Astro setup
+description: Add the code block features to an Astro site that does not use Starlight.
+---
+
+import { LinkCard, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+This page is for Astro sites that do not use Starlight. For a Starlight site, follow [Starlight setup](/starlight-codeblocks/install/starlight/).
+
+The `starlight-codeblocks/astro` subpath exports an Astro integration. It adds Expressive Code to the site, with the features of the code blocks.
+
+The source of the example site is in [`examples/astro` on GitHub](https://github.com/ewels/starlight-codeblocks/tree/main/examples/astro).
+
+<LinkCard title="Astro example site" description="A minimal Astro site with this set-up, on one MDX page with some of the features and a code walkthrough." href="/starlight-codeblocks/examples/astro/" />
+
+## Requirements
+
+- Astro 7 or later.
+- [Expressive Code](https://expressive-code.com/) 0.44 or later.
+- Node.js 22.12 or later.
+
+## Install the integration
+
+<Steps>
+
+1. Add the packages to the site.
+
+   <Tabs syncKey="pm">
+   <TabItem label="npm">
+
+   ```sh
+   npm install starlight-codeblocks astro-expressive-code
+   ```
+
+   </TabItem>
+   <TabItem label="pnpm">
+
+   ```sh
+   pnpm add starlight-codeblocks astro-expressive-code
+   ```
+
+   </TabItem>
+   <TabItem label="Yarn">
+
+   ```sh
+   yarn add starlight-codeblocks astro-expressive-code
+   ```
+
+   </TabItem>
+   </Tabs>
+
+2. Open `astro.config.mjs`.
+
+3. Add `codeblocks()` from `starlight-codeblocks/astro` to `integrations`. If the site uses `mdx()`, put `codeblocks()` before it.
+
+   ```js title="astro.config.mjs" ins={3,7} focus={3,7}
+   import mdx from '@astrojs/mdx';
+   import { defineConfig } from 'astro/config';
+   import codeblocks from 'starlight-codeblocks/astro';
+
+   export default defineConfig({
+     integrations: [
+       codeblocks(),
+       mdx(),
+     ],
+   });
+   ```
+
+4. If `integrations` has `expressiveCode()`, remove it. `codeblocks()` adds Expressive Code itself.
+
+</Steps>
+
+## Options
+
+`codeblocks()` takes the same [options](/starlight-codeblocks/reference/options/) as on a Starlight site. It also takes `expressiveCode`, with the options of `astro-expressive-code`.
+
+Two features change Markdown outside the code blocks, so they are off until you turn them on:
+
+- [Code tabs](/starlight-codeblocks/features/code-tabs/) turn on directive syntax, such as `:::name`, in every Markdown page. Set `codeTabs: {}` to turn them on.
+- [Inline code highlighting](/starlight-codeblocks/features/inline-code-highlighting/) adds a stylesheet to every page. Set `inlineHighlighting: {}` to turn it on.
+
+```js title="astro.config.mjs" focus={2-3}
+codeblocks({
+  codeTabs: {},
+  inlineHighlighting: {},
+}),
+```
+
+An `ec.config.mjs` file works as on a Starlight site. Its options replace the options in `expressiveCode`. If the file has a `plugins` list, add `pluginCodeblocks()` to it, as [Starlight setup](/starlight-codeblocks/install/starlight/#sites-with-an-ecconfigmjs-file) shows.
+
+## Differences from Starlight
+
+- Side annotations and scrollycoding stay inside the content column. On a Starlight page with no table of contents, they use the free space on each side of the column.
+- Code blocks and inline code change theme with the Expressive Code theme selectors. By default, they follow `prefers-color-scheme`, and `data-theme` with the name of a theme on the `html` element.
+- With code tabs on, the integration turns on directive syntax in Sätteri. It turns any other directive back into its text, so text such as `16:9` stays as it is.
+- API cards show on links in code blocks only. Starlight sites also get them on links outside code blocks, such as those from `starlight-pydocs`.
+- With `markdown: { processor: unified() }`, code tabs need `remark-directive` in the `remarkPlugins` of `unified()`.
+- The **Copied** label of colour swatches in prose uses the system colours of the browser.
+
+## Expressive Code only
+
+A site that keeps its own `expressiveCode()` integration can add the plugins in `ec.config.mjs`. Give the options to `pluginCodeblocks()`:
+
+```js title="ec.config.mjs" focus={4-5}
+import { pluginCodeblocks } from 'starlight-codeblocks/expressive-code';
+
+export default {
+  tabWidth: 0,
+  plugins: [pluginCodeblocks({ focus: { style: 'dim' } })],
+};
+```
+
+The features inside code blocks then work, but these parts are not there:
+
+- Code tabs and inline code highlighting, which need the Markdown plugin.
+- The built-in runtimes of the **Run code** button. Map each language to the URL of a runtime module, as in [Without codeblocks()](/starlight-codeblocks/reference/expressive-code-plugins/#without-codeblocks).
+
+`tabWidth: 0` keeps tabs in the code. Without it, Expressive Code turns each tab into spaces.

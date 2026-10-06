@@ -164,7 +164,7 @@ test('a button or a dot shows its example, announces it and marks itself, and th
 });
 
 test('the buttons are a flat list in sidebar order, in even columns, with one dot each', async ({ page }) => {
-  await page.goto('./getting-started/');
+  await page.goto('./install/starlight/');
   const sidebarIds = await page
     .locator('nav[aria-label="Main"] a[href*="/features/"]')
     .evaluateAll((els) =>

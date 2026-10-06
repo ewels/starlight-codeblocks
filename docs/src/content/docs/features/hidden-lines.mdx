@@ -102,7 +102,7 @@ With `hiddenLines: false`, the plugin ignores `hidden={range}`, and `[!code hide
 
 ## Hidden lines or collapsible sections
 
-Expressive Code has its own plugin for a similar job, [`@expressive-code/plugin-collapsible-sections`](https://expressive-code.com/plugins/collapsible-sections/). Its `collapse={range}` attribute folds lines into a section with a summary line, such as "3 collapsed lines". The plugin is not part of Starlight, so a site must install it and add it to the `plugins` list of its `ec.config.mjs` file. That list replaces the plugins of Starlight, so add `pluginCodeblocks()` to it too, as in [Sites with an ec.config.mjs file](/starlight-codeblocks/getting-started/#sites-with-an-ecconfigmjs-file):
+Expressive Code has its own plugin for a similar job, [`@expressive-code/plugin-collapsible-sections`](https://expressive-code.com/plugins/collapsible-sections/). Its `collapse={range}` attribute folds lines into a section with a summary line, such as "3 collapsed lines". The plugin is not part of Starlight, so a site must install it and add it to the `plugins` list of its `ec.config.mjs` file. That list replaces the plugins of Starlight, so add `pluginCodeblocks()` to it too, as in [Sites with an ec.config.mjs file](/starlight-codeblocks/install/starlight/#sites-with-an-ecconfigmjs-file):
 
 ```js title="ec.config.mjs"
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';

@@ -1,0 +1,214 @@
+---
+import '@fontsource/michroma/400.css';
+
+interface Props {
+  frontmatter: { title: string };
+}
+
+const { title } = Astro.props.frontmatter;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="hero">
+      <h1 class="hero-title" data-text="starlight-codeblocks">starlight-codeblocks</h1>
+      <p class="hero-tagline">on a plain Astro site, no Starlight required</p>
+    </header>
+    <p class="intro">
+      This is a minimal Astro site that does not use Starlight. It adds the code block features of
+      starlight-codeblocks with <code>codeblocks()</code> from <code>starlight-codeblocks/astro</code>. To set up
+      your own site, read <a href="https://ewels.github.io/starlight-codeblocks/install/astro/"
+        >Astro setup</a
+      > in the <a href="https://ewels.github.io/starlight-codeblocks/">starlight-codeblocks documentation</a>.
+    </p>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  /* Starlight's default palette and fonts, so that this site looks like the docs. */
+  :root {
+    color-scheme: dark;
+    --sl-color-white: hsl(0, 0%, 100%);
+    --sl-color-gray-1: hsl(224, 20%, 94%);
+    --sl-color-gray-2: hsl(224, 6%, 77%);
+    --sl-color-gray-3: hsl(224, 6%, 56%);
+    --sl-color-gray-4: hsl(224, 7%, 36%);
+    --sl-color-gray-5: hsl(224, 10%, 23%);
+    --sl-color-gray-6: hsl(224, 14%, 16%);
+    --sl-color-black: hsl(224, 10%, 10%);
+    --sl-color-accent-low: hsl(224, 54%, 20%);
+    --sl-color-accent: hsl(224, 100%, 60%);
+    --sl-color-accent-high: hsl(224, 100%, 85%);
+    --sl-color-text: var(--sl-color-gray-2);
+    --sl-color-text-accent: var(--sl-color-accent-high);
+    --sl-color-bg-inline-code: var(--sl-color-gray-5);
+    --sl-font-system:
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', Arial, sans-serif,
+      'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --sl-font-system-mono:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    /* The bracket colours of Night Owl, as on the homepage code block of the docs. */
+    --rim-1: #ffd700;
+    --rim-2: #da70d6;
+    --rim-3: #179fff;
+    --glint: rgb(255 255 255 / 0.8);
+    /* Shared by the code blocks, through `borderRadius` in astro.config.mjs, and the header. */
+    --radius: 0.3rem;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      color-scheme: light;
+      --sl-color-white: hsl(224, 10%, 10%);
+      --sl-color-gray-1: hsl(224, 14%, 16%);
+      --sl-color-gray-2: hsl(224, 10%, 23%);
+      --sl-color-gray-3: hsl(224, 7%, 36%);
+      --sl-color-gray-4: hsl(224, 6%, 56%);
+      --sl-color-gray-5: hsl(224, 6%, 77%);
+      --sl-color-gray-6: hsl(224, 20%, 94%);
+      --sl-color-gray-7: hsl(224, 19%, 97%);
+      --sl-color-black: hsl(0, 0%, 100%);
+      --sl-color-accent-high: hsl(234, 80%, 30%);
+      --sl-color-accent: hsl(234, 90%, 60%);
+      --sl-color-accent-low: hsl(234, 88%, 90%);
+      --sl-color-text-accent: var(--sl-color-accent);
+      --sl-color-bg-inline-code: var(--sl-color-gray-6);
+      --rim-1: #0431fa;
+      --rim-2: #2b822b;
+      --rim-3: #7b3814;
+      --glint: rgb(0 0 0 / 0.55);
+    }
+  }
+
+  body {
+    max-width: 45rem;
+    margin: 0 auto;
+    padding: 3rem 1rem 6rem;
+    background: var(--sl-color-black);
+    color: var(--sl-color-text);
+    font-family: var(--sl-font-system);
+    line-height: 1.75;
+  }
+  h1,
+  h2,
+  h3 {
+    color: var(--sl-color-white);
+    line-height: 1.2;
+  }
+  a {
+    color: var(--sl-color-text-accent);
+  }
+  code {
+    font-family: var(--sl-font-system-mono);
+    font-size: 0.875em;
+  }
+  :not(pre) > code:not(.scb-inline) {
+    padding: 0.125em 0.25em;
+    background: var(--sl-color-bg-inline-code);
+  }
+
+  .intro {
+    font-size: 0.95rem;
+  }
+
+  .hero {
+    position: relative;
+    margin-bottom: 2.5rem;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    /* Expressive Code adds its 1.5px border width to the radius of a frame. */
+    border-radius: calc(var(--radius) + 1.5px);
+    background: var(--sl-color-gray-6);
+    box-shadow:
+      0 1.6em 4.5em -1.2em color-mix(in srgb, var(--rim-2) 45%, transparent),
+      0 0 2.4em -0.6em color-mix(in srgb, var(--rim-1) 40%, transparent);
+  }
+  /* The rim of the homepage code block: a gradient, masked to a 1px border. */
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    padding: 1px;
+    border-radius: calc(var(--radius) + 2.5px);
+    background: linear-gradient(115deg, var(--rim-1), var(--rim-2) 52%, var(--rim-3));
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+
+  .hero-title {
+    position: relative;
+    margin: 0;
+    font-family: Michroma, var(--sl-font-system);
+    font-weight: 400;
+    font-size: clamp(1.4rem, 5.5vw, 2.6rem);
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+    background: linear-gradient(100deg, var(--rim-1), var(--rim-2), var(--rim-3), var(--rim-1));
+    background-size: 300% 100%;
+    background-clip: text;
+    color: transparent;
+    animation: hero-flow 10s linear infinite;
+  }
+  /* A glint that sweeps across the letters. */
+  .hero-title::after {
+    content: attr(data-text) / '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 40%, var(--glint) 50%, transparent 60%);
+    background-size: 250% 100%;
+    background-clip: text;
+    color: transparent;
+    animation: hero-shine 5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .hero-tagline {
+    margin: 0.75rem 0 0;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  @keyframes hero-flow {
+    to {
+      background-position: 300% 0;
+    }
+  }
+  @keyframes hero-shine {
+    0% {
+      background-position: 150% 0;
+    }
+    60%,
+    100% {
+      background-position: -100% 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-title {
+      animation: none;
+    }
+    .hero-title::after {
+      display: none;
+    }
+  }
+  @media (forced-colors: active) {
+    .hero-title {
+      color: CanvasText;
+      background: none;
+    }
+    .hero-title::after {
+      display: none;
+    }
+  }
+</style>

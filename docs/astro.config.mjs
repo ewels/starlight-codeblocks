@@ -11,6 +11,10 @@ import { sidebar } from './src/sidebar.mjs';
 export default defineConfig({
   site: 'https://ewels.github.io',
   base: '/starlight-codeblocks',
+  redirects: {
+    '/getting-started': '/starlight-codeblocks/install/starlight/',
+    '/astro-without-starlight': '/starlight-codeblocks/install/astro/',
+  },
   integrations: [
     starlight({
       title: 'starlight-codeblocks',
@@ -76,7 +80,11 @@ export default defineConfig({
           runnable: { timeout: 5000 },
           lineStates: { states: { todo: { label: 'To do', colour: { dark: '#c792ea', light: '#7c3aed' } } } },
         }),
-        starlightLinksValidator({ exclude: linksValidatorExclude }),
+        starlightLinksValidator({
+          // The example site builds into docs/dist after the docs, so the validator cannot see it.
+          exclude: (context) =>
+            linksValidatorExclude(context) || context.link.startsWith('/starlight-codeblocks/examples/'),
+        }),
       ],
       sidebar,
     }),

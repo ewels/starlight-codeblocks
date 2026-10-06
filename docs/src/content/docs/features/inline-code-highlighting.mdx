@@ -7,6 +7,10 @@ import { Aside, LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
+<Aside>
+On an Astro site without Starlight, inline code highlighting is off until you set `inlineHighlighting: {}` in `codeblocks()`. See [Astro setup](/starlight-codeblocks/install/astro/#options).
+</Aside>
+
 Starlight shows inline code in the prose in one colour, with no syntax highlighting. A short expression such as a function call is then harder to read than the same code in a block. A `{:lang}` suffix at the end of the inline code gives it the syntax colours of that language. A site can also set a [default language](#a-default-language) for all inline code.
 
 <Aside type="tip">
@@ -39,11 +43,7 @@ Each piece of inline code with a suffix gets the colours and the background of t
 | `` `<code>{:<lang>}` `` | Inside the backticks, at the end of the code |
 | `` `<code>`{:<lang>} `` | Directly after the closing backtick |
 
-`<lang>` is a language name or alias that Expressive Code knows, as in a code block: `js`, `py`, `sh`, `css` and others. Languages that the site adds in the `shiki.langs` option of Expressive Code work too. The suffix must follow the code or the backtick with no space between them.
-
-<Aside type="tip">
-If possible, use the first syntax, with the suffix inside the backticks. It is the same syntax as `rehype-pretty-code`, and it is valid in `.md` and `.mdx` files with no change.
-</Aside>
+`<lang>` is a language name or alias that Expressive Code knows, as in a code block: `js`, `py`, `sh`, `css` and others. Languages that the site adds in the `shiki.langs` option of Expressive Code work too. The suffix must follow the code or the backtick with no space between them. If possible, use the first syntax, with the suffix inside the backticks. It is the same syntax as `rehype-pretty-code`, and it is valid in `.md` and `.mdx` files with no change.
 
 <Aside type="caution">
 MDX reads a `{:js}` after the closing backtick as a JavaScript expression, and the build fails.

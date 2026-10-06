@@ -102,7 +102,7 @@ print(mean([1520, 1610, 1480]))
 ```
 ````
 
-- The language of the block chooses the runtime. Built in: Python (`py`, `python`, `pycon`), JavaScript (`js`, `javascript`, `mjs`, `cjs`) and TypeScript (`ts`, `typescript`, `mts`, `cts`). TypeScript runs after Sucrase removes the types, and no types are checked. Other languages, and `jsx` or `tsx`, need a site runtime in `runnable.runtimes`. Sites without Starlight must add a runtime URL for each language.
+- The language of the block chooses the runtime. Built in: Python (`py`, `python`, `pycon`), JavaScript (`js`, `javascript`, `mjs`, `cjs`) and TypeScript (`ts`, `typescript`, `mts`, `cts`). TypeScript runs after Sucrase removes the types, and no types are checked. Other languages, and `jsx` or `tsx`, need a site runtime in `runnable.runtimes`. Sites without `codeblocks()` must add a runtime URL for each language.
 - JavaScript and TypeScript: `console.log` and `console.info` go to standard output, `console.error` and `console.warn` to standard error. Top-level `await` works; `import` statements do not.
 - Standard output and standard error show in the output panel. A run stops after the timeout. The download of the runtime and of imported packages does not count towards the timeout.
 - A Python session with `>>>` prompts runs its commands only, as in the Python REPL: the output shows the value of each expression.

@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/logotype.svg" width="800" alt="starlight-codeblocks">
 </h1>
 
-A Starlight plugin that adds 26 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
+A Starlight and Astro plugin that adds 26 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
 
 Using an agent? [Point it at the bundled skill](https://ewels.github.io/starlight-codeblocks/agent-skill/).
 
@@ -30,6 +30,8 @@ export default defineConfig({
   ],
 });
 ```
+
+On an Astro site without Starlight, add `codeblocks()` from `starlight-codeblocks/astro` to `integrations` instead. The [Astro setup](https://ewels.github.io/starlight-codeblocks/install/astro/) page gives the details.
 
 Most features start only when a code block uses their attribute, or a [comment notation](https://ewels.github.io/starlight-codeblocks/comment-notation/) directive such as `# [!code focus]`. A few, such as file icons and colour swatches, apply to every matching block.
 

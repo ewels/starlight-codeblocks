@@ -1,6 +1,6 @@
 # Agent instructions
 
-`starlight-codeblocks` is a Starlight plugin that adds 26 code block features on top of Expressive Code (EC), which renders every code block in Starlight. `packages/starlight-codeblocks/` is the plugin, `docs/` its Starlight docs site (it uses the plugin through `workspace:*`, and defines each feature's syntax and behaviour), and `skills/starlight-codeblocks/` an agent skill for people who use the plugin.
+`starlight-codeblocks` is a Starlight plugin that adds 26 code block features on top of Expressive Code (EC), which renders every code block in Starlight. `packages/starlight-codeblocks/` is the plugin, `docs/` its Starlight docs site (it uses the plugin through `workspace:*`, and defines each feature's syntax and behaviour), `examples/astro/` a minimal Astro site without Starlight, and `skills/starlight-codeblocks/` an agent skill for people who use the plugin.
 
 - `.agents/DECISIONS.md`: design decisions and the rejected options. Search it before you change existing behaviour.
 - `.agents/WRITING-STYLE.md`: how the docs read, the feature page template and the glossary.
@@ -16,10 +16,10 @@
 ```
 pnpm install
 pnpm build              Build the package (tsdown) into packages/starlight-codeblocks/dist
-pnpm test               Build, then Vitest unit tests and the node:test checks in scripts/
+pnpm test               Build, then Vitest unit tests, a build of examples/astro and the node:test checks in scripts/
 pnpm lint               Build, then Biome and type checks (tsc, astro check)
 pnpm lint:docs          Writing-style lint for docs/, the READMEs and skills/
-pnpm docs:build         Build the package and the docs site into docs/dist, then render the share cards
+pnpm docs:build         Build the package, the docs site into docs/dist and examples/astro into docs/dist/examples/astro, then render the share cards
 pnpm test:e2e           docs:build, then Playwright against astro preview of docs/dist
 pnpm readme:media [slug...]   docs:build, then regenerate the README images in .github/assets/readme/
 ```
@@ -34,6 +34,7 @@ pnpm readme:media [slug...]   docs:build, then regenerate the README images in .
 Paths are under `packages/starlight-codeblocks/src/` unless they start with `docs/`.
 
 - `index.ts`: `codeblocks()`, the Starlight plugin. It validates options (`options.ts`), fills the `globalThis` registry (`registry.ts`) and adds the integration (`integration.ts`).
+- `astro.ts`: `codeblocks()` for Astro without Starlight (`starlight-codeblocks/astro`). It does the same and adds `astroExpressiveCode()` itself. `examples/astro/` uses it: `pnpm build && pnpm --filter example-astro build`.
 - `expressive-code/index.ts`: `createPlugins()`, the preset in order. Core first, notation second; the comments there give the other order constraints. One file per feature, `expressive-code/<name>.ts`. Shared helpers are in `core.ts` and `styles.ts`.
 - `satteri/`: one mdast plugin for code tabs directive, `{:lang}` inline code, mention link checks and duplicate `id` checks. `remark.ts` runs it on `unified()`; add any context it lacks there, with a case in `test/remark.test.ts`.
 - `client/<name>.ts`: browser modules, built to `dist/client/scb-<name>.<hash>.js` and loaded by one loader in `jsModules`. `api-card-page.ts` is the exception: a page script and CSS for API cards on links outside code blocks.

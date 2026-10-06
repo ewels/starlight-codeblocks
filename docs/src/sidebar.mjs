@@ -3,7 +3,8 @@ export const sidebar = [
     label: 'Start here',
     items: [
       { label: 'Introduction', link: '/' },
-      'getting-started',
+      'install/starlight',
+      'install/astro',
       'configuration',
       'comment-notation',
       'agent-skill',

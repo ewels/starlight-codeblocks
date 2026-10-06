@@ -3,7 +3,7 @@ title: Expressive Code plugins
 description: The Expressive Code plugins that the package exports, for sites that configure Expressive Code themselves.
 ---
 
-`codeblocks()` adds every feature to Starlight for you. Behind it, each feature is an Expressive Code plugin. The `starlight-codeblocks/expressive-code` subpath exports these plugins, and a preset that returns all of them. A site that uses Expressive Code without Starlight, or with its own `plugins` list in `ec.config.mjs`, uses them there.
+`codeblocks()` adds every feature to Starlight for you. Behind it, each feature is an Expressive Code plugin. The `starlight-codeblocks/expressive-code` subpath exports these plugins, and a preset that returns all of them. A site with its own `plugins` list in `ec.config.mjs`, or with Expressive Code but no `codeblocks()`, uses them there.
 
 ## The preset
 
@@ -68,12 +68,11 @@ If you add plugins one by one, follow these rules:
 
 The order matters. For example, `pluginPlayground()` sends the copied text, so it must come after `pluginShellCopy()` and `pluginPlaceholders()`, which change that text. `pluginCallouts()` must come after `pluginHiddenLines()`, which rebuilds the lines of the block.
 
-## Without Starlight
+## Without codeblocks()
 
-Some features need more than an Expressive Code plugin. Without `codeblocks()`, these parts are not there:
+Some features need more than an Expressive Code plugin. On an Astro site without Starlight, use `codeblocks()` from `starlight-codeblocks/astro`, as [Astro setup](/starlight-codeblocks/install/astro/) shows. Without `codeblocks()`, these parts are not there:
 
 - The `:::code-tabs` directive and [inline code highlighting](/starlight-codeblocks/features/inline-code-highlighting/) need the Markdown plugin that `codeblocks()` adds.
-- The `<CodeWalkthrough>` and `<Scrollycoding>` components need Starlight.
 - `runnable.runtimes` values are URLs that the browser imports as they are, because `codeblocks()` is not there to bundle the runtime modules. There are no built-in runtimes. Map each language to the URL of its runtime module, such as `https://cdn.jsdelivr.net/npm/starlight-codeblocks/dist/runtimes/pyodide.mjs`. The JavaScript and TypeScript runtimes are `javascript.mjs` and `typescript.mjs` in the same folder.
 - Expressive Code turns each tab into spaces, because `codeblocks()` is not there to set `tabWidth: 0`. Set `tabWidth: 0` in `ec.config.mjs`, so that tabs reach the code blocks unchanged.
 

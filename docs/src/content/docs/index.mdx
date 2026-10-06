@@ -1,16 +1,19 @@
 ---
 title: starlight-codeblocks
-description: A Starlight plugin that adds focus, line states, annotations, API auto-linking and 22 more features to the code blocks of a site.
+description: A plugin for Starlight and Astro that adds focus, line states, annotations, API auto-linking and 22 more features to the code blocks of a site.
 template: splash
 hero:
   tagline: |
     This plugin adds 26 features to the <a href="https://expressive-code.com">Expressive Code</a> blocks of
-    <a href="https://starlight.astro.build">Starlight</a>.
-    Use them to enrich code blocks, they're perfect for docs and training.
+    <a href="https://starlight.astro.build">Starlight</a> and <a href="/starlight-codeblocks/install/astro/">Astro</a> sites.
+    Use them to enrich code blocks.
     <span class="agent-skill">Using an agent? <a href="/starlight-codeblocks/agent-skill/">Point it at the bundled skill</a>.</span>
   actions:
-    - text: Get started
-      link: /starlight-codeblocks/getting-started/
+    - text: Starlight setup
+      link: /starlight-codeblocks/install/starlight/
+      icon: right-arrow
+    - text: Astro setup
+      link: /starlight-codeblocks/install/astro/
       icon: right-arrow
     - text: GitHub
       link: https://github.com/ewels/starlight-codeblocks
@@ -455,49 +458,9 @@ print(f"mean {mean(reads):.0f}, sd {stdev(reads):.1f}")
 
 </FeatureCarousel>
 
-## Install
-
-Add the package to the site:
-
-:::code-tabs{sync="pm"}
-```sh label="npm"
-npm install starlight-codeblocks
-```
-```sh label="pnpm"
-pnpm add starlight-codeblocks
-```
-```sh label="Yarn"
-yarn add starlight-codeblocks
-```
-:::
-
-Then add `codeblocks()` to the Starlight plugins in `astro.config.mjs`:
-
-```js title="astro.config.mjs"
-import { defineConfig } from 'astro/config';
-import starlight from '@astrojs/starlight';
-import codeblocks from 'starlight-codeblocks'; // [!code focus ++] Import the plugin
-
-export default defineConfig({
-  integrations: [
-    starlight({
-      title: 'My docs',
-      plugins: [codeblocks()], // [!code focus ++] Load the plugin
-    }),
-  ],
-});
-```
-
-The [getting started](/starlight-codeblocks/getting-started/) page has the full steps.
-
-## Extend and reference
-
-- [Extend](/starlight-codeblocks/extend/write-an-api-link-adapter/): your own API link adapters, playgrounds and runtimes.
-- [Reference](/starlight-codeblocks/reference/options/): every option, attribute, directive and style setting.
-
 ## Using with an agent
 
-This website is agent-friendly: each page has a Markdown version at the same address with `.md` at the end, such as [getting-started.md](/starlight-codeblocks/getting-started.md).
+This website is agent-friendly: each page has a Markdown version at the same address with `.md` at the end, such as [install/starlight.md](/starlight-codeblocks/install/starlight.md).
 [llms.txt](/starlight-codeblocks/llms.txt) lists every page, and [llms-full.txt](/starlight-codeblocks/llms-full.txt) has every page in one file.
 
 Using an agent? [Point it at the bundled skill](/starlight-codeblocks/agent-skill/). The skill tells the agent which feature suits each use, and how to write it.
