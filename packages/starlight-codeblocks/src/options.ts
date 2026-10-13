@@ -83,6 +83,7 @@ export interface CodeblocksOptions {
   lineStates?: false | { states?: Record<string, LineStateDefinition>; prefix?: boolean };
   notation?: false | { comments?: Record<string, string[]> };
   callouts?: false;
+  squiggles?: false;
   annotations?: false | { style?: 'filled' | 'outline' };
   footnotes?: false | { sticky?: boolean; style?: 'filled' | 'outline' };
   hiddenLines?: false;
@@ -268,6 +269,10 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     },
   },
   callouts: { description: 'Shows a note in a bubble above a line.', page: 'features/inline-callouts' },
+  squiggles: {
+    description: 'Draws wavy error, warning and info lines under code, with an optional message.',
+    page: 'features/squiggles',
+  },
   annotations: {
     description: 'Adds numbered markers that open a note.',
     page: 'features/annotations',

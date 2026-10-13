@@ -21,6 +21,7 @@ import { pluginPlaceholders } from './placeholders.ts';
 import { pluginPlayground } from './playground.ts';
 import { pluginRunnable } from './runnable.ts';
 import { pluginShellCopy } from './shell-copy.ts';
+import { pluginSquiggles } from './squiggles.ts';
 import { pluginSwatches } from './swatches.ts';
 import { pluginWalkthrough } from './walkthrough.ts';
 import { pluginWhitespace } from './whitespace.ts';
@@ -48,6 +49,7 @@ export {
   pluginPlayground,
   pluginRunnable,
   pluginShellCopy,
+  pluginSquiggles,
   pluginSwatches,
   pluginWalkthrough,
   pluginWhitespace,
@@ -102,5 +104,7 @@ export function createPlugins(options: ResolvedOptions, base?: string): Expressi
     ...(options.callouts ? [pluginCallouts()] : []),
     ...(options.annotations ? [pluginAnnotations(options.annotations)] : []),
     ...(options.footnotes ? [pluginFootnotes(options.footnotes)] : []),
+    // Last, so that its wavy line wraps the annotations of the other plugins.
+    ...(options.squiggles ? [pluginSquiggles()] : []),
   ];
 }

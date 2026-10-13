@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/logotype.svg" width="800" alt="starlight-codeblocks">
 </h1>
 
-A Starlight and Astro plugin that adds 26 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
+A Starlight and Astro plugin that adds 27 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
 
 Using an agent? [Point it at the bundled skill](https://ewels.github.io/starlight-codeblocks/agent-skill/).
 
@@ -186,6 +186,22 @@ for name in sys.argv[1:]  # [!code error] SyntaxError: expected ':'
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/line-states.png" alt="A Python block with a red error line and a yellow warning line, each with its message after the code, and a blue info line.">
 
 [Line states documentation](https://ewels.github.io/starlight-codeblocks/features/line-states/)
+
+</details>
+
+<details>
+<summary>Squiggles</summary>
+
+Draw a wavy error, warning or info line under code, as a code editor does, with a message that shows on hover.
+
+```ts
+// [!error /readFle/] Cannot find name `readFle`. Did you mean `readFile`?
+const config = JSON.parse(await readFle('config.json', 'utf8'));
+```
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/squiggles.png" alt="A TypeScript block with a yellow wavy line under the name join and a red wavy line under readFle.">
+
+[Squiggles documentation](https://ewels.github.io/starlight-codeblocks/features/squiggles/)
 
 </details>
 

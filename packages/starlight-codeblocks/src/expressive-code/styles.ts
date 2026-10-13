@@ -228,7 +228,7 @@ ${floatLook(cssVar)}
 /* Callouts and hidden-line markers sit outside the lines, so they read the width of the line numbers plugin's gutter from here. */
 figure:has(.ec-line > .gutter > .ln) { --scb-gutter: calc(var(--lnWidth, 2ch) + 4ch); }
 /* .frame outweighs Expressive Code's square top corners for code in titled blocks. */
-.frame :is(.${PREFIX}-annotation-popover, .${PREFIX}-callout-bubble, .${PREFIX}-footnotes) code {
+.frame :is(.${PREFIX}-annotation-popover, .${PREFIX}-squiggle-popover, .${PREFIX}-callout-bubble, .${PREFIX}-footnotes) code {
   padding: 0 4px;
   border-radius: 3px;
   background: color-mix(in srgb, currentColor 12%, transparent);
@@ -237,7 +237,7 @@ figure:has(.ec-line > .gutter > .ln) { --scb-gutter: calc(var(--lnWidth, 2ch) + 
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
-:is(.${PREFIX}-annotation-popover, .${PREFIX}-callout-bubble, .${PREFIX}-footnotes) a:not(.${PREFIX}-footnote-num) {
+:is(.${PREFIX}-annotation-popover, .${PREFIX}-squiggle-popover, .${PREFIX}-callout-bubble, .${PREFIX}-footnotes) a:not(.${PREFIX}-footnote-num) {
   color: inherit;
   text-underline-offset: 3px;
 }

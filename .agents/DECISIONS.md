@@ -75,6 +75,14 @@ The choices that the code does not explain, with the options that were rejected.
 - **A callout is a sibling of its line**, so line tints and blur do not cover it. It takes the highlight of the lines around it when both sides match. Its width uses `cqi` of the `pre`, except in a side annotation grid, where containment would collapse the code column.
 - **A callout's text is selectable only in a selection that starts in its bubble.** A `pointerdown` in a bubble turns on `user-select: text` for that bubble until the next `pointerdown`, so a drag across the code still leaves every bubble out, and what readers see selected is what they copy. *Rejected:* `user-select: contain` (no browser support); a selectable bubble with a `copy` handler that removes callout text (the paste would differ from the selection, as for hidden lines).
 
+### Squiggles
+
+- **Squiggles mimic VS Code diagnostics**: `[!error /text/]`, `[!warning /text/]` and `[!info /text/]` (with `warn` and `note`, as in line states), placed like callouts. The bare names keep them apart from line states, which use `[!code error]`. *Rejected:* `[!squiggle error]` (longer for no gain); VS Code's hint severity (three faint dots, below 3:1 at any size) and its unnecessary and deprecated tags (fade and strikethrough are not squiggles); a separate syntax for the source and code, such as `ts(2552)` (authors put it in the message).
+- **The wave is VS Code's own 6 × 3 px SVG, as a CSS mask over a background colour**, so the colour comes from a theme variable. *Rejected:* `text-decoration: wavy` (a different, rounder shape in each browser); an SVG background (a data URI cannot read CSS variables).
+- **The squiggle annotation renders in the `latest` phase**, so EC merges the tokens of the range into one element and the wave has no breaks. A later annotation that overlaps only part of the range still splits it.
+- **Every squiggle has a hover, also with no message**: the icon and the name of the severity tell error from warning without colour (WCAG 1.4.1). The message is a `popover="manual"` inside the squiggle, so hover over the message keeps it open. It opens after 300 ms, as in VS Code, at once on keyboard focus, and Escape closes it (WCAG 1.4.13). Screen readers read the severity and the message from `scb-sr-only` text after the code.
+- **The script moves a message back inside the window**: when the block scrolls the text past the window edge, the text's position area reaches past it too, so `position-try` sees no overflow.
+
 ### Hidden lines, expandable blocks
 
 - **Expandable blocks collapse only in the client**, with `hidden="until-found"`, so a block is complete without JavaScript and find in page reveals lines. Collapsed lines use `content-visibility: hidden` because EC's `all: revert` removes the browser's until-found style. `auto` skips code tabs variants, runnable blocks and collapsible sections; the components remove an `auto` cap.

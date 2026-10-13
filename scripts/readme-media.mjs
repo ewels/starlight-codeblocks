@@ -31,6 +31,7 @@ const features = [
     },
   },
   { slug: 'line-states' },
+  { slug: 'squiggles' },
   { slug: 'inline-callouts' },
   {
     slug: 'annotations',

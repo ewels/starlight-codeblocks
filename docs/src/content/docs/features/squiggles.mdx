@@ -1,0 +1,132 @@
+---
+title: Squiggles
+description: Draw a wavy error, warning or info line under code, as a code editor does, with a message that shows on hover.
+---
+
+import { LinkCard } from '@astrojs/starlight/components';
+import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
+
+A code editor draws a wavy line under code that has a problem, and shows the message when you hover over it. A code block in a page shows the code, but not the problem. A squiggle draws the same wavy line under the text, in red for an error, yellow for a warning or blue for info.
+
+:::tip[Good for:]
+A mistake in one name or expression that readers must find, as a compiler or linter reports it.
+To mark a whole line, use [line states](/starlight-codeblocks/features/line-states/).
+:::
+
+export const basic = `
+\`\`\`ts title="load.ts"
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path'; // [!warning /join/] \`join\` is declared but its value is never read.
+
+// [!error /readFle/] Cannot find name \`readFle\`. Did you mean \`readFile\`?
+const config = JSON.parse(await readFle('config.json', 'utf8'));
+\`\`\`
+`;
+
+<Example code={basic} hiddenAttributes="apiLinks=false" />
+
+Each directive is gone from the output. A wavy line is under the text between the slashes. Hover over the line to see the message, or press Tab to move to it.
+
+## Syntax
+
+| Syntax | Where |
+|---|---|
+| `[!error /text/] message` | Comment on or above the line |
+| `[!warning /text/] message` | Comment on or above the line |
+| `[!info /text/] message` | Comment on or above the line |
+| `[!error] message` | Comment on or above the line |
+| `warn`, `note` | Comment on or above the line |
+
+`warn` is another name for `warning`, and `note` for `info`. The directive goes at the end of the line, or on its own line directly above it. `/text/` is literal text, not a regular expression. The wavy line goes under the first match on the line. Without `/text/`, it goes under the whole line, from the first character that is not a space.
+
+The message is optional. It can hold inline code, links and bold text.
+
+## Examples
+
+### A whole line
+
+A squiggle without `/text/` is under all of the code on its line:
+
+export const whole = `
+\`\`\`py
+import sqlite3
+
+db = sqlite3.connect("notes.db")
+db.execute("SELECT body FROM notes")  # [!info] Returns nothing until you call \`fetchall()\`.
+\`\`\`
+`;
+
+<Example code={whole} hiddenAttributes="apiLinks=false" layout="tabs" />
+
+### Two squiggles on one line
+
+Two directives on one line draw two wavy lines, each with its own message:
+
+export const two = `
+\`\`\`js
+// [!error /lenght/] Property \`lenght\` does not exist. Did you mean \`length\`?
+// [!warning /var/] Use \`let\` or \`const\` instead.
+for (var i = 0; i < items.lenght; i++) render(items[i]);
+\`\`\`
+`;
+
+<Example code={two} hiddenAttributes="apiLinks=false" layout="tabs" />
+
+### A squiggle without a message
+
+Without a message, the wavy line is enough. A reader who hovers over it sees only the severity:
+
+export const bare = `
+\`\`\`rust
+fn main() {
+    let unused = 42; // [!warning /unused/]
+    println!("Hello, world!");
+}
+\`\`\`
+`;
+
+<Example code={bare} layout="tabs" />
+
+## Behaviour
+
+- How it looks:
+  - The wavy line is VS Code's own shape, under the text. Its colour comes from the theme's error, warning or info colour.
+  - The line is continuous under text in several colours, such as a function call with its arguments.
+- Opening the message:
+  - Hover over the text for 300 ms to show the message. The mouse cursor can move into the message, for example to click a link.
+  - Each squiggle is in the tab order. Keyboard focus shows the message at once.
+  - Escape closes the message. The message closes when the mouse cursor or the focus leaves.
+- Where the message opens:
+  - Above the text, from its first character, as in VS Code. If there is no room above, it opens below.
+  - The message starts with an icon and the name of the severity, **Error**, **Warning** or **Info**. The colour is not the only sign of the severity.
+  - A long message wraps at the popover width, 340 px by default.
+- Screen readers:
+  - Screen readers read the severity and the message after the text, such as "(Error: Cannot find name)".
+- Copy and print:
+  - The copy button copies the code without the messages. A manual selection leaves them out too.
+  - In print, the wavy lines stay, and the messages are a list under the block, with their line numbers.
+- Without JavaScript:
+  - The wavy lines show, but the messages do not open. Screen readers still read them.
+- Motion:
+  - The message fades in and out in 120 ms. With reduced motion, it shows and hides at once.
+
+## Options
+
+<Options />
+
+With `squiggles: false`, the plugin does not know the `[!error]`, `[!warning]` and `[!info]` directives. It leaves each comment in the code as written, and logs a build warning.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
+
+## Limitations
+
+- A squiggle is on one line. For a problem that spans lines, put one squiggle on each line.
+- `/text/` finds the first match on the line. To mark a later match, make `/text/` longer, so that it is unique on the line.
+- Readers see a message only when they hover over the text or focus it. For a message that is always visible, use [line states](/starlight-codeblocks/features/line-states/).
+
+## Related
+
+- [Line states](/starlight-codeblocks/features/line-states/): tint a whole line as an error, a warning or a note, with the message always visible after the code.
+- [Inline callouts](/starlight-codeblocks/features/inline-callouts/): a short, always visible note above the line, with an arrow at one name.
+- [Annotations](/starlight-codeblocks/features/annotations/): a numbered marker that opens a note in a popover.

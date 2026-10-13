@@ -1,9 +1,10 @@
 # Draw attention
 
-Focus and line states mark lines for every reader. Code mentions, in [explain-code.md](explain-code.md), mark lines only when the reader hovers over a link in the prose.
+Focus, line states and squiggles mark code for every reader. Code mentions, in [explain-code.md](explain-code.md), mark lines only when the reader hovers over a link in the prose.
 
 - If the text is about a few lines and the rest is context, use focus.
 - If a line has a problem or a status, and the reader needs its name or a message, use a line state.
+- If one name or expression on a line has the problem, use a squiggle.
 - If the highlight has no meaning of its own, use `{3}` or `[!code highlight]`, the `mark` of Expressive Code.
 
 ## Focus
@@ -84,3 +85,32 @@ count = len(sys.argv)  # [!code warning] Includes the script name
   Then use `todo={9}` or `[!code todo]`. A name uses lower-case letters, digits and hyphens, and cannot be the name of another attribute, such as `title` or `focus`. Each colour needs a contrast of 3:1 or more on the code background. A state with the name `error`, `warning`, `info` or `success` changes the built-in state. `note` and `warn` cannot be custom names.
 - Option: `lineStates: false` leaves the directives in the code.
 - Limits: a message is one line of text. `[!code <state>]` on a line with only a comment marks the line below, and the comment line goes.
+
+## Squiggles
+
+Docs: https://ewels.github.io/starlight-codeblocks/features/squiggles/
+
+Use to draw a wavy error, warning or info line under one name or expression, as a code editor does for a linter problem. The message shows when the reader hovers over the text or focuses it. Do not use to mark a whole line with a message that is always visible: use a line state.
+
+| Syntax | Where |
+|---|---|
+| `[!error /text/] message` | Comment on or above the line. The message is optional. |
+| `[!warning /text/] message` | Comment on or above the line |
+| `[!info /text/] message` | Comment on or above the line |
+| `[!warn /text/]`, `[!note /text/]` | Other names for `warning` and `info` |
+| `[!error] message` | Without `/text/`: the whole line, from the first character that is not a space |
+
+```ts
+import { join } from 'node:path'; // [!warning /join/] `join` is declared but its value is never read.
+// [!error /readFle/] Cannot find name `readFle`. Did you mean `readFile`?
+const config = await readFle('config.json');
+```
+
+- These directives have no `code` before the name. `[!code error]` is a line state, and `[!error]` is a squiggle.
+- `/text/` is literal text, and the line goes under its first match. Text that is not on the line logs a build warning, and the line renders without the squiggle.
+- Several squiggles can go on one line. Put each directive on its own comment line above the line.
+- The message starts with an icon and the name of the severity: **Error**, **Warning** or **Info**. Each squiggle is in the tab order, and Escape closes the message. Screen readers hear the severity and the message after the text.
+- The copy button and a manual selection leave out the messages. In print, the messages are a list under the block. Without JavaScript, the wavy lines show but the messages do not open.
+- Option: `squiggles: false` leaves the directives in the code.
+- Style settings: `codeblocksSquiggles.error`, `codeblocksSquiggles.warning` and `codeblocksSquiggles.info`.
+- Limits: one line per squiggle. The message opens only on hover or focus.

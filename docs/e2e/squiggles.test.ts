@@ -1,0 +1,86 @@
+import { expect, test } from '@playwright/test';
+import { copyFromKeyboard, css, example, phone, reduced } from './helpers.ts';
+
+test.beforeEach(async ({ page }) => {
+  await page.goto('./features/squiggles/');
+});
+
+test('draws the wave under the text in the severity colour, and the copy button leaves out the messages', async ({
+  page,
+}) => {
+  const block = example(page);
+  const error = block.locator('.scb-squiggle-error');
+  await expect(error).toHaveCount(1);
+  const wave = await error.evaluate((el) => {
+    const after = getComputedStyle(el, '::after');
+    return { height: after.height, mask: after.maskImage, background: after.backgroundColor };
+  });
+  expect(wave.height).toBe('3px');
+  expect(wave.mask).toContain('svg');
+  expect(wave.background).not.toBe('rgba(0, 0, 0, 0)');
+  expect(await copyFromKeyboard(block)).not.toContain('Cannot find');
+});
+
+test('keyboard focus opens the message above the text at once, and Escape closes it', async ({ page }) => {
+  const block = example(page);
+  const squiggle = block.locator('.scb-squiggle-error');
+  const message = squiggle.locator('.scb-squiggle-popover');
+  await expect(message).toBeHidden();
+  await block.locator('.scb-squiggle-warning').focus();
+  await page.keyboard.press('Tab');
+  await expect(squiggle).toBeFocused();
+  await expect(message).toBeVisible();
+  await expect(message).toHaveText(/^ErrorCannot find name readFle\./);
+  const [text, box] = await Promise.all([squiggle.boundingBox(), message.boundingBox()]);
+  expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(text?.y ?? 0);
+  // From the start of the text, as in VS Code. On a phone, the window edge can move it.
+  if (!phone()) expect(Math.abs((box?.x ?? 0) - (text?.x ?? 0))).toBeLessThan(2);
+  expect(box?.x ?? -1).toBeGreaterThanOrEqual(12);
+  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual((page.viewportSize()?.width ?? 0) - 12);
+  expect(await css(squiggle, 'outlineStyle')).toBe('solid');
+  await page.keyboard.press('Escape');
+  await expect(message).toBeHidden();
+  await expect(squiggle).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(block.locator('.scb-squiggle-warning .scb-squiggle-popover')).toBeVisible();
+  await expect(message).toBeHidden();
+});
+
+test.describe('hover', () => {
+  test.skip(({ isMobile }) => isMobile, 'Phones have no hover.');
+
+  test('hovering shows the message after a delay, and it stays while the pointer moves into it', async ({ page }) => {
+    const block = example(page);
+    const squiggle = block.locator('.scb-squiggle-warning');
+    const message = squiggle.locator('.scb-squiggle-popover');
+    await squiggle.hover();
+    await page.waitForTimeout(100);
+    await expect(message).toBeHidden();
+    await expect(message).toBeVisible();
+    if (reduced()) expect(await css(message, 'transitionDuration')).toBe('0s');
+    await message.hover();
+    await page.waitForTimeout(400);
+    await expect(message).toBeVisible();
+    await page.mouse.move(5, 5);
+    await expect(message).toBeHidden();
+  });
+
+  test('Escape closes a hovered message until the pointer leaves', async ({ page }) => {
+    const squiggle = example(page).locator('.scb-squiggle-error');
+    const message = squiggle.locator('.scb-squiggle-popover');
+    await squiggle.hover();
+    await expect(message).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(message).toBeHidden();
+    await page.mouse.move(5, 5);
+    await squiggle.hover();
+    await expect(message).toBeVisible();
+  });
+});
+
+test('a squiggle without a message names its severity', async ({ page }) => {
+  const squiggle = example(page, 3).locator('.scb-squiggle-warning');
+  await squiggle.focus();
+  await expect(squiggle.locator('.scb-squiggle-popover')).toHaveText('Warning');
+  await expect(squiggle.locator('.scb-sr-only')).toHaveText(' (Warning)');
+});

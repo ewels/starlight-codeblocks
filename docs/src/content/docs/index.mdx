@@ -1,10 +1,10 @@
 ---
 title: starlight-codeblocks
-description: A plugin for Starlight and Astro that adds focus, line states, annotations, API auto-linking and 22 more features to the code blocks of a site.
+description: A plugin for Starlight and Astro that adds focus, line states, annotations, API auto-linking and 23 more features to the code blocks of a site.
 template: splash
 hero:
   tagline: |
-    This plugin adds 26 features to the <a href="https://expressive-code.com">Expressive Code</a> blocks of
+    This plugin adds 27 features to the <a href="https://expressive-code.com">Expressive Code</a> blocks of
     <a href="https://starlight.astro.build">Starlight</a> and <a href="/starlight-codeblocks/install/astro/">Astro</a> sites.
     Use them to enrich code blocks.
     <span class="agent-skill">Using an agent? <a href="/starlight-codeblocks/agent-skill/">Point it at the bundled skill</a>.</span>
@@ -187,6 +187,18 @@ for name in sys.argv[1:]  # [!code error] SyntaxError: expected ':'
     print(name)
 
 count = len(sys.argv)  # [!code warning] Includes the script name
+```
+
+</Feature>
+
+<Feature page="features/squiggles">
+
+```ts title="load.ts" apiLinks=false
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path'; // [!warning /join/] `join` is declared but its value is never read.
+
+// [!error /readFle/] Cannot find name `readFle`. Did you mean `readFile`?
+const config = JSON.parse(await readFle('config.json', 'utf8'));
 ```
 
 </Feature>

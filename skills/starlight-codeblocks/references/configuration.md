@@ -22,6 +22,7 @@ codeblocks({
 | `lineStates` | `states`: custom states by name, each `{ label, colour: { dark, light } }`. `prefix`: default `true`. `false` hides the state name on screen | Line states |
 | `notation` | `comments`: comment syntax for each language, added to the built-in map | Comment notation |
 | `callouts` | None | Inline callouts |
+| `squiggles` | None | Squiggles |
 | `annotations` | `style`: `'filled'` or `'outline'`, default `'filled'` | Annotations and side annotations |
 | `footnotes` | `sticky`: default `false`. `style`: `'filled'` or `'outline'`, default `'outline'` | Footnotes |
 | `hiddenLines` | None | Hidden lines |
