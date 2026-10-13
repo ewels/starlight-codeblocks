@@ -37,7 +37,7 @@ test('hovering shows the card under the link, the pointer can move onto it, and 
   await expect(card(page).locator('.scb-api-card-head')).toHaveText('function json.loads');
   // The summary comes from the live docs.python.org page, so its words can change.
   await expect(card(page).locator('.scb-api-card-summary')).not.toBeEmpty();
-  await expect(card(page).locator('.scb-api-card-source')).toHaveText('Python 3.14 documentation');
+  await expect(card(page).locator('.scb-api-card-source')).toHaveText(/^Python 3\.\d+ documentation$/);
   const l = await link.boundingBox();
   const c = await card(page).boundingBox();
   expect(c && l && c.y).toBeGreaterThanOrEqual((l?.y ?? 0) + (l?.height ?? 0));
