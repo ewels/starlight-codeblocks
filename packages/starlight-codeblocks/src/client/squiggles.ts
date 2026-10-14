@@ -1,4 +1,4 @@
-import { anchored, EDGE, place } from './shared/position.ts';
+import { anchored, place } from './shared/position.ts';
 
 const SQUIGGLE = '.scb-squiggle[tabindex]';
 const stops = new WeakMap<Element, () => void>();
@@ -12,17 +12,8 @@ const popoverOf = (squiggle: Element) => squiggle.querySelector<HTMLElement>(':s
 function show(squiggle: HTMLElement) {
   const popover = popoverOf(squiggle);
   if (!popover || popover.matches(':popover-open')) return;
-  popover.style.translate = '';
   popover.showPopover();
-  if (!anchored()) {
-    stops.set(popover, place(popover, squiggle));
-    return;
-  }
-  // Text that the block scrolls past the edge of the window still fits its own position area.
-  const { left, right } = popover.getBoundingClientRect();
-  const width = document.documentElement.clientWidth;
-  const shift = right > width - EDGE ? width - EDGE - right : left < EDGE ? EDGE - left : 0;
-  if (shift) popover.style.translate = `${shift}px`;
+  if (!anchored()) stops.set(popover, place(popover, squiggle));
 }
 
 function hide(squiggle: Element) {
@@ -36,8 +27,9 @@ const squiggleAt = (target: EventTarget | null) => (target as Element | null)?.c
 
 /** Hover shows the message after 300 ms, as in VS Code. The popover is inside the squiggle, so the pointer can move into it. */
 function pointerOver(event: PointerEvent) {
+  if (event.pointerType !== 'mouse') return;
   const squiggle = squiggleAt(event.target);
-  if (!squiggle || event.pointerType !== 'mouse') return;
+  if (!squiggle) return;
   clearTimeout(hiding.get(squiggle));
   if (dismissed.has(squiggle)) return;
   clearTimeout(showing);
@@ -57,8 +49,8 @@ function pointerOut(event: PointerEvent) {
 }
 
 function focusIn(event: FocusEvent) {
-  const squiggle = squiggleAt(event.target);
-  if (squiggle && event.target === squiggle && squiggle.matches(':focus-visible')) show(squiggle);
+  const target = event.target as HTMLElement;
+  if (target.matches?.(`${SQUIGGLE}:focus-visible`)) show(target);
 }
 
 function focusOut(event: FocusEvent) {

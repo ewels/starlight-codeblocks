@@ -251,6 +251,8 @@ figure:has(.ec-line > .gutter > .ln) { --scb-gutter: calc(var(--lnWidth, 2ch) + 
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .${PREFIX}-tools {
   display: flex;

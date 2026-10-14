@@ -183,6 +183,8 @@ test('the buttons are a flat list in sidebar order, in columns, with one dot eac
   );
   const columns = [...new Set(boxes.map(([x]) => x))].map((x) => boxes.filter(([bx]) => bx === x).map(([, y]) => y));
   const lengths = columns.map((c) => c.length);
+  // CSS columns balance their heights, so only the last column can be short.
+  expect(lengths.slice(0, -1).every((n) => n === lengths[0])).toBe(true);
   // Each column holds the next run of tiles in order, so the x of the tiles never goes back.
   expect(boxes.every(([x], i) => i === 0 || x >= (boxes[i - 1]?.[0] ?? 0))).toBe(true);
   for (const column of columns) expect(column).toEqual((columns[0] ?? []).slice(0, column.length));

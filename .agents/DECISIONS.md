@@ -81,7 +81,7 @@ The choices that the code does not explain, with the options that were rejected.
 - **The wave is VS Code's own 6 × 3 px SVG, as a CSS mask over a background colour**, so the colour comes from a theme variable. *Rejected:* `text-decoration: wavy` (a different, rounder shape in each browser); an SVG background (a data URI cannot read CSS variables).
 - **The squiggle annotation renders in the `latest` phase**, so EC merges the tokens of the range into one element and the wave has no breaks. A later annotation that overlaps only part of the range still splits it.
 - **Every squiggle has a hover, also with no message**: the icon and the name of the severity tell error from warning without colour (WCAG 1.4.1). The message is a `popover="manual"` inside the squiggle, so hover over the message keeps it open. It opens after 300 ms, as in VS Code, at once on keyboard focus, and Escape closes it (WCAG 1.4.13). Screen readers read the severity and the message from `scb-sr-only` text after the code.
-- **The script moves a message back inside the window**: when the block scrolls the text past the window edge, the text's position area reaches past it too, so `position-try` sees no overflow.
+- **The message is placed with anchor insets, `left: max(12px, anchor(left))`, not a position area.** A position area starts at the text, so for text that the block scrolls past the window edge nothing overflows and `position-try` never flips. *Rejected:* a script that shifts the open message (it goes stale on scroll).
 
 ### Hidden lines, expandable blocks
 

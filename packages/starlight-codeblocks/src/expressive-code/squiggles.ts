@@ -8,15 +8,15 @@ import {
   type StyleResolverFn,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
-import { type Element, type ElementContent, h, select, toText } from '@expressive-code/core/hast';
+import { type ElementContent, h, select, toText } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { blockUid, type CodeblocksPlugin, lineNumber, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
+import { builtInStates, stateAliases } from './line-states.ts';
 import { type DirectiveSpecs, getDirectives } from './notation.ts';
 import { onCode, PREFIX, themeColour } from './styles.ts';
 
 export interface SquigglesStyleSettings {
-  /** The wavy line and the icon of an error. Needs 3:1 contrast on the code and on the popover background. */
   error: UnresolvedStyleValue;
   warning: UnresolvedStyleValue;
   info: UnresolvedStyleValue;
@@ -30,16 +30,18 @@ declare module '@expressive-code/core' {
 
 type Context = Parameters<StyleResolverFn>[0];
 
+/** The line states of the same names give the theme colours. The labels are VS Code's, so `info` reads Info. */
+const stateColour = (state: string) => String(builtInStates[state]?.themeColour);
+
 export const severities = {
-  error: { label: 'Error', themeColour: 'editorError.foreground' },
-  warning: { label: 'Warning', themeColour: 'editorWarning.foreground' },
-  info: { label: 'Info', themeColour: 'editorInfo.foreground' },
-} as const;
+  error: { label: 'Error', themeColour: stateColour('error') },
+  warning: { label: 'Warning', themeColour: stateColour('warning') },
+  info: { label: 'Info', themeColour: stateColour('info') },
+};
 
 type Severity = keyof typeof severities;
 
-/** Other names, as in line states. */
-const aliases: Record<string, Severity> = { warn: 'warning', note: 'info' };
+const aliases = stateAliases as Record<string, Severity>;
 
 const colour = (key: string) => (context: Context) =>
   ensureColorContrastOnBackground(
@@ -179,15 +181,17 @@ ${Object.keys(severities)
   -webkit-print-color-adjust: exact;
 }
 .${cls()}[tabindex] { border-radius: 2px; }
-.${cls()} .${PREFIX}-sr-only { user-select: none; -webkit-user-select: none; }
-/* Above the text and from its start, as in VS Code. */
+/* Above the text and from its start, as in VS Code. Insets, because a position area that starts at text scrolled
+   past the window edge never overflows, so the fallbacks would not run. */
 .${cls('-popover')} {
   width: max-content;
   max-width: min(${cssVar('codeblocks.popoverMaxWidth')}, calc(100vw - 24px));
   margin: 6px 0;
   padding: 0.35rem 0.65rem;
-  position-area: block-start span-inline-end;
+  position-area: none;
   justify-self: auto;
+  bottom: anchor(top);
+  left: max(12px, anchor(left));
   position-try-fallbacks: flip-inline, flip-block, flip-block flip-inline;
   opacity: 0;
   user-select: text;
@@ -226,32 +230,22 @@ ${Object.keys(severities)
     hooks: {
       annotateCode(context) {
         const { codeBlock } = context;
-        const found = [...Object.keys(severities), ...Object.keys(aliases)].flatMap((name) =>
-          getDirectives(codeBlock, name).map((directive) => ({
-            directive,
-            severity: aliases[name] ?? (name as Severity),
-          })),
-        );
+        const found = getDirectives(codeBlock).filter((d) => d.name in severities || d.name in aliases);
         if (found.length === 0) return;
         const data = squiggleData.getOrCreateFor(codeBlock);
-        found.sort((a, b) => a.directive.sourceLine - b.directive.sourceLine);
         const uid = blockUid(context);
-        for (const { directive, severity } of found) {
+        for (const directive of found) {
           const line = directive.lines[0];
           if (!line) continue;
+          const severity = aliases[directive.name] ?? (directive.name as Severity);
+          // The notation plugin drops a directive whose `/text/` is not on its line.
           const { match } = directive;
           const start = match ? line.text.indexOf(match) : line.text.search(/\S/);
-          const end = match ? start + match.length : line.text.trimEnd().length;
-          if (start < 0 || end <= start) {
-            warn(
-              context,
-              match
-                ? `\`/${match}/\` in \`[!${directive.name}]\` is not on its line. The line renders without it.`
-                : `\`[!${directive.name}]\` has no code to underline on its line.`,
-              directive.sourceLine,
-            );
+          if (start < 0) {
+            warn(context, `\`[!${directive.name}]\` has no code to underline on its line.`, directive.sourceLine);
             continue;
           }
+          const end = match ? start + match.length : line.text.trimEnd().length;
           const squiggle = { severity, text: inlineMarkdown(directive.text ?? ''), line };
           data.squiggles.push(squiggle);
           line.addAnnotation(
@@ -264,10 +258,11 @@ ${Object.keys(severities)
       },
       postprocessRenderedBlock({ codeBlock, renderData }) {
         const { squiggles } = squiggleData.getOrCreateFor(codeBlock);
+        if (squiggles.length === 0) return;
         const figure = select('figure', renderData.blockAst);
         const pre = figure && select('pre', figure);
-        if (squiggles.length === 0 || !figure || !pre) return;
-        (pre as Element).properties.dataScbSquiggles = '';
+        if (!figure || !pre) return;
+        pre.properties.dataScbSquiggles = '';
         // The popovers do not print, so their messages go in a list under the block.
         const items = squiggles.map(({ severity, text, line }) =>
           h('li', [
