@@ -1,3 +1,4 @@
+import { dismiss, hoverPopovers } from './shared/hover.ts';
 import { anchored, below, EDGE, follow } from './shared/position.ts';
 import { unhide } from './shared/scroll.ts';
 
@@ -86,8 +87,6 @@ function toggle(event: Event) {
 }
 
 const NOTE = '.scb-annotation-popover';
-// Notes that a click closed. Hover does not show them again until the pointer leaves.
-const closed = new WeakSet<Element>();
 const openNotes = () => document.querySelectorAll<HTMLElement>(`${NOTE}:popover-open`);
 
 /**
@@ -101,7 +100,7 @@ function click(event: MouseEvent) {
   if (note) {
     if (note.dataset.scbPeek !== undefined) delete note.dataset.scbPeek;
     else if (target.closest('.scb-annotation-badge')) {
-      closed.add(note);
+      dismiss(note);
       note.hidePopover();
     }
     return;
@@ -117,7 +116,7 @@ function click(event: MouseEvent) {
     delete popover.dataset.scbPeek;
     return;
   }
-  if (popover.matches(':popover-open')) closed.add(popover);
+  if (popover.matches(':popover-open')) dismiss(popover);
   // `popovertarget` finds the popover by id, so in a copy of the block, as full screen plugins show, it
   // would open the popover of the original. The popover right after the button is the button's own.
   if (document.getElementById(popover.id) === popover) return;
@@ -133,48 +132,24 @@ function keydown(event: KeyboardEvent) {
   (focused?.previousElementSibling as HTMLElement | null)?.focus();
 }
 
-let showing = 0;
-const hiding = new WeakMap<Element, number>();
-
-/** The popover of the marker or the popover under the pointer, and whether the pointer is on the marker. */
-function hovered(event: PointerEvent) {
-  if (event.pointerType !== 'mouse') return {};
-  const target = event.target as Element;
-  const button = target.closest?.('button.scb-annotation');
-  const popover = (button?.nextElementSibling ?? target.closest?.(NOTE)) as HTMLElement | null;
-  return { popover, button };
+/** The popover of the marker or the popover under the pointer. */
+function noteAt(target: Element) {
+  const button = target.closest('button.scb-annotation');
+  const key = (button?.nextElementSibling ?? target.closest(NOTE)) as HTMLElement | null;
+  return key ? { key, trigger: button !== null } : undefined;
 }
 
-/**
- * Hovering over a marker shows its note until the pointer leaves the marker and the note. The delay
- * before it hides lets the pointer move into the note.
- */
-function pointerOver(event: PointerEvent) {
-  const { popover, button } = hovered(event);
-  if (!popover) return;
-  clearTimeout(hiding.get(popover));
-  if (!button || closed.has(popover) || popover.matches(':popover-open')) return;
-  clearTimeout(showing);
-  showing = window.setTimeout(() => {
-    if (popover.matches(':popover-open')) return;
-    popover.dataset.scbPeek = '';
-    // `source` makes the marker the invoker, as a click does, for its expanded state.
-    (popover.showPopover as (options?: { source?: Element }) => void)({ source: button });
-  }, 80);
+function peek(popover: HTMLElement) {
+  if (popover.matches(':popover-open')) return;
+  popover.dataset.scbPeek = '';
+  // `source` makes the marker the invoker, as a click does, for its expanded state.
+  (popover.showPopover as (options?: { source?: Element }) => void)({
+    source: popover.previousElementSibling ?? undefined,
+  });
 }
 
-function pointerOut(event: PointerEvent) {
-  const { popover } = hovered(event);
-  if (!popover) return;
-  clearTimeout(showing);
-  const to = (event.relatedTarget as Element | null)?.closest?.('button.scb-annotation, .scb-annotation-popover');
-  if (to !== popover && to !== popover.previousElementSibling) closed.delete(popover);
-  if (popover.dataset.scbPeek === undefined) return;
-  hiding.set(
-    popover,
-    window.setTimeout(() => popover.dataset.scbPeek !== undefined && popover.hidePopover(), 200),
-  );
-}
+/** Only a note that hover opened hides when the pointer leaves. */
+const unpeek = (popover: HTMLElement) => popover.dataset.scbPeek !== undefined && popover.hidePopover();
 
 let lit: Element | null | undefined;
 let litN: string | undefined;
@@ -287,8 +262,7 @@ export default function initAnnotations() {
     document.addEventListener('toggle', toggle, true);
     document.addEventListener('click', click);
     document.addEventListener('keydown', keydown);
-    document.addEventListener('pointerover', pointerOver);
-    document.addEventListener('pointerout', pointerOut);
+    hoverPopovers(noteAt, 80, peek, unpeek);
     // On the document, so that copies of a block, as full screen plugins show, light up too.
     document.addEventListener('mouseover', over);
     document.addEventListener('focusin', over);

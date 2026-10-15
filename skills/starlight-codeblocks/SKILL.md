@@ -1,12 +1,12 @@
 ---
 name: starlight-codeblocks
-description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, comment notation directives, annotations, footnotes, inline callouts, side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, colour swatches, file icons, inline code highlighting, code links, API auto-linking, line permalinks, code tabs, fill-in placeholders, smart shell copy, open in playground and run code. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
+description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, squiggles, comment notation directives, annotations, footnotes, inline callouts, side annotations, scrollycoding, code mentions, word-level diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, colour swatches, file icons, inline code highlighting, code links, API auto-linking, line permalinks, code tabs, fill-in placeholders, smart shell copy, open in playground and run code. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
 license: MIT
 ---
 
 # starlight-codeblocks
 
-starlight-codeblocks is a Starlight plugin. It adds 26 features to the code blocks that Expressive Code renders. A feature starts only when a code block uses its attribute or its directive, so the plugin does not change existing pages. A few features apply to every block of a type: they are in [Features that start on their own](#features-that-start-on-their-own).
+starlight-codeblocks is a Starlight plugin. It adds 27 features to the code blocks that Expressive Code renders. A feature starts only when a code block uses its attribute or its directive, so the plugin does not change existing pages. A few features apply to every block of a type: they are in [Features that start on their own](#features-that-start-on-their-own).
 
 Full docs: https://ewels.github.io/starlight-codeblocks/. Each page has a Markdown version at the same address with `.md` at the end. https://ewels.github.io/starlight-codeblocks/llms-full.txt has every page in one file.
 
@@ -66,6 +66,7 @@ Use scrollycoding when prose explains the code step by step as the reader scroll
 |---|---|---|
 | The text is about a few lines, but readers need the rest for context | Focus: `focus={4-7}` or `[!code focus]` | Blurs the other lines. Hover or keyboard focus makes every line sharp. |
 | A line is wrong, needs care, or needs a note, as in an editor | Line states: `[!code error] message`, `[!code warning]`, `[!code info]`, `[!code success]` | A tint, a bar and an optional message after the code. |
+| One name or expression has a problem, as a linter or compiler reports it | Squiggles: `[!error /name/] message`, `[!warning /name/]`, `[!info /name/]` | A wavy line under the text, as in VS Code. The message shows on hover and keyboard focus. |
 | A neutral highlight with no meaning | `{3}` on the fence line or `[!code highlight]` | The `mark` of Expressive Code. |
 | A state that is not error, warning, info or success, such as "To do" | A custom state in `lineStates.states` | Its name becomes an attribute and a directive. |
 
@@ -137,7 +138,7 @@ Directives go in a comment, in the comment syntax of the language of the block. 
 | `[!code <name>:N]` | Applies to its line and the next N-1 lines. | `// [!code ++:3]` |
 | `[!code <name> <name>]` | Applies each name to the line. Text after it goes to the first name that takes text. | `// [!code focus ++] Loads the plugin` |
 | `[!<name>] <text>` | Takes the text after it, to the end of the comment. | `// [!annotate] Runs once` |
-| `[!<name> /<text>/]` | Points at the first match of the literal text on its target line. | `// [!callout /port/] From the environment` |
+| `[!<name> /<text>/]` | Points at the first whole-word match of the literal text on its target line, else the first match. | `// [!callout /port/] From the environment` |
 | `[\!code <name>]` | Renders as the literal text `[!code <name>]`. | `// [\!code focus]` |
 
 Rules that apply to every directive:

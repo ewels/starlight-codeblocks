@@ -72,6 +72,8 @@ const decorations = [
   'footnote-badge',
   'footnote-num',
   'callout',
+  'squiggle-popover',
+  'squiggle-list',
   'hidden-marker',
   'expandable-bar',
   'steps-stepper',

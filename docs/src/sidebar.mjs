@@ -23,7 +23,7 @@ export const sidebar = [
   },
   {
     label: 'Draw attention',
-    items: ['features/focus', 'features/line-states', 'features/code-mentions'],
+    items: ['features/focus', 'features/line-states', 'features/squiggles', 'features/code-mentions'],
   },
   {
     label: 'Make code easier to read',

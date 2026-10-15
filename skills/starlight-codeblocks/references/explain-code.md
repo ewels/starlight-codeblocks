@@ -36,7 +36,7 @@ const controller = new AbortController();
 const res = await fetch(url, { signal: controller.signal });
 ```
 
-- The arrow points at the first match of `/text/` on the target line.
+- The arrow points at the first whole-word match of `/text/` on the target line, else the first match.
 - Two callout lines above one line give two bubbles, in source order.
 - Between two lines with the same highlight (`{}`, `ins`, `del` or a line state), the bubble's row has the highlight too.
 - The bubble is at most 60 characters wide, or 90% of the block. Longer notes wrap.

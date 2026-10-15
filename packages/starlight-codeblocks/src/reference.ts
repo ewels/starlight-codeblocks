@@ -1,5 +1,7 @@
 /** Docs for the attributes and style settings reference pages. `test/reference.test.ts` keeps them complete. */
 
+import { severities } from './expressive-code/squiggles.ts';
+
 export interface AttributeDoc {
   /** The attribute key, or `<state>` for custom line states. */
   name: string;
@@ -734,6 +736,18 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
         derived: 'The index of the theme in the Expressive Code `themes` list.',
       },
     },
+  },
+  codeblocksSquiggles: {
+    page: 'features/squiggles',
+    settings: Object.fromEntries(
+      Object.entries(severities).map(([name, { label, themeColour }]) => [
+        name,
+        {
+          description: `The wavy line and the icon of the ${label.toLowerCase()} severity. Needs 3:1 contrast on the code and on the popover background.`,
+          derived: `${fromTheme(themeColour, '3:1')} Also 3:1 on \`codeblocks.popoverBackground\`.`,
+        },
+      ]),
+    ),
   },
   codeblocksCallouts: {
     page: 'features/inline-callouts',

@@ -12,6 +12,7 @@ const icons: Record<string, string> = {
   'features/scrollycoding': lucide.ScrollText,
   'features/focus': lucide.Focus,
   'features/line-states': lucide.TriangleAlert,
+  'features/squiggles': lucide.Waves,
   'features/code-mentions': lucide.AtSign,
   'features/word-level-diff': lucide.Diff,
   'features/code-walkthrough': lucide.Replace,
@@ -397,8 +398,8 @@ if (order.some((at, i) => i > 0 && at < (order[i - 1] ?? 0)))
     height: 1rem;
   }
   /* Columns, so that the tiles read down each column in sidebar order, as the tab order goes.
-     "12rem" gives five even columns of five on a desktop screen. Below 44rem, it's forced to two
-     (still column-major, an even 13/12 split) up to where the auto column width would give three. */
+     "12rem" gives five columns on a desktop screen. Below 44rem, it's forced to two
+     (still column-major) up to where the auto column width would give three. */
   .picker {
     columns: 12rem;
     column-gap: 0.5rem;

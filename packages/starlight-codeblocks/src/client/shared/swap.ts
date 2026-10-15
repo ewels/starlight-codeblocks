@@ -9,6 +9,7 @@ const parts = [
   '.scb-expandable-bar',
   '.scb-footnotes',
   '.scb-annotation-list',
+  '.scb-squiggle-list',
   '.copy',
   '.scb-run-output',
   '.scb-steps-controls',

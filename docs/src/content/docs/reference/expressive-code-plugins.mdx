@@ -55,6 +55,7 @@ Each plugin takes the settings of its option, as the [options reference](/starli
 | `pluginCallouts()` | `callouts` | [Inline callouts](/starlight-codeblocks/features/inline-callouts/) |
 | `pluginAnnotations()` | `annotations` | [Annotations](/starlight-codeblocks/features/annotations/) and [side annotations](/starlight-codeblocks/features/side-annotations/) |
 | `pluginFootnotes(settings)` | `footnotes` | [Footnotes](/starlight-codeblocks/features/footnotes/) |
+| `pluginSquiggles()` | `squiggles` | [Squiggles](/starlight-codeblocks/features/squiggles/) |
 
 `pluginCodeLinks()` and `pluginApiLinks()` take the `base` of the Astro site, for links that start with `/`. With `codeblocks()`, they read it from Astro. `pluginApiLinks()` has no default adapters. Give it the adapters from `starlight-codeblocks/adapters/python` and `starlight-codeblocks/adapters/nextflow`, or your own.
 
@@ -66,7 +67,7 @@ If you add plugins one by one, follow these rules:
 2. Add `pluginNotation()` second, if any plugin after it reads directives.
 3. Add the other plugins in the order of the table.
 
-The order matters. For example, `pluginPlayground()` sends the copied text, so it must come after `pluginShellCopy()` and `pluginPlaceholders()`, which change that text. `pluginCallouts()` must come after `pluginHiddenLines()`, which rebuilds the lines of the block.
+The order matters. For example, `pluginPlayground()` sends the copied text, so it must come after `pluginShellCopy()` and `pluginPlaceholders()`, which change that text. `pluginCallouts()` must come after `pluginHiddenLines()`, which rebuilds the lines of the block. `pluginSquiggles()` comes last, so that its wavy line is one element around the code of other plugins.
 
 ## Without codeblocks()
 

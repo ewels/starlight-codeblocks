@@ -7,6 +7,7 @@ const blocks = [
   block('js', 'a(); // [!code error] Fails', 'b(); // [!code warning]'),
   block('js', 'run(a); // [!annotate] Runs it.', 'done(); // [!ref] The end.'),
   block('js', '// [!callout /signal/] Aborts.', 'fetch(url, { signal });'),
+  block('ts', '// [!error /readFle(path)/] Cannot find `readFle`.', 'const a = await readFle(path); // [!warning]'),
   block('js title="a.js" hidden={1} id="x" playground="typescript" run', 'setup();', 'main();'),
   block('js annotations="side"', 'run(a); // [!annotate] Runs it.'),
   block('sh placeholder="TOKEN"', 'curl -H "Bearer TOKEN"'),
