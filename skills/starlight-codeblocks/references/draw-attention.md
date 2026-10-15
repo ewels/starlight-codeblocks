@@ -107,7 +107,7 @@ const config = await readFle('config.json');
 ```
 
 - These directives have no `code` before the name. `[!code error]` is a line state, and `[!error]` is a squiggle.
-- `/text/` is literal text, and the line goes under its first match. Text that is not on the line logs a build warning, and the line renders without the squiggle.
+- `/text/` is literal text, and the line goes under its first whole-word match, else its first match. Text that is not on the line logs a build warning, and the line renders without the squiggle.
 - Several squiggles can go on one line. Put each directive on its own comment line above the line.
 - The message starts with an icon and the name of the severity: **Error**, **Warning** or **Info**. Each squiggle is in the tab order, and Escape closes the message. Screen readers hear the severity and the message after the text.
 - The copy button and a manual selection leave out the messages. In print, the messages are a list under the block. Without JavaScript, the wavy lines show but the messages do not open.

@@ -31,6 +31,19 @@ export interface Directive {
   sourceLine: number;
 }
 
+const wordChar = /[\w$]/;
+
+/**
+ * Where `/text/` starts on a line: as a whole word first, so that `/x/` finds `x` and not the `x` in `max`,
+ * else anywhere. -1 when it is not on the line.
+ */
+export function matchStart(text: string, match: string) {
+  const escaped = match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const before = wordChar.test(match[0] ?? '') ? '(?<![\\w$])' : '';
+  const after = wordChar.test(match.at(-1) ?? '') ? '(?![\\w$])' : '';
+  return new RegExp(before + escaped + after).exec(text)?.index ?? text.indexOf(match);
+}
+
 export interface ParsedLine {
   text: string;
   /** The line holds only directives. Its directives moved to the line below. */

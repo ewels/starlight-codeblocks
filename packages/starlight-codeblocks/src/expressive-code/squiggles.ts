@@ -8,12 +8,12 @@ import {
   type StyleResolverFn,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
-import { type ElementContent, h, select, toText } from '@expressive-code/core/hast';
+import { h, select, toText } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { blockUid, type CodeblocksPlugin, lineNumber, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { builtInStates, stateAliases } from './line-states.ts';
-import { type DirectiveSpecs, getDirectives } from './notation.ts';
+import { type DirectiveSpecs, getDirectives, matchStart } from './notation.ts';
 import { onCode, PREFIX, themeColour } from './styles.ts';
 
 export interface SquigglesStyleSettings {
@@ -79,7 +79,7 @@ const ICONS: Record<Severity, string> = {
 
 interface Squiggle {
   severity: Severity;
-  text: ElementContent[];
+  message: string;
   line: ExpressiveCodeLine;
 }
 
@@ -95,14 +95,15 @@ class SquiggleAnnotation extends ExpressiveCodeAnnotation {
     super({ inlineRange, renderPhase: 'latest' });
   }
   render({ nodesToTransform }: AnnotationRenderOptions) {
-    const { severity, text } = this.squiggle;
+    const { severity, message } = this.squiggle;
     const { label } = severities[severity];
-    const kind = `${cls()} ${cls(`-${severity}`)}`;
-    // A later annotation that overlaps part of the range splits it. Only the first part opens the message.
+    const text = inlineMarkdown(message);
+    const part = { class: `${cls()} ${cls(`-${severity}`)}`, 'data-scb-squiggle': this.anchor };
+    // A later annotation that overlaps part of the range splits it. Only the first part holds the message.
     return nodesToTransform.map((node, i) =>
       i > 0
-        ? h('span', { class: kind }, [node])
-        : h('span', { class: kind, tabindex: '0', style: `anchor-name:${this.anchor}` }, [
+        ? h('span', part, [node])
+        : h('span', { ...part, tabindex: '0', style: `anchor-name:${this.anchor}` }, [
             node,
             h(
               'span',
@@ -194,11 +195,12 @@ ${Object.keys(severities)
   left: max(12px, anchor(left));
   position-try-fallbacks: flip-inline, flip-block, flip-block flip-inline;
   opacity: 0;
-  user-select: text;
-  -webkit-user-select: text;
+  user-select: none;
+  -webkit-user-select: none;
   transition: opacity 120ms ease-out, display 120ms allow-discrete, overlay 120ms allow-discrete;
 }
 .${cls('-popover')}:popover-open { display: block; opacity: 1; }
+.${cls('-popover')}[data-scb-squiggle-select] { user-select: text; -webkit-user-select: text; }
 @starting-style {
   .${cls('-popover')}:popover-open { opacity: 0; }
 }
@@ -240,13 +242,13 @@ ${Object.keys(severities)
           const severity = aliases[directive.name] ?? (directive.name as Severity);
           // The notation plugin drops a directive whose `/text/` is not on its line.
           const { match } = directive;
-          const start = match ? line.text.indexOf(match) : line.text.search(/\S/);
+          const start = match ? matchStart(line.text, match) : line.text.search(/\S/);
           if (start < 0) {
             warn(context, `\`[!${directive.name}]\` has no code to underline on its line.`, directive.sourceLine);
             continue;
           }
           const end = match ? start + match.length : line.text.trimEnd().length;
-          const squiggle = { severity, text: inlineMarkdown(directive.text ?? ''), line };
+          const squiggle = { severity, message: directive.text ?? '', line };
           data.squiggles.push(squiggle);
           line.addAnnotation(
             new SquiggleAnnotation(squiggle, `--${cls()}-${uid}-${data.squiggles.length}`, {
@@ -264,10 +266,10 @@ ${Object.keys(severities)
         if (!figure || !pre) return;
         pre.properties.dataScbSquiggles = '';
         // The popovers do not print, so their messages go in a list under the block.
-        const items = squiggles.map(({ severity, text, line }) =>
+        const items = squiggles.map(({ severity, message, line }) =>
           h('li', [
             `Line ${lineNumber(codeBlock, line)}, ${severities[severity].label.toLowerCase()}`,
-            ...(text.length ? [': ', ...text] : []),
+            ...(message ? [': ', ...inlineMarkdown(message)] : []),
           ]),
         );
         figure.children.splice(figure.children.indexOf(pre) + 1, 0, h('ul', { class: cls('-list') }, items));

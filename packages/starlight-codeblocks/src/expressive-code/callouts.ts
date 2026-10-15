@@ -3,7 +3,7 @@ import { type Element, h, select, selectAll, toText } from '@expressive-code/cor
 import { clientJsModules } from '../client-modules.ts';
 import { type CodeblocksPlugin, insertBefore, lineElement } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
-import { getRenderedDirectives } from './notation.ts';
+import { getRenderedDirectives, matchStart } from './notation.ts';
 import { shellPrompt } from './shell-copy.ts';
 import { PREFIX, TAB_SIZE } from './styles.ts';
 
@@ -45,7 +45,7 @@ function column(text: string, index: number) {
  */
 export function calloutMiddle(text: string, match?: string, prompt = '') {
   const line = prompt + text;
-  const at = match ? text.indexOf(match) : -1;
+  const at = match ? matchStart(text, match) : -1;
   if (at >= 0) return column(line, prompt.length + at) + column(match as string, (match as string).length) / 2;
   return column(line, prompt.length + Math.max(0, text.search(/\S/))) + 0.5;
 }

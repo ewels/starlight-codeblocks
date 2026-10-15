@@ -1,6 +1,7 @@
 import { getColorContrast } from '@expressive-code/core';
 import { expect, test } from 'vitest';
 import { pluginCodeblocks } from '../src/expressive-code/index.ts';
+import { matchStart } from '../src/expressive-code/notation.ts';
 import { variants } from './contrast.ts';
 import { block, render } from './render.ts';
 
@@ -8,7 +9,7 @@ import { block, render } from './render.ts';
 function squiggles(html: string) {
   return [
     ...html.matchAll(
-      /<span class="scb-squiggle scb-squiggle-(\w+)" tabindex="0"[^>]*>(.*?)<span class="scb-sr-only">(.*?)<\/span><span class="scb-float[^>]*><span class="scb-squiggle-label">(\w+)<\/span>(.*?)<\/span><\/span>/g,
+      /<span class="scb-squiggle scb-squiggle-(\w+)" data-scb-squiggle="[^"]+" tabindex="0"[^>]*>(.*?)<span class="scb-sr-only">(.*?)<\/span><span class="scb-float[^>]*><span class="scb-squiggle-label">(\w+)<\/span>(.*?)<\/span><\/span>/g,
     ),
   ].map(([, severity, code, sr, label, message]) => ({
     severity,
@@ -85,6 +86,25 @@ test('a directive on its own line applies to the line below, and several stack i
   const inline = await render(block('js', 'go(signal); // [!info /signal/] Note'));
   const own = await render(block('js', '// [!info /signal/] Note', 'go(signal);'));
   expect(inline.html.replace(/--scb-squiggle-\w+-/g, '')).toBe(own.html.replace(/--scb-squiggle-\w+-/g, ''));
+});
+
+test('finds /text/ as a whole word first, so that a short name does not match inside another', async () => {
+  expect(matchStart('let max = x', 'x')).toBe(10);
+  expect(matchStart('let max = x', '= x')).toBe(8);
+  expect(matchStart('a.lenght', 'len')).toBe(2);
+  expect(matchStart('foo', 'bar')).toBe(-1);
+  const { html } = await render(block('js', 'let max = x // [!error /x/] Not defined.'));
+  expect(html).toMatch(/max.*=.*<span class="scb-squiggle scb-squiggle-error"[^>]*><span[^>]*>x</);
+});
+
+test('a squiggle split by another keeps its id on every part, so that each part finds its message', async () => {
+  const { html } = await render(block('js', '// [!error /foo.bar/] E', 'go(foo.bar); // [!warning /bar/] W'));
+  const ids = [...html.matchAll(/class="scb-squiggle scb-squiggle-error" data-scb-squiggle="([^"]+)"/g)].map(
+    (m) => m[1],
+  );
+  expect(ids).toHaveLength(2);
+  expect(new Set(ids).size).toBe(1);
+  expect(html).toContain(`style="anchor-name:${ids[0]}"`);
 });
 
 test('gives each squiggle its own anchor', async () => {

@@ -38,7 +38,7 @@ Each directive is gone from the output. A wavy line is under the text between th
 | `[!error] message` | Comment on or above the line |
 | `warn`, `note` | Comment on or above the line |
 
-`warn` is another name for `warning`, and `note` for `info`. The directive goes at the end of the line, or on its own line directly above it. `/text/` is literal text, not a regular expression. The wavy line goes under the first match on the line. Without `/text/`, it goes under the whole line, from the first character that is not a space.
+`warn` is another name for `warning`, and `note` for `info`. The directive goes at the end of the line, or on its own line directly above it. `/text/` is literal text, not a regular expression. The wavy line goes under the first match on the line that is a whole word, else under the first match. So `/x/` finds `x`, not the `x` in `max`. Without `/text/`, it goes under the whole line, from the first character that is not a space.
 
 The message is optional. It can hold inline code, links and bold text.
 
@@ -96,6 +96,7 @@ fn main() {
 - Opening the message:
   - Hover over the text for 300 ms to show the message. The mouse cursor can move into the message, for example to click a link.
   - Each squiggle is in the tab order. Keyboard focus shows the message at once.
+  - On a touch screen, tap the text to show the message. Tap somewhere else to close it.
   - Escape closes the message. The message closes when the mouse cursor or the focus leaves.
 - Where the message opens:
   - Above the text, from its first character, as in VS Code. If there is no room above, it opens below.

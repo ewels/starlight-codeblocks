@@ -1,19 +1,32 @@
-import { anchored, place } from './shared/position.ts';
+import { dismiss, hoverPopovers } from './shared/hover.ts';
+import { anchored, EDGE, follow } from './shared/position.ts';
 
-const SQUIGGLE = '.scb-squiggle[tabindex]';
+const SELECT = 'data-scb-squiggle-select';
 const stops = new WeakMap<Element, () => void>();
-const hiding = new WeakMap<Element, number>();
-// Closed with Escape: the pointer must leave before hover shows it again.
-const dismissed = new WeakSet<Element>();
-let showing = 0;
+let touch = false;
+let selectable: Element | undefined;
 
 const popoverOf = (squiggle: Element) => squiggle.querySelector<HTMLElement>(':scope > .scb-squiggle-popover');
+
+/** The script version of the popover styles: above the text from its first character, else below it. */
+function above(popover: HTMLElement, squiggle: HTMLElement) {
+  const gap = 6;
+  const a = squiggle.getBoundingClientRect();
+  const { width, height } = popover.getBoundingClientRect();
+  const top = a.top - gap - height >= EDGE ? a.top - gap - height : a.bottom + gap;
+  const left = Math.max(EDGE, Math.min(a.left, innerWidth - width - EDGE));
+  Object.assign(popover.style, { margin: '0', top: `${top}px`, left: `${left}px` });
+}
 
 function show(squiggle: HTMLElement) {
   const popover = popoverOf(squiggle);
   if (!popover || popover.matches(':popover-open')) return;
   popover.showPopover();
-  if (!anchored()) stops.set(popover, place(popover, squiggle));
+  if (!anchored())
+    stops.set(
+      popover,
+      follow(popover, () => above(popover, squiggle)),
+    );
 }
 
 function hide(squiggle: Element) {
@@ -23,34 +36,29 @@ function hide(squiggle: Element) {
   stops.get(popover)?.();
 }
 
-const squiggleAt = (target: EventTarget | null) => (target as Element | null)?.closest?.<HTMLElement>(SQUIGGLE);
-
-/** Hover shows the message after 300 ms, as in VS Code. The popover is inside the squiggle, so the pointer can move into it. */
-function pointerOver(event: PointerEvent) {
-  if (event.pointerType !== 'mouse') return;
-  const squiggle = squiggleAt(event.target);
-  if (!squiggle) return;
-  clearTimeout(hiding.get(squiggle));
-  if (dismissed.has(squiggle)) return;
-  clearTimeout(showing);
-  showing = window.setTimeout(() => show(squiggle), 300);
-}
-
-function pointerOut(event: PointerEvent) {
-  const squiggle = squiggleAt(event.target);
-  if (!squiggle || squiggleAt(event.relatedTarget) === squiggle) return;
-  clearTimeout(showing);
-  dismissed.delete(squiggle);
-  if (squiggle.contains(document.activeElement)) return;
-  hiding.set(
-    squiggle,
-    window.setTimeout(() => hide(squiggle), 200),
+/**
+ * The squiggle that holds the message under `target`. A later annotation that overlaps a squiggle splits it,
+ * and a part inside a link, for example, finds its message through the first part.
+ */
+function squiggleAt(target: EventTarget | null) {
+  const el = target as Element | null;
+  const head = el?.closest?.<HTMLElement>('.scb-squiggle[tabindex]');
+  if (head) return head;
+  const part = el?.closest?.<HTMLElement>('.scb-squiggle');
+  return (
+    part
+      ?.closest('.ec-line')
+      ?.querySelector<HTMLElement>(`.scb-squiggle[tabindex][data-scb-squiggle="${part.dataset.scbSquiggle}"]`) ??
+    undefined
   );
 }
 
+const keyboard = (squiggle: Element) => squiggle.matches(':focus-visible, :has(:focus-visible)');
+
+/** Keyboard focus, or a tap, opens the message at once. A mouse click focuses the squiggle too, but hover handles the mouse. */
 function focusIn(event: FocusEvent) {
-  const target = event.target as HTMLElement;
-  if (target.matches?.(`${SQUIGGLE}:focus-visible`)) show(target);
+  const squiggle = squiggleAt(event.target);
+  if (squiggle && (touch || keyboard(squiggle)) && squiggleAt(event.relatedTarget) !== squiggle) show(squiggle);
 }
 
 function focusOut(event: FocusEvent) {
@@ -62,20 +70,40 @@ function keydown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return;
   for (const popover of document.querySelectorAll('.scb-squiggle-popover:popover-open')) {
     const squiggle = popover.parentElement as HTMLElement;
-    dismissed.add(squiggle);
-    hide(squiggle);
+    dismiss(squiggle);
+    // Before it hides, so that focus on a link in the message does not fall to the page.
     if (squiggle.contains(document.activeElement)) squiggle.focus();
+    hide(squiggle);
   }
+}
+
+/**
+ * Makes a message's text selectable for a selection that starts in it, so that a drag across the code
+ * still leaves the message out.
+ */
+function pointerDown(event: PointerEvent) {
+  touch = event.pointerType !== 'mouse';
+  selectable?.removeAttribute(SELECT);
+  selectable = (event.target as Element).closest?.('.scb-squiggle-popover') ?? undefined;
+  selectable?.setAttribute(SELECT, '');
 }
 
 let ready = false;
 
-/** Opens the message of a squiggle on hover and on keyboard focus. Escape closes it. */
+/** Opens the message of a squiggle on hover, on keyboard focus and on a tap. Escape closes it. */
 export default function initSquiggles() {
   if (ready) return;
   ready = true;
-  document.addEventListener('pointerover', pointerOver);
-  document.addEventListener('pointerout', pointerOut);
+  hoverPopovers(
+    (target) => {
+      const key = squiggleAt(target);
+      return key && { key, trigger: true };
+    },
+    300,
+    show,
+    (squiggle) => keyboard(squiggle) || hide(squiggle),
+  );
+  document.addEventListener('pointerdown', pointerDown);
   document.addEventListener('focusin', focusIn);
   document.addEventListener('focusout', focusOut);
   document.addEventListener('keydown', keydown);

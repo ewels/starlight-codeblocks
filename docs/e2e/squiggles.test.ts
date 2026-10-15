@@ -76,6 +76,61 @@ test.describe('hover', () => {
     await squiggle.hover();
     await expect(message).toBeVisible();
   });
+
+  test('after a click on the text, the message still closes when the pointer leaves', async ({ page }) => {
+    const squiggle = example(page).locator('.scb-squiggle-error');
+    const message = squiggle.locator('.scb-squiggle-popover');
+    await squiggle.click();
+    await expect(message).toBeVisible();
+    await page.mouse.move(5, 5);
+    await expect(message).toBeHidden();
+  });
+
+  test('a selection across the code leaves out an open message', async ({ page }) => {
+    const squiggle = example(page).locator('.scb-squiggle-error');
+    const message = squiggle.locator('.scb-squiggle-popover');
+    const line = squiggle.locator('xpath=ancestor::div[contains(@class, "ec-line")]');
+    const [from, over] = await Promise.all([line.boundingBox(), squiggle.boundingBox()]);
+    if (!from || !over) throw new Error('No line');
+    const y = from.y + from.height / 2;
+    await page.mouse.move(from.x + 2, y);
+    await page.mouse.down();
+    await page.mouse.move(over.x + over.width / 2, y, { steps: 5 });
+    await expect(message).toBeVisible();
+    await page.mouse.move(from.x + from.width - 2, y, { steps: 5 });
+    await page.mouse.up();
+    const selected = await page.evaluate(() => getSelection()?.toString() ?? '');
+    expect(selected).toContain('readFle');
+    expect(selected).not.toContain('Cannot find');
+  });
+});
+
+test('a tap on the text opens the message, and a tap somewhere else closes it', async ({ page }) => {
+  test.skip(!phone(), 'Touch screens only.');
+  const squiggle = example(page).locator('.scb-squiggle-error');
+  const message = squiggle.locator('.scb-squiggle-popover');
+  await squiggle.tap();
+  await expect(message).toBeVisible();
+  await page.locator('h1').tap();
+  await expect(message).toBeHidden();
+});
+
+test('Escape in the message closes it and moves the focus back to the text', async ({ page }) => {
+  const squiggle = example(page).locator('.scb-squiggle-error');
+  const message = squiggle.locator('.scb-squiggle-popover');
+  await squiggle.focus();
+  await expect(message).toBeVisible();
+  // Stands in for a link in the message.
+  await message
+    .locator('code')
+    .first()
+    .evaluate((el: HTMLElement) => {
+      el.tabIndex = 0;
+      el.focus();
+    });
+  await page.keyboard.press('Escape');
+  await expect(message).toBeHidden();
+  await expect(squiggle).toBeFocused();
 });
 
 test('a squiggle without a message names its severity', async ({ page }) => {

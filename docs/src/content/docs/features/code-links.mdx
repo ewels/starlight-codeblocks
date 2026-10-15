@@ -29,7 +29,7 @@ The directive is on its own line, above the line it applies to. It can also go a
 | `[!link /<text>/ <url>] <description>` | Comment on or above the line |
 | `[!link /<text>/ <url>]` | Comment on or above the line |
 
-`<text>` is literal text, not a regular expression. The plugin links its first match on the line it applies to. `<url>` is a relative, `http` or `https` URL without spaces. A URL that starts with `/` is a link inside the site.
+`<text>` is literal text, not a regular expression. The plugin links its first match on the line it applies to that is a whole word, else its first match. `<url>` is a relative, `http` or `https` URL without spaces. A URL that starts with `/` is a link inside the site.
 
 `<description>` is optional. It shows in a card, as for [API auto-linking](/starlight-codeblocks/features/api-auto-linking/). The text runs to the next directive or to the end of the comment. Without a description, the link has no card.
 
@@ -117,7 +117,7 @@ With `codeLinks: false`, a `[!link]` directive is an unknown directive. The buil
 
 ## Limitations
 
-- A directive links the first match only. To link a later match, make the text longer, so that it matches only there.
+- A directive links one match only: the first whole word, else the first match. To link a later match, make the text longer, so that it matches only there.
 - Languages with no comment syntax, such as JSON, cannot use `[!link]`. Use `jsonc` instead.
 - A link cannot span two lines.
 

@@ -10,7 +10,7 @@ import { getRegistry } from '../registry.ts';
 import { apiCardStyles, sentences } from './api-links.ts';
 import { type CodeblocksPlugin, isSafeUrl, warn, withBase } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
-import { getDirectives } from './notation.ts';
+import { getDirectives, matchStart } from './notation.ts';
 import { PREFIX, tint } from './styles.ts';
 
 export interface CodeLinksStyleSettings {
@@ -99,7 +99,7 @@ ${apiCardStyles(cssVar)}`,
             continue;
           }
           const line = directive.lines[0];
-          const start = line?.text.indexOf(directive.match) ?? -1;
+          const start = line ? matchStart(line.text, directive.match) : -1;
           if (!line || start === -1) continue;
           const href = withBase(url, root);
           const properties: Record<string, string> = { href };
