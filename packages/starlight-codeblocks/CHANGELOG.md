@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- Squiggles: wavy error, warning and info lines under code, with a message on hover, focus or tap (#16)
+- Callouts, code links: a `/text/` match prefers a whole word (#16)
+
 ## 1.1.0
 
 - Astro: `starlight-codeblocks/astro` adds every feature to Astro sites without Starlight (#14)
