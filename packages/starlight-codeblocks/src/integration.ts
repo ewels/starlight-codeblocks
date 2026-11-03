@@ -10,6 +10,7 @@ import { PLUGIN_PREFIX } from './expressive-code/index.ts';
 import { runtimeFileName, runtimeModules } from './expressive-code/runnable.ts';
 import { proseSwatchStyles, SWATCH_CSS_ID } from './expressive-code/swatches.ts';
 import type { ResolvedOptions } from './options.ts';
+import { getRegistry } from './registry.ts';
 import { mdastPlugins } from './satteri/index.ts';
 import { INLINE_CSS_ID, inlineStyles } from './satteri/inline-code.ts';
 import { remarkFromSatteri } from './satteri/remark.ts';
@@ -56,8 +57,9 @@ export function codeblocksIntegration({
             }
           | undefined;
         // The content layer keeps rendered Markdown until its digest of the Astro config changes. That digest
-        // skips integrations and functions but covers these options, which both processors otherwise ignore.
-        if (processor?.options) processor.options.starlightCodeblocks = optionsDigest(options);
+        // skips integrations and functions but covers these options and the site's UI texts, which both
+        // processors otherwise ignore.
+        if (processor?.options) processor.options.starlightCodeblocks = optionsDigest(options, getRegistry()?.texts);
         if (processor?.name === 'unified') {
           processor.options?.remarkPlugins?.push(remarkFromSatteri(mdastPlugins(options, logger)));
         } else processor?.options?.mdastPlugins?.push(...mdastPlugins(options, logger));
@@ -88,9 +90,13 @@ export function codeblocksIntegration({
   };
 }
 
-const optionsDigest = (options: ResolvedOptions) =>
+const optionsDigest = (options: ResolvedOptions, texts: unknown) =>
   createHash('sha256')
-    .update(JSON.stringify(options, (_, value) => (typeof value === 'function' ? String(value) : value)))
+    .update(
+      JSON.stringify([options, texts], (_, value) =>
+        typeof value === 'function' ? String(value) : value instanceof Map ? [...value] : value,
+      ),
+    )
     .digest('base64url')
     .slice(0, 16);
 

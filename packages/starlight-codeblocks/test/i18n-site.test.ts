@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
@@ -22,6 +22,7 @@ test('a Starlight site with two locales gives each page the texts of its languag
   expect(warnings).toEqual([]);
   const de = read(join(out, 'de/index.html'));
   const en = read(join(out, 'index.html'));
+  rmSync(out, { recursive: true, force: true });
 
   expect(de).toContain('<span>2 verborgene Zeilen</span>');
   expect(de).toContain('data-scb-texts="{"closed":"2 verborgene Zeilen","open":"Hide 2 lines"}"');

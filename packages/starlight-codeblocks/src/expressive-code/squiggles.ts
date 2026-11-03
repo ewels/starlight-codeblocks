@@ -10,7 +10,7 @@ import {
 } from '@expressive-code/core';
 import { h, select, toText } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
-import { uiTexts } from '../translations.ts';
+import { uiStrings, uiTexts } from '../translations.ts';
 import { blockUid, type CodeblocksPlugin, lineNumber, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { builtInStates, stateAliases } from './line-states.ts';
@@ -35,9 +35,9 @@ type Context = Parameters<StyleResolverFn>[0];
 const stateColour = (state: string) => String(builtInStates[state]?.themeColour);
 
 export const severities = {
-  error: { label: 'Error', themeColour: stateColour('error') },
-  warning: { label: 'Warning', themeColour: stateColour('warning') },
-  info: { label: 'Info', themeColour: stateColour('info') },
+  error: { label: uiStrings['squiggles.error'], themeColour: stateColour('error') },
+  warning: { label: uiStrings['squiggles.warning'], themeColour: stateColour('warning') },
+  info: { label: uiStrings['squiggles.info'], themeColour: stateColour('info') },
 };
 
 type Severity = keyof typeof severities;
@@ -82,6 +82,7 @@ interface Squiggle {
   severity: Severity;
   message: string;
   line: ExpressiveCodeLine;
+  label: string;
 }
 
 const squiggleData = new AttachedPluginData<{ squiggles: Squiggle[] }>(() => ({ squiggles: [] }));
@@ -90,15 +91,13 @@ class SquiggleAnnotation extends ExpressiveCodeAnnotation {
   constructor(
     private readonly squiggle: Squiggle,
     private readonly anchor: string,
-    private readonly label: string,
     inlineRange: { columnStart: number; columnEnd: number },
   ) {
     // Last, so that the tokens of the range merge into one node and the wave runs on without a break.
     super({ inlineRange, renderPhase: 'latest' });
   }
   render({ nodesToTransform }: AnnotationRenderOptions) {
-    const { severity, message } = this.squiggle;
-    const { label } = this;
+    const { severity, message, label } = this.squiggle;
     const text = inlineMarkdown(message);
     const part = { class: `${cls()} ${cls(`-${severity}`)}`, 'data-scb-squiggle': this.anchor };
     // A later annotation that overlaps part of the range splits it. Only the first part holds the message.
@@ -251,18 +250,13 @@ ${Object.keys(severities)
             continue;
           }
           const end = match ? start + match.length : line.text.trimEnd().length;
-          const squiggle = { severity, message: directive.text ?? '', line };
+          const squiggle = { severity, message: directive.text ?? '', line, label: say(`squiggles.${severity}`) };
           data.squiggles.push(squiggle);
           line.addAnnotation(
-            new SquiggleAnnotation(
-              squiggle,
-              `--${cls()}-${uid}-${data.squiggles.length}`,
-              say(`squiggles.${severity}`),
-              {
-                columnStart: start,
-                columnEnd: end,
-              },
-            ),
+            new SquiggleAnnotation(squiggle, `--${cls()}-${uid}-${data.squiggles.length}`, {
+              columnStart: start,
+              columnEnd: end,
+            }),
           );
         }
       },

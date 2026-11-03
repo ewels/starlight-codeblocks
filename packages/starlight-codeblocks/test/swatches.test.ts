@@ -209,4 +209,8 @@ test('prose swatches are off by default, and cover text and whole inline code wh
   );
   expect(html).toContain('<code><span class="scb-swatch-text" data-scb-colour="rebeccapurple"');
   expect(html).toContain('<code>color: red</code>');
+  // The code block loader imports the client module for any `data-scb-swatches`, which would make them buttons.
+  const still = await md(text, { swatches: { prose: true, copy: false } });
+  expect(still).toContain('<span class="scb-swatch-text" data-scb-colour="#ff5f1f" style=');
+  expect(still).not.toContain('data-scb-swatches');
 });

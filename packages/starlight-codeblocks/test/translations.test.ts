@@ -96,6 +96,18 @@ test('format fills in values and picks the plural form of the locale, as i18next
   ).toBe('Step 1 of 2, <y> {{missing}}');
 });
 
+test('a key without plural forms in a language wins over the plural forms of the fallback, as in i18next', () => {
+  const site = siteTexts({ root: { lang: 'en' }, de: {} }, (lang) =>
+    Object.assign(() => '', {
+      all: () => (lang === 'de' ? { [key('expandable.showAll')]: 'Alle {{count}} Zeilen' } : {}),
+      exists: () => false,
+    }),
+  );
+  expect(format(site.get('de'), 'de', 'expandable.showAll', { count: 1 })).toBe('Alle 1 Zeilen');
+  expect(format(site.get('de'), 'de', 'hiddenLines.marker', { count: 1 })).toBe('1 hidden line');
+  expect(format(site.get('en'), 'en', 'expandable.showAll', { count: 8 })).toBe('Show all 8 lines');
+});
+
 test('blocks in a locale get its texts, then the default locale, then English', async () => {
   const de = (markdown: string, options = {}) => render(markdown, options, [], 'de');
   const hidden = (await de(block('js hidden={2-3} title="app.js"', 'a', 'b', 'c', 'd'))).html;

@@ -22,12 +22,12 @@ const texts = (panel: HTMLElement): Record<string, string> => JSON.parse(panel.d
 function show(panel: HTMLElement, ...children: HTMLElement[]) {
   const label = document.createElement('span');
   label.className = 'scb-run-label';
-  label.textContent = texts(panel).output ?? '';
+  label.textContent = texts(panel).output;
   panel.replaceChildren(label, ...children);
 }
 
-const status = (text = '') => line('p', 'scb-run-status', text);
-const error = (panel: HTMLElement, text: string) => line('pre', 'scb-run-stderr', text, texts(panel).error);
+const status = (text: string) => line('p', 'scb-run-status', text);
+const error = (prefix: string, text: string) => line('pre', 'scb-run-stderr', text, prefix);
 
 /** Prints the output that the author wrote, a line at a time, as if the code ran. */
 async function replay(figure: HTMLElement, panel: HTMLElement, output: string) {
@@ -35,14 +35,15 @@ async function replay(figure: HTMLElement, panel: HTMLElement, output: string) {
   const waits: Record<number, number> = JSON.parse(figure.dataset.scbRunnableWaits ?? '{}');
   const streams: Record<number, string> = JSON.parse(figure.dataset.scbRunnableStreams ?? '{}');
   const marks = figure.querySelector('.scb-run-marks');
-  if (delay || figure.dataset.scbRunnableWaits) show(panel, status(texts(panel).running));
+  const t = texts(panel);
+  if (delay || figure.dataset.scbRunnableWaits) show(panel, status(t.running));
   let part: HTMLElement | undefined;
   for (const [i, text] of decodeCode(output).split('\n').entries()) {
     const ms = i ? (waits[i - 1] ?? delay) : delay;
     if (ms) await new Promise((resolve) => setTimeout(resolve, ms));
     if (!part) show(panel);
     if (!part || i in streams) {
-      part = streams[i] === 'stderr' ? error(panel, '') : line('pre', 'scb-run-stdout', '');
+      part = streams[i] === 'stderr' ? error(t.error, '') : line('pre', 'scb-run-stdout', '');
       panel.append(part);
     } else part.append('\n');
     part.append(marks?.querySelector(`[data-scb-run-line="${i}"]`)?.cloneNode(true) ?? text);
@@ -71,7 +72,7 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
     loaded.add(url);
   } catch (e) {
     runtimes.delete(url);
-    show(panel, error(panel, `${t.failed} ${e instanceof Error ? e.message : String(e)}`));
+    show(panel, error(t.error, `${t.failed} ${e instanceof Error ? e.message : String(e)}`));
     return;
   }
   show(panel, status(t.running));
@@ -85,15 +86,15 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
     const { stdout, stderr } = await Promise.race([runtime.run(code, { signal: controller.signal, session }), stopped]);
     const parts = [];
     if (stdout) parts.push(line('pre', 'scb-run-stdout', stdout));
-    if (stderr) parts.push(error(panel, stderr));
+    if (stderr) parts.push(error(t.error, stderr));
     show(panel, ...(parts.length ? parts : [status(t.empty)]));
   } catch (e) {
     if (controller.signal.aborted) {
       // The runtime may have thrown itself away to stop the code, so the next run loads it again.
       loaded.delete(url);
-      show(panel, error(panel, t.timeout ?? ''));
+      show(panel, error(t.error, t.timeout));
     } else {
-      show(panel, error(panel, e instanceof Error ? e.message : String(e)));
+      show(panel, error(t.error, e instanceof Error ? e.message : String(e)));
     }
   } finally {
     clearTimeout(timer);

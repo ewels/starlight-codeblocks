@@ -12,7 +12,7 @@ const texts = (el: HTMLElement) =>
 async function copy(el: HTMLElement) {
   const colour = el.dataset.scbColour;
   if (!colour || !(await writeClipboard(colour))) return;
-  const { copied, done } = texts(el);
+  const { copied = '', done = '' } = texts(el);
   el.dataset.scbCopied = copied;
   if (!live?.isConnected) {
     live = document.createElement('span');
@@ -41,7 +41,7 @@ function setUp() {
     el.dataset.scbReady = '';
     el.role = 'button';
     el.tabIndex = 0;
-    const { hint, copy } = texts(el);
+    const { hint = '', copy = '' } = texts(el);
     el.dataset.scbHint = hint;
     el.ariaLabel = copy.replace('{{colour}}', el.dataset.scbColour ?? '');
   }

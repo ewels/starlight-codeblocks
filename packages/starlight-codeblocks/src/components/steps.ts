@@ -95,10 +95,9 @@ export function codeWalkthrough(
         ?.children.map((c) => ('value' in c ? c.value : ''))
         .join('') ?? '',
   );
-  const name = (i: number) =>
-    labels[i]
-      ? say('walkthrough.stepWithLabel', { step: i + 1, label: labels[i] })
-      : say('walkthrough.step', { step: i + 1 });
+  const names = labels.map((label, i) =>
+    label ? say('walkthrough.stepWithLabel', { step: i + 1, label }) : say('walkthrough.step', { step: i + 1 }),
+  );
   const first = startIndex(start, groups.length, warn);
 
   groups.forEach((group, current) => {
@@ -116,7 +115,7 @@ export function codeWalkthrough(
               type: 'button',
               class: `${S}-dot${done}`,
               dataScbStepsGo: String(i),
-              ariaLabel: name(i),
+              ariaLabel: names[i],
               ariaCurrent: i === current ? 'step' : undefined,
             },
             String(i + 1),

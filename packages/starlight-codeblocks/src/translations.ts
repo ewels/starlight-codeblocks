@@ -109,18 +109,22 @@ export function siteTexts(
         key.startsWith(KEY_PREFIX) && typeof text === 'string' ? [[key.slice(KEY_PREFIX.length), text]] : [],
       ),
     );
-  const fallback = { ...uiStrings, ...own() };
+  // i18next reads a language's key without a plural form before the plural forms of the fallback language.
+  const over = (base: Texts, top: Texts): Texts =>
+    Object.fromEntries(
+      Object.entries({ ...base, ...top }).filter(
+        ([key]) => key in top || !(key.replace(/_(zero|one|two|few|many|other)$/, '') in top),
+      ),
+    );
+  const fallback = over(uiStrings, own());
   const texts = new PluginTexts<Texts>(fallback);
-  for (const [dir, { lang = dir }] of Object.entries(locales ?? {}))
-    texts.addLocale(lang, { ...fallback, ...own(lang) });
+  for (const [dir, { lang = dir }] of Object.entries(locales ?? {})) texts.addLocale(lang, over(fallback, own(lang)));
   return texts;
 }
 
-const english = new PluginTexts<Texts>(uiStrings);
-
 /** The texts of a block in `locale`, its Expressive Code locale. Sites without Starlight get English. */
 export function uiTexts(locale: string): Say {
-  const texts = (getRegistry()?.texts ?? english).get(locale);
+  const texts = getRegistry()?.texts?.get(locale) ?? uiStrings;
   return (key, vars) => format(texts, locale, key, vars);
 }
 

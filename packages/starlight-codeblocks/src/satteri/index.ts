@@ -124,16 +124,16 @@ function codeTabs(node: ContainerDirective, file: string, fallback: TabsVariant[
   } as unknown as MdastNode;
 }
 
-const swatchHast = (colour: string, texts: string) => ({
+const swatchHast = (colour: string, texts: string | undefined) => ({
   className: [`${SWATCH}-text`],
   dataScbColour: colour,
-  dataScbSwatches: texts,
+  ...(texts && { dataScbSwatches: texts }),
   style: `--scb-swatch: ${colour}`,
 });
 const chipHast = { className: [SWATCH], ariaHidden: 'true' };
 
 /** The text with a swatch before each colour, or `undefined` when it has none. */
-function proseSwatches(node: Text, { formats }: SwatchSettings, texts: string) {
+function proseSwatches(node: Text, { formats }: SwatchSettings, texts: string | undefined) {
   const matches = findColours(node.value, 'prose', formats);
   if (matches.length === 0) return;
   const nodes: unknown[] = [];
@@ -155,7 +155,7 @@ function proseSwatches(node: Text, { formats }: SwatchSettings, texts: string) {
 }
 
 /** Inline code that is one colour, as a `code` element with a swatch inside. */
-function inlineSwatch(node: InlineCode, { formats }: SwatchSettings, texts: string) {
+function inlineSwatch(node: InlineCode, { formats }: SwatchSettings, texts: string | undefined) {
   const colour = wholeColour(node.value, formats);
   if (!colour) return;
   const chip = { type: 'element', tagName: 'span', properties: chipHast, children: [] };
@@ -179,7 +179,7 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
       const file = fileName(fileURL);
       const warn = (message: string) => logger.warn(`${file}: ${message}`);
       const say = uiTexts(getRegistry()?.pageLang?.(fileURL ? fileURLToPath(fileURL) : '') ?? 'en');
-      const swatches = prose ? swatchTexts(say) : '';
+      const swatches = prose?.copy ? swatchTexts(say) : undefined;
       return {
         name: 'starlight-codeblocks',
         before(root, ctx) {
