@@ -91,8 +91,9 @@ Use for short Python, JavaScript or TypeScript examples that readers can run in 
 | `runnable` | Code block fence line |
 | `runnable.packages="<name> <name>"` | Code block fence line |
 | `runnable.button="below"`, `runnable.button="title"`, `runnable.button="both"` | Code block fence line |
-| `[!output]`, `[!output end]` | Comment in the code, on its own line |
+| `[!output]`, `[!output stdout]`, `[!output stderr]`, `[!output end]` | Comment in the code, on its own line |
 | `[!wait <ms>]` | Comment at the end of a line of output |
+| `[!code highlight]`, `[!code error]`, `[!code warning]`, `[!code info]`, `[!code success]` | Comment at the end of a line of output |
 | `runnable.output="<text>"`, `runnable.outputDelay=<ms>` | Code block fence line |
 
 ````md
@@ -107,7 +108,7 @@ print(mean([1520, 1610, 1480]))
 - Standard output and standard error show in the output panel. A run stops after the timeout. The download of the runtime and of imported packages does not count towards the timeout.
 - A Python session with `>>>` prompts runs its commands only, as in the Python REPL: the output shows the value of each expression.
 - `runnable.button` puts the button under the block (default), in the title bar, or both.
-- For code that cannot run in the browser, such as a command line tool, write its output after an `[!output]` comment. The button prints it instead of running the code, one line every `outputDelay` ms (default `200`; `0` prints it at once). The output lines leave the code and the copied text. `[!output end]` ends the output; without it, the output goes to the end of the block. `[!wait <ms>]` at the end of an output line changes the wait after it. The block needs no `runnable` attribute and no runtime. A block with only output shows the button in the middle of the empty code area. `runnable.output="…"` on the fence line does the same, with `\n` for new lines.
+- For code that cannot run in the browser, such as a command line tool, write its output after an `[!output]` comment. The button prints it instead of running the code, one line every `outputDelay` ms (default `200`; `0` prints it at once). The output lines leave the code and the copied text. `[!output end]` ends the output; without it, the output goes to the end of the block. `[!output stderr]` starts lines that print as standard error, as for a failed run, and `[!output stdout]` switches back. Each switch starts a new part of the output. `[!wait <ms>]` at the end of an output line changes the wait after it. `[!code highlight]` and line state directives at the end of an output line mark it in the output, as in the code. They need line states on. `[!wait]` and a mark can share one comment. Ranges on the fence line, such as `{2}`, count the code lines only. The block needs no `runnable` attribute and no runtime. A block with only output shows the button in the middle of the empty code area. `runnable.output="…"` on the fence line does the same, with `\n` for new lines.
 
 ````md
 ```sh
@@ -115,6 +116,8 @@ nextflow run hello.nf
 # [!output]
 Launching hello.nf # [!wait 1500]
 Hello world!
+# [!output stderr]
+ERROR ~ Error executing process > 'sayHello' # [!code error]
 ```
 ````
 - Python packages: the runtime reads the `import` lines and installs Pyodide's packages (NumPy, pandas and about 350 more). It installs any other import from PyPI with micropip, under the import name. PyPI packages must be pure Python. When the package name differs from the import name, name it: ` ```py runnable runnable.packages="python-slugify" ` for `import slugify`. Separate several names with spaces; `name==1.2` pins a version.
