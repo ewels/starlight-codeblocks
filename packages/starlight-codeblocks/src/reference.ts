@@ -172,7 +172,7 @@ export const attributesReference: AttributeDoc[] = [
     name: 'nextflow',
     syntax: ['nextflow="config"'],
     description:
-      'Makes the Nextflow adapter read the block as a config file, as it does when the title ends in `.config`. It then links the config scopes and the directives in the `process` scope.',
+      'Makes the Nextflow adapter read the block as a config file, as it does when the title ends in `.config`. It then links the config scopes, such as `params` and `docker`, and the directives in the `process` scope.',
     page: 'features/api-auto-linking',
     example: { lang: 'nextflow', meta: 'nextflow="config"', code: "docker.enabled = true\nprocess.memory = '2 GB'" },
   },

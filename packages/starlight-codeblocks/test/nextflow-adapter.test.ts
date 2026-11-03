@@ -274,7 +274,9 @@ test('links a config scope only at the start of a setting, and a directive only 
     "workDir = 'work'",
   ];
   expect(await targets('nextflow title="nextflow.config"', lines)).toEqual([
+    'profiles config#config-profiles',
     'docker reference/config/docker',
+    'params config#parameters',
     'executor reference/config/executor',
     'env reference/config/env',
     'report reference/config/report',
@@ -283,6 +285,51 @@ test('links a config scope only at the start of a setting, and a directive only 
     'cpus reference/process/directives/cpus',
     'memory reference/process/directives/memory',
     'ext reference/process/directives/ext',
+  ]);
+});
+
+test('links params and profiles in a config block, also in a profile body, but not in strings or map keys', async () => {
+  const lines = [
+    "params.input = 'samples.csv'",
+    'params {',
+    "    outdir = 'results'",
+    '}',
+    'profiles {',
+    '    test {',
+    "        params.input = 'test/samples.csv'",
+    '        process.cpus = 2',
+    '    }',
+    '}',
+    "docker.runOptions = 'params { }'",
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Nextflow string interpolation, not JavaScript.
+    'docker.registry = "${params.registry}"',
+    'env.OPTIONS = [',
+    "    params: 'none',",
+    ']',
+  ];
+  expect(await targets('nextflow title="nextflow.config"', lines)).toEqual([
+    'params config#parameters',
+    'params config#parameters',
+    'profiles config#config-profiles',
+    'params config#parameters',
+    'process config#process-configuration',
+    'cpus reference/process/directives/cpus',
+    'docker reference/config/docker',
+    'docker reference/config/docker',
+    'env reference/config/env',
+  ]);
+  const { html } = await render(block('nextflow title="nextflow.config"', 'params {', '}'), withNextflow());
+  expect(links(html)).toEqual([
+    {
+      text: 'params',
+      href: `${NF}config#parameters`,
+      head: 'config scope params',
+      summary: 'Defines pipeline parameters.',
+      source: SOURCE,
+    },
+  ]);
+  expect(await targets('nextflow', ["params.input = 'samples.csv'"])).toEqual([
+    'params reference/stdlib-namespaces/global',
   ]);
 });
 
@@ -378,7 +425,7 @@ test('the bundled map has every channel factory and operator of the reference', 
   ]);
   expect(Object.keys(operators)).toHaveLength(47);
   expect(Object.keys(directives)).toHaveLength(41);
-  expect(Object.keys(scopes)).toHaveLength(33);
+  expect(Object.keys(scopes)).toHaveLength(35);
   expect(Object.keys(globals)).toHaveLength(22);
   expect(Object.keys(namespaces)).toEqual(['log', 'nextflow', 'workflow']);
 });

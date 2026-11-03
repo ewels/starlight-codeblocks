@@ -46,7 +46,7 @@ API auto-linking finds library names in a block and links each one to its refere
 - The Python adapter runs on `py`, `python` and `pycon` blocks. It reads `import x`, `import x as y` and `from a import b as c`, then links the names that they bind and attribute chains on them, such as `os.path.join`.
 - The Nextflow adapter runs on `nextflow` and `nf` blocks. It links channel factories, such as `channel.of`, and operators after them. With the `modules` option, it links processes and workflows from `include` statements.
 - In a `process` body, the Nextflow adapter links the directives, such as `cpus`, and the `input:` and `output:` labels. It also links global names, such as `params` and `file()`, and the members of `workflow`, `log` and `nextflow`, such as `workflow.projectDir`.
-- A Nextflow block is a config file if its title ends in `.config`. For a config block with another title or none, add `nextflow="config"` to the fence line. In a config file, the adapter links the config scopes, such as `docker` in `docker.enabled = true`, and the directives in the `process` scope.
+- A Nextflow block is a config file if its title ends in `.config`. For a config block with another title or none, add `nextflow="config"` to the fence line. In a config file, the adapter links the config scopes, such as `docker` in `docker.enabled = true`, `params` and `profiles`, and the directives in the `process` scope.
 - The build caches fetched indexes in `node_modules/.cache/starlight-codeblocks/`. A failed fetch logs a warning and does not fail the build.
 - Option: `apiLinks.adapters` (default `[python(), nextflow()]`). A list replaces the default list, so give every adapter that you want:
 

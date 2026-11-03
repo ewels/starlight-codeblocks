@@ -402,6 +402,11 @@ export const scopes: Record<string, Entry> = {
     summary: 'Controls the automatic sending of an email notification on workflow completion.',
     settings: ['attributes', 'enabled', 'from', 'template', 'to'],
   },
+  params: {
+    href: 'https://docs.seqera.io/nextflow/config#parameters',
+    summary: 'Defines pipeline parameters.',
+    settings: [],
+  },
   podman: {
     href: 'https://docs.seqera.io/nextflow/reference/config/podman',
     summary: 'Controls how Podman containers are executed by Nextflow.',
@@ -410,6 +415,11 @@ export const scopes: Record<string, Entry> = {
   process: {
     href: 'https://docs.seqera.io/nextflow/config#process-configuration',
     summary: 'Sets process directives separately from the pipeline code.',
+    settings: [],
+  },
+  profiles: {
+    href: 'https://docs.seqera.io/nextflow/config#config-profiles',
+    summary: 'Defines sets of settings that the `-profile` option selects at run time.',
     settings: [],
   },
   registry: {
