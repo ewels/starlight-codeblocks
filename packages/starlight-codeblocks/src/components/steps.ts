@@ -58,11 +58,28 @@ export function plainSteps(html: string): string {
   return toHtml(root);
 }
 
+/** The index of the step that `start` names. A bad `start` warns and gives the first step. */
+function startIndex(start: number | string, total: number, warn: (message: string) => void) {
+  if (start === 'last') return total - 1;
+  // MDX authors often quote numbers, as in `<ol start="2">`.
+  const n = typeof start === 'string' && /^\d+$/.test(start) ? Number(start) : start;
+  if (typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= total) return n - 1;
+  const shown = typeof start === 'string' ? `"${start}"` : `{${start}}`;
+  warn(
+    `\`<CodeWalkthrough start=${shown}>\`: \`start\` must be \`"last"\` or a step number from 1 to ${total}. The walkthrough opens on step 1.`,
+  );
+  return 0;
+}
+
 /**
  * Turns the blocks that Expressive Code rendered inside `<CodeWalkthrough>` into steps: adds the numbered steps
  * to each title bar, a Previous/Next/counter row under each block, and keys the tokens for the animation.
  */
-export function codeWalkthrough(html: string): string {
+export function codeWalkthrough(
+  html: string,
+  start: number | string = 1,
+  warn: (message: string) => void = console.warn,
+): string {
   const root = fromHtml(html, { fragment: true });
   removeAutoExpandable(root);
   const groups = root.children.filter(
@@ -77,6 +94,7 @@ export function codeWalkthrough(html: string): string {
         .join('') ?? '',
   );
   const name = (i: number) => `Step ${i + 1}${labels[i] ? `: ${labels[i]}` : ''}`;
+  const first = startIndex(start, groups.length, warn);
 
   groups.forEach((group, current) => {
     const figure = select('figure', group) as Element;
@@ -105,7 +123,7 @@ export function codeWalkthrough(html: string): string {
       nameFigure(figure);
     }
     group.children.push(controlsRow(current, groups.length));
-    if (current === 0) addClassName(group, `${S}-current`);
+    if (current === first) addClassName(group, `${S}-current`);
   });
   const data = stepsData(groups);
   markDecorations(root);

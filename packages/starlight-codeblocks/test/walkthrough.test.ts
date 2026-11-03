@@ -18,13 +18,14 @@ const steps = [
   block('title="server.js"', 'app.listen(3000);'),
 ];
 
-async function renderSteps(blocks = steps, plugins: ExpressiveCodePlugin[] = []) {
+async function renderSteps(blocks = steps, plugins: ExpressiveCodePlugin[] = [], start?: number | string) {
   const rendered = await Promise.all(blocks.map((b) => render(b, {}, plugins)));
-  const html = codeWalkthrough(rendered.map((r) => r.rawHtml).join('\n'))
+  const warnings: string[] = [];
+  const html = codeWalkthrough(rendered.map((r) => r.rawHtml).join('\n'), start, (m) => warnings.push(m))
     .replaceAll(' scb-deco', '')
     .replace(/ data-pagefind-ignore(="")?/g, '');
   const data = JSON.parse(html.match(/<script type="application\/json">(.*?)<\/script>/)?.[1] ?? '[]') as StepTokens[];
-  return { html, data, rendered };
+  return { html, data, rendered, warnings };
 }
 
 test('the plugin shows the step label after the title, or first without one, even with the feature off', async () => {
@@ -75,6 +76,42 @@ test('adds numbered steps and Previous and Next to each title bar, with the firs
     'const app = express();\napp.use(express.json());\n\napp.listen(3000);',
     'app.listen(3000);',
   ]);
+});
+
+test('start opens on the last step or on a step number, also in quotes, and leaves the steps and their tokens as they are', async () => {
+  const base = await renderSteps();
+  const currentStep = (html: string) =>
+    html.split('<div class="expressive-code').findIndex((part) => part.startsWith(' scb-steps-current')) - 1;
+  for (const [start, index] of [
+    ['last', 2],
+    [2, 1],
+    ['2', 1],
+    [1, 0],
+  ] as const) {
+    const { html, data, warnings } = await renderSteps(steps, [], start);
+    expect(currentStep(html), String(start)).toBe(index);
+    expect(html.match(/scb-steps-current/g)).toHaveLength(1);
+    expect(html.replace(' scb-steps-current', '')).toBe(base.html.replace(' scb-steps-current', ''));
+    expect(data).toEqual(base.data);
+    expect(warnings).toEqual([]);
+  }
+});
+
+test('a start outside the steps, or not a step number, warns and opens on the first step', async () => {
+  for (const [start, shown] of [
+    [0, '{0}'],
+    [4, '{4}'],
+    ['4', '"4"'],
+    [1.5, '{1.5}'],
+    ['first', '"first"'],
+    ['-1', '"-1"'],
+  ] as const) {
+    const { html, warnings } = await renderSteps(steps, [], start);
+    expect(html).toMatch(/^<div class="scb-steps" data-scb-steps><div class="expressive-code scb-steps-current">/);
+    expect(warnings).toEqual([
+      `\`<CodeWalkthrough start=${shown}>\`: \`start\` must be \`"last"\` or a step number from 1 to 3. The walkthrough opens on step 1.`,
+    ]);
+  }
 });
 
 test('serialises the tokens of each step with the colours of both themes, and unchanged tokens keep their keys', async () => {
