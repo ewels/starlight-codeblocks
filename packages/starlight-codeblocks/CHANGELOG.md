@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.0
 
 - API links: the Nextflow adapter links process directives, input and output labels, global names such as `params`, and the scopes and process directives of config files. `nextflow="config"` marks a block as a config file (#22)
 - Code walkthrough: `start` opens a walkthrough on a chosen step, and `walkthrough: { start: 'last' }` sets it for the site (#23)
