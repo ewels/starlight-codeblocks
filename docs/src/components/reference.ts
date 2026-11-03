@@ -1,7 +1,7 @@
 import { commentSyntaxGroups as groups } from '../../../packages/starlight-codeblocks/src/expressive-code/comments.ts';
 import type { CodeblocksPlugin } from '../../../packages/starlight-codeblocks/src/expressive-code/core.ts';
 import { createPlugins } from '../../../packages/starlight-codeblocks/src/expressive-code/index.ts';
-import { languageAliases, languages } from '../../../packages/starlight-codeblocks/src/languages.ts';
+import { languageAliases, languages } from '../../../packages/starlight-codeblocks/src/languages/index.ts';
 import { optionsReference, resolveOptions } from '../../../packages/starlight-codeblocks/src/options.ts';
 import { attributesReference, styleSettingsReference } from '../../../packages/starlight-codeblocks/src/reference.ts';
 import { translations } from '../../../packages/starlight-codeblocks/src/translations.ts';

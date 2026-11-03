@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { languageAliases, languages } from '../src/languages.ts';
+import { languageAliases, languages } from '../src/languages/index.ts';
 import { uiStrings } from '../src/translations.ts';
 
 const PLURAL = /_(zero|one|two|few|many|other)$/;
@@ -29,6 +29,13 @@ test.each(codes)('the %s table has every key, the plural forms of the language a
     expect(text, `${code} ${key}`).toBe(text.trim());
     expect(text, `${code} ${key}`).not.toContain('...');
   }
+});
+
+test('the index registers every language file', () => {
+  const files = readdirSync(new URL('../src/languages/', import.meta.url))
+    .filter((file) => file !== 'index.ts')
+    .map((file) => file.replace(/\.ts$/, ''));
+  expect(Object.keys(languages).sort()).toEqual(files.sort());
 });
 
 test('the agent skill lists every code', () => {

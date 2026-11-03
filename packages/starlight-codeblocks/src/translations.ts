@@ -1,12 +1,12 @@
 import { PluginTexts } from '@expressive-code/core';
-import { languageAliases, languages } from './languages.ts';
+import { languageAliases, languages } from './languages/index.ts';
 import { getRegistry } from './registry.ts';
 
 /** The prefix of every key in Starlight's UI strings. */
 export const KEY_PREFIX = 'starlightCodeblocks.';
 
 /**
- * The English UI texts, by key without `KEY_PREFIX`. `languages.ts` has the other languages, and Starlight sites change
+ * The English UI texts, by key without `KEY_PREFIX`. `languages/` has the other languages, and Starlight sites change
  * any text in `src/content/i18n/<lang>.json`. A text with a count has i18next plural forms, such as `_one` and `_other`.
  */
 export const uiStrings = {
