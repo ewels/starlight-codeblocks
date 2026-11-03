@@ -10,6 +10,7 @@ import {
 } from '@expressive-code/core';
 import { h, select, toText } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
+import { uiTexts } from '../translations.ts';
 import { blockUid, type CodeblocksPlugin, lineNumber, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { builtInStates, stateAliases } from './line-states.ts';
@@ -89,6 +90,7 @@ class SquiggleAnnotation extends ExpressiveCodeAnnotation {
   constructor(
     private readonly squiggle: Squiggle,
     private readonly anchor: string,
+    private readonly label: string,
     inlineRange: { columnStart: number; columnEnd: number },
   ) {
     // Last, so that the tokens of the range merge into one node and the wave runs on without a break.
@@ -96,7 +98,7 @@ class SquiggleAnnotation extends ExpressiveCodeAnnotation {
   }
   render({ nodesToTransform }: AnnotationRenderOptions) {
     const { severity, message } = this.squiggle;
-    const { label } = severities[severity];
+    const { label } = this;
     const text = inlineMarkdown(message);
     const part = { class: `${cls()} ${cls(`-${severity}`)}`, 'data-scb-squiggle': this.anchor };
     // A later annotation that overlaps part of the range splits it. Only the first part holds the message.
@@ -236,6 +238,7 @@ ${Object.keys(severities)
         if (found.length === 0) return;
         const data = squiggleData.getOrCreateFor(codeBlock);
         const uid = blockUid(context);
+        const say = uiTexts(context.locale);
         for (const directive of found) {
           const line = directive.lines[0];
           if (!line) continue;
@@ -251,24 +254,30 @@ ${Object.keys(severities)
           const squiggle = { severity, message: directive.text ?? '', line };
           data.squiggles.push(squiggle);
           line.addAnnotation(
-            new SquiggleAnnotation(squiggle, `--${cls()}-${uid}-${data.squiggles.length}`, {
-              columnStart: start,
-              columnEnd: end,
-            }),
+            new SquiggleAnnotation(
+              squiggle,
+              `--${cls()}-${uid}-${data.squiggles.length}`,
+              say(`squiggles.${severity}`),
+              {
+                columnStart: start,
+                columnEnd: end,
+              },
+            ),
           );
         }
       },
-      postprocessRenderedBlock({ codeBlock, renderData }) {
+      postprocessRenderedBlock({ codeBlock, renderData, locale }) {
         const { squiggles } = squiggleData.getOrCreateFor(codeBlock);
         if (squiggles.length === 0) return;
         const figure = select('figure', renderData.blockAst);
         const pre = figure && select('pre', figure);
         if (!figure || !pre) return;
         pre.properties.dataScbSquiggles = '';
+        const say = uiTexts(locale);
         // The popovers do not print, so their messages go in a list under the block.
         const items = squiggles.map(({ severity, message, line }) =>
           h('li', [
-            `Line ${lineNumber(codeBlock, line)}, ${severities[severity].label.toLowerCase()}`,
+            say(`squiggles.${severity}Line`, { line: lineNumber(codeBlock, line) }),
             ...(message ? [': ', ...inlineMarkdown(message)] : []),
           ]),
         );

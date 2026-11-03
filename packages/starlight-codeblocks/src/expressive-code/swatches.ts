@@ -1,6 +1,7 @@
 import { type AnnotationRenderOptions, ExpressiveCodeAnnotation } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
+import { type Say, uiTexts } from '../translations.ts';
 import { blockSetting, type CodeblocksPlugin, languageId } from './core.ts';
 import { PREFIX } from './styles.ts';
 
@@ -180,6 +181,15 @@ const swatchProperties = (colour: string) => ({
 /** The swatch before the colour, which copies no text. */
 const swatchElement = () => h('span', { class: SWATCH, ariaHidden: 'true' });
 
+/** The value of `data-scb-swatches`: the client module's texts, with `{{colour}}` for it to fill in. */
+export const swatchTexts = (say: Say) =>
+  JSON.stringify({
+    hint: say('swatches.hint'),
+    copied: say('swatches.copied'),
+    copy: say('swatches.copy', { colour: '{{colour}}' }),
+    done: say('swatches.copiedColour', { colour: '{{colour}}' }),
+  });
+
 /** Styles for swatches in code blocks and in prose. `tip` colours the **Copied** label. */
 function swatchStyles(
   { shape, size, hover }: Pick<SwatchSettings, 'shape' | 'size' | 'hover'>,
@@ -240,7 +250,7 @@ ${Object.entries(SHAPES)
 /* The client module makes each colour a button. */
 .${SWATCH}-text[role='button'] { cursor: copy; }
 .${SWATCH}-text[role='button']::after {
-  content: 'Click to copy';
+  content: attr(data-scb-hint);
   /* Beside the colour, not above it: a code block clips anything above its first line. */
   position: absolute;
   inset-block-start: 50%;
@@ -342,7 +352,7 @@ export function pluginSwatches(settings: SwatchSettings): CodeblocksPlugin {
       postprocessRenderedBlock(context) {
         const pre = select('pre', context.renderData.blockAst);
         if (!pre || !select(`.${SWATCH}-text`, pre)) return;
-        if (settings.copy) pre.properties.dataScbSwatches = '';
+        if (settings.copy) pre.properties.dataScbSwatches = swatchTexts(uiTexts(context.locale));
         const shape = blockSetting<SwatchShape | undefined>(
           context,
           'swatches.shape',

@@ -3,6 +3,7 @@ import { getClassNames, h, select } from '@expressive-code/core/hast';
 import { encodeCode } from '../client/shared/copy.ts';
 import { clientJsModules } from '../client-modules.ts';
 import { getRegistry } from '../registry.ts';
+import { uiTexts } from '../translations.ts';
 import {
   addTitleBarControl,
   blockSetting,
@@ -87,8 +88,8 @@ const milliseconds = (min: number) => (raw: string) =>
 export function pluginRunnable({
   runtimes,
   timeout = 10000,
-  label = 'Run code',
-  againLabel = 'Run again',
+  label,
+  againLabel,
   button = 'below',
   outputDelay = 200,
 }: RunnableSettings = {}): CodeblocksPlugin {
@@ -200,8 +201,20 @@ export function pluginRunnable({
         if (!codeBlock.metaOptions.getBoolean('runnable') && scripted === undefined) return;
         const figure = select('figure', renderData.blockAst);
         if (!figure) return;
-        const buttonText = blockSetting(context, 'runnable.label', text, label, 'some text');
-        const again = blockSetting(context, 'runnable.againLabel', text, againLabel, 'some text');
+        const say = uiTexts(context.locale);
+        const buttonText = blockSetting(context, 'runnable.label', text, label ?? say('runnable.run'), 'some text');
+        const again = blockSetting(
+          context,
+          'runnable.againLabel',
+          text,
+          againLabel ?? say('runnable.again'),
+          'some text',
+        );
+        const texts: Record<string, string> = {
+          output: say('runnable.output'),
+          running: say('runnable.running'),
+          error: `${say('runnable.error')} `,
+        };
         const where = blockSetting(
           context,
           'runnable.button',
@@ -220,8 +233,10 @@ export function pluginRunnable({
               },
               buttonText,
             );
-          if (where !== 'below') addTitleBarControl(renderData.blockAst, runButton(`${PREFIX}-btn `));
-          figure.children.push(h('div', { class: cls('-output'), ariaLive: 'polite' }));
+          if (where !== 'below') addTitleBarControl(renderData.blockAst, runButton(`${PREFIX}-btn `), context.locale);
+          figure.children.push(
+            h('div', { class: cls('-output'), ariaLive: 'polite', dataScbTexts: JSON.stringify(texts) }),
+          );
           if (where === 'title') return;
           const pre = select('pre', figure);
           if (scripted !== undefined && !codeBlock.code.trim() && pre) {
@@ -277,6 +292,13 @@ export function pluginRunnable({
             'a whole number of milliseconds, from 1 to 2147483647',
           ),
         );
+        const name = String(figure.properties.dataScbRunnableName);
+        Object.assign(texts, {
+          loading: say('runnable.loading', { language: name }),
+          failed: say('runnable.loadFailed', { language: name }),
+          empty: say('runnable.noOutput'),
+          timeout: say('runnable.timeout', { count: Number(figure.properties.dataScbRunnableTimeout) / 1000 }),
+        });
         const packages = blockSetting(
           context,
           'runnable.packages',

@@ -14,8 +14,8 @@ const js = { runnable: { runtimes: { javascript: '/runtimes/js.js' } } };
 
 test('runnable adds a Run code button under the block, after an empty live output panel', async () => {
   const { html, copyText, warnings } = await render(block('js runnable', 'console.log(1)'), js);
-  expect(html).toContain(
-    '<div class="scb-run-output" aria-live="polite"></div><div class="scb-run-controls scb-no-print"><button type="button" class="scb-run scb-no-print scb-needs-js" data-scb-run-again="Run again">Run code</button></div></figure>',
+  expect(html).toMatch(
+    /<div class="scb-run-output" aria-live="polite" data-scb-texts="[^"]*"><\/div><div class="scb-run-controls scb-no-print"><button type="button" class="scb-run scb-no-print scb-needs-js" data-scb-run-again="Run again">Run code<\/button><\/div><\/figure>/,
   );
   expect(html).not.toContain('scb-tools');
   expect(html).toContain('data-scb-runnable="/runtimes/js.js" data-scb-runnable-name="JavaScript"');

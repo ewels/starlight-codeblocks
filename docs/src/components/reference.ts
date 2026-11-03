@@ -3,6 +3,7 @@ import type { CodeblocksPlugin } from '../../../packages/starlight-codeblocks/sr
 import { createPlugins } from '../../../packages/starlight-codeblocks/src/expressive-code/index.ts';
 import { optionsReference, resolveOptions } from '../../../packages/starlight-codeblocks/src/options.ts';
 import { attributesReference, styleSettingsReference } from '../../../packages/starlight-codeblocks/src/reference.ts';
+import { translations } from '../../../packages/starlight-codeblocks/src/translations.ts';
 
 export const commentSyntaxGroups = groups.map(({ syntax, languages }) => ({
   syntax,
@@ -30,6 +31,9 @@ export const directives = Object.entries(
       ]
     : [],
 );
+
+/** Every UI string with its English text, in the order of the dictionary. */
+export const uiStrings = Object.entries(translations).map(([key, text]) => ({ key, text }));
 
 export const attributes = attributesReference.map(({ example, ...attribute }) => ({
   ...attribute,

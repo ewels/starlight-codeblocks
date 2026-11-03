@@ -1,6 +1,7 @@
 import { AttachedPluginData, type ExpressiveCodeBlock } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
+import { uiTexts } from '../translations.ts';
 import { addTitleBarControl, type CodeblocksPlugin } from './core.ts';
 import { type FileIconSettings, fileIconResolver } from './file-icons.ts';
 import { PREFIX } from './styles.ts';
@@ -108,7 +109,7 @@ export function pluginCodeTabs(fileIcons: Partial<FileIconSettings> = {}): Codeb
           labelTitle.getOrCreateFor(codeBlock).fromLabel = true;
         }
       },
-      async postprocessRenderedBlock({ codeBlock, renderData }) {
+      async postprocessRenderedBlock({ codeBlock, renderData, locale }) {
         const variant = readVariant(codeBlock);
         if (!variant) return;
         if (variant.control === 'tabs') {
@@ -138,11 +139,12 @@ export function pluginCodeTabs(fileIcons: Partial<FileIconSettings> = {}): Codeb
             svg ?? icon(`${PREFIX}-tabs-icon`, CODE_ICON),
             h(
               'select',
-              { class: `${PREFIX}-btn ${MENU}`, ariaLabel: 'Variant' },
+              { class: `${PREFIX}-btn ${MENU}`, ariaLabel: uiTexts(locale)('codeTabs.variant') },
               labels.map((label, i) => h('option', { value: String(i), selected: i === index }, label)),
             ),
             icon(`${PREFIX}-tabs-chevron`, 'm6 9 6 6 6-6'),
           ]),
+          locale,
         );
       },
       postprocessRenderedBlockGroup({ renderedGroupContents, renderData }) {

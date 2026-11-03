@@ -5,17 +5,22 @@ const COLOUR = '.scb-swatch-text:has(> .scb-swatch)';
 const timers = new WeakMap<HTMLElement, number>();
 let live: HTMLElement | undefined;
 
+// On the `pre` of a block, or on the colour itself in prose.
+const texts = (el: HTMLElement) =>
+  JSON.parse(el.closest<HTMLElement>('[data-scb-swatches]')?.dataset.scbSwatches || '{}');
+
 async function copy(el: HTMLElement) {
   const colour = el.dataset.scbColour;
   if (!colour || !(await writeClipboard(colour))) return;
-  el.dataset.scbCopied = 'Copied';
+  const { copied, done } = texts(el);
+  el.dataset.scbCopied = copied;
   if (!live?.isConnected) {
     live = document.createElement('span');
     live.setAttribute('aria-live', 'polite');
     live.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)';
     document.body.append(live);
   }
-  live.textContent = `Copied ${colour}`;
+  live.textContent = done.replace('{{colour}}', colour);
   clearTimeout(timers.get(el));
   timers.set(
     el,
@@ -36,7 +41,9 @@ function setUp() {
     el.dataset.scbReady = '';
     el.role = 'button';
     el.tabIndex = 0;
-    el.ariaLabel = `Copy colour ${el.dataset.scbColour}`;
+    const { hint, copy } = texts(el);
+    el.dataset.scbHint = hint;
+    el.ariaLabel = copy.replace('{{colour}}', el.dataset.scbColour ?? '');
   }
 }
 

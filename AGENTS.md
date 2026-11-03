@@ -41,6 +41,7 @@ Paths are under `packages/starlight-codeblocks/src/` unless they start with `doc
 - `components/`: `<CodeWalkthrough>` and `<Scrollycoding>`, shipped as source. They read tokens from EC's rendered HTML and animate with magic-move's renderer.
 - `adapters/` (`python`, `nextflow`) and `runtimes/` (`pyodide`, `javascript`, `typescript`): subpath exports. The docs site has its own adapters in `docs/src/adapters/`.
 - `reference.ts`, `optionsReference` and each plugin's `directives`: the data behind the docs reference tables.
+- `translations.ts`: the English UI texts, which Starlight sites translate in `src/content/i18n/`, and the readers for each layer.
 - `scripts/og-cards.mjs`: the share cards in `docs/dist/og/`. It screenshots the first example (else the first code block) of each built page in Chromium and sets it in the card. The home page card is a wall of the feature examples.
 - `docs/src/sidebar.mjs`: the single source for the sidebar, the carousel, `llms.txt` and the Markdown routes. A page not in it fails the build.
 - `docs/src/components/Example.astro`: "Readers see" above "You write". It renders fenced blocks with `<Code>`; for prose, directives or components, put the same Markdown between the tags as a live slot.
@@ -65,6 +66,7 @@ The EC plugin:
 - Apply effects to line objects, never to indexes. Find a rendered line with `lineElement(line)` and insert with `insertBefore()`. Never index `.ec-line`: other plugins add and move lines.
 - Extra nodes never change the copied text. Add each decoration to the `scb-deco` list in `core.ts`, with `user-select: none`. `test/decorations.test.ts` checks that a block without its decorations reads as its copied text. Screen reader text goes in `scb-sr-only`.
 - Title bar controls go through `addTitleBarControl()`. A control that needs JavaScript gets `scb-needs-js`.
+- Texts that readers see or hear: add the English text to `uiStrings` in `translations.ts` (a count gets `_one` and `_other` keys and `{{count}}`), and read it with `uiTexts(context.locale)` in a hook, or `componentTexts(Astro.locals.t)` in a component. Never hard-code a reader text in a plugin, a component or a client module.
 - Anything in `code` that lines up with the text adds `var(--scb-gutter, 0px)`. For focusable code, put `tabindex="0"` on `pre > code`, because EC's script removes it from a `pre` that does not scroll.
 
 Styles:
@@ -85,6 +87,7 @@ Client module, only when static HTML cannot do the job:
 - Popovers stay inside the block's `.expressive-code`, which holds the theme variables. Use `scb-float` with `place()`, `follow()` or `below()`.
 - To reach a hidden line, call `unhide()`. It opens tabs and `<details>` and sends `beforematch` for each feature to handle.
 - For placeholder values, read `data-code` when you need it, and listen for `scb-placeholders-change`.
+- Texts come filled in from the build: the plugin writes them as JSON in `data-scb-texts` on an element that the module owns, such as its button.
 
 Tests and docs:
 

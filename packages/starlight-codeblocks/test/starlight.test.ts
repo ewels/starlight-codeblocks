@@ -18,6 +18,8 @@ async function setup(ecConfig?: string, expressiveCode: unknown = {}, options = 
     config: { expressiveCode },
     updateConfig: (update: Record<string, unknown>) => updates.push(update),
     addIntegration: (integration: { name: string }) => integrations.push(integration),
+    useTranslations: () => ({ all: () => ({}) }),
+    absolutePathToLang: () => 'en',
     astroConfig: {
       root: pathToFileURL(`${root}/`),
       cacheDir: pathToFileURL(`${root}/node_modules/.astro/`),

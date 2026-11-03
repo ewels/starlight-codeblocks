@@ -7,15 +7,16 @@ async function click(event: MouseEvent) {
   if (!button) return;
   if (!(await writeClipboard(decodeCode(button.dataset.code)))) return;
   const live = button.parentElement?.querySelector('[aria-live]');
+  const { copy, copied } = JSON.parse(button.dataset.scbTexts ?? '{}');
   // Keeps the width, so that the shorter label does not move the buttons beside it.
   button.style.minWidth = `${button.getBoundingClientRect().width}px`;
-  button.textContent = 'Copied';
-  if (live) live.textContent = 'Copied';
+  button.textContent = copied;
+  if (live) live.textContent = copied;
   clearTimeout(timers.get(button));
   timers.set(
     button,
     window.setTimeout(() => {
-      button.textContent = 'Copy commands';
+      button.textContent = copy;
       if (live) live.textContent = '';
     }, 1500),
   );

@@ -2,6 +2,7 @@ import { type Element, h, select } from '@expressive-code/core/hast';
 import { typescriptPlaygroundUrl } from '../client/shared/typescript-playground.ts';
 import { clientJsModules } from '../client-modules.ts';
 import type { PlaygroundDefinition } from '../options.ts';
+import { type UiKey, uiTexts } from '../translations.ts';
 import { addTitleBarControl, type CodeblocksPlugin, copiedText, keepCopiedText, warn } from './core.ts';
 import { PREFIX } from './styles.ts';
 
@@ -44,7 +45,11 @@ export function pluginPlayground(playgrounds: Record<string, PlaygroundDefinitio
           lang: codeBlock.language,
           title: codeBlock.props.title,
         };
-        const label = [playground.label, h('span', { class: `${PREFIX}-sr-only` }, ' (opens in a new tab)')];
+        const say = uiTexts(context.locale);
+        const label = [
+          playground === builtInPlaygrounds[name] ? say(`playgrounds.${name}` as UiKey) : playground.label,
+          h('span', { class: `${PREFIX}-sr-only` }, ` ${say('playgrounds.newTab')}`),
+        ];
         let control: Element;
         if (playground.url) {
           const href = playground.url(input);
@@ -75,7 +80,7 @@ export function pluginPlayground(playgrounds: Record<string, PlaygroundDefinitio
             ],
           );
         }
-        addTitleBarControl(renderData.blockAst, control);
+        addTitleBarControl(renderData.blockAst, control, context.locale);
       },
     },
   };

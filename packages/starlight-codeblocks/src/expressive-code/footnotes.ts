@@ -8,6 +8,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
+import { uiTexts } from '../translations.ts';
 import {
   blockSetting,
   blockUid,
@@ -246,6 +247,7 @@ ${litLine(`.${cls('-on')}, .${cls('-peek')}`, 'var(--scb-fn-line)', 'var(--scb-f
         );
         const uid = blockUid(context);
         const start = startNoteNumber(context);
+        const say = uiTexts(context.locale);
         const items = refs.map((directive, i) => {
           const n = String(start + i);
           const note = `${PREFIX}-fn-${uid}-${n}`;
@@ -260,7 +262,7 @@ ${litLine(`.${cls('-on')}, .${cls('-peek')}`, 'var(--scb-fn-line)', 'var(--scb-f
                 class: cls('-badge'),
                 href: `#${note}`,
                 id: badge,
-                ariaLabel: `Footnote ${n}`,
+                ariaLabel: say('footnotes.badge', { number: n }),
                 ariaDescribedby: `${note}-text`,
                 dataScbFn: n,
               },
@@ -273,7 +275,7 @@ ${litLine(`.${cls('-on')}, .${cls('-peek')}`, 'var(--scb-fn-line)', 'var(--scb-f
               {
                 class: cls('-num'),
                 href: `#${badge}`,
-                ariaLabel: `Footnote ${n}, for line ${lineNumber(codeBlock, line)}`,
+                ariaLabel: say('footnotes.number', { number: n, line: lineNumber(codeBlock, line) }),
               },
               `${n}.`,
             ),

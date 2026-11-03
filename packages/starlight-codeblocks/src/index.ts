@@ -12,6 +12,7 @@ import {
 } from './integration.ts';
 import { type CodeblocksOptions, resolveOptions } from './options.ts';
 import { getRegistry, setRegistry } from './registry.ts';
+import { siteTexts, translations } from './translations.ts';
 
 export type * from './options.ts';
 
@@ -20,7 +21,10 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
   return {
     name: 'starlight-codeblocks',
     hooks: {
-      async 'config:setup'({ config, updateConfig, addIntegration, astroConfig }) {
+      async 'i18n:setup'({ injectTranslations }) {
+        injectTranslations({ en: translations });
+      },
+      async 'config:setup'({ config, updateConfig, addIntegration, astroConfig, useTranslations, absolutePathToLang }) {
         if (config.expressiveCode === false) {
           throw new AstroError(
             'starlight-codeblocks needs Expressive Code, but the Starlight config has `expressiveCode: false`.',
@@ -39,6 +43,8 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
           cacheDir: fileURLToPath(astroConfig.cacheDir),
           expressiveCode: mergeEcOptions(ec, ecConfig, astroConfig.markdown?.shikiConfig),
           blockIds: new Set(),
+          texts: siteTexts(config.locales, useTranslations),
+          pageLang: absolutePathToLang,
         });
         const pageCss = pageCssIds(options);
         const css = pageCss.length > 0 ? { customCss: [...(config.customCss ?? []), ...pageCss] } : {};

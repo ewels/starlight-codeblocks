@@ -43,7 +43,7 @@ codeblocks({
 | `walkthrough` | None | Code walkthrough |
 | `scrollycoding` | None | Scrollycoding |
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
-| `runnable` | `runtimes`: language to module path, added to the built-in Python, JavaScript and TypeScript runtimes, or replacing them. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run code'`. `againLabel`: default `'Run again'`. `button`: `'below'` (default), `'title'` or `'both'`. `outputDelay`: default `200` ms | Run code |
+| `runnable` | `runtimes`: language to module path, added to the built-in Python, JavaScript and TypeScript runtimes, or replacing them. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run code'`, or its translation. `againLabel`: default `'Run again'`, or its translation. Both replace the translations. `button`: `'below'` (default), `'title'` or `'both'`. `outputDelay`: default `200` ms | Run code |
 
 ### Options for one block
 
@@ -104,6 +104,25 @@ starlight({
 ```
 
 The defaults meet WCAG 2.2 AA contrast. A new colour must keep the contrast that the style settings page gives for it.
+
+## Translations
+
+Docs: https://ewels.github.io/starlight-codeblocks/configuration/#translate-the-plugin-texts
+
+The buttons, labels and screen reader texts of the plugin are Starlight UI strings, with keys that start with `starlightCodeblocks.`. The package has the English texts. A multilingual Starlight site adds the other languages in `src/content/i18n/<lang>.json`, next to Starlight's own strings. The site needs the `i18n` collection in `src/content.config.ts`. A key that a language does not have takes the text of the default language, then English.
+
+```json
+{
+  "starlightCodeblocks.runnable.run": "Code ausführen",
+  "starlightCodeblocks.hiddenLines.marker_one": "{{count}} verborgene Zeile",
+  "starlightCodeblocks.hiddenLines.marker_other": "{{count}} verborgene Zeilen"
+}
+```
+
+- A text with a count has a key for each plural form of the language, with the i18next suffixes. English has `_one` and `_other`, and Polish also has `_few` and `_many`.
+- Keep `{{count}}` and every other name in double braces. The plugin fills in their values.
+- `runnable.label` and `runnable.againLabel` replace the translations. Custom line states and playgrounds show the label from their options.
+- Sites without Starlight show the English texts.
 
 ## ec.config.mjs
 

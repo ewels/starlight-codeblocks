@@ -11,6 +11,7 @@ import {
 import { type Element, getClassNames, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { getRegistry } from '../registry.ts';
+import { uiTexts } from '../translations.ts';
 import { type CodeblocksPlugin, lineNumber, numberedLines } from './core.ts';
 import { litLine, onCode, PREFIX, solidCodeBackground, themeColour } from './styles.ts';
 
@@ -85,15 +86,17 @@ export function pluginPermalinks(): CodeblocksPlugin {
 ${litLine(`.${LINK}-target`, cssVar('codeblocksPermalinks.targetBackground'), cssVar('codeblocksPermalinks.target'))}`,
     jsModules: clientJsModules,
     hooks: {
-      preprocessMetadata({ codeBlock, addGutterElement }) {
+      preprocessMetadata({ codeBlock, addGutterElement, locale }) {
         const numbers = numbering(codeBlock);
         if (!numbers) return;
         getRegistry()?.blockIds?.add(numbers.id);
+        const say = uiTexts(locale);
         addGutterElement({
           renderPhase: 'earlier',
           renderLine({ line }) {
             const n = numbers.of(line);
-            return h('a', { class: LINK, href: `#${numbers.id}-L${n}`, ariaLabel: `Link to line ${n}` }, String(n));
+            const ariaLabel = say('permalinks.link', { line: n });
+            return h('a', { class: LINK, href: `#${numbers.id}-L${n}`, ariaLabel }, String(n));
           },
           renderPlaceholder: () => h('span', { class: LINK }),
         });

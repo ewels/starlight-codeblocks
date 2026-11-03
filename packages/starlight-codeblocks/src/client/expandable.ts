@@ -22,7 +22,7 @@ function set(pre: HTMLElement, expanded: boolean) {
   const button = pre.parentElement?.querySelector('.scb-expandable-toggle');
   if (!button) return;
   button.setAttribute('aria-expanded', String(expanded));
-  button.textContent = expanded ? 'Show fewer lines' : `Show all ${linesOf(pre).length} lines`;
+  button.textContent = JSON.parse(button.getAttribute('data-scb-texts') ?? '{}')[expanded ? 'open' : 'closed'] ?? '';
 }
 
 // Found through the event target, so that a copy of the block, as full screen plugins show, works too.

@@ -7,8 +7,16 @@ import type { CodeblocksOptions } from '../src/options.ts';
 
 const FENCE = /^(`{3,}|~{3,})([^\s`]*)[ \t]*(.*)\n([\s\S]*?)\n?\1[ \t]*$/;
 
-/** Renders one Markdown code block the way a site with the plugin does, with `plugins` before it. Warnings go to `warnings`. */
-export async function render(markdown: string, options: CodeblocksOptions = {}, plugins: ExpressiveCodePlugin[] = []) {
+/**
+ * Renders one Markdown code block the way a site with the plugin does, with `plugins` before it, in the block
+ * locale `locale`, as Starlight sets it. Warnings go to `warnings`.
+ */
+export async function render(
+  markdown: string,
+  options: CodeblocksOptions = {},
+  plugins: ExpressiveCodePlugin[] = [],
+  locale?: string,
+) {
   const match = markdown.trim().match(FENCE);
   if (!match) throw new Error(`Not a single fenced code block:\n${markdown}`);
   const [, , language = '', meta = '', code = ''] = match;
@@ -21,6 +29,7 @@ export async function render(markdown: string, options: CodeblocksOptions = {}, 
     code,
     language,
     meta,
+    locale,
     parentDocument: { sourceFilePath: 'src/content/docs/example.md' },
   });
   const button = select('.copy button[data-code]', renderedGroupAst);

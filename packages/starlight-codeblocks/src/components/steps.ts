@@ -5,6 +5,7 @@ import { fromHtml } from 'hast-util-from-html';
 import { markDecorations, nameFigure } from '../expressive-code/core.ts';
 import { removeAutoExpandable } from '../expressive-code/expandable.ts';
 import { stepsHead } from '../expressive-code/walkthrough.ts';
+import { componentTexts, type Say } from '../translations.ts';
 import { readTokens } from './tokens.ts';
 
 const S = 'scb-steps';
@@ -12,8 +13,8 @@ const S = 'scb-steps';
 /** A step for the browser: each token is `[key, content, style]`. */
 export type StepTokens = [number, string, string][];
 
-function navButton(go: 'prev' | 'next', disabled: boolean) {
-  const text = go === 'prev' ? 'Previous' : 'Next';
+function navButton(go: 'prev' | 'next', disabled: boolean, say: Say) {
+  const text = say(go === 'prev' ? 'walkthrough.previous' : 'walkthrough.next');
   const icon = h('span', { class: `${S}-nav-icon`, ariaHidden: 'true' }, go === 'prev' ? '‹' : '›');
   const label = h('span', { class: `${S}-nav-text` }, text);
   return h('button', { type: 'button', class: `${S}-nav`, dataScbStepsGo: go, ariaLabel: text, disabled }, [
@@ -22,11 +23,11 @@ function navButton(go: 'prev' | 'next', disabled: boolean) {
 }
 
 /** The Previous and Next buttons and a "Step N of M" counter, in a row under the block. */
-function controlsRow(current: number, total: number) {
+function controlsRow(current: number, total: number, say: Say) {
   return h('div', { class: `${S}-controls scb-no-print` }, [
-    navButton('prev', current === 0),
-    h('span', { class: `${S}-count` }, `Step ${current + 1} of ${total}`),
-    navButton('next', current === total - 1),
+    navButton('prev', current === 0, say),
+    h('span', { class: `${S}-count` }, say('walkthrough.stepCount', { step: current + 1, total })),
+    navButton('next', current === total - 1, say),
   ]);
 }
 
@@ -62,7 +63,7 @@ export function plainSteps(html: string): string {
  * Turns the blocks that Expressive Code rendered inside `<CodeWalkthrough>` into steps: adds the numbered steps
  * to each title bar, a Previous/Next/counter row under each block, and keys the tokens for the animation.
  */
-export function codeWalkthrough(html: string): string {
+export function codeWalkthrough(html: string, say: Say = componentTexts(undefined)): string {
   const root = fromHtml(html, { fragment: true });
   removeAutoExpandable(root);
   const groups = root.children.filter(
@@ -76,7 +77,10 @@ export function codeWalkthrough(html: string): string {
         ?.children.map((c) => ('value' in c ? c.value : ''))
         .join('') ?? '',
   );
-  const name = (i: number) => `Step ${i + 1}${labels[i] ? `: ${labels[i]}` : ''}`;
+  const name = (i: number) =>
+    labels[i]
+      ? say('walkthrough.stepWithLabel', { step: i + 1, label: labels[i] })
+      : say('walkthrough.step', { step: i + 1 });
 
   groups.forEach((group, current) => {
     const figure = select('figure', group) as Element;
@@ -84,7 +88,7 @@ export function codeWalkthrough(html: string): string {
     if (header) {
       const stepper = h(
         'span',
-        { class: `${S}-stepper scb-no-print`, role: 'group', ariaLabel: 'Steps' },
+        { class: `${S}-stepper scb-no-print`, role: 'group', ariaLabel: say('walkthrough.steps') },
         groups.flatMap((_, i) => {
           const done = i <= current ? ` ${S}-done` : '';
           const dot = h(
@@ -102,9 +106,9 @@ export function codeWalkthrough(html: string): string {
         }),
       );
       stepsHead(header).children.unshift(stepper);
-      nameFigure(figure);
+      nameFigure(figure, say('block.name'));
     }
-    group.children.push(controlsRow(current, groups.length));
+    group.children.push(controlsRow(current, groups.length, say));
     if (current === 0) addClassName(group, `${S}-current`);
   });
   const data = stepsData(groups);

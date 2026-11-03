@@ -11,6 +11,7 @@ import {
   options,
   pageOptions,
   styleGroups,
+  uiStrings,
 } from './components/reference.ts';
 import { carouselGroups, sidebar, unlisted } from './sidebar.mjs';
 
@@ -136,6 +137,12 @@ const component: Record<string, (props: Record<string, string>, id: string) => s
     );
     return ['| Comment syntax | Languages |', '|---|---|', ...rows].join('\n');
   },
+  UiStrings: () =>
+    [
+      '| Key | English text |',
+      '|---|---|',
+      ...uiStrings.map(({ key, text }) => `| ${code(key)} | ${cell(text)} |`),
+    ].join('\n'),
 };
 
 /** The home page carousel as a list of the features in each sidebar group. */

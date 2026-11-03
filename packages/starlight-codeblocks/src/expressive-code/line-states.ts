@@ -11,6 +11,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, type ElementContent, h, select } from '@expressive-code/core/hast';
 import type { LineStateDefinition } from '../options.ts';
+import { type UiKey, uiTexts } from '../translations.ts';
 import { blockSetting, type CodeblocksPlugin, ensureTextContrast, parseBoolean, resolveRange } from './core.ts';
 import { isHiddenLine } from './hidden-lines.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
@@ -219,7 +220,7 @@ ${Object.values(markers)
           }
         }
       },
-      postprocessRenderedLine({ codeBlock, line, renderData }) {
+      postprocessRenderedLine({ codeBlock, line, renderData, locale }) {
         const { states, markers: lineMarkers, prefix: showPrefix } = stateData.getOrCreateFor(codeBlock);
         const code = select('.code', renderData.lineAst);
         if (!code) return;
@@ -235,7 +236,13 @@ ${Object.values(markers)
         // A hidden line above does not count: readers would see the run without its name.
         const above = lines.slice(0, lines.indexOf(line)).findLast((l) => !isHiddenLine(codeBlock, l));
         const previous = (above && states.get(above)) || [];
-        const labels = list.map(({ name }) => all[name]?.label ?? name);
+        const say = uiTexts(locale);
+        // A site's own definition of a built-in state keeps its label.
+        const labels = list.map(({ name }) =>
+          builtInStates[name] && all[name] === builtInStates[name]
+            ? say(`lineStates.${name}` as UiKey)
+            : (all[name]?.label ?? name),
+        );
         const labelNodes: ElementContent[] = [];
         list.forEach(({ name, messages }, i) => {
           addClassName(renderData.lineAst, cls(`-${name}`));

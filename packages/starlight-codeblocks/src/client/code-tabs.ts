@@ -50,12 +50,13 @@ function pick(group: HTMLElement, index: number) {
 function addTabs(group: HTMLElement) {
   const titles = variants(group).map((variant) => variant.querySelector('.header .title'));
   const contents = titles.map((title) => title?.cloneNode(true).childNodes ?? []);
+  const { variant } = JSON.parse(group.dataset.scbTexts ?? '{}');
   titles.forEach((title, i) => {
     if (!title) return;
     const list = document.createElement('div');
     list.className = 'scb-tabs-list';
     list.role = 'tablist';
-    list.ariaLabel = 'Variant';
+    list.ariaLabel = variant;
     contents.forEach((nodes, j) => {
       const tab = document.createElement('button');
       tab.type = 'button';
