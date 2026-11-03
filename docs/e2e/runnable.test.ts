@@ -9,8 +9,9 @@ const PACKAGES = 4;
 const ERROR = 5;
 const LOOP = 6;
 const SCRIPTED = 7;
-const OUTPUT_ONLY = 8;
-const TITLE = 9;
+const FAILED = 8;
+const OUTPUT_ONLY = 9;
+const TITLE = 10;
 
 const oneProject = () =>
   test.skip(test.info().project.name !== 'desktop-dark', 'Slow or needs the network, so one project is enough.');
@@ -158,6 +159,27 @@ test('scripted output prints a line at a time, and runs no runtime', async ({ pa
   await expect(stdout).toHaveText(/Launching hello\.nf[\s\S]*Hola mundo!$/, { timeout: 8_000 });
   await expect(button).toHaveText('Run again');
   expect(requests.filter((u) => u.includes('scb-runtime-'))).toEqual([]);
+});
+
+test('scripted output prints each part in order, standard error with its bar and its Error: prefix', async ({
+  page,
+}) => {
+  const block = example(page, FAILED);
+  const parts = block.locator('.scb-run-output > pre');
+  await block.locator('.scb-run').focus();
+  await page.keyboard.press('Enter');
+  await expect(parts).toHaveCount(1);
+  await expect(parts.first()).toHaveClass('scb-run-stdout');
+  await expect(parts.first()).toHaveText('executor >  local (1)\n[a8/1f6ead] sayHello (1) | 0 of 1');
+  await expect(parts).toHaveCount(2, { timeout: 5_000 });
+  const stderr = parts.nth(1);
+  await expect(stderr).toHaveClass('scb-run-stderr');
+  await expect(stderr.locator('.scb-sr-only')).toHaveText('Error: ');
+  await expect(stderr).toHaveText(/^Error: ERROR ~ Error executing[\s\S]*`sayHello \(1\)`$/, { timeout: 5_000 });
+  expect(await css(stderr, 'borderInlineStartWidth')).toBe('2px');
+  expect(await css(stderr, 'marginTop')).not.toBe('0px');
+  expect(await css(parts.first(), 'color')).not.toBe(await css(stderr, 'color'));
+  await expect(block.locator('.scb-run')).toBeFocused();
 });
 
 test('an output-only block has the button in its code area, which fades out on click', async ({ page }) => {

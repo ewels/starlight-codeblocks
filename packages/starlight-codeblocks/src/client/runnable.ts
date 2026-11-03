@@ -36,16 +36,29 @@ function seconds(ms: number) {
 async function replay(figure: HTMLElement, panel: HTMLElement, output: string) {
   const delay = Number(figure.dataset.scbRunnableDelay) || 0;
   const waits: Record<number, number> = JSON.parse(figure.dataset.scbRunnableWaits ?? '{}');
+  const streams: Record<number, string> = JSON.parse(figure.dataset.scbRunnableStreams ?? '{}');
   const lines = decodeCode(output).split('\n');
-  if (!delay && !figure.dataset.scbRunnableWaits) return show(panel, line('pre', 'scb-run-stdout', lines.join('\n')));
+  const parts: HTMLElement[] = [];
+  const print = (i: number) => {
+    let part = parts.at(-1);
+    if (!part || i in streams) {
+      part = streams[i] === 'stderr' ? error('') : line('pre', 'scb-run-stdout', '');
+      parts.push(part);
+    } else part.append('\n');
+    part.append(lines[i] as string);
+  };
+  if (!delay && !figure.dataset.scbRunnableWaits) {
+    for (const i of lines.keys()) print(i);
+    return show(panel, ...parts);
+  }
   show(panel, status('Running…'));
-  const pre = line('pre', 'scb-run-stdout', '');
-  for (const [i, text] of lines.entries()) {
+  for (const i of lines.keys()) {
     const ms = i ? (waits[i - 1] ?? delay) : delay;
     if (ms) await new Promise((resolve) => setTimeout(resolve, ms));
-    if (i) pre.append('\n');
-    else show(panel, pre);
-    pre.append(text);
+    const count = parts.length;
+    print(i);
+    if (!i) show(panel, ...parts);
+    else if (parts.length > count) panel.append(parts.at(-1) as HTMLElement);
   }
 }
 

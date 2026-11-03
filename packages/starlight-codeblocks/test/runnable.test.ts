@@ -179,6 +179,61 @@ test('[!output] takes the lines after it out of the code, up to [!output end] or
   expect(badWait.warnings.join('\n')).toContain('`[!wait]` needs milliseconds, on a line of `[!output]`.');
 });
 
+test('[!output stderr] and [!output stdout] start parts of standard error and standard output', async () => {
+  const { html, copyText, warnings } = await render(
+    block(
+      'sh',
+      'nextflow run hello.nf',
+      '# [!output]',
+      'executor >  local (1) # [!wait 1000]',
+      '# [!output stderr]',
+      'ERROR ~ Error executing process # [!wait 500]',
+      'Caused by:',
+      '# [!output stdout]',
+      'Done',
+      '# [!output end]',
+      'ls',
+    ),
+  );
+  expect(html).toContain(
+    'data-scb-runnable-output="executor >  local (1)\x7FERROR ~ Error executing process\x7FCaused by:\x7FDone" data-scb-runnable-waits="{&#x22;0&#x22;:1000,&#x22;1&#x22;:500}" data-scb-runnable-streams="{&#x22;1&#x22;:&#x22;stderr&#x22;,&#x22;3&#x22;:&#x22;stdout&#x22;}"',
+  );
+  expect(copyText).toBe('nextflow run hello.nf\nls');
+  expect(warnings).toEqual([]);
+  const first = await render(block('sh', 'make', '# [!output stderr]', 'make: *** No targets.'));
+  expect(first.html).toContain('data-scb-runnable-streams="{&#x22;0&#x22;:&#x22;stderr&#x22;}"');
+  expect(first.copyText).toBe('make');
+  // A switch to the stream that already prints starts no part.
+  const same = await render(block('sh', 'make', '# [!output stdout]', 'a', '# [!output]', 'b'));
+  expect(same.html).toContain('data-scb-runnable-output="a\x7Fb"');
+  expect(same.html).not.toContain('data-scb-runnable-streams');
+  expect(same.warnings).toEqual([]);
+});
+
+test('[!output] warns about other arguments and about a second output, and prints without them', async () => {
+  const bad = await render(
+    block('sh', 'make', '# [!output]', 'a', '# [!output sterr]', 'b', '# [!output end now]', 'c'),
+  );
+  expect(bad.html).toContain('data-scb-runnable-output="a\x7Fb\x7Fc"');
+  expect(bad.html).not.toContain('data-scb-runnable-streams');
+  expect(bad.copyText).toBe('make');
+  expect(bad.warnings).toEqual([
+    'src/content/docs/example.md, sh code block, line 4: `[!output]` takes nothing, `stdout`, `stderr` or `end`.',
+    'src/content/docs/example.md, sh code block, line 6: `[!output]` takes nothing, `stdout`, `stderr` or `end`.',
+  ]);
+  const unknown = await render(block('sh', 'make', '# [!output now]', 'a'));
+  expect(unknown.html).not.toContain('scb-run');
+  expect(unknown.warnings).toHaveLength(1);
+  const second = await render(
+    block('sh', 'make', '# [!output]', 'a', '# [!output end]', 'make test', '# [!output stderr]', 'b'),
+  );
+  expect(second.html).toContain('data-scb-runnable-output="a"');
+  expect(second.copyText).toBe('make\nmake test\nb');
+  expect(second.warnings).toEqual([
+    'src/content/docs/example.md, sh code block, line 6: A block has one output, so `[!output]` after `[!output end]` leaves its lines in the code.',
+  ]);
+});
+
 test('a block with only output has the button in its code area, and no copy button', async () => {
   const { html, warnings } = await render(block('sh', '# [!output]', 'Hello'));
   expect(html).toContain('class="frame is-terminal scb-run-empty"');

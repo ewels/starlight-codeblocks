@@ -1,4 +1,10 @@
-import { AttachedPluginData, mix, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
+import {
+  AttachedPluginData,
+  type ExpressiveCodeLine,
+  mix,
+  PluginStyleSettings,
+  type UnresolvedStyleValue,
+} from '@expressive-code/core';
 import { getClassNames, h, select } from '@expressive-code/core/hast';
 import { encodeCode } from '../client/shared/copy.ts';
 import { clientJsModules } from '../client-modules.ts';
@@ -12,7 +18,7 @@ import {
   languageId,
   warn,
 } from './core.ts';
-import { getDirectives } from './notation.ts';
+import { type Directive, getDirectives } from './notation.ts';
 import { pythonSessionPrompts } from './shell-copy.ts';
 import { onCode, PREFIX, solidCodeBackground, solidCodeForeground, themeColour } from './styles.ts';
 
@@ -77,7 +83,19 @@ const cls = (suffix: string) => `${PREFIX}-run${suffix}`;
 /** Any text but blank, for `blockSetting()`. */
 const text = (raw: string) => (raw.trim() ? raw : undefined);
 
-const scriptedData = new AttachedPluginData<{ text?: string; waits: Record<number, number> }>(() => ({ waits: {} }));
+const streams = ['stdout', 'stderr'] as const;
+type Stream = (typeof streams)[number];
+
+/** The stream that an `[!output]` directive starts, or `end`. `undefined` for an argument that it does not take. */
+const outputMark = ({ args }: Directive) =>
+  args.length > 1 ? undefined : [...streams, 'end' as const].find((arg) => arg === (args[0] ?? 'stdout'));
+
+const scriptedData = new AttachedPluginData<{
+  text?: string;
+  waits: Record<number, number>;
+  /** The output line where each part starts, when its stream differs from the part before. */
+  streams: Record<number, Stream>;
+}>(() => ({ waits: {}, streams: {} }));
 
 const milliseconds = (min: number) => (raw: string) =>
   /^\d+$/.test(raw) && Number(raw) >= min && Number(raw) <= 2 ** 31 - 1 ? Number(raw) : undefined;
@@ -116,7 +134,7 @@ export function pluginRunnable({
   border-inline-start: 2px solid currentColor;
   padding-inline-start: 0.75ch;
 }
-.${cls('-stdout')} + .${cls('-stderr')} { margin-top: 0.4rem; }
+.${cls('-stdout')} + .${cls('-stderr')}, .${cls('-stderr')} + .${cls('-stdout')} { margin-top: 0.4rem; }
 .${cls('')}[aria-disabled='true'] { opacity: 0.6; cursor: progress; }
 .${cls('-controls')} { display: flex; justify-content: center; padding-block-start: 12px; }
 .${cls('-controls')} > .${cls('')}, .${cls('-start')} {
@@ -148,8 +166,8 @@ export function pluginRunnable({
       output: {
         docs: {
           description:
-            'Starts the output that the **Run code** button prints instead of running the code. `[!output end]` ends it; without it, the output goes to the end of the block. The block needs no `runnable` and no runtime.',
-          args: 'Optional. `end`.',
+            'Starts the output that the **Run code** button prints instead of running the code. `[!output stderr]` starts lines that print as standard error, and `[!output stdout]` switches back. `[!output end]` ends the output; without it, the output goes to the end of the block. The block needs no `runnable` and no runtime.',
+          args: 'Optional. `stdout`, `stderr` or `end`.',
           example: { lang: 'sh', code: 'nextflow run hello.nf\n# [!output]\nHello world!' },
           page: 'features/run-code',
         },
@@ -168,22 +186,35 @@ export function pluginRunnable({
         const { codeBlock } = context;
         const marks = getDirectives(codeBlock, 'output');
         if (marks.length === 0) return;
-        for (const mark of marks.filter((d) => d.args.length > 1 || (d.args[0] ?? 'end') !== 'end'))
-          warn(context, '`[!output]` takes nothing or `end`.', mark.sourceLine);
+        for (const mark of marks.filter((d) => !outputMark(d)))
+          warn(context, '`[!output]` takes nothing, `stdout`, `stderr` or `end`.', mark.sourceLine);
         const lines = codeBlock.getLines();
-        const startMark = marks.find((d) => d.args.length === 0);
-        const from = startMark?.lines[0] ? lines.indexOf(startMark.lines[0]) : -1;
+        const starts = marks.filter((d) => outputMark(d) && outputMark(d) !== 'end');
+        const from = starts[0]?.lines[0] ? lines.indexOf(starts[0].lines[0]) : -1;
         if (from === -1) {
-          warn(context, '`[!output end]` needs an `[!output]` line before it.');
+          if (marks.some((d) => outputMark(d) === 'end'))
+            warn(context, '`[!output end]` needs an `[!output]` line before it.');
           return;
         }
         const endLine = marks
-          .filter((d) => d.args[0] === 'end')
+          .filter((d) => outputMark(d) === 'end')
           .map((d) => (d.lines[0] ? lines.indexOf(d.lines[0]) : lines.length))
           .find((i) => i > from);
         const output = lines.slice(from, endLine ?? lines.length);
         const data = scriptedData.getOrCreateFor(codeBlock);
         data.text = output.map((line) => line.text).join('\n');
+        let stream: Stream = 'stdout';
+        for (const mark of starts) {
+          const index = output.indexOf(mark.lines[0] as ExpressiveCodeLine);
+          const next = outputMark(mark) as Stream;
+          if (index === -1)
+            warn(
+              context,
+              'A block has one output, so `[!output]` after `[!output end]` leaves its lines in the code.',
+              mark.sourceLine,
+            );
+          else if (next !== stream) data.streams[index] = stream = next;
+        }
         for (const wait of getDirectives(codeBlock, 'wait')) {
           const index = wait.lines[0] ? output.indexOf(wait.lines[0]) : -1;
           const ms = milliseconds(0)(wait.args[0] ?? '');
@@ -195,7 +226,7 @@ export function pluginRunnable({
       },
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
-        const { text: fromDirectives, waits } = scriptedData.getOrCreateFor(codeBlock);
+        const { text: fromDirectives, waits, streams: parts } = scriptedData.getOrCreateFor(codeBlock);
         const scripted = codeBlock.metaOptions.getString('runnable.output') ?? fromDirectives;
         if (!codeBlock.metaOptions.getBoolean('runnable') && scripted === undefined) return;
         const figure = select('figure', renderData.blockAst);
@@ -240,6 +271,7 @@ export function pluginRunnable({
           // A fence line holds one line, so `\n` stands for a line break.
           figure.properties.dataScbRunnableOutput = encodeCode(scripted.replace(/\\n/g, '\n'));
           if (Object.keys(waits).length > 0) figure.properties.dataScbRunnableWaits = JSON.stringify(waits);
+          if (Object.keys(parts).length > 0) figure.properties.dataScbRunnableStreams = JSON.stringify(parts);
           figure.properties.dataScbRunnableDelay = String(
             blockSetting(
               context,
