@@ -9,8 +9,10 @@ const PACKAGES = 4;
 const ERROR = 5;
 const LOOP = 6;
 const SCRIPTED = 7;
-const OUTPUT_ONLY = 8;
-const TITLE = 9;
+const FAILED = 8;
+const MARKS = 9;
+const OUTPUT_ONLY = 10;
+const TITLE = 11;
 
 const oneProject = () =>
   test.skip(test.info().project.name !== 'desktop-dark', 'Slow or needs the network, so one project is enough.');
@@ -158,6 +160,60 @@ test('scripted output prints a line at a time, and runs no runtime', async ({ pa
   await expect(stdout).toHaveText(/Launching hello\.nf[\s\S]*Hola mundo!$/, { timeout: 8_000 });
   await expect(button).toHaveText('Run again');
   expect(requests.filter((u) => u.includes('scb-runtime-'))).toEqual([]);
+});
+
+test('scripted output prints each part in order, standard error with its bar and its Error: prefix', async ({
+  page,
+}) => {
+  const block = example(page, FAILED);
+  const parts = block.locator('.scb-run-output > pre');
+  await block.locator('.scb-run').focus();
+  await page.keyboard.press('Enter');
+  await expect(parts).toHaveCount(1);
+  await expect(parts.first()).toHaveClass('scb-run-stdout');
+  await expect(parts.first()).toHaveText('executor >  local (1)\n[a8/1f6ead] sayHello (1) | 0 of 1');
+  await expect(parts).toHaveCount(2, { timeout: 5_000 });
+  const stderr = parts.nth(1);
+  await expect(stderr).toHaveClass('scb-run-stderr');
+  await expect(stderr.locator('.scb-sr-only')).toHaveText('Error: ');
+  await expect(stderr).toHaveText(/^Error: ERROR ~ Error executing[\s\S]*`sayHello \(1\)`$/, { timeout: 5_000 });
+  expect(await css(stderr, 'borderInlineStartWidth')).toBe('2px');
+  expect(await css(stderr, 'marginTop')).not.toBe('0px');
+  expect(await css(parts.first(), 'color')).not.toBe(await css(stderr, 'color'));
+  await expect(block.locator('.scb-run')).toBeFocused();
+});
+
+test('marks on lines of output show as their lines print, as in the code, with the text in line', async ({ page }) => {
+  const block = example(page, MARKS);
+  const panel = block.locator('.scb-run-output');
+  await block.locator('.scb-run').focus();
+  await page.keyboard.press('Enter');
+  const highlight = panel.locator('.scb-run-stdout > .scb-run-line.scb-state-mark');
+  await expect(highlight).toHaveText('[Hello, Bonjour, Hola]');
+  await expect(panel.locator('.scb-run-line')).toHaveCount(1);
+  const error = panel.locator('.scb-run-stderr > .scb-run-line.scb-state-error');
+  await expect(error).toContainText("ERROR ~ Error executing process > 'sayHello (1)'", { timeout: 5_000 });
+  await expect(error.locator('.scb-sr-only')).toHaveText('Error:');
+  await expect(error.locator('.scb-state-label')).toHaveText('Error');
+  await expect(panel.locator('.scb-run-line')).toHaveCount(3, { timeout: 5_000 });
+  for (const line of [highlight, error]) {
+    expect(await css(line, 'backgroundColor')).not.toBe('rgba(0, 0, 0, 0)');
+    expect(await css(line, 'borderInlineStartStyle')).toBe('solid');
+    // The text starts where the text of the lines around it starts.
+    const offset = await line.evaluate((el) => {
+      const px = (e: Element, key: 'borderInlineStartWidth' | 'paddingInlineStart') =>
+        Number.parseFloat(getComputedStyle(e)[key]);
+      const part = el.parentElement as HTMLElement;
+      const text = el.getBoundingClientRect().left + px(el, 'borderInlineStartWidth') + px(el, 'paddingInlineStart');
+      return (
+        text - (part.getBoundingClientRect().left + px(part, 'borderInlineStartWidth') + px(part, 'paddingInlineStart'))
+      );
+    });
+    expect(Math.abs(offset)).toBeLessThan(0.5);
+  }
+  expect(await css(highlight, 'borderInlineStartColor')).not.toBe(await css(error, 'borderInlineStartColor'));
+  await expect(block.locator('.scb-run')).toBeFocused();
+  expect(await block.locator('.copy button').getAttribute('data-code')).toBe('nextflow run hello-channels.nf');
 });
 
 test('an output-only block has the button in its code area, which fades out on click', async ({ page }) => {

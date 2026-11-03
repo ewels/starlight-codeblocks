@@ -330,15 +330,27 @@ export interface BlockDirective extends Directive {
 const notationData = new AttachedPluginData<{
   directives: BlockDirective[];
   removed: ExpressiveCodeLine[];
+  output: ExpressiveCodeLine[];
   specs: DirectiveSpecs;
   diffIndent: Map<ExpressiveCodeLine, number>;
-}>(() => ({ directives: [], removed: [], specs: {}, diffIndent: new Map() }));
+}>(() => ({ directives: [], removed: [], output: [], specs: {}, diffIndent: new Map() }));
 
 /** The directives in a code block, optionally only those with one name, such as `code focus`. */
 export function getDirectives(codeBlock: ExpressiveCodeBlock, name?: string): BlockDirective[] {
   const { directives } = notationData.getOrCreateFor(codeBlock);
   return name === undefined ? directives : directives.filter((directive) => directive.name === name);
 }
+
+/** The stream that an `[!output]` directive starts, or `end`. `undefined` for an argument that it does not take. */
+export const outputMark = ({ args }: Pick<Directive, 'args'>) =>
+  args.length > 1 ? undefined : (['stdout', 'stderr', 'end'] as const).find((arg) => arg === (args[0] ?? 'stdout'));
+
+/**
+ * The lines of scripted output: from the first `[!output]` to the `[!output end]` after it, or to the end of the block.
+ * They leave the code for the Run code output panel, so line numbers and ranges skip them.
+ */
+export const getOutputLines = (codeBlock: ExpressiveCodeBlock): readonly ExpressiveCodeLine[] =>
+  notationData.getOrCreateFor(codeBlock).output;
 
 /** The lines of the range attribute `key`, such as `focus={2}`, and the lines of the `name` directives. */
 export function markedLines(context: Parameters<typeof resolveRange>[0], key: string, name: string) {
@@ -413,26 +425,41 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
           codeBlock.metaOptions.getBoolean('useDiffSyntax') ?? Boolean(codeBlock.props.useDiffSyntax),
         );
         const visible = lines.filter((_, i) => !parsed[i]?.removed);
-        lineData.getOrCreateFor(codeBlock).lines = visible;
+        const marks = parsed.flatMap(({ directives }, i) =>
+          directives
+            .filter((d) => d.name === 'output')
+            .map((d) => ({ at: visible.indexOf(lines[i] as ExpressiveCodeLine), mark: outputMark(d) })),
+        );
+        const start = marks.findIndex(({ mark }) => mark && mark !== 'end');
+        const from = marks[start]?.at ?? -1;
+        const end = marks.slice(start + 1).find(({ mark }) => mark === 'end')?.at;
+        const output = from === -1 ? [] : visible.slice(from, end);
+        const code = visible.toSpliced(from, output.length);
+        lineData.getOrCreateFor(codeBlock).lines = code;
         const data = notationData.getOrCreateFor(codeBlock);
         data.specs = specs;
         data.removed = lines.filter((_, i) => parsed[i]?.removed);
-        if (data.removed.length > 0) remapCollapse(codeBlock, lines, visible);
+        data.output = output;
+        if (code.length < lines.length) remapCollapse(codeBlock, lines, code);
         parsed.forEach(({ directives }, i) => {
-          const target = visible.indexOf(lines[i] as ExpressiveCodeLine);
+          if (directives.length === 0) return;
+          const line = lines[i] as ExpressiveCodeLine;
+          // A count runs on in the output or in the code, never from one into the other.
+          const area = output.includes(line) ? output : code;
+          const target = area.indexOf(line);
           for (const directive of directives) {
-            data.directives.push({ ...directive, lines: visible.slice(target, target + directive.count) });
-            if (target + directive.count > visible.length) {
+            data.directives.push({ ...directive, lines: area.slice(target, target + directive.count) });
+            if (target + directive.count > area.length) {
               warn(context, `\`:${directive.count}\` runs past the last line of the block.`, directive.sourceLine);
             }
             const marker = markers[directive.name]?.[0];
-            if (marker) addMarkerLines(codeBlock, marker, target + 1, directive.count);
+            if (marker && area === code) addMarkerLines(codeBlock, marker, target + 1, directive.count);
           }
         });
       },
       preprocessMetadata({ codeBlock }) {
-        const { removed } = notationData.getOrCreateFor(codeBlock);
-        if (removed.length === 0) return;
+        const { removed, output } = notationData.getOrCreateFor(codeBlock);
+        if (removed.length === 0 && output.length === 0) return;
         // Plugins before this one attached their line annotations by source line.
         const lines = codeBlock.getLines();
         const visible = numberedLines(codeBlock);

@@ -1,5 +1,6 @@
 import {
   AttachedPluginData,
+  type ExpressiveCodeBlock,
   type ExpressiveCodeLine,
   ensureColorContrastOnBackground,
   mix,
@@ -9,7 +10,7 @@ import {
   setAlpha,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
-import { addClassName, type ElementContent, h, select } from '@expressive-code/core/hast';
+import { addClassName, type Element, type ElementContent, h, select } from '@expressive-code/core/hast';
 import type { LineStateDefinition } from '../options.ts';
 import { type UiKey, uiTexts } from '../translations.ts';
 import { blockSetting, type CodeblocksPlugin, ensureTextContrast, parseBoolean, resolveRange } from './core.ts';
@@ -92,12 +93,66 @@ function stateSettings(name: string, state: LineStateDefinition | (typeof builtI
 }
 
 const stateData = new AttachedPluginData<{
-  states: Map<ExpressiveCodeLine, { name: string; messages: string[] }[]>;
+  states: Map<ExpressiveCodeLine, { name: string; label: string; messages: string[] }[]>;
   markers: Map<ExpressiveCodeLine, { marker: string; message: string }[]>;
+  highlights: Set<ExpressiveCodeLine>;
   prefix: boolean;
-}>(() => ({ states: new Map(), markers: new Map(), prefix: true }));
+}>(() => ({ states: new Map(), markers: new Map(), highlights: new Set(), prefix: true }));
 
 const cls = (suffix: string) => `${PREFIX}-state${suffix}`;
+
+/**
+ * Adds the states and messages of `line` to `lineAst` (classes) and `code` (names and labels), and returns whether it
+ * added anything. `getLines()` gives the lines around `line`, to find the start of a run. A line of `output` also gets
+ * its highlight, which Expressive Code draws only on code lines.
+ */
+export function decorateLine(
+  codeBlock: ExpressiveCodeBlock,
+  line: ExpressiveCodeLine,
+  getLines: () => readonly ExpressiveCodeLine[],
+  lineAst: Element,
+  code: Element,
+  output = false,
+) {
+  const { states, markers: lineMarkers, highlights, prefix: showPrefix } = stateData.getOrCreateFor(codeBlock);
+  // Output has no inserted or deleted lines, so only a highlight keeps its message there.
+  const markerLabels = (lineMarkers.get(line) ?? []).filter(({ marker }) => !output || marker === 'mark');
+  for (const { marker, message } of markerLabels) {
+    code.children.push(h('span', { class: `${cls('-label')} ${cls(`-label-${marker}`)}` }, inlineMarkdown(message)));
+  }
+  const highlighted = output && highlights.has(line);
+  if (highlighted) addClassName(lineAst, cls('-mark'));
+  const list = states.get(line);
+  if (!list) return highlighted || markerLabels.length > 0;
+  addClassName(lineAst, cls(''));
+  const lines = getLines();
+  // A hidden line above does not count: readers would see the run without its name.
+  const above = lines.slice(0, lines.indexOf(line)).findLast((l) => !isHiddenLine(codeBlock, l));
+  const previous = (above && states.get(above)) || [];
+  const labels = list.map(({ label }) => label);
+  const labelNodes: ElementContent[] = [];
+  list.forEach(({ name, messages }, i) => {
+    addClassName(lineAst, cls(`-${name}`));
+    for (const message of messages) {
+      labelNodes.push(
+        h('span', { class: cls('-label') }, [
+          ...(showPrefix
+            ? [h('strong', { ariaHidden: 'true' }, labels[i]), { type: 'text', value: ' ' } as const]
+            : []),
+          ...inlineMarkdown(message),
+        ]),
+      );
+    }
+    // So that the colour does not carry the state alone: the first line of a run shows the name,
+    // unless the author turned the names off.
+    if (showPrefix && messages.length === 0 && !previous.some((state) => state.name === name)) {
+      labelNodes.push(h('span', { class: cls('-label') }, [h('strong', { ariaHidden: 'true' }, labels[i])]));
+    }
+  });
+  code.children.unshift(h('span', { class: `${cls('-prefix')} ${PREFIX}-sr-only` }, `${labels.join(', ')}:`));
+  code.children.push(...labelNodes);
+  return true;
+}
 
 /** Tints lines as errors, warnings, notes, successes or custom states, with an optional message after the code. */
 export function pluginLineStates({
@@ -166,6 +221,12 @@ pre.${cls('-all')} .ec-line.${cls('')} .code { --ecLineBrdCol: transparent; }
 /* The space after the name stays in the text for reading without styles. In monospace it is 1ch wide. */
 .${cls('-label')} strong { margin-inline-end: calc(6px - 1ch); font-weight: 600; }
 .${cls('-label')}, .${cls('-prefix')} { user-select: none; -webkit-user-select: none; }
+/* A highlighted line of output. Before the states, so that a state wins. */
+.${cls('-mark')} {
+  --scbStateBar: ${cssVar('textMarkers.markBorderColor' as never)};
+  --scbStateBg: ${cssVar('textMarkers.markBackground' as never)};
+  --scbStateLabelFg: ${v('markLabelForeground')};
+}
 ${Object.keys(all)
   .map(
     (name) => `.${cls(`-${name}`)} {
@@ -190,9 +251,15 @@ ${Object.values(markers)
         const data = stateData.getOrCreateFor(context.codeBlock);
         data.prefix = blockSetting(context, 'lineStates.prefix', parseBoolean, prefix, '`true` or `false`');
         const lineStates = data.states;
+        const say = uiTexts(context.locale);
+        // A site's own definition of a built-in state keeps its label.
+        const label = (name: string) =>
+          builtInStates[name] && all[name] === builtInStates[name]
+            ? say(`lineStates.${name}` as UiKey)
+            : (all[name]?.label ?? name);
         const add = (line: ExpressiveCodeLine, name: string, message?: string) => {
           const list = lineStates.get(line) ?? [];
-          const entry = list.find((state) => state.name === name) ?? { name, messages: [] };
+          const entry = list.find((state) => state.name === name) ?? { name, label: label(name), messages: [] };
           if (!list.includes(entry)) list.push(entry);
           if (message) entry.messages.push(message);
           lineStates.set(line, list);
@@ -208,6 +275,7 @@ ${Object.values(markers)
           for (const { lines, text } of getDirectives(context.codeBlock, name)) {
             const line = lines[0];
             if (line && text) lineMarkers.set(line, [...(lineMarkers.get(line) ?? []), { marker, message: text }]);
+            if (marker === 'mark') for (const l of lines) data.highlights.add(l);
           }
         }
       },
@@ -220,50 +288,9 @@ ${Object.values(markers)
           }
         }
       },
-      postprocessRenderedLine({ codeBlock, line, renderData, locale }) {
-        const { states, markers: lineMarkers, prefix: showPrefix } = stateData.getOrCreateFor(codeBlock);
+      postprocessRenderedLine({ codeBlock, line, renderData }) {
         const code = select('.code', renderData.lineAst);
-        if (!code) return;
-        for (const { marker, message } of lineMarkers.get(line) ?? []) {
-          code.children.push(
-            h('span', { class: `${cls('-label')} ${cls(`-label-${marker}`)}` }, inlineMarkdown(message)),
-          );
-        }
-        const list = states.get(line);
-        if (!list) return;
-        addClassName(renderData.lineAst, cls(''));
-        const lines = codeBlock.getLines();
-        // A hidden line above does not count: readers would see the run without its name.
-        const above = lines.slice(0, lines.indexOf(line)).findLast((l) => !isHiddenLine(codeBlock, l));
-        const previous = (above && states.get(above)) || [];
-        const say = uiTexts(locale);
-        // A site's own definition of a built-in state keeps its label.
-        const labels = list.map(({ name }) =>
-          builtInStates[name] && all[name] === builtInStates[name]
-            ? say(`lineStates.${name}` as UiKey)
-            : (all[name]?.label ?? name),
-        );
-        const labelNodes: ElementContent[] = [];
-        list.forEach(({ name, messages }, i) => {
-          addClassName(renderData.lineAst, cls(`-${name}`));
-          for (const message of messages) {
-            labelNodes.push(
-              h('span', { class: cls('-label') }, [
-                ...(showPrefix
-                  ? [h('strong', { ariaHidden: 'true' }, labels[i]), { type: 'text', value: ' ' } as const]
-                  : []),
-                ...inlineMarkdown(message),
-              ]),
-            );
-          }
-          // So that the colour does not carry the state alone: the first line of a run shows the name,
-          // unless the author turned the names off.
-          if (showPrefix && messages.length === 0 && !previous.some((state) => state.name === name)) {
-            labelNodes.push(h('span', { class: cls('-label') }, [h('strong', { ariaHidden: 'true' }, labels[i])]));
-          }
-        });
-        code.children.unshift(h('span', { class: `${cls('-prefix')} ${PREFIX}-sr-only` }, `${labels.join(', ')}:`));
-        code.children.push(...labelNodes);
+        if (code) decorateLine(codeBlock, line, () => codeBlock.getLines(), renderData.lineAst, code);
       },
       postprocessRenderedBlock({ codeBlock, renderData }) {
         const { states } = stateData.getOrCreateFor(codeBlock);
