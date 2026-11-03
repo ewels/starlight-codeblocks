@@ -35,6 +35,8 @@ On an Astro site without Starlight, add `codeblocks()` from `starlight-codeblock
 
 Most features start only when a code block uses their attribute, or a [comment notation](https://ewels.github.io/starlight-codeblocks/comment-notation/) directive such as `# [!code focus]`. A few, such as file icons and colour swatches, apply to every matching block.
 
+On a Starlight site in more than one language, the buttons and labels of the plugin show in the language of the page. The plugin has texts in English and 17 more languages, and a site can [change any text](https://ewels.github.io/starlight-codeblocks/configuration/#translate-the-plugin-texts).
+
 The [documentation](https://ewels.github.io/starlight-codeblocks/) has a page for each feature, with live examples, and a reference for every option.
 
 ## Features

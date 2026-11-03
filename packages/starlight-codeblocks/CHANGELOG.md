@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- API links: the Nextflow adapter links process directives, input and output labels, global names such as `params`, and the scopes and process directives of config files. `nextflow="config"` marks a block as a config file (#22)
+- Code walkthrough: `start` opens a walkthrough on a chosen step, and `walkthrough: { start: 'last' }` sets it for the site (#23)
+- Run code: `[!output stderr]` prints scripted output as standard error, and `[!code highlight]` and the line states mark lines of output (#24)
+- Run code: ranges on the fence line count lines of code only, not lines of scripted output, so a range after `[!output end]` can now mark another line (#24)
+- Translations: the plugin texts are Starlight UI strings, with translations in 17 languages. A site changes them in `src/content/i18n/` (#25)
+
 ## 1.2.0
 
 - Squiggles: wavy error, warning and info lines under code, with a message on hover, focus or tap (#16)
