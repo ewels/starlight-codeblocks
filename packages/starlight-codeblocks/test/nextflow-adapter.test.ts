@@ -6,8 +6,8 @@ import { block, apiLinks as links, render } from './render.ts';
 
 const withNextflow = (options: NextflowAdapterOptions = {}) => ({ apiLinks: { adapters: [nextflow(options)] } });
 
-const texts = async (lines: string[], options?: NextflowAdapterOptions, fence = 'nextflow') =>
-  links((await render(block(fence, ...lines), withNextflow(options))).html).map((l) => l.text);
+const texts = async (lines: string[], options?: NextflowAdapterOptions) =>
+  links((await render(block('nextflow', ...lines), withNextflow(options))).html).map((l) => l.text);
 
 const NF = 'https://docs.seqera.io/nextflow/';
 const SOURCE = 'Nextflow reference';
@@ -203,6 +203,7 @@ test('links a directive only at the start of a statement, before the first label
     '}',
   ];
   expect(await texts(lines)).toEqual(['publishDir', 'params', 'input']);
+  expect(await texts(['process align {', '    cpus 2', '    debug'])).toEqual(['cpus', 'debug']);
 });
 
 test('links the input and output labels only in a legacy process, and no other label', async () => {
@@ -214,6 +215,8 @@ test('links the input and output labels only in a legacy process, and no other l
     'output',
     'println',
   ]);
+  const bracketed = ['process greet {', '    input:', "    path('reads.fq')", '    script:', '    ""', '}'];
+  expect(await texts(bracketed)).toEqual(['input']);
 });
 
 test('links config scopes and process directives in a config block', async () => {
@@ -229,6 +232,10 @@ test('links config scopes and process directives in a config block', async () =>
   expect(await targets('nextflow', config)).toEqual([]);
   expect(await targets('nextflow title="main.nf"', config)).toEqual([]);
   expect(await targets('nextflow nextflow="config"', ["process.memory = '2 GB'"])).toEqual(expected.slice(1));
+  expect(await targets('nextflow nextflow="config"', ["trace.sep = ','", 'docker.enabled = true'])).toEqual([
+    'trace reference/config/trace',
+    'docker reference/config/docker',
+  ]);
   const { html } = await render(block('nextflow nextflow="config"', 'docker.enabled = true'), withNextflow());
   expect(links(html)).toEqual([
     {
@@ -333,6 +340,11 @@ test('leaves a global name plain where the block binds it, where it is a map key
     [['channel.of(1).map { file -> file }'], ['channel.of', 'map']],
     [['channel.of(1).map { id, Path file -> file }'], ['channel.of', 'map']],
     [['def stage(projectDir) { projectDir }', 'for (workDir in dirs) { workDir }'], []],
+    [['def stage(dir = params.outdir) { dir }'], ['params']],
+    [
+      ["println '{'", "def sep = ','", "println ':'"],
+      ['println', 'println'],
+    ],
     [["projectDir = '/data'", 'launchDir = projectDir'], []],
     [["meta = [params: 1, projectDir: 'a']", "copy(file: 'a.txt')"], []],
     [['params {', '    input: Path', '}'], []],
@@ -342,7 +354,7 @@ test('leaves a global name plain where the block binds it, where it is a map key
     [['log.constructor', 'workflow.hasOwnProperty("a")', 'constructor()', 'toString()'], []],
   ];
   for (const [lines, expected] of cases) expect(await texts(lines), lines.join('\n')).toEqual(expected);
-  expect(await texts(['assert workflow.success'], {}, 'nextflow title="tests/main.nf.test"')).toEqual([]);
+  expect(await targets('nextflow title="tests/main.nf.test"', ['assert workflow.success'])).toEqual([]);
 });
 
 test('warns for a nextflow attribute that is not config, and links the block as a script', async () => {

@@ -58,21 +58,22 @@ function skipCall(tokens: Token[], i: number) {
 
 const isChannel = (token?: Token) => token?.value === 'channel' || token?.value === 'Channel';
 
-const has = (map: object, key: string | undefined) => key !== undefined && Object.hasOwn(map, key);
-
-const resolve = (map: Record<string, Entry>, name: string, kind?: string): Resolution => {
+const resolve = (map: Record<string, Entry>, name: string, kind?: string): Resolution | undefined => {
+  if (!Object.hasOwn(map, name)) return undefined;
   const { href, signature, summary } = map[name] as Entry;
   return { href, kind, signature, summary, source: SOURCE };
 };
 
-const opens = (token: Token) => token.type === 'op' && '([{'.includes(token.value);
-const closes = (token: Token) => token.type === 'op' && ')]}'.includes(token.value);
+// A string token's value is its content, so `'{'` must not count as `{`.
+const op = (token: Token | undefined, chars: string) => token?.type === 'op' && chars.includes(token.value);
+const opens = (token: Token) => op(token, '([{');
+const closes = (token: Token) => op(token, ')]}');
 
 /** Whether `tokens[i]` starts a statement: it follows `{` or `;`, or starts a line that does not continue a list. */
 function startsStatement(code: string, tokens: Token[], i: number) {
   const prev = tokens[i - 1];
-  if (!prev || prev.value === '{' || prev.value === ';') return true;
-  return prev.value !== ',' && code.slice(prev.end, tokens[i]?.start).includes('\n');
+  if (!prev || op(prev, '{;')) return true;
+  return !op(prev, ',') && code.slice(prev.end, tokens[i]?.start).includes('\n');
 }
 
 type Add = (start: Token, end: Token, name: string, resolution?: Resolution) => void;
@@ -80,6 +81,7 @@ type Add = (start: Token, end: Token, name: string, resolution?: Resolution) => 
 const LABELS = new Set(['input', 'output', 'stage', 'topic', 'script', 'shell', 'exec', 'stub', 'when']);
 const DECLARATIONS = new Set(['input', 'output', 'stage', 'topic']);
 // A typed process declares `name: Type` or calls `stdout()`, and the inputs and outputs page is for legacy ones.
+// Typed processes have no `val()` or `path()`.
 const LEGACY = new Set(['val', 'path', 'file', 'env', 'stdin', 'stdout', 'eval', 'tuple', 'each']);
 
 /**
@@ -108,25 +110,23 @@ function processLinks(code: string, tokens: Token[], add: Add) {
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i]?.value !== 'process' || tokens[i + 1]?.type !== 'name' || tokens[i + 2]?.value !== '{') continue;
     if (!startsStatement(code, tokens, i)) continue;
-    const end = skipBrackets(tokens, i + 2) - 1;
+    const end = skipBrackets(tokens, i + 2);
     let labelled = false;
-    for (let j = i + 3, nested = 0; j < end; j++) {
+    for (let j = i + 3; j < end; j++) {
       const token = tokens[j] as Token;
-      if (opens(token)) nested++;
-      else if (closes(token)) nested--;
-      if (nested > 0 || token.type !== 'name' || !startsStatement(code, tokens, j)) continue;
+      if (opens(token)) j = skipBrackets(tokens, j) - 1;
+      if (token.type !== 'name' || !startsStatement(code, tokens, j)) continue;
       if (label(j)) {
         labelled = true;
         const first = tokens[j + 2]?.value ?? '';
-        const legacy = LEGACY.has(first) && !['(', ':', '='].includes(tokens[j + 3]?.value ?? '');
-        if (has(sections, token.value) && legacy) {
-          add(token, token, token.value, resolve(sections, token.value, 'process section'));
-        }
-      } else if (!labelled && has(directives, token.value) && !['=', '.', ':'].includes(tokens[j + 1]?.value ?? '')) {
+        const after = tokens[j + 3];
+        const legacy = LEGACY.has(first) && (op(after, '(') ? first === 'val' || first === 'path' : !op(after, ':='));
+        if (legacy) add(token, token, token.value, resolve(sections, token.value, 'process section'));
+      } else if (!labelled && !['=', '.', ':'].includes(tokens[j + 1]?.value ?? '')) {
         add(token, token, token.value, resolve(directives, token.value, 'process directive'));
       }
     }
-    i = end;
+    i = end - 1;
   }
   return declarations;
 }
@@ -157,15 +157,15 @@ function configLinks(code: string, tokens: Token[], add: Add) {
     else if (token.type !== 'name') return;
     else if (within === 'process') {
       if (value === 'withName' || value === 'withLabel') block = 'process';
-      else if (has(directives, value)) add(token, token, value, resolve(directives, value, 'process directive'));
+      else add(token, token, value, resolve(directives, value, 'process directive'));
     } else if (value === 'profiles') block = 'profiles';
-    else if (has(scopes, value)) {
+    else if (Object.hasOwn(scopes, value)) {
       const settings = (scopes[value] as Entry).settings ?? [];
       const process = value === 'process';
       const setting =
         next === '.' &&
         member?.type === 'name' &&
-        (process ? has(directives, member.value) : settings.length === 0 || settings.includes(member.value));
+        (process ? Object.hasOwn(directives, member.value) : settings.length === 0 || settings.includes(member.value));
       if (next === '{' || setting) add(token, token, value, resolve(scopes, value, 'config scope'));
       if (process && next === '{') block = 'process';
       if (process && setting && member) {
@@ -181,6 +181,16 @@ function boundNames(tokens: Token[]) {
   const names = (from: number, to: number) => {
     for (const token of tokens.slice(from, to)) if (token.type === 'name') bound.add(token.value);
   };
+  // Not the names in default values, such as `params` in `def f(dir = params.outdir)`.
+  const parameters = (open: number) => {
+    let value = false;
+    for (let j = open + 1, end = skipBrackets(tokens, open) - 1; j < end; j++) {
+      const token = tokens[j] as Token;
+      if (opens(token)) j = skipBrackets(tokens, j) - 1;
+      else if (op(token, '=,')) value = token.value === '=';
+      else if (!value && token.type === 'name') bound.add(token.value);
+    }
+  };
   tokens.forEach((token, i) => {
     const prev = tokens[i - 1]?.value;
     const next = tokens[i + 1]?.value;
@@ -194,7 +204,7 @@ function boundNames(tokens: Token[]) {
     if (next === '=' && !['=', '~'].includes(tokens[i + 2]?.value ?? '') && prev !== '.') bound.add(token.value);
     if (token.value === 'def') {
       const open = next === '(' ? i + 1 : tokens[i + 2]?.value === '(' ? i + 2 : -1;
-      if (open > 0) names(open, skipBrackets(tokens, open));
+      if (open > 0) parameters(open);
     }
   });
   return bound;
@@ -203,13 +213,13 @@ function boundNames(tokens: Token[]) {
 /** Whether the global name at `tokens[i]` is used: not a map key or a `params` block, and a function is called. */
 function usesGlobal(code: string, tokens: Token[], i: number) {
   const token = tokens[i] as Token;
-  const next = tokens[i + 1]?.value;
-  if (next === ':' || next === '{') return false;
+  const next = tokens[i + 1];
+  if (op(next, ':{')) return false;
   const { signature = '' } = globals[token.value] as Entry;
   if (!signature.includes('(')) return true;
   // Only a function that returns nothing works as a statement without brackets, such as `println 'Hello'`.
   const statement = !signature.includes('->') && startsStatement(code, tokens, i);
-  return next === '(' || (statement && /^[ \t]+["'\w$]/.test(code.slice(token.end)));
+  return op(next, '(') || (statement && /^[ \t]+["'\w$]/.test(code.slice(token.end)));
 }
 
 /**
@@ -254,7 +264,7 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
 
       const file = attributes.nextflow;
       if (file !== undefined && file !== 'config') {
-        warn(`nextflow="${file}" is not a file type that the adapter knows. The block links as a script.`);
+        warn(`nextflow="${file}" is not a file type that the adapter knows, so the adapter ignores it.`);
       }
       // nf-test has its own `workflow` and `file()`.
       if (attributes.title?.endsWith('.nf.test')) return symbols;
@@ -338,12 +348,11 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
         if (token.type !== 'name' || tokens[i - 1]?.value === '.' || inInclude.has(token)) return;
         if (bound.has(token.value) || declarations.has(token)) return;
         const member = tokens[i + 2];
-        if (has(namespaces, token.value) && tokens[i + 1]?.value === '.' && member) {
+        if (Object.hasOwn(namespaces, token.value) && tokens[i + 1]?.value === '.' && member) {
           const members = namespaces[token.value] as Record<string, Entry>;
-          if (!has(members, member.value)) return;
           const oneLine = !code.slice(token.start, member.end).includes('\n');
           add(oneLine ? token : member, member, `${token.value}.${member.value}`, resolve(members, member.value));
-        } else if (has(globals, token.value) && usesGlobal(code, tokens, i)) {
+        } else if (Object.hasOwn(globals, token.value) && usesGlobal(code, tokens, i)) {
           add(token, token, token.value, resolve(globals, token.value));
         }
       });

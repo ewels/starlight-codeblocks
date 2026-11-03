@@ -136,14 +136,18 @@ const hrefs = new Set(
     Object.values(map).map((entry) => entry.href),
   ),
 );
-const html = new Map();
+const urls = new Set([...hrefs].map((href) => href.split('#')[0]));
+const html = new Map(
+  await Promise.all(
+    [...urls].map(async (url) => {
+      const response = await fetch(url);
+      return [url, response.ok ? await response.text() : `HTTP ${response.status}`];
+    }),
+  ),
+);
 const failures = [];
 for (const href of hrefs) {
   const [url, anchor] = href.split('#');
-  if (!html.has(url)) {
-    const response = await fetch(url);
-    html.set(url, response.ok ? await response.text() : `HTTP ${response.status}`);
-  }
   const page = html.get(url);
   if (page.startsWith('HTTP ')) failures.push(`${href}: ${page}`);
   else if (anchor && !new RegExp(`\\sid="?${anchor}["\\s>]`).test(page)) failures.push(`${href}: no such anchor`);
