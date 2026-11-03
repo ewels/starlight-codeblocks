@@ -165,6 +165,7 @@ Use for a tutorial that shows the same file several times, with changes each tim
 |---|---|
 | `<CodeWalkthrough>` ... `</CodeWalkthrough>` | Around two or more code blocks, in an MDX file |
 | `step="<text>"` | Code block fence line of each step: the label of the step. Optional. |
+| `start="last"` or `start={N}` | On `<CodeWalkthrough>`: the step that it opens on, counted from 1. Optional. |
 
 ````mdx
 import { CodeWalkthrough } from 'starlight-codeblocks/components';
@@ -188,12 +189,13 @@ app.listen(3000);
 ````
 
 - Leave an empty line after `<CodeWalkthrough>` and before `</CodeWalkthrough>`. Each code block is one step, in order. Each keeps its other attributes, such as `title`.
+- The walkthrough opens on its first step. For a Before and After pair, put Before first and add `start="last"`: the reader sees and copies After, and **Next** animates the change. `start="2"` in quotes works too. Any other value, or a number outside the steps, logs a build warning and opens the first step.
 - The copy button copies the code of the current step.
 - Arrow keys move between steps when a numbered step has focus. Under reduced motion, steps change without the animation.
 - A line that is new in a step flashes the theme's green, then fades out in 1 second. There is no flash under reduced motion.
 - Without JavaScript, and when the page prints, each step shows as a separate block with its label after the title.
 - The page loads the animation library, about 3 kB, only on pages with `<CodeWalkthrough>`.
-- Option: `walkthrough: false` shows each step as a separate block, with no script. The `codeblocksWalkthrough` style settings change the colours and `duration`.
+- Option: `walkthrough: { start: 'last' }` opens every walkthrough on its last step. `start` on a `<CodeWalkthrough>` overrides it. `walkthrough: false` shows each step as a separate block, with no script. The `codeblocksWalkthrough` style settings change the colours and `duration`.
 - Limits: MDX only. During the animation, only the syntax colours show. Line states, line numbers and other decorations come back at the end.
 
 ## Code mentions

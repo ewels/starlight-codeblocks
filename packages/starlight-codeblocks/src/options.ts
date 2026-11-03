@@ -122,7 +122,7 @@ export interface CodeblocksOptions {
   permalinks?: false;
   placeholders?: false | { storage?: 'local' | 'session' | 'none' };
   codeTabs?: false | { control?: 'tabs' | 'menu' };
-  walkthrough?: false;
+  walkthrough?: false | { start?: 1 | 'last' };
   scrollycoding?: false;
   inlineHighlighting?: false | { defaultLanguage?: string | false };
   runnable?:
@@ -555,6 +555,15 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     description: 'Animates the code between the steps of a `<CodeWalkthrough>` component.',
     page: 'features/code-walkthrough',
     off: '`<CodeWalkthrough>` then shows each step as a separate block, with its label after the title, and loads no script.',
+    fields: {
+      start: {
+        type: "1 | 'last'",
+        default: 1,
+        description:
+          'The step that each walkthrough opens on: the first or the last. A walkthrough can set its own with `start` on `<CodeWalkthrough>`.',
+        valid: (value) => value === 1 || value === 'last',
+      },
+    },
   },
   scrollycoding: {
     description: 'Changes the focus of a sticky block as the prose steps scroll past.',

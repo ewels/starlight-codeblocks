@@ -12,6 +12,7 @@ test('turns every feature on with defaults, in new objects on each call', () => 
   expect(options.expandable).toEqual({ lines: 12, auto: false });
   expect(options.inlineHighlighting).toEqual({ defaultLanguage: false });
   expect(options.playgrounds).toEqual({});
+  expect(options.walkthrough).toEqual({ start: 1 });
   expect(options.runnable).toEqual({
     runtimes: {},
     timeout: 10000,
@@ -32,8 +33,10 @@ test('keeps given values and turns features off with false', () => {
     annotations: { style: 'outline' },
     playgrounds: { demo: { label: 'Open in Demo', url } },
     runnable: false,
+    walkthrough: { start: 'last' },
   });
   expect(options.focus).toEqual({ style: 'dim' });
+  expect(options.walkthrough).toEqual({ start: 'last' });
   expect(options.callouts).toBe(false);
   expect(options.annotations).toEqual({ style: 'outline' });
   expect(options.playgrounds).toEqual({ demo: { label: 'Open in Demo', url } });
@@ -67,6 +70,8 @@ test('rejects options that are not valid, with an OptionsError that names the op
     [{ runnable: { button: 'top' } }, '`runnable.button`'],
     [{ runnable: { outputDelay: -1 } }, '`runnable.outputDelay`'],
     [{ apiLinks: { adapters: [{ name: 'x', languages: ['js'] }] } }, '`apiLinks.adapters`'],
+    [{ walkthrough: { start: 2 } }, "`walkthrough.start` must be 1 | 'last', got 2"],
+    [{ walkthrough: { start: 'first' } }, '`walkthrough.start` must be'],
   ];
   for (const [options, message] of cases) {
     const resolve = () => resolveOptions(options as never);
