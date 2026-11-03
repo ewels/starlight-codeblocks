@@ -1,6 +1,7 @@
 import { commentSyntaxGroups as groups } from '../../../packages/starlight-codeblocks/src/expressive-code/comments.ts';
 import type { CodeblocksPlugin } from '../../../packages/starlight-codeblocks/src/expressive-code/core.ts';
 import { createPlugins } from '../../../packages/starlight-codeblocks/src/expressive-code/index.ts';
+import { languageAliases, languages } from '../../../packages/starlight-codeblocks/src/languages.ts';
 import { optionsReference, resolveOptions } from '../../../packages/starlight-codeblocks/src/options.ts';
 import { attributesReference, styleSettingsReference } from '../../../packages/starlight-codeblocks/src/reference.ts';
 import { translations } from '../../../packages/starlight-codeblocks/src/translations.ts';
@@ -33,7 +34,14 @@ export const directives = Object.entries(
 );
 
 /** Every UI string with its English text, in the order of the dictionary. */
-export const uiStrings = Object.entries(translations).map(([key, text]) => ({ key, text }));
+export const uiStrings = Object.entries(translations.en ?? {}).map(([key, text]) => ({ key, text }));
+
+const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
+
+/** Every language that the plugin ships, by English name, with the codes of the locales that get it. */
+export const bundledLanguages = Object.keys(languages)
+  .map((code) => ({ name: languageNames.of(code) ?? code, codes: [code, ...(languageAliases[code] ?? [])] }))
+  .sort((a, b) => a.name.localeCompare(b.name));
 
 export const attributes = attributesReference.map(({ example, ...attribute }) => ({
   ...attribute,

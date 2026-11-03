@@ -7,7 +7,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Translations',
-      locales: { root: { label: 'English', lang: 'en' }, de: { label: 'Deutsch' } },
+      locales: { root: { label: 'English', lang: 'en' }, de: { label: 'Deutsch' }, pt: { label: 'Português' } },
       pagefind: false,
       disable404Route: true,
       plugins: [codeblocks({ apiLinks: false })],

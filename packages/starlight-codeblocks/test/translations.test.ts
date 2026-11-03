@@ -48,7 +48,7 @@ const bundles: Record<string, Record<string, unknown>> = {
 
 /** Starlight's `useTranslations()`, with i18next's lookup: the language, then the default locale. */
 const useTranslations = (lang = 'en') => {
-  const own = { ...translations, ...bundles.en, ...bundles[lang] } as Record<string, string>;
+  const own = { ...translations.en, ...bundles.en, ...bundles[lang] } as Record<string, string>;
   const pick = (k: string, options: { count?: number } = {}) =>
     typeof options.count === 'number'
       ? (own[`${k}_${new Intl.PluralRules(lang).select(options.count)}`] ?? own[k])
@@ -73,11 +73,15 @@ function texts(html: string, before: string, name = 'data-scb-texts') {
   return JSON.parse(value.replaceAll('&#x22;', '"').replaceAll('&quot;', '"'));
 }
 
-test('the plugin injects its English texts under one prefix, with plural forms', async () => {
+test('the plugin injects the texts of every language under one prefix, with plural forms', async () => {
   const all: Record<string, Record<string, string>>[] = [];
   await codeblocks().hooks['i18n:setup']?.({ injectTranslations: (t) => all.push(t) });
   const injected = all[0] ?? {};
-  expect(Object.keys(injected)).toEqual(['en']);
+  expect(Object.keys(injected).sort()).toEqual(
+    'ca de en eo es fr hi id it ja ko nb no pl pt pt-BR pt-PT ru sv tr zh zh-CN zh-TW'.split(' '),
+  );
+  expect(injected['pt-BR']?.[key('runnable.run')]).toBe('Executar código');
+  expect(injected.no).toEqual(injected.nb);
   expect(injected.en?.[key('runnable.run')]).toBe('Run code');
   expect(injected.en?.[key('hiddenLines.marker_one')]).toBe('{{count}} hidden line');
   expect(Object.keys(injected.en ?? {}).every((k) => k.startsWith(KEY_PREFIX))).toBe(true);
@@ -106,6 +110,13 @@ test('a key without plural forms in a language wins over the plural forms of the
   expect(format(site.get('de'), 'de', 'expandable.showAll', { count: 1 })).toBe('Alle 1 Zeilen');
   expect(format(site.get('de'), 'de', 'hiddenLines.marker', { count: 1 })).toBe('1 hidden line');
   expect(format(site.get('en'), 'en', 'expandable.showAll', { count: 8 })).toBe('Show all 8 lines');
+});
+
+test('a locale named by its folder, such as pt-br, finds its texts under the code that Starlight gives it', () => {
+  const site = siteTexts({ root: { lang: 'en' }, 'pt-br': {} }, (lang) =>
+    Object.assign(() => '', { all: () => (lang === 'pt-BR' ? translations['pt-BR'] : {}), exists: () => false }),
+  );
+  expect(format(site.get('pt-BR'), 'pt-BR', 'runnable.run')).toBe('Executar código');
 });
 
 test('blocks in a locale get its texts, then the default locale, then English', async () => {

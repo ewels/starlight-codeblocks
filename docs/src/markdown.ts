@@ -5,6 +5,7 @@ import { iconSetNames, iconSetTables } from './components/icon-sets.ts';
 import {
   adapterOptions,
   attributes,
+  bundledLanguages,
   commentSyntaxGroups,
   directives,
   type OptionEntry,
@@ -137,6 +138,12 @@ const component: Record<string, (props: Record<string, string>, id: string) => s
     );
     return ['| Comment syntax | Languages |', '|---|---|', ...rows].join('\n');
   },
+  Languages: () =>
+    [
+      '| Language | Codes |',
+      '|---|---|',
+      ...bundledLanguages.map(({ name, codes }) => `| ${name} | ${codes.map(code).join(', ')} |`),
+    ].join('\n'),
   UiStrings: () =>
     [
       '| Key | English text |',

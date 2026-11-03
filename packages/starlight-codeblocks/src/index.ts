@@ -22,7 +22,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
     name: 'starlight-codeblocks',
     hooks: {
       async 'i18n:setup'({ injectTranslations }) {
-        injectTranslations({ en: translations });
+        injectTranslations(translations);
       },
       async 'config:setup'({ config, updateConfig, addIntegration, astroConfig, useTranslations, absolutePathToLang }) {
         if (config.expressiveCode === false) {

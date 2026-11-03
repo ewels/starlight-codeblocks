@@ -4,6 +4,7 @@ description: Turn features off, change their settings and change their colours w
 ---
 
 import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import Languages from '../../components/Languages.astro';
 import UiStrings from '../../components/UiStrings.astro';
 
 With no options, `codeblocks()` turns on every feature. Most features change a code block only when the block uses their attribute or directive. A few, such as file icons, colour swatches and word-level diff, apply to every matching block. Pages that use no interactive feature load no JavaScript from the plugin.
@@ -77,22 +78,29 @@ starlight({
 
 ## Translate the plugin texts
 
-The buttons, labels and screen reader texts of the plugin are in English. On a Starlight site with more than one language, you translate them in the same files as the [UI strings of Starlight](https://starlight.astro.build/guides/i18n/#translate-starlights-ui). Add the keys to the file of each language in `src/content/i18n/`:
+The buttons, labels and screen reader texts of the plugin come in English and in 17 more languages. On a Starlight site with more than one language, each page gets the texts of its language. The `lang` of a locale must match one of these codes:
+
+<Languages />
+
+Portuguese uses the Brazilian words, and Chinese uses simplified characters. A locale with another code, such as `de-AT`, does not get these texts.
+
+To change a text, or to add a language, add its key to the file of the language in `src/content/i18n/`. These are the files of the [UI strings of Starlight](https://starlight.astro.build/guides/i18n/#translate-starlights-ui). The texts of the site come before the texts of the plugin:
 
 ```json title="src/content/i18n/de.json"
 {
-  "starlightCodeblocks.runnable.run": "Code ausführen",
-  "starlightCodeblocks.shellCopy.copy": "Befehle kopieren",
-  "starlightCodeblocks.hiddenLines.marker_one": "{{count}} verborgene Zeile",
-  "starlightCodeblocks.hiddenLines.marker_other": "{{count}} verborgene Zeilen"
+  "starlightCodeblocks.runnable.run": "Code starten",
+  "starlightCodeblocks.hiddenLines.marker_one": "{{count}} versteckte Zeile",
+  "starlightCodeblocks.hiddenLines.marker_other": "{{count}} versteckte Zeilen"
 }
 ```
 
-Each page gets the texts of its language. If a language has no text for a key, the page shows the text of the default language, then the English text. To change an English text, add its key to `en.json`.
+If a language has no text for a key, the page shows the text of the default language, then the English text.
 
-A text with a count has one key for each plural form of the language. English has `_one` and `_other`, and Polish also has `_few` and `_many`. A name in double braces, such as `{{count}}`, is a value that the plugin fills in. Keep it in the translation.
+A text with a count has one key for each plural form of the language. English has `_one` and `_other`, and Polish also has `_few` and `_many`. To change such a text, give all its plural keys. A name in double braces, such as `{{count}}`, is a value that the plugin fills in. Keep it in the translation.
 
 The `runnable.label` and `runnable.againLabel` options, on the site or on a fence line, replace the translations of the **Run code** button. Custom line states and playgrounds show the label from their options. Sites without Starlight show the English texts.
+
+Native speakers can make the translations better. To correct a text, open a pull request that changes [`languages.ts`](https://github.com/ewels/starlight-codeblocks/blob/main/packages/starlight-codeblocks/src/languages.ts).
 
 <UiStrings />
 

@@ -1,12 +1,13 @@
 import { PluginTexts } from '@expressive-code/core';
+import { languageAliases, languages } from './languages.ts';
 import { getRegistry } from './registry.ts';
 
 /** The prefix of every key in Starlight's UI strings. */
 export const KEY_PREFIX = 'starlightCodeblocks.';
 
 /**
- * The English UI texts, by key without `KEY_PREFIX`. Starlight sites change them, or add other languages, in
- * `src/content/i18n/<lang>.json`. A text with a count has i18next plural forms, such as `_one` and `_other`.
+ * The English UI texts, by key without `KEY_PREFIX`. `languages.ts` has the other languages, and Starlight sites change
+ * any text in `src/content/i18n/<lang>.json`. A text with a count has i18next plural forms, such as `_one` and `_other`.
  */
 export const uiStrings = {
   'block.name': 'Code block',
@@ -70,9 +71,14 @@ export type UiKey = keyof typeof uiStrings extends infer K ? (K extends `${infer
 type Vars = Record<string, string | number>;
 export type Say = (key: UiKey, vars?: Vars) => string;
 
-/** The English texts with their full keys, as `injectTranslations()` takes them. */
-export const translations: Texts = Object.fromEntries(
-  Object.entries(uiStrings).map(([key, text]) => [KEY_PREFIX + key, text]),
+const withPrefix = (texts: Texts) =>
+  Object.fromEntries(Object.entries(texts).map(([key, text]) => [KEY_PREFIX + key, text]));
+
+/** The texts of every language with their full keys, under each code of the language, as `injectTranslations()` takes them. */
+export const translations: Record<string, Texts> = Object.fromEntries(
+  [['en', uiStrings as Texts] as const, ...Object.entries(languages)].flatMap(([code, texts]) =>
+    [code, ...(languageAliases[code] ?? [])].map((alias) => [alias, withPrefix(texts)]),
+  ),
 );
 
 /** Fills in `{{name}}` and picks the plural form for `count`, as Starlight's `t()` (i18next) does. */
@@ -118,7 +124,11 @@ export function siteTexts(
     );
   const fallback = over(uiStrings, own());
   const texts = new PluginTexts<Texts>(fallback);
-  for (const [dir, { lang = dir }] of Object.entries(locales ?? {})) texts.addLocale(lang, over(fallback, own(lang)));
+  for (const [dir, { lang = dir }] of Object.entries(locales ?? {})) {
+    // Starlight writes the region in capitals, so a `pt-br` locale has its texts under `pt-BR`.
+    const tag = lang.replace(/-([a-z]{2})(?=-|$)/i, (region) => region.toUpperCase());
+    texts.addLocale(tag, over(fallback, own(tag)));
+  }
   return texts;
 }
 
