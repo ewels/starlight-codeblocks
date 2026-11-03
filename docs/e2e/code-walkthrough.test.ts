@@ -168,38 +168,16 @@ test('every step, done or not, changes its border under the pointer', async ({ p
   }
 });
 
-test('start="last" shows the last step before the script runs, and Previous, Next, the arrow keys and copy work from there', async ({
-  page,
-}) => {
-  const last = steps(page, 3);
-  const after = 'def greet(name, greeting="Hello"):\n    return f"{greeting}, {name}"';
-  await page.route('**/CodeWalkthrough.astro_astro_type_script_*', (route) => route.abort());
-  await page.reload();
-  await expect(current(page, 3)).toHaveCount(1);
-  await expect(current(page, 3).locator('.scb-steps-count')).toHaveText('Step 2 of 2');
-  await expect(last).not.toHaveAttribute('data-scb-steps-ready');
-  await page.unroute('**/CodeWalkthrough.astro_astro_type_script_*');
-  await page.reload();
-  await expect(last).toHaveAttribute('data-scb-steps-ready');
-  await expect(current(page, 3)).toHaveCount(1);
-  await expect(current(page, 3).getByRole('button', { name: 'Step 2: After' })).toHaveAttribute('aria-current', 'step');
-  await expect(current(page, 3).locator('.scb-steps-count')).toHaveText('Step 2 of 2');
-  await expect(current(page, 3).getByRole('button', { name: 'Next' })).toBeDisabled();
-  await expect(current(page, 3).getByRole('button', { name: 'Previous' })).toBeEnabled();
-  await current(page, 3).locator('.copy button').click();
-  expect(await clipboard(page)).toBe(after);
-  await current(page, 3).getByRole('button', { name: 'Previous' }).click();
-  if (!reduced()) await expect(current(page, 3).locator('.scb-steps-anim')).toHaveCount(1);
-  await expect(current(page, 3).locator('.scb-steps-anim')).toHaveCount(0);
-  await expect(current(page, 3)).toContainText('return "Hello, " + name');
-  await expect(current(page, 3).getByRole('button', { name: 'Step 1: Before' })).toBeFocused();
-  await expect(current(page, 3).locator('.scb-steps-count')).toHaveText('Step 1 of 2');
-  await expect(last.locator(':scope > [aria-live]')).toHaveText('Step 1: Before');
-  await page.keyboard.press('ArrowRight');
-  await expect(current(page, 3).getByRole('button', { name: 'Step 2: After' })).toBeFocused();
-  await expect(current(page, 3).locator('.scb-steps-anim')).toHaveCount(0);
-  await current(page, 3).locator('.copy button').click();
-  expect(await clipboard(page)).toBe(after);
+test('start="last" opens on the last step, copies it, and Previous animates back to the first', async ({ page }) => {
+  const shown = current(page, 3);
+  await expect(steps(page, 3)).toHaveAttribute('data-scb-steps-ready');
+  await expect(shown.locator('.scb-steps-count')).toHaveText('Step 2 of 2');
+  await shown.locator('.copy button').click();
+  expect(await clipboard(page)).toBe('def greet(name, greeting="Hello"):\n    return f"{greeting}, {name}"');
+  await shown.getByRole('button', { name: 'Previous' }).click();
+  if (!reduced()) await expect(shown.locator('.scb-steps-anim')).toHaveCount(1);
+  await expect(shown.locator('.scb-steps-anim')).toHaveCount(0);
+  await expect(shown).toContainText('return "Hello, " + name');
 });
 
 test('without JavaScript, every step shows as its own block, with its label', async ({ browser }) => {

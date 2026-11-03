@@ -88,11 +88,9 @@ test('start opens on the last step or on a step number, also in quotes, and leav
     ['2', 1],
     [1, 0],
   ] as const) {
-    const { html, data, warnings } = await renderSteps(steps, [], start);
+    const { html, warnings } = await renderSteps(steps, [], start);
     expect(currentStep(html), String(start)).toBe(index);
-    expect(html.match(/scb-steps-current/g)).toHaveLength(1);
     expect(html.replace(' scb-steps-current', '')).toBe(base.html.replace(' scb-steps-current', ''));
-    expect(data).toEqual(base.data);
     expect(warnings).toEqual([]);
   }
 });

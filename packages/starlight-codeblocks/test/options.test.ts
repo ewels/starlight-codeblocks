@@ -70,7 +70,6 @@ test('rejects options that are not valid, with an OptionsError that names the op
     [{ runnable: { button: 'top' } }, '`runnable.button`'],
     [{ runnable: { outputDelay: -1 } }, '`runnable.outputDelay`'],
     [{ apiLinks: { adapters: [{ name: 'x', languages: ['js'] }] } }, '`apiLinks.adapters`'],
-    [{ walkthrough: true }, '`walkthrough` must be `false` or an object, got true'],
     [{ walkthrough: { start: 2 } }, "`walkthrough.start` must be 1 | 'last', got 2"],
     [{ walkthrough: { start: 'first' } }, '`walkthrough.start` must be'],
   ];

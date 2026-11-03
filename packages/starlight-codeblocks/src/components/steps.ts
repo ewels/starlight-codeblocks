@@ -62,8 +62,8 @@ export function plainSteps(html: string): string {
 function startIndex(start: number | string, total: number, warn: (message: string) => void) {
   if (start === 'last') return total - 1;
   // MDX authors often quote numbers, as in `<ol start="2">`.
-  const n = typeof start === 'string' && /^\d+$/.test(start) ? Number(start) : start;
-  if (typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= total) return n - 1;
+  const n = /^\d+$/.test(String(start)) ? Number(start) : 0;
+  if (n >= 1 && n <= total) return n - 1;
   const shown = typeof start === 'string' ? `"${start}"` : `{${start}}`;
   warn(
     `\`<CodeWalkthrough start=${shown}>\`: \`start\` must be \`"last"\` or a step number from 1 to ${total}. The walkthrough opens on step 1.`,
