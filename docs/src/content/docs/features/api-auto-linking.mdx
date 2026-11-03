@@ -30,12 +30,13 @@ API auto-linking has no syntax. It runs on every code block in a language that h
 | Syntax | Where | Effect |
 |---|---|---|
 | `apiLinks=false` | Code block fence line | Turns the feature off for one code block |
+| `nextflow="config"` | Code block fence line | Links a Nextflow code block as a config file |
 
 ## Examples
 
 ### Nextflow
 
-A Nextflow workflow gets links for the channel factory and for the process from nf-core:
+A Nextflow workflow gets links for the channel factory, for `params` and for the process from nf-core:
 
 export const nextflowExample = `
 \`\`\`nextflow title="main.nf"
@@ -49,6 +50,27 @@ workflow {
 `;
 
 <Example code={nextflowExample} layout="tabs" />
+
+### Nextflow config file
+
+A code block with a title that ends in `.config` is a config file. It gets links for the config scopes, such as `params` and `docker`, and for the directives in the `process` scope:
+
+export const nextflowConfig = `
+\`\`\`nextflow title="nextflow.config"
+params {
+    input = 'samples.csv'
+}
+
+docker.enabled = true
+
+process {
+    cpus = 2
+    memory = '4 GB'
+}
+\`\`\`
+`;
+
+<Example code={nextflowConfig} layout="tabs" />
 
 ### An adapter for your own names
 
@@ -151,12 +173,25 @@ A name that the package at `pydocsBase` does not have links to the first package
 
 ## Nextflow adapter
 
-The Nextflow adapter runs on `nextflow` and `nf` code blocks. It has the channel factories and operators of the Nextflow reference, so it needs no network. It links:
+The Nextflow adapter runs on `nextflow` and `nf` code blocks. It has the names of the Nextflow reference, so it needs no network. It links:
 
 - Channel factories, such as `channel.of` and `channel.fromPath`.
 - Operators in a chain after a channel factory, such as `.map` and `.view`.
 - Operators on a variable that holds a channel in every assignment in the block.
+- Process directives at the start of a statement in a `process` body, such as `publishDir` and `cpus`.
+- The `input:` and `output:` labels of a process, if the first declaration under the label starts with a qualifier, such as `val` or `path`.
+- Global names, such as `params`, `projectDir` and `file()`, and the members of `workflow`, `log` and `nextflow`, such as `workflow.projectDir` and `log.info`.
 - Processes and workflows from `include` statements, if you give the `modules` option.
+
+A name that the block assigns, or that is a closure parameter or a map key, stays plain text. In input and output declarations, `tuple`, `env` and `file` are qualifiers, so they do not link to the global functions. A code block with a title that ends in `.nf.test` is an nf-test file, and the adapter links nothing in it.
+
+A code block with a title that ends in `.config` is a config file. In a config file, the adapter links the config scope at the start of each setting, such as `docker` in `docker.enabled = true`. The `params`, `process` and `profiles` scopes link to their sections of the Nextflow configuration page. Settings in a profile link as they do outside it. The adapter also links the directives in the `process` scope, such as `memory` in `process.memory` or in `process { memory = '2 GB' }`, also inside `withName` and `withLabel`. For a config file with another title or none, add `nextflow="config"` to the fence line:
+
+````md
+```nextflow nextflow="config"
+docker.enabled = true
+```
+````
 
 <Options adapter="nextflow" />
 
@@ -178,6 +213,8 @@ nextflow({
 - The Python adapter does not link built-in names, such as `print` and `len`.
 - A name that the block binds again, for example with `json = {}` or as a function parameter, does not link anywhere in the block.
 - The Nextflow adapter does not link operators after a process output, such as `FASTQC.out.html.map`, or after the `|` operator.
+- The Nextflow adapter does not link input and output qualifiers, such as `val` and `tuple`. The inputs and outputs page has no fixed anchor for each one.
+- In a config file, the Nextflow adapter links only scopes and directives. Settings, such as `enabled` in `docker.enabled` or `workDir`, and names in values, such as `params` after `=`, stay plain text.
 - The files in `node_modules/.cache/starlight-codeblocks/` do not expire. Delete the folder to fetch the indexes again.
 - A link cannot span two lines.
 - Names on the line that a `[!link]` directive targets do not link, so that a link is never inside another link.
