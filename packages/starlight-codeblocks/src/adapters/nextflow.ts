@@ -158,8 +158,7 @@ function configLinks(code: string, tokens: Token[], add: Add) {
     else if (within === 'process') {
       if (value === 'withName' || value === 'withLabel') block = 'process';
       else add(token, token, value, resolve(directives, value, 'process directive'));
-    } else if (value === 'profiles') block = 'profiles';
-    else if (Object.hasOwn(scopes, value)) {
+    } else if (Object.hasOwn(scopes, value)) {
       const settings = (scopes[value] as Entry).settings ?? [];
       const process = value === 'process';
       const setting =
@@ -167,7 +166,7 @@ function configLinks(code: string, tokens: Token[], add: Add) {
         member?.type === 'name' &&
         (process ? Object.hasOwn(directives, member.value) : settings.length === 0 || settings.includes(member.value));
       if (next === '{' || setting) add(token, token, value, resolve(scopes, value, 'config scope'));
-      if (process && next === '{') block = 'process';
+      if (next === '{' && (process || value === 'profiles')) block = value as Scope;
       if (process && setting && member) {
         add(member, member, member.value, resolve(directives, member.value, 'process directive'));
       }

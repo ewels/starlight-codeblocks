@@ -53,10 +53,14 @@ workflow {
 
 ### Nextflow config file
 
-A code block with a title that ends in `.config` is a config file. It gets links for the config scopes and for the directives in the `process` scope:
+A code block with a title that ends in `.config` is a config file. It gets links for the config scopes, such as `params` and `docker`, and for the directives in the `process` scope:
 
 export const nextflowConfig = `
 \`\`\`nextflow title="nextflow.config"
+params {
+    input = 'samples.csv'
+}
+
 docker.enabled = true
 
 process {
@@ -181,7 +185,7 @@ The Nextflow adapter runs on `nextflow` and `nf` code blocks. It has the names o
 
 A name that the block assigns, or that is a closure parameter or a map key, stays plain text. In input and output declarations, `tuple`, `env` and `file` are qualifiers, so they do not link to the global functions. A code block with a title that ends in `.nf.test` is an nf-test file, and the adapter links nothing in it.
 
-A code block with a title that ends in `.config` is a config file. In a config file, the adapter links the config scope at the start of each setting, such as `docker` in `docker.enabled = true`. It also links the directives in the `process` scope, such as `memory` in `process.memory` or in `process { memory = '2 GB' }`, also inside `withName` and `withLabel`. For a config file with another title or none, add `nextflow="config"` to the fence line:
+A code block with a title that ends in `.config` is a config file. In a config file, the adapter links the config scope at the start of each setting, such as `docker` in `docker.enabled = true`. The `params`, `process` and `profiles` scopes link to their sections of the Nextflow configuration page. Settings in a profile link as they do outside it. The adapter also links the directives in the `process` scope, such as `memory` in `process.memory` or in `process { memory = '2 GB' }`, also inside `withName` and `withLabel`. For a config file with another title or none, add `nextflow="config"` to the fence line:
 
 ````md
 ```nextflow nextflow="config"
@@ -210,7 +214,7 @@ nextflow({
 - A name that the block binds again, for example with `json = {}` or as a function parameter, does not link anywhere in the block.
 - The Nextflow adapter does not link operators after a process output, such as `FASTQC.out.html.map`, or after the `|` operator.
 - The Nextflow adapter does not link input and output qualifiers, such as `val` and `tuple`. The inputs and outputs page has no fixed anchor for each one.
-- In a config file, the Nextflow adapter links only scopes and directives. Settings, such as `enabled` in `docker.enabled` or `workDir`, and global names, such as `params`, stay plain text.
+- In a config file, the Nextflow adapter links only scopes and directives. Settings, such as `enabled` in `docker.enabled` or `workDir`, and names in values, such as `params` after `=`, stay plain text.
 - The files in `node_modules/.cache/starlight-codeblocks/` do not expire. Delete the folder to fetch the indexes again.
 - A link cannot span two lines.
 - Names on the line that a `[!link]` directive targets do not link, so that a link is never inside another link.

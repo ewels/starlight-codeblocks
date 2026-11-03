@@ -81,15 +81,26 @@ function scopes() {
         },
       ];
     });
-  // No scope page: its settings are the process directives.
-  all.push([
-    'process',
-    {
-      href: `${BASE}/config#process-configuration`,
-      summary: 'Sets process directives separately from the pipeline code.',
-      settings: [],
-    },
-  ]);
+  // No scope page, only a section of the configuration guide. The `process` settings are the process directives.
+  all.push(
+    [
+      'process',
+      {
+        href: `${BASE}/config#process-configuration`,
+        summary: 'Sets process directives separately from the pipeline code.',
+        settings: [],
+      },
+    ],
+    ['params', { href: `${BASE}/config#parameters`, summary: 'Defines pipeline parameters.', settings: [] }],
+    [
+      'profiles',
+      {
+        href: `${BASE}/config#config-profiles`,
+        summary: 'Defines sets of settings that the `-profile` option selects at run time.',
+        settings: [],
+      },
+    ],
+  );
   return Object.fromEntries(all.sort(([a], [b]) => a.localeCompare(b)));
 }
 
