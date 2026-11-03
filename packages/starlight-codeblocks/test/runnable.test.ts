@@ -180,6 +180,24 @@ test('[!output] takes the lines after it out of the code, up to [!output end] or
   expect(badWait.warnings.join('\n')).toContain('`[!wait]` needs milliseconds, on a line of `[!output]`.');
 });
 
+test('[!output] keeps backslashes and the lines that other plugins delete, and gives way to runnable.output', async () => {
+  const backslash = await render(block('sh', 'dir', '# [!output]', 'C:\\new\\dir # [!wait 500]', 'next'));
+  expect(backslash.html).toContain(
+    'data-scb-runnable-output="C:\\new\\dir\x7Fnext" data-scb-runnable-waits="{&#x22;0&#x22;:500}"',
+  );
+  // The frames plugin takes a file name comment in the first lines as the title.
+  const title = await render(block('sh', '# [!output]', '# config.sh', 'Hello'));
+  expect(title.html).toContain('data-scb-runnable-output="# config.sh\x7FHello"');
+  const empty = await render(block('sh', '# [!output]', '# [!output end]', 'make'));
+  expect(empty.copyText).toBe('make');
+  const fence = await render(
+    block('sh runnable.output="x"', 'make', '# [!output]', 'a # [!wait 500] [!code highlight]'),
+  );
+  expect(fence.html).toContain('data-scb-runnable-output="x"');
+  expect(fence.html).not.toContain('data-scb-runnable-waits');
+  expect(fence.html).not.toContain('scb-run-marks');
+});
+
 test('[!output stderr] and [!output stdout] start parts of standard error and standard output', async () => {
   const { html, copyText, warnings } = await render(
     block(
@@ -266,6 +284,9 @@ test('[!code highlight] and line states on a line of output mark it in the outpu
   expect(warnings).toEqual([]);
   const plain = await render(block('sh', 'make', '# [!output]', 'Done # [!wait 100]'));
   expect(plain.html).not.toContain('scb-run-marks');
+  // Output has no inserted or deleted lines.
+  const ins = await render(block('sh', 'ls', '# [!output]', 'a # [!code ++] added'));
+  expect(ins.html).not.toContain('scb-run-marks');
 });
 
 test('[!wait] and a mark share one comment, in either order', async () => {

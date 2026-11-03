@@ -101,27 +101,30 @@ const stateData = new AttachedPluginData<{
 const cls = (suffix: string) => `${PREFIX}-state${suffix}`;
 
 /**
- * Adds the states and messages of `line` to its rendered element: the state classes to `lineAst`, and the screen reader
- * names and the labels to `code`. `lines` holds `line`, for the run of a state that it is part of. A line of `output`
- * also gets its highlight, which Expressive Code draws only on code lines. Returns whether it added anything.
+ * Adds the states and messages of `line` to `lineAst` (classes) and `code` (names and labels), and returns whether it
+ * added anything. `getLines()` gives the lines around `line`, to find the start of a run. A line of `output` also gets
+ * its highlight, which Expressive Code draws only on code lines.
  */
 export function decorateLine(
   codeBlock: ExpressiveCodeBlock,
   line: ExpressiveCodeLine,
-  lines: readonly ExpressiveCodeLine[],
+  getLines: () => readonly ExpressiveCodeLine[],
   lineAst: Element,
   code: Element,
   output = false,
 ) {
   const { states, markers: lineMarkers, highlights, prefix: showPrefix } = stateData.getOrCreateFor(codeBlock);
-  for (const { marker, message } of lineMarkers.get(line) ?? []) {
+  // Output has no inserted or deleted lines, so only a highlight keeps its message there.
+  const markerLabels = (lineMarkers.get(line) ?? []).filter(({ marker }) => !output || marker === 'mark');
+  for (const { marker, message } of markerLabels) {
     code.children.push(h('span', { class: `${cls('-label')} ${cls(`-label-${marker}`)}` }, inlineMarkdown(message)));
   }
   const highlighted = output && highlights.has(line);
   if (highlighted) addClassName(lineAst, cls('-mark'));
   const list = states.get(line);
-  if (!list) return highlighted || lineMarkers.has(line);
+  if (!list) return highlighted || markerLabels.length > 0;
   addClassName(lineAst, cls(''));
+  const lines = getLines();
   // A hidden line above does not count: readers would see the run without its name.
   const above = lines.slice(0, lines.indexOf(line)).findLast((l) => !isHiddenLine(codeBlock, l));
   const previous = (above && states.get(above)) || [];
@@ -217,7 +220,7 @@ pre.${cls('-all')} .ec-line.${cls('')} .code { --ecLineBrdCol: transparent; }
 /* The space after the name stays in the text for reading without styles. In monospace it is 1ch wide. */
 .${cls('-label')} strong { margin-inline-end: calc(6px - 1ch); font-weight: 600; }
 .${cls('-label')}, .${cls('-prefix')} { user-select: none; -webkit-user-select: none; }
-/* A highlighted line of output, in Expressive Code's colours. Before the states, so that a state wins. */
+/* A highlighted line of output. Before the states, so that a state wins. */
 .${cls('-mark')} {
   --scbStateBar: ${cssVar('textMarkers.markBorderColor' as never)};
   --scbStateBg: ${cssVar('textMarkers.markBackground' as never)};
@@ -284,7 +287,7 @@ ${Object.values(markers)
       },
       postprocessRenderedLine({ codeBlock, line, renderData }) {
         const code = select('.code', renderData.lineAst);
-        if (code) decorateLine(codeBlock, line, codeBlock.getLines(), renderData.lineAst, code);
+        if (code) decorateLine(codeBlock, line, () => codeBlock.getLines(), renderData.lineAst, code);
       },
       postprocessRenderedBlock({ codeBlock, renderData }) {
         const { states } = stateData.getOrCreateFor(codeBlock);

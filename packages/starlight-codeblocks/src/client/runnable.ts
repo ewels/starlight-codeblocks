@@ -38,28 +38,17 @@ async function replay(figure: HTMLElement, panel: HTMLElement, output: string) {
   const waits: Record<number, number> = JSON.parse(figure.dataset.scbRunnableWaits ?? '{}');
   const streams: Record<number, string> = JSON.parse(figure.dataset.scbRunnableStreams ?? '{}');
   const marks = figure.querySelector('.scb-run-marks');
-  const lines = decodeCode(output).split('\n');
-  const parts: HTMLElement[] = [];
-  const print = (i: number) => {
-    let part = parts.at(-1);
-    if (!part || i in streams) {
-      part = streams[i] === 'stderr' ? error('') : line('pre', 'scb-run-stdout', '');
-      parts.push(part);
-    } else part.append('\n');
-    part.append(marks?.querySelector(`[data-scb-run-line="${i}"]`)?.cloneNode(true) ?? (lines[i] as string));
-  };
-  if (!delay && !figure.dataset.scbRunnableWaits) {
-    for (const i of lines.keys()) print(i);
-    return show(panel, ...parts);
-  }
-  show(panel, status('Running…'));
-  for (const i of lines.keys()) {
+  if (delay || figure.dataset.scbRunnableWaits) show(panel, status('Running…'));
+  let part: HTMLElement | undefined;
+  for (const [i, text] of decodeCode(output).split('\n').entries()) {
     const ms = i ? (waits[i - 1] ?? delay) : delay;
     if (ms) await new Promise((resolve) => setTimeout(resolve, ms));
-    const count = parts.length;
-    print(i);
-    if (!i) show(panel, ...parts);
-    else if (parts.length > count) panel.append(parts.at(-1) as HTMLElement);
+    if (!part) show(panel);
+    if (!part || i in streams) {
+      part = streams[i] === 'stderr' ? error('') : line('pre', 'scb-run-stdout', '');
+      panel.append(part);
+    } else part.append('\n');
+    part.append(marks?.querySelector(`[data-scb-run-line="${i}"]`)?.cloneNode(true) ?? text);
   }
 }
 

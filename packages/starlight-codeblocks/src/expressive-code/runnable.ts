@@ -87,12 +87,10 @@ const text = (raw: string) => (raw.trim() ? raw : undefined);
 type Stream = 'stdout' | 'stderr';
 
 const scriptedData = new AttachedPluginData<{
-  lines: readonly ExpressiveCodeLine[];
-  text?: string;
   waits: Record<number, number>;
   /** The output line where each part starts, when its stream differs from the part before. */
   streams: Record<number, Stream>;
-}>(() => ({ lines: [], waits: {}, streams: {} }));
+}>(() => ({ waits: {}, streams: {} }));
 
 const milliseconds = (min: number) => (raw: string) =>
   /^\d+$/.test(raw) && Number(raw) >= min && Number(raw) <= 2 ** 31 - 1 ? Number(raw) : undefined;
@@ -206,8 +204,6 @@ export function pluginRunnable({
           return;
         }
         const data = scriptedData.getOrCreateFor(codeBlock);
-        data.lines = output;
-        data.text = output.map((line) => line.text).join('\n');
         let stream: Stream = 'stdout';
         for (const mark of marks) {
           const next = outputMark(mark);
@@ -228,12 +224,21 @@ export function pluginRunnable({
             warn(context, '`[!wait]` needs milliseconds, on a line of `[!output]`.', wait.sourceLine);
           else data.waits[index] = ms;
         }
-        for (const line of [...output].reverse()) codeBlock.deleteLine(codeBlock.getLines().indexOf(line));
+        // Plugins before this one can delete a line of output, such as the frames plugin's file name comment.
+        const current = codeBlock.getLines();
+        const indices = output.map((line) => current.indexOf(line)).filter((i) => i !== -1);
+        if (indices.length > 0) codeBlock.deleteLines(indices);
       },
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
-        const { lines, text: fromDirectives, waits, streams: parts } = scriptedData.getOrCreateFor(codeBlock);
-        const scripted = codeBlock.metaOptions.getString('runnable.output') ?? fromDirectives;
+        const meta = codeBlock.metaOptions.getString('runnable.output');
+        // `runnable.output` replaces the `[!output]` lines, and their waits, streams and marks with them.
+        const { waits, streams } =
+          meta === undefined ? scriptedData.getOrCreateFor(codeBlock) : { waits: {}, streams: {} };
+        const lines = meta === undefined ? getOutputLines(codeBlock) : [];
+        // A fence line holds one line, so `\n` stands for a line break.
+        const scripted =
+          meta?.replace(/\\n/g, '\n') ?? (lines.length > 0 ? lines.map((line) => line.text).join('\n') : undefined);
         if (!codeBlock.metaOptions.getBoolean('runnable') && scripted === undefined) return;
         const figure = select('figure', renderData.blockAst);
         if (!figure) return;
@@ -274,14 +279,13 @@ export function pluginRunnable({
         };
         if (scripted !== undefined) {
           figure.properties.dataScbRunnable = '';
-          // A fence line holds one line, so `\n` stands for a line break.
-          figure.properties.dataScbRunnableOutput = encodeCode(scripted.replace(/\\n/g, '\n'));
+          figure.properties.dataScbRunnableOutput = encodeCode(scripted);
           if (Object.keys(waits).length > 0) figure.properties.dataScbRunnableWaits = JSON.stringify(waits);
-          if (Object.keys(parts).length > 0) figure.properties.dataScbRunnableStreams = JSON.stringify(parts);
+          if (Object.keys(streams).length > 0) figure.properties.dataScbRunnableStreams = JSON.stringify(streams);
           const marked = new Map<ExpressiveCodeLine, Element>();
           lines.forEach((line, i) => {
             const element = h('span', { class: cls('-line'), dataScbRunLine: String(i) }, line.text);
-            if (decorateLine(codeBlock, line, lines, element, element, true)) marked.set(line, element);
+            if (decorateLine(codeBlock, line, () => lines, element, element, true)) marked.set(line, element);
           });
           if (marked.size > 0)
             figure.children.push(h('div', { class: cls('-marks'), hidden: true }, [...marked.values()]));

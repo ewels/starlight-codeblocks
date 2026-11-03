@@ -430,9 +430,11 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
             .filter((d) => d.name === 'output')
             .map((d) => ({ at: visible.indexOf(lines[i] as ExpressiveCodeLine), mark: outputMark(d) })),
         );
-        const from = marks.find(({ mark }) => mark && mark !== 'end')?.at ?? -1;
-        const output = from === -1 ? [] : visible.slice(from, marks.find((m) => m.mark === 'end' && m.at > from)?.at);
-        const code = visible.filter((line) => !output.includes(line));
+        const start = marks.findIndex(({ mark }) => mark && mark !== 'end');
+        const from = marks[start]?.at ?? -1;
+        const end = marks.slice(start + 1).find(({ mark }) => mark === 'end')?.at;
+        const output = from === -1 ? [] : visible.slice(from, end);
+        const code = visible.toSpliced(from, output.length);
         lineData.getOrCreateFor(codeBlock).lines = code;
         const data = notationData.getOrCreateFor(codeBlock);
         data.specs = specs;
@@ -440,6 +442,7 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
         data.output = output;
         if (code.length < lines.length) remapCollapse(codeBlock, lines, code);
         parsed.forEach(({ directives }, i) => {
+          if (directives.length === 0) return;
           const line = lines[i] as ExpressiveCodeLine;
           // A count runs on in the output or in the code, never from one into the other.
           const area = output.includes(line) ? output : code;
@@ -455,10 +458,11 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
         });
       },
       preprocessMetadata({ codeBlock }) {
+        const { removed, output } = notationData.getOrCreateFor(codeBlock);
+        if (removed.length === 0 && output.length === 0) return;
+        // Plugins before this one attached their line annotations by source line.
         const lines = codeBlock.getLines();
         const visible = numberedLines(codeBlock);
-        if (visible.length === lines.length) return;
-        // Plugins before this one attached their line annotations by source line.
         const moves = lines.map((line, i) => [line, visible[i], line.getAnnotations()] as const);
         for (const [line, target, annotations] of moves) {
           if (target === line) continue;
