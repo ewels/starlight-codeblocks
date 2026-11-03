@@ -26,7 +26,10 @@ test('a Starlight site with two locales gives each page the texts of its languag
   expect(de).toContain('<span>2 verborgene Zeilen</span>');
   expect(de).toContain('data-scb-texts="{"closed":"2 verborgene Zeilen","open":"Hide 2 lines"}"');
   expect(de).toContain('>Code ausführen</button>');
-  expect(de).toContain('{"output":"Ausgabe","running":"Running…","error":"Error: "}');
+  expect(de).toContain('{"output":"Ausgabe","running":"Running…","error":"Fehler: "}');
+  expect(de).toContain(
+    '<span class="scb-state-prefix scb-sr-only scb-deco" data-pagefind-ignore="">Fehler:</span>No rule',
+  );
   expect(de).toContain('>Befehle kopieren</button>');
   expect(de).toContain('data-scb-labels="["Klartext","JavaScript"]"');
   expect(de).toContain('<span class="scb-steps-count">Schritt 1 von 2</span>');
@@ -36,5 +39,8 @@ test('a Starlight site with two locales gives each page the texts of its languag
   expect(en).toContain('<span>2 hidden lines</span>');
   expect(en).toContain('>Run code</button>');
   expect(en).toContain('>Copy commands</button>');
+  expect(en).toContain(
+    '<span class="scb-state-prefix scb-sr-only scb-deco" data-pagefind-ignore="">Error:</span>No rule',
+  );
   expect(en).toContain('<span class="scb-steps-count">Step 1 of 2</span>');
 });

@@ -17,6 +17,7 @@ const bundles: Record<string, Record<string, unknown>> = {
     'search.label': 'Suchen',
     [key('runnable.run')]: 'Code ausführen',
     [key('runnable.running')]: 'Läuft…',
+    [key('runnable.error')]: 'Fehler:',
     [key('runnable.timeout_one')]: 'Nach {{count}} Sekunde gestoppt.',
     [key('runnable.timeout_other')]: 'Nach {{count}} Sekunden gestoppt.',
     [key('hiddenLines.marker_one')]: '{{count}} verborgene Zeile',
@@ -153,7 +154,7 @@ test('the Run button and the output panel take the texts, but the site and fence
   expect(texts(html, 'class="scb-run-output"')).toEqual({
     output: 'Result',
     running: 'Läuft…',
-    error: 'Error: ',
+    error: 'Fehler: ',
     loading: 'Loading the JavaScript runtime…',
     failed: 'The JavaScript runtime did not load.',
     empty: 'The code ran with no output.',
@@ -167,7 +168,28 @@ test('the Run button and the output panel take the texts, but the site and fence
     '>Los</button>',
   );
   const scripted = (await render(block('sh runnable.output="ok"', 'x'), {}, [], 'de')).html;
-  expect(texts(scripted, 'class="scb-run-output"')).toEqual({ output: 'Result', running: 'Läuft…', error: 'Error: ' });
+  expect(texts(scripted, 'class="scb-run-output"')).toEqual({ output: 'Result', running: 'Läuft…', error: 'Fehler: ' });
+});
+
+test('scripted standard error and the marks on output lines take the texts of the block locale', async () => {
+  const output = (options = {}) =>
+    render(
+      block('sh', 'make', '# [!output]', 'Done # [!code success]', '# [!output stderr]', 'No rule # [!code error]'),
+      options,
+      [],
+      'de',
+    );
+  const { html } = await output();
+  expect(html).toContain('data-scb-runnable-streams="{&#x22;1&#x22;:&#x22;stderr&#x22;}"');
+  expect(texts(html, 'class="scb-run-output"').error).toBe('Fehler: ');
+  const marks = html.match(/<div class="scb-run-marks" hidden>(.*?)<\/div>/)?.[1] ?? '';
+  expect(marks).toContain('<span class="scb-state-prefix scb-sr-only">Fehler:</span>No rule');
+  expect(marks).toContain('<strong aria-hidden="true">Fehler</strong>');
+  expect(marks).toContain('<strong aria-hidden="true">Success</strong>');
+  const own = await output({
+    lineStates: { states: { error: { label: 'Kaputt', colour: { dark: '#f66', light: '#c00' } } } },
+  });
+  expect(own.html).toContain('<span class="scb-state-prefix scb-sr-only">Kaputt:</span>No rule');
 });
 
 test('without Starlight, blocks and components get the English texts', async () => {

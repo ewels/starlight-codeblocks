@@ -3,6 +3,8 @@
   "starlightCodeblocks.hiddenLines.marker_other": "{{count}} verborgene Zeilen",
   "starlightCodeblocks.runnable.run": "Code ausführen",
   "starlightCodeblocks.runnable.output": "Ausgabe",
+  "starlightCodeblocks.runnable.error": "Fehler:",
+  "starlightCodeblocks.lineStates.error": "Fehler",
   "starlightCodeblocks.shellCopy.copy": "Befehle kopieren",
   "starlightCodeblocks.codeTabs.plainText": "Klartext",
   "starlightCodeblocks.walkthrough.stepCount": "Schritt {{step}} von {{total}}",
