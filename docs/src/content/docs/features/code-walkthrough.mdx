@@ -6,6 +6,7 @@ description: Step through versions of one code block, and watch the code move fr
 import { LinkCard } from '@astrojs/starlight/components';
 import { CodeWalkthrough } from 'starlight-codeblocks/components';
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
 A tutorial often shows the same file several times, with a few lines more each time. Readers must compare the blocks line by line to find the change. A code walkthrough puts the versions in one block with numbered steps in the title bar. When the reader changes step, unchanged code moves to its new place, and new code fades in.
 
@@ -83,6 +84,7 @@ Click **Next**, and `app.listen(3000);` moves down while the new line fades in. 
 |---|---|
 | `<CodeWalkthrough>` ... `</CodeWalkthrough>` | Around the code blocks, in an MDX file |
 | `step="<label>"` | Code block fence line of each step |
+| `start="last"` or `start={N}` | On `<CodeWalkthrough>` |
 
 Import the component at the top of the MDX file:
 
@@ -91,6 +93,8 @@ import { CodeWalkthrough } from 'starlight-codeblocks/components';
 ```
 
 Put two or more code blocks between the tags, with an empty line after `<CodeWalkthrough>` and before `</CodeWalkthrough>`. Each code block is one step, in order. The `step` attribute is optional. Each step keeps its other attributes, such as `title`.
+
+The walkthrough opens on its first step. `start="last"` opens it on the last step, and `start={N}` on step `N`, counted from 1. `start="N"` in quotes works too. Any other value, or a number outside the steps, logs a build warning, and the walkthrough opens on its first step.
 
 ## Examples
 
@@ -180,6 +184,44 @@ def total(items):
 
 </Example>
 
+### Open on the last step
+
+Each walkthrough shows one change that readers make to a file. `start="last"` opens it on the code after the change, so the copy button copies the new code. **Previous** shows the code before the change, and **Next** animates the change again:
+
+export const last = `
+<CodeWalkthrough start="last">
+
+\`\`\`py title="greet.py" step="Before"
+def greet(name):
+    return "Hello, " + name
+\`\`\`
+
+\`\`\`py title="greet.py" step="After"
+def greet(name, greeting="Hello"):
+    return f"{greeting}, {name}"
+\`\`\`
+
+</CodeWalkthrough>
+`;
+
+<Example code={last} layout="tabs">
+
+<CodeWalkthrough start="last">
+
+```py title="greet.py" step="Before"
+def greet(name):
+    return "Hello, " + name
+```
+
+```py title="greet.py" step="After"
+def greet(name, greeting="Hello"):
+    return f"{greeting}, {name}"
+```
+
+</CodeWalkthrough>
+
+</Example>
+
 ## Behaviour
 
 - The controls:
@@ -189,6 +231,7 @@ def total(items):
   - A row under the block shows the **Previous** and **Next** buttons, with the step count between them, such as "Step 2 of 3".
   - When the steps are narrower than 480 px, the label is hidden. If the label is too long for the title bar, it ends with an ellipsis.
 - Moving between steps:
+  - The walkthrough opens on the step that `start` gives. The page shows that step from the first paint, before the script runs.
   - Click a number to go to that step. You cannot click **Previous** on the first step, or **Next** on the last step.
   - When a numbered step has keyboard focus, the left and right arrow keys go to the previous and the next step.
 - Screen readers:
@@ -206,7 +249,17 @@ def total(items):
 
 ## Options
 
-Code walkthrough has no options. To turn the feature off for the whole site, set `walkthrough` to `false`:
+<Options />
+
+To open every walkthrough on the site on its last step:
+
+```js title="astro.config.mjs"
+codeblocks({
+  walkthrough: { start: 'last' },
+});
+```
+
+`start` on a `<CodeWalkthrough>` overrides the site setting for that walkthrough. For example, `start={1}` opens it on the first step. To turn the feature off for the whole site, set `walkthrough` to `false`:
 
 ```js title="astro.config.mjs"
 codeblocks({

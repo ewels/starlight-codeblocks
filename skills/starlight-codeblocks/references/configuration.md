@@ -40,7 +40,7 @@ codeblocks({
 | `permalinks` | None | Line permalinks |
 | `placeholders` | `storage`: `'local'`, `'session'` or `'none'`, default `'local'` | Fill-in placeholders |
 | `codeTabs` | `control`: `'tabs'` or `'menu'`, default `'tabs'` | Code tabs |
-| `walkthrough` | None | Code walkthrough |
+| `walkthrough` | `start`: `1` (default) or `'last'`, the step that each walkthrough opens on | Code walkthrough |
 | `scrollycoding` | None | Scrollycoding |
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
 | `runnable` | `runtimes`: language to module path, added to the built-in Python, JavaScript and TypeScript runtimes, or replacing them. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run code'`, or its translation. `againLabel`: default `'Run again'`, or its translation. Both replace the translations. `button`: `'below'` (default), `'title'` or `'both'`. `outputDelay`: default `200` ms | Run code |

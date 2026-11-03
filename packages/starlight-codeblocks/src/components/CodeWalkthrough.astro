@@ -4,11 +4,19 @@ import { getRegistry } from '../registry.ts';
 import { componentTexts } from '../translations.ts';
 import { codeWalkthrough, plainSteps } from './steps.ts';
 
+interface Props {
+  /** The step that the walkthrough opens on: `"last"`, or a step number from 1. The default is the `walkthrough.start` option. */
+  start?: 'last' | number | `${number}`;
+}
+
 const html = await Astro.slots.render('default');
-const on = getRegistry()?.options.walkthrough !== false;
+const options = getRegistry()?.options.walkthrough;
+const on = options !== false;
+const start = Astro.props.start ?? (options ? options.start : undefined);
+const warn = (message: string) => console.warn(`starlight-codeblocks: ${Astro.url.pathname}: ${message}`);
 ---
 
-<Fragment set:html={on ? codeWalkthrough(html, componentTexts(Astro.locals.t)) : plainSteps(html)} />
+<Fragment set:html={on ? codeWalkthrough(html, start, warn, componentTexts(Astro.locals.t)) : plainSteps(html)} />
 
 {
   on && (

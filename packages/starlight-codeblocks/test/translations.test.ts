@@ -193,7 +193,7 @@ test('components read the texts with Astro.locals.t, and fall back to English fo
       async (meta) => (await render(block(`js title="a.js" ${meta}`, 'x'), {}, [], 'de')).rawHtml,
     ),
   );
-  const html = codeWalkthrough(steps.join('\n'), componentTexts(t as never));
+  const html = codeWalkthrough(steps.join('\n'), 1, undefined, componentTexts(t as never));
   expect(html).toContain('<span class="scb-steps-count">Schritt 1 von 2</span>');
   expect(html).toContain('aria-label="Schritt 1: Erstellen"');
   expect(html).toContain('aria-label="Step 2"');

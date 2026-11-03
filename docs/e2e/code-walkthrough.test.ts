@@ -168,6 +168,18 @@ test('every step, done or not, changes its border under the pointer', async ({ p
   }
 });
 
+test('start="last" opens on the last step, copies it, and Previous animates back to the first', async ({ page }) => {
+  const shown = current(page, 3);
+  await expect(steps(page, 3)).toHaveAttribute('data-scb-steps-ready');
+  await expect(shown.locator('.scb-steps-count')).toHaveText('Step 2 of 2');
+  await shown.locator('.copy button').click();
+  expect(await clipboard(page)).toBe('def greet(name, greeting="Hello"):\n    return f"{greeting}, {name}"');
+  await shown.getByRole('button', { name: 'Previous' }).click();
+  if (!reduced()) await expect(shown.locator('.scb-steps-anim')).toHaveCount(1);
+  await expect(shown.locator('.scb-steps-anim')).toHaveCount(0);
+  await expect(shown).toContainText('return "Hello, " + name');
+});
+
 test('without JavaScript, every step shows as its own block, with its label', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
@@ -180,5 +192,7 @@ test('without JavaScript, every step shows as its own block, with its label', as
   ]);
   await expect(current(page).first().getByRole('group', { name: 'Steps' })).toBeHidden();
   await expect(current(page).first().locator('.scb-steps-controls')).toBeHidden();
+  await expect(current(page, 3)).toHaveCount(2);
+  await expect(current(page, 3).nth(1)).toHaveClass(/scb-steps-current/);
   await context.close();
 });

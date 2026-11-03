@@ -18,7 +18,7 @@ function setup(root: HTMLElement) {
   for (const group of groups) group.dataset.scbStepsOf = String(id);
   roots.set(id, groups);
   const live = root.querySelector(':scope > [aria-live]');
-  let current = 0;
+  let current = groups.findIndex((group) => group.classList.contains(`${S}-current`));
   let stop = () => {};
 
   const go = (k: number, control?: string, motion = true) => {
@@ -47,7 +47,7 @@ function setup(root: HTMLElement) {
   root.addEventListener('beforematch', (event) => go(stepOf(event.target as Element), undefined, false), true);
   // A line permalink can target a step before this script is ready, and could not scroll to it then.
   const target = root.querySelector('.scb-permalink-target');
-  if (target && stepOf(target) > 0) {
+  if (target && stepOf(target) !== current) {
     go(stepOf(target), undefined, false);
     scrollTo(target, 'center');
   }
