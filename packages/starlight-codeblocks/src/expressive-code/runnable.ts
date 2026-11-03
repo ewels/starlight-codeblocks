@@ -5,7 +5,7 @@ import {
   PluginStyleSettings,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
-import { getClassNames, h, select } from '@expressive-code/core/hast';
+import { type Element, getClassNames, h, select } from '@expressive-code/core/hast';
 import { encodeCode } from '../client/shared/copy.ts';
 import { clientJsModules } from '../client-modules.ts';
 import { getRegistry } from '../registry.ts';
@@ -18,7 +18,8 @@ import {
   languageId,
   warn,
 } from './core.ts';
-import { type Directive, getDirectives } from './notation.ts';
+import { decorateLine } from './line-states.ts';
+import { getDirectives, getOutputLines, outputMark } from './notation.ts';
 import { pythonSessionPrompts } from './shell-copy.ts';
 import { onCode, PREFIX, solidCodeBackground, solidCodeForeground, themeColour } from './styles.ts';
 
@@ -83,19 +84,15 @@ const cls = (suffix: string) => `${PREFIX}-run${suffix}`;
 /** Any text but blank, for `blockSetting()`. */
 const text = (raw: string) => (raw.trim() ? raw : undefined);
 
-const streams = ['stdout', 'stderr'] as const;
-type Stream = (typeof streams)[number];
-
-/** The stream that an `[!output]` directive starts, or `end`. `undefined` for an argument that it does not take. */
-const outputMark = ({ args }: Directive) =>
-  args.length > 1 ? undefined : [...streams, 'end' as const].find((arg) => arg === (args[0] ?? 'stdout'));
+type Stream = 'stdout' | 'stderr';
 
 const scriptedData = new AttachedPluginData<{
+  lines: readonly ExpressiveCodeLine[];
   text?: string;
   waits: Record<number, number>;
   /** The output line where each part starts, when its stream differs from the part before. */
   streams: Record<number, Stream>;
-}>(() => ({ waits: {}, streams: {} }));
+}>(() => ({ lines: [], waits: {}, streams: {} }));
 
 const milliseconds = (min: number) => (raw: string) =>
   /^\d+$/.test(raw) && Number(raw) >= min && Number(raw) <= 2 ** 31 - 1 ? Number(raw) : undefined;
@@ -125,7 +122,7 @@ export function pluginRunnable({
   font-size: 0.78125rem;
   line-height: 1.65;
 }
-.${cls('-output')} > * { margin: 0; padding: 0; background: none; border: 0; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+.${cls('-output')} > * { display: block; margin: 0; padding: 0; background: none; border: 0; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
 .${cls('-label')}, .${cls('-status')} { color: ${cssVar('codeblocks.mutedForeground')}; }
 .${cls('-label')} { display: block; margin-bottom: 2px; font-size: 0.72rem; }
 .${cls('-stdout')} { color: ${cssVar('codeblocksRunnable.outputForeground')}; }
@@ -135,6 +132,20 @@ export function pluginRunnable({
   padding-inline-start: 0.75ch;
 }
 .${cls('-stdout')} + .${cls('-stderr')}, .${cls('-stderr')} + .${cls('-stdout')} { margin-top: 0.4rem; }
+/* Expressive Code reverts the browser style of hidden elements. */
+.${cls('-marks')} { display: none; }
+/* The output colours meet 4.5:1 only on the code background, so a marked line takes the text colour of its label. */
+.${cls('-line')} {
+  display: inline-block;
+  box-sizing: border-box;
+  width: calc(100% + 1.5ch);
+  margin-inline: -0.75ch;
+  padding-inline: calc(0.75ch - ${cssVar('codeblocksLineStates.barWidth')}) 0.75ch;
+  border-inline-start: ${cssVar('codeblocksLineStates.barWidth')} solid var(--scbStateBar);
+  background: var(--scbStateBg);
+  color: var(--scbStateLabelFg);
+  vertical-align: top;
+}
 .${cls('')}[aria-disabled='true'] { opacity: 0.6; cursor: progress; }
 .${cls('-controls')} { display: flex; justify-content: center; padding-block-start: 12px; }
 .${cls('-controls')} > .${cls('')}, .${cls('-start')} {
@@ -166,7 +177,7 @@ export function pluginRunnable({
       output: {
         docs: {
           description:
-            'Starts the output that the **Run code** button prints instead of running the code. `[!output stderr]` starts lines that print as standard error, and `[!output stdout]` switches back. `[!output end]` ends the output; without it, the output goes to the end of the block. The block needs no `runnable` and no runtime.',
+            'Starts the output that the **Run code** button prints instead of running the code. `[!output stderr]` starts lines that print as standard error, and `[!output stdout]` switches back. `[!output end]` ends the output; without it, the output goes to the end of the block. `[!code highlight]` and line states mark lines of output. The block needs no `runnable` and no runtime.',
           args: 'Optional. `stdout`, `stderr` or `end`.',
           example: { lang: 'sh', code: 'nextflow run hello.nf\n# [!output]\nHello world!' },
           page: 'features/run-code',
@@ -188,25 +199,20 @@ export function pluginRunnable({
         if (marks.length === 0) return;
         for (const mark of marks.filter((d) => !outputMark(d)))
           warn(context, '`[!output]` takes nothing, `stdout`, `stderr` or `end`.', mark.sourceLine);
-        const lines = codeBlock.getLines();
-        const starts = marks.filter((d) => outputMark(d) && outputMark(d) !== 'end');
-        const from = starts[0]?.lines[0] ? lines.indexOf(starts[0].lines[0]) : -1;
-        if (from === -1) {
+        const output = getOutputLines(codeBlock);
+        if (output.length === 0) {
           if (marks.some((d) => outputMark(d) === 'end'))
             warn(context, '`[!output end]` needs an `[!output]` line before it.');
           return;
         }
-        const endLine = marks
-          .filter((d) => outputMark(d) === 'end')
-          .map((d) => (d.lines[0] ? lines.indexOf(d.lines[0]) : lines.length))
-          .find((i) => i > from);
-        const output = lines.slice(from, endLine ?? lines.length);
         const data = scriptedData.getOrCreateFor(codeBlock);
+        data.lines = output;
         data.text = output.map((line) => line.text).join('\n');
         let stream: Stream = 'stdout';
-        for (const mark of starts) {
+        for (const mark of marks) {
+          const next = outputMark(mark);
+          if (!next || next === 'end') continue;
           const index = output.indexOf(mark.lines[0] as ExpressiveCodeLine);
-          const next = outputMark(mark) as Stream;
           if (index === -1)
             warn(
               context,
@@ -222,11 +228,11 @@ export function pluginRunnable({
             warn(context, '`[!wait]` needs milliseconds, on a line of `[!output]`.', wait.sourceLine);
           else data.waits[index] = ms;
         }
-        for (const line of output.reverse()) codeBlock.deleteLine(codeBlock.getLines().indexOf(line));
+        for (const line of [...output].reverse()) codeBlock.deleteLine(codeBlock.getLines().indexOf(line));
       },
       postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
-        const { text: fromDirectives, waits, streams: parts } = scriptedData.getOrCreateFor(codeBlock);
+        const { lines, text: fromDirectives, waits, streams: parts } = scriptedData.getOrCreateFor(codeBlock);
         const scripted = codeBlock.metaOptions.getString('runnable.output') ?? fromDirectives;
         if (!codeBlock.metaOptions.getBoolean('runnable') && scripted === undefined) return;
         const figure = select('figure', renderData.blockAst);
@@ -272,6 +278,19 @@ export function pluginRunnable({
           figure.properties.dataScbRunnableOutput = encodeCode(scripted.replace(/\\n/g, '\n'));
           if (Object.keys(waits).length > 0) figure.properties.dataScbRunnableWaits = JSON.stringify(waits);
           if (Object.keys(parts).length > 0) figure.properties.dataScbRunnableStreams = JSON.stringify(parts);
+          const marked = new Map<ExpressiveCodeLine, Element>();
+          lines.forEach((line, i) => {
+            const element = h('span', { class: cls('-line'), dataScbRunLine: String(i) }, line.text);
+            if (decorateLine(codeBlock, line, lines, element, element, true)) marked.set(line, element);
+          });
+          if (marked.size > 0)
+            figure.children.push(h('div', { class: cls('-marks'), hidden: true }, [...marked.values()]));
+          for (const highlight of getDirectives(codeBlock, 'code highlight')) {
+            const [line] = highlight.lines;
+            if (!line || !lines.includes(line) || marked.has(line)) continue;
+            const message = '`[!code highlight]` on a line of output needs line states. The line prints without it.';
+            warn(context, message, highlight.sourceLine);
+          }
           figure.properties.dataScbRunnableDelay = String(
             blockSetting(
               context,

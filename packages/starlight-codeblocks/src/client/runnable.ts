@@ -37,6 +37,7 @@ async function replay(figure: HTMLElement, panel: HTMLElement, output: string) {
   const delay = Number(figure.dataset.scbRunnableDelay) || 0;
   const waits: Record<number, number> = JSON.parse(figure.dataset.scbRunnableWaits ?? '{}');
   const streams: Record<number, string> = JSON.parse(figure.dataset.scbRunnableStreams ?? '{}');
+  const marks = figure.querySelector('.scb-run-marks');
   const lines = decodeCode(output).split('\n');
   const parts: HTMLElement[] = [];
   const print = (i: number) => {
@@ -45,7 +46,7 @@ async function replay(figure: HTMLElement, panel: HTMLElement, output: string) {
       part = streams[i] === 'stderr' ? error('') : line('pre', 'scb-run-stdout', '');
       parts.push(part);
     } else part.append('\n');
-    part.append(lines[i] as string);
+    part.append(marks?.querySelector(`[data-scb-run-line="${i}"]`)?.cloneNode(true) ?? (lines[i] as string));
   };
   if (!delay && !figure.dataset.scbRunnableWaits) {
     for (const i of lines.keys()) print(i);

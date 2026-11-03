@@ -2,11 +2,12 @@ import { getColorContrast } from '@expressive-code/core';
 import { h, toHtml } from '@expressive-code/core/hast';
 import { afterEach, expect, test } from 'vitest';
 import { keepCopiedText, pluginCore } from '../src/expressive-code/core.ts';
+import { builtInStates } from '../src/expressive-code/line-states.ts';
 import { pluginRunnable, runtimeFileName, runtimeModules } from '../src/expressive-code/runnable.ts';
 import { runtimePlugins } from '../src/integration.ts';
 import { setRegistry } from '../src/registry.ts';
-import { variants } from './contrast.ts';
-import { block, render } from './render.ts';
+import { tinted, variants } from './contrast.ts';
+import { block, lineClasses, render } from './render.ts';
 
 afterEach(() => setRegistry(undefined));
 
@@ -232,6 +233,113 @@ test('[!output] warns about other arguments and about a second output, and print
   expect(second.warnings).toEqual([
     'src/content/docs/example.md, sh code block, line 6: A block has one output, so `[!output]` after `[!output end]` leaves its lines in the code.',
   ]);
+});
+
+test('[!code highlight] and line states on a line of output mark it in the output, as in the code', async () => {
+  const { html, rawHtml, copyText, warnings } = await render(
+    block(
+      'sh',
+      'nextflow run hello.nf',
+      '# [!output]',
+      'executor: local (1)',
+      '[a8/1f6ead] sayHello (1) | 0 of 1 # [!code highlight]',
+      'Cached: 2 # [!code info]',
+      'Version 25.04 # [!code warning] Update to 26.04',
+      'Done # [!code success]',
+      '# [!output stderr]',
+      'ERROR ~ Error executing process # [!code error]',
+      'Caused by: # [!code error]',
+    ),
+  );
+  const name = (label: string) => `<span class="scb-state-prefix scb-sr-only">${label}:</span>`;
+  expect(html).toContain(
+    `<div class="scb-run-marks" hidden><span class="scb-run-line scb-state-mark" data-scb-run-line="1">[a8/1f6ead] sayHello (1) | 0 of 1</span><span class="scb-run-line scb-state scb-state-info" data-scb-run-line="2">${name('Note')}Cached: 2<span class="scb-state-label"><strong aria-hidden="true">Note</strong></span></span><span class="scb-run-line scb-state scb-state-warning" data-scb-run-line="3">${name('Warning')}Version 25.04<span class="scb-state-label"><strong aria-hidden="true">Warning</strong> Update to 26.04</span></span><span class="scb-run-line scb-state scb-state-success" data-scb-run-line="4">${name('Success')}Done<span class="scb-state-label"><strong aria-hidden="true">Success</strong></span></span><span class="scb-run-line scb-state scb-state-error" data-scb-run-line="5">${name('Error')}ERROR ~ Error executing process<span class="scb-state-label"><strong aria-hidden="true">Error</strong></span></span><span class="scb-run-line scb-state scb-state-error" data-scb-run-line="6">${name('Error')}Caused by:</span></div>`,
+  );
+  expect(html).toContain(
+    'data-scb-runnable-output="executor: local (1)\x7F[a8/1f6ead] sayHello (1) | 0 of 1\x7FCached: 2\x7FVersion 25.04\x7FDone\x7FERROR ~ Error executing process\x7FCaused by:"',
+  );
+  expect(html).toContain('data-scb-runnable-streams="{&#x22;5&#x22;:&#x22;stderr&#x22;}"');
+  expect(lineClasses(html)).toEqual(['ec-line']);
+  // Tools that read the HTML, and Pagefind, leave the marked lines out.
+  expect(rawHtml).toContain('<div class="scb-run-marks scb-deco" hidden data-pagefind-ignore="">');
+  expect(copyText).toBe('nextflow run hello.nf');
+  expect(warnings).toEqual([]);
+  const plain = await render(block('sh', 'make', '# [!output]', 'Done # [!wait 100]'));
+  expect(plain.html).not.toContain('scb-run-marks');
+});
+
+test('[!wait] and a mark share one comment, in either order', async () => {
+  const { html, warnings } = await render(
+    block(
+      'sh',
+      'make',
+      '# [!output]',
+      'Compiling # [!wait 1500] [!code highlight]',
+      'Failed # [!code error] Exit 2 [!wait 500]',
+      'x',
+    ),
+  );
+  expect(html).toContain(
+    'data-scb-runnable-output="Compiling\x7FFailed\x7Fx" data-scb-runnable-waits="{&#x22;0&#x22;:1500,&#x22;1&#x22;:500}"',
+  );
+  expect(html).toContain('<span class="scb-run-line scb-state-mark" data-scb-run-line="0">Compiling</span>');
+  expect(html).toContain(
+    'Failed<span class="scb-state-label"><strong aria-hidden="true">Error</strong> Exit 2</span></span></div>',
+  );
+  expect(warnings).toEqual([]);
+  const message = await render(block('sh', 'make', '# [!output]', 'Linking # [!code highlight] The slow step'));
+  expect(message.html).toContain(
+    '<span class="scb-run-line scb-state-mark" data-scb-run-line="0">Linking<span class="scb-state-label scb-state-label-mark">The slow step</span></span>',
+  );
+});
+
+test('fence ranges and counts skip the lines of output, so they count the code lines only', async () => {
+  const lines = ['one', '# [!output]', 'out a', 'out b', '# [!output end]', 'two', 'three'];
+  const marked = await render(block('sh {3}', ...lines));
+  expect(lineClasses(marked.html)).toEqual(['ec-line', 'ec-line', 'ec-line highlight mark']);
+  expect(marked.html).not.toContain('scb-run-marks');
+  const state = await render(block('sh error={2}', ...lines));
+  expect(lineClasses(state.html)).toEqual(['ec-line', 'ec-line scb-state scb-state-error', 'ec-line']);
+  const after = await render(block('sh', 'one', '# [!output]', 'out', '# [!output end]', 'two # [!code highlight]'));
+  expect(lineClasses(after.html)).toEqual(['ec-line', 'ec-line highlight mark']);
+  expect(after.html).not.toContain('scb-run-marks');
+  const outside = await render(block('sh error={4}', ...lines));
+  expect(outside.warnings).toEqual([
+    'src/content/docs/example.md, sh code block: `error={4}` names line 4, but the block has 3 lines. The plugin ignores it.',
+  ]);
+  const count = await render(block('sh', 'one # [!code error:2]', '# [!output]', 'out'));
+  expect(count.html).not.toContain('scb-run-marks');
+  expect(count.warnings).toEqual([
+    'src/content/docs/example.md, sh code block, line 1: `:2` runs past the last line of the block.',
+  ]);
+});
+
+test('with line states off, marks on lines of output warn, and the lines print without them', async () => {
+  const { html, warnings } = await render(
+    block('sh', 'make', '# [!output]', 'Compiling # [!code highlight]', 'Failed # [!code error]'),
+    { lineStates: false },
+  );
+  expect(html).not.toContain('scb-run-marks');
+  expect(html).toContain('data-scb-runnable-output="Compiling\x7FFailed # [!code error]"');
+  expect(warnings).toEqual([
+    'src/content/docs/example.md, sh code block, line 4: `[!code error]` is not a known directive. The line renders without it.',
+    'src/content/docs/example.md, sh code block, line 3: `[!code highlight]` on a line of output needs line states. The line prints without it.',
+  ]);
+});
+
+test('the text of a marked line of output meets 4.5:1 on its tint, in the dark and the light theme', async () => {
+  const pairs = [
+    ...Object.keys(builtInStates).map((s) => [
+      `codeblocksLineStates.${s}LabelForeground`,
+      `codeblocksLineStates.${s}Background`,
+    ]),
+    ['codeblocksLineStates.markLabelForeground', 'textMarkers.markBackground'],
+  ];
+  for (const v of await variants()) {
+    for (const [fg = '', bg = ''] of pairs) {
+      expect(getColorContrast(v.get(fg), tinted(v, [v.get(bg)])), `${fg}, ${v.name}`).toBeGreaterThanOrEqual(4.5);
+    }
+  }
 });
 
 test('a block with only output has the button in its code area, and no copy button', async () => {
