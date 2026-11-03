@@ -12,6 +12,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, type Element, type ElementContent, h, select } from '@expressive-code/core/hast';
 import type { LineStateDefinition } from '../options.ts';
+import { type UiKey, uiStrings, uiTexts } from '../translations.ts';
 import { blockSetting, type CodeblocksPlugin, ensureTextContrast, parseBoolean, resolveRange } from './core.ts';
 import { isHiddenLine } from './hidden-lines.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
@@ -37,10 +38,10 @@ declare module '@expressive-code/core' {
 
 /** The built-in states take their colour from the theme's colour of the same name. */
 export const builtInStates: Record<string, { label: string; themeColour: string }> = {
-  error: { label: 'Error', themeColour: 'editorError.foreground' },
-  warning: { label: 'Warning', themeColour: 'editorWarning.foreground' },
-  info: { label: 'Note', themeColour: 'editorInfo.foreground' },
-  success: { label: 'Success', themeColour: 'terminal.ansiGreen' },
+  error: { label: uiStrings['lineStates.error'], themeColour: 'editorError.foreground' },
+  warning: { label: uiStrings['lineStates.warning'], themeColour: 'editorWarning.foreground' },
+  info: { label: uiStrings['lineStates.info'], themeColour: 'editorInfo.foreground' },
+  success: { label: uiStrings['lineStates.success'], themeColour: 'terminal.ansiGreen' },
 };
 
 /** Expressive Code's line markers, whose directives take a message in the same label. */
@@ -250,13 +251,15 @@ ${Object.values(markers)
         const data = stateData.getOrCreateFor(context.codeBlock);
         data.prefix = blockSetting(context, 'lineStates.prefix', parseBoolean, prefix, '`true` or `false`');
         const lineStates = data.states;
+        const say = uiTexts(context.locale);
+        // A site's own definition of a built-in state keeps its label.
+        const label = (name: string) =>
+          builtInStates[name] && all[name] === builtInStates[name]
+            ? say(`lineStates.${name}` as UiKey)
+            : (all[name]?.label ?? name);
         const add = (line: ExpressiveCodeLine, name: string, message?: string) => {
           const list = lineStates.get(line) ?? [];
-          const entry = list.find((state) => state.name === name) ?? {
-            name,
-            label: all[name]?.label ?? name,
-            messages: [],
-          };
+          const entry = list.find((state) => state.name === name) ?? { name, label: label(name), messages: [] };
           if (!list.includes(entry)) list.push(entry);
           if (message) entry.messages.push(message);
           lineStates.set(line, list);

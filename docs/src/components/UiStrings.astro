@@ -1,0 +1,19 @@
+---
+import { uiStrings } from './reference.ts';
+---
+
+<table>
+  <thead>
+    <tr><th>Key</th><th>English text</th></tr>
+  </thead>
+  <tbody>
+    {
+      uiStrings.map(({ key, text }) => (
+        <tr>
+          <td><code>{key}</code></td>
+          <td>{text}</td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>

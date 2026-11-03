@@ -10,6 +10,7 @@ import {
 } from '@expressive-code/core';
 import { h, select, toText } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
+import { uiStrings, uiTexts } from '../translations.ts';
 import { blockUid, type CodeblocksPlugin, lineNumber, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { builtInStates, stateAliases } from './line-states.ts';
@@ -34,9 +35,9 @@ type Context = Parameters<StyleResolverFn>[0];
 const stateColour = (state: string) => String(builtInStates[state]?.themeColour);
 
 export const severities = {
-  error: { label: 'Error', themeColour: stateColour('error') },
-  warning: { label: 'Warning', themeColour: stateColour('warning') },
-  info: { label: 'Info', themeColour: stateColour('info') },
+  error: { label: uiStrings['squiggles.error'], themeColour: stateColour('error') },
+  warning: { label: uiStrings['squiggles.warning'], themeColour: stateColour('warning') },
+  info: { label: uiStrings['squiggles.info'], themeColour: stateColour('info') },
 };
 
 type Severity = keyof typeof severities;
@@ -81,6 +82,7 @@ interface Squiggle {
   severity: Severity;
   message: string;
   line: ExpressiveCodeLine;
+  label: string;
 }
 
 const squiggleData = new AttachedPluginData<{ squiggles: Squiggle[] }>(() => ({ squiggles: [] }));
@@ -95,8 +97,7 @@ class SquiggleAnnotation extends ExpressiveCodeAnnotation {
     super({ inlineRange, renderPhase: 'latest' });
   }
   render({ nodesToTransform }: AnnotationRenderOptions) {
-    const { severity, message } = this.squiggle;
-    const { label } = severities[severity];
+    const { severity, message, label } = this.squiggle;
     const text = inlineMarkdown(message);
     const part = { class: `${cls()} ${cls(`-${severity}`)}`, 'data-scb-squiggle': this.anchor };
     // A later annotation that overlaps part of the range splits it. Only the first part holds the message.
@@ -236,6 +237,7 @@ ${Object.keys(severities)
         if (found.length === 0) return;
         const data = squiggleData.getOrCreateFor(codeBlock);
         const uid = blockUid(context);
+        const say = uiTexts(context.locale);
         for (const directive of found) {
           const line = directive.lines[0];
           if (!line) continue;
@@ -248,7 +250,7 @@ ${Object.keys(severities)
             continue;
           }
           const end = match ? start + match.length : line.text.trimEnd().length;
-          const squiggle = { severity, message: directive.text ?? '', line };
+          const squiggle = { severity, message: directive.text ?? '', line, label: say(`squiggles.${severity}`) };
           data.squiggles.push(squiggle);
           line.addAnnotation(
             new SquiggleAnnotation(squiggle, `--${cls()}-${uid}-${data.squiggles.length}`, {
@@ -258,17 +260,18 @@ ${Object.keys(severities)
           );
         }
       },
-      postprocessRenderedBlock({ codeBlock, renderData }) {
+      postprocessRenderedBlock({ codeBlock, renderData, locale }) {
         const { squiggles } = squiggleData.getOrCreateFor(codeBlock);
         if (squiggles.length === 0) return;
         const figure = select('figure', renderData.blockAst);
         const pre = figure && select('pre', figure);
         if (!figure || !pre) return;
         pre.properties.dataScbSquiggles = '';
+        const say = uiTexts(locale);
         // The popovers do not print, so their messages go in a list under the block.
         const items = squiggles.map(({ severity, message, line }) =>
           h('li', [
-            `Line ${lineNumber(codeBlock, line)}, ${severities[severity].label.toLowerCase()}`,
+            say(`squiggles.${severity}Line`, { line: lineNumber(codeBlock, line) }),
             ...(message ? [': ', ...inlineMarkdown(message)] : []),
           ]),
         );

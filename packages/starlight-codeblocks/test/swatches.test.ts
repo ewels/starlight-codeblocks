@@ -164,7 +164,7 @@ test('swatches.shape sets the shape for one block, and a bad value warns', async
 test('the hover chip is solid, with a darker border and readable text', async () => {
   const css = await baseStyles();
   expect(css).toContain('.scb-swatch-text::before');
-  expect(css).toContain("content:'Click to copy'");
+  expect(css).toContain('content:attr(data-scb-hint)');
   expect(css).toContain('oklch(from var(--scb-swatch) calc(l * 0.7) c h)');
   expect(css).not.toMatch(/color-mix\(in srgb,var\(--scb-swatch\) \d+%/);
 });
@@ -205,8 +205,12 @@ test('prose swatches are off by default, and cover text and whole inline code wh
   const html = await md(text, { swatches: { prose: true } });
   expect(html.match(/class="scb-swatch-text"/g)).toHaveLength(2);
   expect(html).toContain(
-    '<span class="scb-swatch-text" data-scb-colour="#ff5f1f" data-scb-swatches="" style="--scb-swatch: #ff5f1f"><span class="scb-swatch" aria-hidden="true"></span>#ff5f1f</span>',
+    '<span class="scb-swatch-text" data-scb-colour="#ff5f1f" data-scb-swatches="{&#x22;hint&#x22;:&#x22;Click to copy&#x22;,&#x22;copied&#x22;:&#x22;Copied&#x22;,&#x22;copy&#x22;:&#x22;Copy colour {{colour}}&#x22;,&#x22;done&#x22;:&#x22;Copied {{colour}}&#x22;}" style="--scb-swatch: #ff5f1f"><span class="scb-swatch" aria-hidden="true"></span>#ff5f1f</span>',
   );
   expect(html).toContain('<code><span class="scb-swatch-text" data-scb-colour="rebeccapurple"');
   expect(html).toContain('<code>color: red</code>');
+  // The code block loader imports the client module for any `data-scb-swatches`, which would make them buttons.
+  const still = await md(text, { swatches: { prose: true, copy: false } });
+  expect(still).toContain('<span class="scb-swatch-text" data-scb-colour="#ff5f1f" style=');
+  expect(still).not.toContain('data-scb-swatches');
 });

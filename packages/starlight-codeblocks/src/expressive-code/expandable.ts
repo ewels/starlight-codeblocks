@@ -1,6 +1,7 @@
 import type { ExpressiveCodeBlock } from '@expressive-code/core';
 import { h, type Parents, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
+import { uiTexts } from '../translations.ts';
 import { TABS_META } from './code-tabs.ts';
 import { blockSetting, type CodeblocksPlugin } from './core.ts';
 import { PREFIX } from './styles.ts';
@@ -103,11 +104,18 @@ export function pluginExpandable({
         if (!lines || total - lines < 3) return;
         pre.properties.dataScbExpandable = String(lines);
         if (automatic) pre.properties.dataScbExpandableAuto = '';
+        const say = uiTexts(context.locale);
+        const closed = say('expandable.showAll', { count: total });
         const bar = h('div', { class: `${PREFIX}-expandable-bar ${PREFIX}-no-print` }, [
           h(
             'button',
-            { type: 'button', class: `${PREFIX}-btn ${PREFIX}-expandable-toggle`, ariaExpanded: 'false' },
-            `Show all ${total} lines`,
+            {
+              type: 'button',
+              class: `${PREFIX}-btn ${PREFIX}-expandable-toggle`,
+              ariaExpanded: 'false',
+              dataScbTexts: JSON.stringify({ closed, open: say('expandable.showFewer') }),
+            },
+            closed,
           ),
         ]);
         figure.children.splice(figure.children.indexOf(pre) + 1, 0, bar);

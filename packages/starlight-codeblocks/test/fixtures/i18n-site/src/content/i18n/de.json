@@ -1,0 +1,6 @@
+{
+  "starlightCodeblocks.hiddenLines.marker_one": "{{count}} versteckte Zeile",
+  "starlightCodeblocks.hiddenLines.marker_other": "{{count}} versteckte Zeilen",
+  "starlightCodeblocks.runnable.run": "Code starten",
+  "starlightCodeblocks.walkthrough.stepCount": "Schritt {{step}}/{{total}}"
+}

@@ -1,0 +1,19 @@
+---
+import { bundledLanguages } from './reference.ts';
+---
+
+<table>
+  <thead>
+    <tr><th>Language</th><th>Codes</th></tr>
+  </thead>
+  <tbody>
+    {
+      bundledLanguages.map(({ name, codes }) => (
+        <tr>
+          <td>{name}</td>
+          <td>{codes.map((c, i) => <>{i > 0 && ', '}<code>{c}</code></>)}</td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>

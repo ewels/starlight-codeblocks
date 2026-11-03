@@ -1,6 +1,7 @@
 ---
 import '@shikijs/magic-move/style.css';
 import { getRegistry } from '../registry.ts';
+import { componentTexts } from '../translations.ts';
 import { codeWalkthrough, plainSteps } from './steps.ts';
 
 interface Props {
@@ -15,7 +16,7 @@ const start = Astro.props.start ?? (options ? options.start : undefined);
 const warn = (message: string) => console.warn(`starlight-codeblocks: ${Astro.url.pathname}: ${message}`);
 ---
 
-<Fragment set:html={on ? codeWalkthrough(html, start, warn) : plainSteps(html)} />
+<Fragment set:html={on ? codeWalkthrough(html, start, warn, componentTexts(Astro.locals.t)) : plainSteps(html)} />
 
 {
   on && (

@@ -1,4 +1,4 @@
-import type { ExpressiveCodePlugin, StyleVariant } from '@expressive-code/core';
+import type { ExpressiveCodePlugin, PluginTexts, StyleVariant } from '@expressive-code/core';
 import type { ResolvedOptions } from './options.ts';
 
 export interface Registry {
@@ -18,6 +18,10 @@ export interface Registry {
   blockIds?: Set<string>;
   /** The site engine's themes and resolved style settings, set when it creates its base styles. */
   styleVariants?: StyleVariant[];
+  /** The site's UI texts by locale, from Starlight's translations. Unset without Starlight, which gives English. */
+  texts?: PluginTexts<Record<string, string>>;
+  /** Starlight's `absolutePathToLang()`, for the language of a Markdown page. */
+  pageLang?: (path: string) => string;
 }
 
 // A global, because Astro loads the config and renders pages through different module instances.

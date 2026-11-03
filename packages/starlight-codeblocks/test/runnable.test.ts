@@ -15,11 +15,12 @@ const js = { runnable: { runtimes: { javascript: '/runtimes/js.js' } } };
 
 test('runnable adds a Run code button under the block, after an empty live output panel', async () => {
   const { html, copyText, warnings } = await render(block('js runnable', 'console.log(1)'), js);
-  expect(html).toContain(
-    '<div class="scb-run-output" aria-live="polite"></div><div class="scb-run-controls scb-no-print"><button type="button" class="scb-run scb-no-print scb-needs-js" data-scb-run-again="Run again">Run code</button></div></figure>',
+  expect(html).toMatch(
+    /<div class="scb-run-output" aria-live="polite" data-scb-texts="[^"]*"><\/div><div class="scb-run-controls scb-no-print"><button type="button" class="scb-run scb-no-print scb-needs-js" data-scb-run-again="Run again">Run code<\/button><\/div><\/figure>/,
   );
   expect(html).not.toContain('scb-tools');
-  expect(html).toContain('data-scb-runnable="/runtimes/js.js" data-scb-runnable-name="JavaScript"');
+  expect(html).toContain('data-scb-runnable="/runtimes/js.js"');
+  expect(html).toContain('Loading the JavaScript runtime…');
   expect(html).toContain('data-scb-runnable-timeout="10000"');
   expect(html).not.toContain('data-scb-code');
   expect(copyText).toBe('console.log(1)');
@@ -66,7 +67,7 @@ test('runnable.output prints scripted output with no runtime, at the line delay'
     'data-scb-runnable="" data-scb-runnable-output="Pulling…\x7FDone &#x22;ok&#x22;" data-scb-runnable-delay="0"',
   );
   expect(html).toContain('scb-run-controls');
-  expect(html).not.toContain('data-scb-runnable-name');
+  expect(html).not.toContain('data-scb-runnable-timeout');
   expect(copyText).toBe('nextflow run hello');
   expect(warnings).toEqual([]);
   const site = await render(block('sh runnable.output="x"', 'y'), { runnable: { outputDelay: 50 } });
@@ -81,7 +82,8 @@ test('finds the runtime by the language name or its alias, for a pycon session t
   const python = { runnable: { runtimes: { python: '/py.js' } } };
   for (const lang of ['py', 'pycon']) {
     const { html, warnings } = await render(block(`${lang} runnable`, '>>> 1 + 1'), python);
-    expect(html).toContain('data-scb-runnable="/py.js" data-scb-runnable-name="Python"');
+    expect(html).toContain('data-scb-runnable="/py.js"');
+    expect(html).toContain('Loading the Python runtime…');
     expect(warnings.filter((w) => w.includes('runnable'))).toEqual([]);
   }
   const byAlias = { runnable: { runtimes: { py: '/alias.js' } } };

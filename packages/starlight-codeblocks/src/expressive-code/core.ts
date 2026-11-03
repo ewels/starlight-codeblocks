@@ -26,6 +26,7 @@ import {
 import { bundledLanguagesInfo } from 'shiki/langs';
 import { decodeCode, encodeCode } from '../client/shared/copy.ts';
 import { getRegistry } from '../registry.ts';
+import { uiTexts } from '../translations.ts';
 import type { DirectiveSpecs } from './notation.ts';
 import { parseRange, RangeSyntaxError } from './ranges.ts';
 import { baseStyles, type NoteStyle, PREFIX, styleSettings } from './styles.ts';
@@ -280,7 +281,7 @@ export function resolveRange(context: Context, key: string): ExpressiveCodeLine[
 }
 
 /** Adds a control, such as an `scb-btn` button, to the group of controls at the end of the title bar. */
-export function addTitleBarControl(blockAst: Element, control: Element) {
+export function addTitleBarControl(blockAst: Element, control: Element, locale: string) {
   const header = select('.header', blockAst);
   if (!header) return;
   let tools = select(`.${PREFIX}-tools`, header);
@@ -290,7 +291,7 @@ export function addTitleBarControl(blockAst: Element, control: Element) {
   }
   tools.children.push(control);
   const figure = select('figure', blockAst);
-  if (figure) nameFigure(figure);
+  if (figure) nameFigure(figure, uiTexts(locale)('block.name'));
 }
 
 const copyButton = (blockAst: Element) =>
@@ -312,9 +313,9 @@ const controlTags = new Set(['a', 'button', 'input', 'select']);
 
 /**
  * Names the figure after the text of its title bar without the controls. Otherwise the figure takes its
- * name from the whole `figcaption`, controls included.
+ * name from the whole `figcaption`, controls included. `fallback` names a figure with no title.
  */
-export function nameFigure(figure: Element) {
+export function nameFigure(figure: Element, fallback: string) {
   const header = select('.header', figure);
   if (!header) return;
   const text = (node: ElementContent): string =>
@@ -323,7 +324,7 @@ export function nameFigure(figure: Element) {
       : node.type === 'element' && !controlTags.has(node.tagName)
         ? node.children.map(text).join('')
         : '';
-  figure.properties.ariaLabel = header.children.map(text).join(' ').replace(/\s+/g, ' ').trim() || 'Code block';
+  figure.properties.ariaLabel = header.children.map(text).join(' ').replace(/\s+/g, ' ').trim() || fallback;
 }
 
 /**

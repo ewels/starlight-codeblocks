@@ -603,14 +603,18 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       },
       label: {
         type: 'string',
-        default: 'Run code',
-        description: 'The text of the button. A code block can set its own on its fence line.',
+        default: undefined,
+        defaultText: "`'Run code'`, or its translation",
+        description:
+          'The text of the button, in place of the translations. A code block can set its own on its fence line.',
         valid: (value) => isString(value) && value.trim() !== '',
       },
       againLabel: {
         type: 'string',
-        default: 'Run again',
-        description: 'The text of the button after the first run. A code block can set its own on its fence line.',
+        default: undefined,
+        defaultText: "`'Run again'`, or its translation",
+        description:
+          'The text of the button after the first run, in place of the translations. A code block can set its own on its fence line.',
         valid: (value) => isString(value) && value.trim() !== '',
       },
       button: {

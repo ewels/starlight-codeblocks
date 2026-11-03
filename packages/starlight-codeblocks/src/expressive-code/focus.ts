@@ -5,6 +5,7 @@ import {
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { addClassName, select } from '@expressive-code/core/hast';
+import { uiTexts } from '../translations.ts';
 import { blockSetting, type CodeblocksPlugin } from './core.ts';
 import { markedLines } from './notation.ts';
 import { PREFIX } from './styles.ts';
@@ -100,7 +101,7 @@ pre > code[tabindex]:focus-visible {
         const { lines } = focusData.getOrCreateFor(codeBlock);
         if (lines.size > 0 && !lines.has(line)) addClassName(renderData.lineAst, OUT);
       },
-      postprocessRenderedBlock({ codeBlock, renderData }) {
+      postprocessRenderedBlock({ codeBlock, renderData, locale }) {
         if (focusData.getOrCreateFor(codeBlock).lines.size === 0) return;
         // Not on the pre: Expressive Code's script removes its tabindex when the code does not scroll.
         const code = select('pre > code', renderData.blockAst);
@@ -110,7 +111,9 @@ pre > code[tabindex]:focus-visible {
         if (blockStyle !== style) code.properties.dataScbFocusStyle = blockStyle;
         // `code` prohibits a name, so it needs a role that takes one.
         code.properties.role = 'region';
-        code.properties.ariaLabel = codeBlock.props.title ? `Code: ${codeBlock.props.title}` : 'Code block';
+        const say = uiTexts(locale);
+        const { title } = codeBlock.props;
+        code.properties.ariaLabel = title ? say('block.nameWithTitle', { title }) : say('block.name');
       },
     },
   };

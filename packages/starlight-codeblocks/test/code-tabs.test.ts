@@ -83,7 +83,7 @@ const npm = [
 test('wraps the code blocks, and gives each its index and every label', async () => {
   const { html, metas, decoded } = await directive(npm.join('\n'));
   expect(html).toContain(
-    '<div class="scb-tabs" data-scb-code-tabs="pm" data-scb-control="tabs" data-scb-labels="[&quot;npm&quot;,&quot;Python&quot;]">',
+    '<div class="scb-tabs" data-scb-code-tabs="pm" data-scb-control="tabs" data-scb-labels="[&quot;npm&quot;,&quot;Python&quot;]" data-scb-texts="{&quot;variant&quot;:&quot;Variant&quot;}">',
   );
   expect(decoded).toEqual([
     { index: 0, labels: ['npm', 'Python'], control: 'tabs' },

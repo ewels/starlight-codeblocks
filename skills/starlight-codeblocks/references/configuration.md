@@ -43,7 +43,7 @@ codeblocks({
 | `walkthrough` | `start`: `1` (default) or `'last'`, the step that each walkthrough opens on | Code walkthrough |
 | `scrollycoding` | None | Scrollycoding |
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
-| `runnable` | `runtimes`: language to module path, added to the built-in Python, JavaScript and TypeScript runtimes, or replacing them. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run code'`. `againLabel`: default `'Run again'`. `button`: `'below'` (default), `'title'` or `'both'`. `outputDelay`: default `200` ms | Run code |
+| `runnable` | `runtimes`: language to module path, added to the built-in Python, JavaScript and TypeScript runtimes, or replacing them. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run code'`, or its translation. `againLabel`: default `'Run again'`, or its translation. Both replace the translations. `button`: `'below'` (default), `'title'` or `'both'`. `outputDelay`: default `200` ms | Run code |
 
 ### Options for one block
 
@@ -104,6 +104,31 @@ starlight({
 ```
 
 The defaults meet WCAG 2.2 AA contrast. A new colour must keep the contrast that the style settings page gives for it.
+
+## Translations
+
+Docs: https://ewels.github.io/starlight-codeblocks/configuration/#translate-the-plugin-texts
+
+The buttons, labels and screen reader texts of the plugin are Starlight UI strings, with keys that start with `starlightCodeblocks.`. The package has texts in English and 17 more languages. The `lang` of a locale must be one of these codes:
+
+`ca`, `de`, `eo`, `es`, `fr`, `hi`, `id`, `it`, `ja`, `ko`, `nb`, `no`, `pl`, `pt`, `pt-BR`, `pt-PT`, `ru`, `sv`, `tr`, `zh`, `zh-CN`, `zh-TW`
+
+The code must match exactly: `de-AT` gets none. Portuguese uses Brazilian words, and Chinese uses simplified characters.
+
+To change a text, or to add a language, a site adds the key in `src/content/i18n/<lang>.json`, next to Starlight's own strings. The site needs the `i18n` collection in `src/content.config.ts`. The site's texts come first. A key that a language does not have takes the text of the default language, then English.
+
+```json
+{
+  "starlightCodeblocks.runnable.run": "Code starten",
+  "starlightCodeblocks.hiddenLines.marker_one": "{{count}} versteckte Zeile",
+  "starlightCodeblocks.hiddenLines.marker_other": "{{count}} versteckte Zeilen"
+}
+```
+
+- A text with a count has a key for each plural form of the language, with the i18next suffixes. English has `_one` and `_other`, and Polish also has `_few` and `_many`. To change such a text, give all its plural keys.
+- Keep `{{count}}` and every other name in double braces. The plugin fills in their values.
+- `runnable.label` and `runnable.againLabel` replace the translations. Custom line states and playgrounds show the label from their options.
+- Sites without Starlight show the English texts.
 
 ## ec.config.mjs
 

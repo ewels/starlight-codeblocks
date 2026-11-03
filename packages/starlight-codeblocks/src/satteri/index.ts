@@ -13,9 +13,11 @@ import { encodeVariant, TABS_META, type TabsVariant } from '../expressive-code/c
 import { commentSyntaxFor } from '../expressive-code/comments.ts';
 import { bundledLanguage } from '../expressive-code/core.ts';
 import { parseNotation } from '../expressive-code/notation.ts';
-import { findColours, SWATCH, type SwatchSettings, wholeColour } from '../expressive-code/swatches.ts';
+import { findColours, SWATCH, type SwatchSettings, swatchTexts, wholeColour } from '../expressive-code/swatches.ts';
 import { withTrailingWhitespace } from '../expressive-code/whitespace.ts';
 import type { ResolvedOptions } from '../options.ts';
+import { getRegistry } from '../registry.ts';
+import { type Say, uiTexts } from '../translations.ts';
 import { inlineCode } from './inline-code.ts';
 
 type ContainerDirective = Parameters<NonNullable<MdastPluginDefinition['containerDirective']>>[0];
@@ -77,19 +79,19 @@ function checkMentions(events: Event[], ctx: MdastVisitorContext, warn: Logger['
   });
 }
 
-function languageName(lang: string | null | undefined) {
-  if (!lang) return 'Plain text';
+function languageName(lang: string | null | undefined, say: Say) {
+  if (!lang) return say('codeTabs.plainText');
   return bundledLanguage(lang)?.name ?? lang;
 }
 
 /** Turns `:::code-tabs{sync="…" control="…"}` into a wrapper whose code blocks each carry their variant. */
-function codeTabs(node: ContainerDirective, file: string, fallback: TabsVariant['control']): MdastNode {
+function codeTabs(node: ContainerDirective, file: string, fallback: TabsVariant['control'], say: Say): MdastNode {
   const codes = node.children;
   if (codes.length === 0 || codes.some((child) => child.type !== 'code')) {
     throw new Error(`${file}: \`:::code-tabs\` can contain only fenced code blocks, and needs at least one.`);
   }
   const labels = (codes as Code[]).map(
-    (code) => new MetaOptions(code.meta ?? '').getString('label') ?? languageName(fenceLanguage(code)),
+    (code) => new MetaOptions(code.meta ?? '').getString('label') ?? languageName(fenceLanguage(code), say),
   );
   const repeated = labels.find((label, i) => labels.indexOf(label) !== i);
   if (repeated !== undefined) {
@@ -112,6 +114,7 @@ function codeTabs(node: ContainerDirective, file: string, fallback: TabsVariant[
         dataScbCodeTabs: node.attributes?.sync ?? '',
         dataScbControl: control,
         dataScbLabels: JSON.stringify(labels),
+        dataScbTexts: JSON.stringify({ variant: say('codeTabs.variant') }),
       },
     },
     children: (codes as Code[]).map((code, index) => ({
@@ -121,16 +124,16 @@ function codeTabs(node: ContainerDirective, file: string, fallback: TabsVariant[
   } as unknown as MdastNode;
 }
 
-const swatchHast = (colour: string) => ({
+const swatchHast = (colour: string, texts: string | undefined) => ({
   className: [`${SWATCH}-text`],
   dataScbColour: colour,
-  dataScbSwatches: '',
+  ...(texts && { dataScbSwatches: texts }),
   style: `--scb-swatch: ${colour}`,
 });
 const chipHast = { className: [SWATCH], ariaHidden: 'true' };
 
 /** The text with a swatch before each colour, or `undefined` when it has none. */
-function proseSwatches(node: Text, { formats }: SwatchSettings) {
+function proseSwatches(node: Text, { formats }: SwatchSettings, texts: string | undefined) {
   const matches = findColours(node.value, 'prose', formats);
   if (matches.length === 0) return;
   const nodes: unknown[] = [];
@@ -139,7 +142,7 @@ function proseSwatches(node: Text, { formats }: SwatchSettings) {
     if (start > at) nodes.push({ type: 'text', value: node.value.slice(at, start) });
     nodes.push({
       type: 'scbSwatch',
-      data: { hName: 'span', hProperties: swatchHast(colour) },
+      data: { hName: 'span', hProperties: swatchHast(colour, texts) },
       children: [
         { type: 'scbSwatchChip', data: { hName: 'span', hProperties: chipHast }, children: [] },
         { type: 'text', value: colour },
@@ -152,7 +155,7 @@ function proseSwatches(node: Text, { formats }: SwatchSettings) {
 }
 
 /** Inline code that is one colour, as a `code` element with a swatch inside. */
-function inlineSwatch(node: InlineCode, { formats }: SwatchSettings) {
+function inlineSwatch(node: InlineCode, { formats }: SwatchSettings, texts: string | undefined) {
   const colour = wholeColour(node.value, formats);
   if (!colour) return;
   const chip = { type: 'element', tagName: 'span', properties: chipHast, children: [] };
@@ -162,7 +165,7 @@ function inlineSwatch(node: InlineCode, { formats }: SwatchSettings) {
     value: node.value,
     data: {
       hName: 'code',
-      hChildren: [{ type: 'element', tagName: 'span', properties: swatchHast(colour), children: [chip, text] }],
+      hChildren: [{ type: 'element', tagName: 'span', properties: swatchHast(colour, texts), children: [chip, text] }],
     },
   } as InlineCode;
 }
@@ -175,6 +178,8 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
     ({ fileURL }: PluginFactoryContext): MdastPluginDefinition => {
       const file = fileName(fileURL);
       const warn = (message: string) => logger.warn(`${file}: ${message}`);
+      const say = uiTexts(getRegistry()?.pageLang?.(fileURL ? fileURLToPath(fileURL) : '') ?? 'en');
+      const swatches = prose?.copy ? swatchTexts(say) : undefined;
       return {
         name: 'starlight-codeblocks',
         before(root, ctx) {
@@ -209,16 +214,16 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPlu
           if (checkLinks) checkMentions(events, ctx, warn);
         },
         containerDirective(node) {
-          if (options.codeTabs && node.name === 'code-tabs') return codeTabs(node, file, options.codeTabs.control);
+          if (options.codeTabs && node.name === 'code-tabs') return codeTabs(node, file, options.codeTabs.control, say);
         },
         ...((options.inlineHighlighting || prose) && {
           inlineCode: async (node, ctx) =>
             ((options.inlineHighlighting && (await inlineCode(node, ctx, warn, defaultLanguage))) ||
-              (prose && inlineSwatch(node, prose))) as never,
+              (prose && inlineSwatch(node, prose, swatches))) as never,
         }),
         ...(prose && {
           text(node, ctx) {
-            const nodes = proseSwatches(node, prose);
+            const nodes = proseSwatches(node, prose, swatches);
             if (nodes) ctx.replaceNode(node, nodes as never);
           },
         }),

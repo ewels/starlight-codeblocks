@@ -10,6 +10,7 @@ import {
 } from '@expressive-code/core';
 import { addClassName, h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
+import { uiTexts } from '../translations.ts';
 import { addTitleBarControl, blockUid, type CodeblocksPlugin, insertBefore, lineElement } from './core.ts';
 import { markedLines } from './notation.ts';
 import { PREFIX, solidCodeBackground, solidCodeForeground } from './styles.ts';
@@ -48,8 +49,6 @@ const hiddenData = new AttachedPluginData<{ lines: Set<ExpressiveCodeLine> }>(()
 /** Whether the hidden lines plugin hides `line`. Known from `preprocessMetadata` on. */
 export const isHiddenLine = (codeBlock: ExpressiveCodeBlock, line: ExpressiveCodeLine) =>
   hiddenData.getOrCreateFor(codeBlock).lines.has(line);
-
-const plural = (n: number) => `${n} hidden line${n === 1 ? '' : 's'}`;
 
 /**
  * Hides `hidden={…}` and `[!code hide]` lines behind a marker, and adds a title bar button that
@@ -137,6 +136,9 @@ export function pluginHiddenLines(): CodeblocksPlugin {
         const lines = codeBlock.getLines();
         const isHidden = (i: number) => hidden.has(lines[i] as ExpressiveCodeLine);
         const uid = blockUid(context);
+        const say = uiTexts(context.locale);
+        const texts = (closed: string, count: number) =>
+          JSON.stringify({ closed, open: say('hiddenLines.hide', { count }) });
         const allIds: string[] = [];
         for (let i = 0; i < lines.length; i++) {
           const first = lineElement(lines[i] as ExpressiveCodeLine);
@@ -153,6 +155,7 @@ export function pluginHiddenLines(): CodeblocksPlugin {
             ids.push(id);
           }
           allIds.push(...ids);
+          const label = say('hiddenLines.marker', { count: ids.length });
           insertBefore(
             code,
             first,
@@ -163,13 +166,15 @@ export function pluginHiddenLines(): CodeblocksPlugin {
                 class: `${PREFIX}-hidden-marker ${PREFIX}-no-print`,
                 ariaExpanded: 'false',
                 ariaControls: ids.join(' '),
+                dataScbTexts: texts(label, ids.length),
               },
-              [h('span', {}, plural(ids.length))],
+              [h('span', {}, label)],
             ),
           );
         }
         if (allIds.length === 0) return;
         figure.properties.dataScbHiddenLines = '';
+        const label = say('hiddenLines.show', { count: allIds.length });
         addTitleBarControl(
           figure,
           h(
@@ -179,9 +184,11 @@ export function pluginHiddenLines(): CodeblocksPlugin {
               class: `${PREFIX}-btn ${PREFIX}-hidden-toggle ${PREFIX}-no-print ${PREFIX}-needs-js`,
               ariaExpanded: 'false',
               ariaControls: allIds.join(' '),
+              dataScbTexts: texts(label, allIds.length),
             },
-            `Show ${plural(allIds.length)}`,
+            label,
           ),
+          context.locale,
         );
       },
     },

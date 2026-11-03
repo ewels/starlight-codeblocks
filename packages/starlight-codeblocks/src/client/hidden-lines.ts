@@ -3,7 +3,8 @@ import { scrollTo, unhide } from './shared/scroll.ts';
 const OPEN = 'scb-hidden-open';
 
 const ids = (el: Element) => (el.getAttribute('aria-controls') ?? '').split(' ').filter(Boolean);
-const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? '' : 's'}`;
+const text = (el: Element, open: boolean): string =>
+  JSON.parse(el.getAttribute('data-scb-texts') ?? '{}')[open ? 'open' : 'closed'] ?? '';
 const isOpen = (marker: Element) => marker.getAttribute('aria-expanded') === 'true';
 
 // Within the block, not by document id: full screen plugins show a copy of the block with the same ids.
@@ -20,7 +21,7 @@ function setRun(block: Element, marker: Element, open: boolean) {
   }
   marker.setAttribute('aria-expanded', String(open));
   const span = marker.querySelector('span');
-  if (span) span.textContent = open ? `Hide ${count(lines.length, 'line')}` : count(lines.length, 'hidden line');
+  if (span) span.textContent = text(marker, open);
 }
 
 function click(event: MouseEvent) {
@@ -38,11 +39,9 @@ function click(event: MouseEvent) {
 function label(block: Element) {
   const toggle = block.querySelector('.scb-hidden-toggle');
   if (!toggle) return;
-  const markers = [...block.querySelectorAll('.scb-hidden-marker')];
-  const total = markers.reduce((sum, m) => sum + ids(m).length, 0);
-  const open = markers.every(isOpen);
+  const open = [...block.querySelectorAll('.scb-hidden-marker')].every(isOpen);
   toggle.setAttribute('aria-expanded', String(open));
-  toggle.textContent = open ? `Hide ${count(total, 'line')}` : `Show ${count(total, 'hidden line')}`;
+  toggle.textContent = text(toggle, open);
 }
 
 /** Opens the run of a closed hidden line, as a line permalink asks with a `beforematch` event. */

@@ -1,6 +1,7 @@
 import { type ExpressiveCodeLine, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
+import { uiTexts } from '../translations.ts';
 import { blockUid, type CodeblocksPlugin, lineElement, lineNumber, noteStyle, startNoteNumber, warn } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
 import { getRenderedDirectives } from './notation.ts';
@@ -286,6 +287,7 @@ ${SIDE_SIZES.map(
         }
         const uid = blockUid(context);
         const start = startNoteNumber(context);
+        const say = uiTexts(context.locale);
         const items = annotations.map((directive, i) => {
           const n = String(start + i);
           const text = inlineMarkdown(directive.text ?? '');
@@ -298,7 +300,11 @@ ${SIDE_SIZES.map(
             code?.children.push(h('span', { class: `${cls()} ${cls('-num')}`, ariaHidden: 'true' }, n));
             return h('li', { tabindex: '0', dataScbAnno: n }, [
               h('span', { class: cls('-note-num'), ariaHidden: 'true' }, n),
-              h('span', { class: `${PREFIX}-sr-only` }, `Note ${n}, for line ${lineNumber(codeBlock, line)}: `),
+              h(
+                'span',
+                { class: `${PREFIX}-sr-only` },
+                `${say('annotations.sideNote', { number: n, line: lineNumber(codeBlock, line) })} `,
+              ),
               ...text,
             ]);
           }
@@ -311,7 +317,7 @@ ${SIDE_SIZES.map(
                 type: 'button',
                 class: cls(),
                 popovertarget: id,
-                ariaLabel: `Annotation ${n}`,
+                ariaLabel: say('annotations.marker', { number: n }),
                 style: `anchor-name:${anchor}`,
               },
               n,

@@ -12,6 +12,7 @@ import { fromHtml } from 'hast-util-from-html';
 import { breakoutMargin, breakoutStyles, SIDE_SIZES, sideSize } from '../expressive-code/annotations.ts';
 import { removeAutoExpandable } from '../expressive-code/expandable.ts';
 import { parseRange, RangeSyntaxError } from '../expressive-code/ranges.ts';
+import { componentTexts, type Say } from '../translations.ts';
 import { stepsData } from './steps.ts';
 import { codeLines, readTokens } from './tokens.ts';
 
@@ -72,7 +73,7 @@ function renameIds(copy: Element, suffix: string) {
 }
 
 /** Sets the focus and the marks of one step on a copy of the block. */
-function apply(group: Element, { focus, mark }: StepState, suffix: string, focusable = focus.length > 0) {
+function apply(group: Element, { focus, mark }: StepState, suffix: string, say: Say, focusable = focus.length > 0) {
   const copy = structuredClone(group);
   renameIds(copy, suffix);
   codeLines(copy).forEach((line, i) => {
@@ -84,7 +85,7 @@ function apply(group: Element, { focus, mark }: StepState, suffix: string, focus
   if (code && focusable) {
     code.properties.tabindex = '0';
     code.properties.role ??= 'region';
-    code.properties.ariaLabel ??= 'Code block';
+    code.properties.ariaLabel ??= say('block.name');
   }
   return copy;
 }
@@ -95,6 +96,8 @@ export interface ScrollyOptions {
   /** `false` changes the code of a new version without the token animation. */
   animate?: boolean;
   codeSide?: 'left' | 'right';
+  /** The UI texts, from `componentTexts()`. English by default. */
+  say?: Say;
 }
 
 /** The longest line of the blocks, with 4 characters on the first line for the copy button. */
@@ -110,9 +113,9 @@ function longestLine(groups: Element[]) {
  * The code of a version as plain text for screen readers, at the step where it starts. The wide layout hides the
  * step's copy of the block, and the sticky column shows only the current version.
  */
-function spokenCode(group: Element) {
+function spokenCode(group: Element, say: Say) {
   return h('div', { class: `${S}-spoken`, dataPagefindIgnore: '' }, [
-    h('p', {}, 'Code from this step on:'),
+    h('p', {}, say('scrollycoding.codeFromStep')),
     h('pre', {}, readTokens(group).code),
   ]);
 }
@@ -124,7 +127,10 @@ const is = (node: Element, name: string) => getClassNames(node).includes(name);
  * a copy of the block after each step, and a copy of each version of the block for the sticky column of
  * the wide layout. A block between steps is a new version of the code from the next step on.
  */
-export function scrollycoding(html: string, { interactive = true, animate = true, codeSide }: ScrollyOptions = {}) {
+export function scrollycoding(
+  html: string,
+  { interactive = true, animate = true, codeSide, say = componentTexts(undefined) }: ScrollyOptions = {},
+) {
   const root = fromHtml(html, { fragment: true });
   removeAutoExpandable(root);
   const items = root.children.filter(
@@ -187,9 +193,9 @@ export function scrollycoding(html: string, { interactive = true, animate = true
       [
         h('div', { class: `${S}-text` }, step.children),
         ...(interactive && versions.length > 1 && steps.findIndex((other) => other.version === version) === k
-          ? [spokenCode(versions[version])]
+          ? [spokenCode(versions[version], say)]
           : []),
-        apply(versions[version], states[k], `s${k + 1}`),
+        apply(versions[version], states[k], `s${k + 1}`, say),
       ],
     );
   });
@@ -198,7 +204,7 @@ export function scrollycoding(html: string, { interactive = true, animate = true
     const focusable = states.some((state) => state.focus.length > 0);
     const sticky = versions.map((group, v) => {
       const k = steps.findIndex((step) => step.version === v);
-      const copy = apply(group, states[k], versions.length > 1 ? `sticky${v + 1}` : 'sticky', focusable);
+      const copy = apply(group, states[k], versions.length > 1 ? `sticky${v + 1}` : 'sticky', say, focusable);
       const figure = select('figure', copy);
       if (figure) addClassName(figure, `${S}-frame`);
       if (v === 0) addClassName(copy, `${S}-current`);

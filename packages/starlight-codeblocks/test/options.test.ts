@@ -16,8 +16,8 @@ test('turns every feature on with defaults, in new objects on each call', () => 
   expect(options.runnable).toEqual({
     runtimes: {},
     timeout: 10000,
-    label: 'Run code',
-    againLabel: 'Run again',
+    label: undefined,
+    againLabel: undefined,
     button: 'below',
     outputDelay: 200,
   });

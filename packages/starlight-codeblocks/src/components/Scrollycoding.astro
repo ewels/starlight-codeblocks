@@ -1,6 +1,7 @@
 ---
 import '@shikijs/magic-move/style.css';
 import { getRegistry } from '../registry.ts';
+import { componentTexts } from '../translations.ts';
 import { firstOnPage, scrollycoding, scrollyStyles } from './scrolly.ts';
 
 interface Props {
@@ -18,6 +19,7 @@ const html = scrollycoding(await Astro.slots.render('default'), {
   interactive,
   animate: options?.walkthrough !== false,
   codeSide,
+  say: componentTexts(Astro.locals.t),
 });
 ---
 

@@ -10,6 +10,7 @@ import { addClassName, h, select } from '@expressive-code/core/hast';
 import { LanguageGroups } from '@expressive-code/plugin-frames';
 import { encodeCode } from '../client/shared/copy.ts';
 import { clientJsModules } from '../client-modules.ts';
+import { uiTexts } from '../translations.ts';
 import { addTitleBarControl, type CodeblocksPlugin } from './core.ts';
 import { onCode, PREFIX, themeColour } from './styles.ts';
 
@@ -169,7 +170,7 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
           select('.code', renderData.lineAst)?.children.unshift(h('span', { class: `${PREFIX}-shell-prompt` }, prompt));
         else if (!commands.has(line)) addClassName(renderData.lineAst, `${PREFIX}-shell-output`);
       },
-      postprocessRenderedBlock({ codeBlock, renderData }) {
+      postprocessRenderedBlock({ codeBlock, renderData, locale }) {
         const { prompts: linePrompts, commands } = shellData.getOrCreateFor(codeBlock);
         if (commands.size === 0) return;
         const lines = codeBlock.getLines();
@@ -199,6 +200,8 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
           .filter((line) => commands.has(line))
           .map((line) => line.text)
           .join('\n');
+        const say = uiTexts(locale);
+        const label = say('shellCopy.copy');
         addTitleBarControl(
           figure,
           h(
@@ -207,11 +210,13 @@ export function pluginShellCopy({ prompts = ['$ ', '> '] }: { prompts?: string[]
               type: 'button',
               class: `${PREFIX}-btn ${PREFIX}-shell-copy ${PREFIX}-no-print`,
               dataCode: encodeCode(text),
+              dataScbTexts: JSON.stringify({ copy: label, copied: say('shellCopy.copied') }),
             },
-            'Copy commands',
+            label,
           ),
+          locale,
         );
-        addTitleBarControl(figure, h('span', { class: `${PREFIX}-sr-only`, ariaLive: 'polite' }));
+        addTitleBarControl(figure, h('span', { class: `${PREFIX}-sr-only`, ariaLive: 'polite' }), locale);
       },
     },
   };
