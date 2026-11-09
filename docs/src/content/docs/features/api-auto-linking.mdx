@@ -36,7 +36,7 @@ API auto-linking has no syntax. It runs on every code block in a language that h
 
 ### Nextflow
 
-A Nextflow workflow gets links for the channel factory, for `params` and for the process from nf-core:
+A Nextflow workflow gets links for the keywords, the channel factory, `params` and the process from nf-core:
 
 export const nextflowExample = `
 \`\`\`nextflow title="main.nf"
@@ -53,7 +53,7 @@ workflow {
 
 ### Nextflow config file
 
-A code block with a title that ends in `.config` is a config file. It gets links for the config scopes, such as `params` and `docker`, and for the directives in the `process` scope:
+A code block with a title that ends in `.config` is a config file. It gets links for the config scopes, such as `params`, for the settings, such as `docker.enabled`, and for the directives in the `process` scope:
 
 export const nextflowConfig = `
 \`\`\`nextflow title="nextflow.config"
@@ -175,17 +175,30 @@ A name that the package at `pydocsBase` does not have links to the first package
 
 The Nextflow adapter runs on `nextflow` and `nf` code blocks. It has the names of the Nextflow reference, so it needs no network. It links:
 
-- Channel factories, such as `channel.of` and `channel.fromPath`.
-- Operators in a chain after a channel factory, such as `.map` and `.view`.
-- Operators on a variable that holds a channel in every assignment in the block.
+- The keywords that start a declaration, such as `process`, `workflow` and `include`.
+- The section labels of processes and workflows, such as `input:`, `script:`, `take:` and `emit:`.
 - Process directives at the start of a statement in a `process` body, such as `publishDir` and `cpus`.
-- The `input:` and `output:` labels of a process, if the first declaration under the label starts with a qualifier, such as `val` or `path`.
+- Input and output qualifiers, such as `val`, `path` and `tuple`, and output options, such as `emit:`. In a typed process, the stage directives and output functions, such as `stageAs` and `file()`.
+- Channel factories, such as `channel.of` and `channel.fromPath`, and operators on a channel, such as `.map` and `.view`.
 - Global names, such as `params`, `projectDir` and `file()`, and the members of `workflow`, `log` and `nextflow`, such as `workflow.projectDir` and `log.info`.
+- Feature flags, such as `nextflow.enable.types`, and task properties, such as `task.attempt` and `task.cpus`.
+- Members of the standard library types, such as `name` in `fasta.name`, if the block shows the type of the value.
 - Processes and workflows from `include` statements, if you give the `modules` option.
 
-A name that the block assigns, or that is a closure parameter or a map key, stays plain text. In input and output declarations, `tuple`, `env` and `file` are qualifiers, so they do not link to the global functions. A code block with a title that ends in `.nf.test` is an nf-test file, and the adapter links nothing in it.
+Names in the `$name` and `${…}` parts of double-quoted strings link as they do in code. A code block with a title that ends in `.nf.test` is an nf-test file, and the adapter links nothing in it.
 
-A code block with a title that ends in `.config` is a config file. In a config file, the adapter links the config scope at the start of each setting, such as `docker` in `docker.enabled = true`. The `params`, `process` and `profiles` scopes link to their sections of the Nextflow configuration page. Settings in a profile link as they do outside it. The adapter also links the directives in the `process` scope, such as `memory` in `process.memory` or in `process { memory = '2 GB' }`, also inside `withName` and `withLabel`. For a config file with another title or none, add `nextflow="config"` to the fence line:
+The adapter links an operator on a value that holds a channel. This is a channel factory, a call to a process or workflow, its `.out`, or a variable that holds one of these in every assignment. The adapter links a member of a type on these values:
+
+- A variable that the block declares with a type, such as `fasta: Path` in a typed process.
+- A `path` input of a legacy process.
+- A variable that every assignment in the block sets to a value of one type, such as `file('ref.fa')`.
+- The value that a linked member gives, so `fasta.name.toUpperCase()` links `name` and `toUpperCase`.
+
+A name that the block assigns, or that is a closure parameter or a map key, does not link to a global name. In input and output declarations, `tuple`, `env` and `file` link to the qualifiers, not to the global functions.
+
+A code block with a title that ends in `.config` is a config file. In a config file, the adapter links each setting, such as `docker.enabled`, and each setting in a scope block, such as `enabled` in `docker { enabled = true }`. It links the scope at the start of a block, such as `docker {`. A setting that the reference does not list, such as `env.GREETING`, links its scope. The `params`, `process` and `profiles` scopes link to their sections of the Nextflow configuration page. Settings in a profile link as they do outside it.
+
+The adapter also links the directives in the `process` scope, such as `memory` in `process.memory` or in `process { memory = '2 GB' }`, also inside `withName` and `withLabel`. For a config file with another title or none, add `nextflow="config"` to the fence line:
 
 ````md
 ```nextflow nextflow="config"
@@ -212,9 +225,10 @@ nextflow({
 - The Python adapter does not follow assignments. After `p = Path("run.json")`, the name `p.read_text` stays plain text.
 - The Python adapter does not link built-in names, such as `print` and `len`.
 - A name that the block binds again, for example with `json = {}` or as a function parameter, does not link anywhere in the block.
-- The Nextflow adapter does not link operators after a process output, such as `FASTQC.out.html.map`, or after the `|` operator.
-- The Nextflow adapter does not link input and output qualifiers, such as `val` and `tuple`. The inputs and outputs page has no fixed anchor for each one.
-- In a config file, the Nextflow adapter links only scopes and directives. Settings, such as `enabled` in `docker.enabled` or `workDir`, and names in values, such as `params` after `=`, stay plain text.
+- The Nextflow adapter does not link operators after the `|` operator.
+- The Nextflow adapter does not know the type of a closure parameter, such as `it` or `bam` in `{ bam -> bam.name }`. The members of a closure parameter stay plain text.
+- A qualifier, a standard library type member or a global name links to its section or page, not to its own heading. The anchors of these headings come from their signatures, so they change when a signature changes.
+- In a config file, names in values, such as `params` after `=`, stay plain text. Only task properties, such as `task.attempt`, link there.
 - The files in `node_modules/.cache/starlight-codeblocks/` do not expire. Delete the folder to fetch the indexes again.
 - A link cannot span two lines.
 - Names on the line that a `[!link]` directive targets do not link, so that a link is never inside another link.

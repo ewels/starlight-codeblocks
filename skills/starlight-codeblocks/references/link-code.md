@@ -44,9 +44,10 @@ API auto-linking finds library names in a block and links each one to its refere
 | `nextflow="config"` | Code block fence line of a Nextflow block: links it as a config file |
 
 - The Python adapter runs on `py`, `python` and `pycon` blocks. It reads `import x`, `import x as y` and `from a import b as c`, then links the names that they bind and attribute chains on them, such as `os.path.join`.
-- The Nextflow adapter runs on `nextflow` and `nf` blocks. It links channel factories, such as `channel.of`, and operators after them. With the `modules` option, it links processes and workflows from `include` statements.
-- In a `process` body, the Nextflow adapter links the directives, such as `cpus`, and the `input:` and `output:` labels. It also links global names, such as `params` and `file()`, and the members of `workflow`, `log` and `nextflow`, such as `workflow.projectDir`.
-- A Nextflow block is a config file if its title ends in `.config`. For a config block with another title or none, add `nextflow="config"` to the fence line. In a config file, the adapter links the config scopes, such as `docker` in `docker.enabled = true`, `params` and `profiles`, and the directives in the `process` scope.
+- The Nextflow adapter runs on `nextflow` and `nf` blocks. It links keywords, such as `process` and `workflow`, section labels, such as `script:` and `take:`, channel factories, such as `channel.of`, and operators on channels. With the `modules` option, it links processes and workflows from `include` statements.
+- In a `process` body, the Nextflow adapter links the directives, such as `cpus`, and the qualifiers, such as `val`, `path` and `tuple`. It also links global names, such as `params` and `file()`, and the members of `workflow`, `log` and `nextflow`. Feature flags, such as `nextflow.enable.types`, and `task.*` names, such as `task.cpus`, also link.
+- The Nextflow adapter links the members of standard library types, such as `name` in `fasta.name`, if the block shows the type. The block shows it with a declaration such as `fasta: Path`, a legacy `path` input, or an assignment such as `fasta = file('ref.fa')`. Names in `$name` and `${…}` of double-quoted strings link as in code.
+- A Nextflow block is a config file if its title ends in `.config`. For a config block with another title or none, add `nextflow="config"` to the fence line. In a config file, the adapter links the settings, such as `docker.enabled`, and the config scopes, such as `docker {`, `params` and `profiles`. It also links the directives in the `process` scope.
 - The build caches fetched indexes in `node_modules/.cache/starlight-codeblocks/`. A failed fetch logs a warning and does not fail the build.
 - Option: `apiLinks.adapters` (default `[python(), nextflow()]`). A list replaces the default list, so give every adapter that you want:
 
@@ -68,7 +69,7 @@ API auto-linking finds library names in a block and links each one to its refere
 - Nextflow adapter option: `modules`, a function of `{ name, path }` that returns a URL, an object with `href`, or `undefined`.
 - Another language needs an adapter of your own: https://ewels.github.io/starlight-codeblocks/extend/write-an-api-link-adapter/
 - Another plugin can give its own links the card. Put `data-scb-api-links` on an element that holds the links. Put `data-scb-api-head` on each `a`, with optional `data-scb-api-summary`, `data-scb-api-source`, `data-scb-api-icon` and `data-scb-api-action`. `data-scb-api-icons` on the element that holds the links maps each icon key to an SVG path. This works on pages with no code blocks, and needs `codeblocks()`. starlight-pydocs does this for the types in its signatures.
-- Limits: the Python adapter does not follow assignments and does not link built-ins such as `print`. A name that the block binds again does not link.
+- Limits: the Python adapter does not follow assignments and does not link built-ins such as `print`. A name that the block binds again does not link. The Nextflow adapter does not know the type of a closure parameter, such as `bam` in `{ bam -> bam.name }`.
 
 ## Line permalinks
 
