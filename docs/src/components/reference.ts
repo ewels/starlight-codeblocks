@@ -108,7 +108,7 @@ export const options: OptionEntry[] = Object.entries(optionsReference).flatMap((
 const apiLinks = 'features/api-auto-linking';
 
 /** The options of the built-in adapters for API auto-linking. */
-export const adapterOptions: Record<'python' | 'nextflow', OptionEntry[]> = {
+export const adapterOptions: Record<'python' | 'nextflow' | 'apiIndex', OptionEntry[]> = {
   python: [
     {
       id: 'python-stdlib',
@@ -146,6 +146,59 @@ export const adapterOptions: Record<'python' | 'nextflow', OptionEntry[]> = {
       description: 'The reference page of an included process or workflow.',
       page: apiLinks,
     },
+    {
+      id: 'nextflow-version',
+      label: 'version',
+      type: '`string`',
+      default: 'The latest release',
+      description: 'The Nextflow language server release whose API index the adapter reads, such as `26.10.1`.',
+      page: apiLinks,
+    },
+    {
+      id: 'nextflow-index',
+      label: 'index',
+      type: '`string | URL | ApiIndex`',
+      default: 'None',
+      description:
+        'Another API index: a URL, a file path from the project root, or the index itself. It replaces `version`.',
+      page: apiLinks,
+    },
+  ],
+  apiIndex: [
+    {
+      id: 'api-index-languages',
+      label: 'languages',
+      type: '`string[]`',
+      default: 'None',
+      description: 'The code block languages that the adapter links, such as `["tally"]`. Required.',
+      page: apiLinks,
+    },
+    {
+      id: 'api-index-index',
+      label: 'index',
+      type: '`string | URL | ApiIndex`',
+      default: 'None',
+      description: 'The API index: a URL, a file path from the project root, or the index itself. Required.',
+      page: apiLinks,
+    },
+    {
+      id: 'api-index-name',
+      label: 'name',
+      type: '`string`',
+      default: 'The first language',
+      description: 'The name of the adapter in build warnings.',
+      page: apiLinks,
+    },
+    {
+      id: 'api-index-syntax',
+      label: 'syntax',
+      type: '`{ comments?: string[]; quotes?: string[]; interpolated?: string[] }`',
+      default: '`//` and `#` comments, and `"`, `\'`, `` ` `` and triple quotes',
+      description:
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: string interpolation in the code blocks, not JavaScript.
+        'How the language writes comments and strings, so that the adapter skips them. `interpolated` lists the quotes whose strings hold code in `$name` and `${…}`.',
+      page: apiLinks,
+    },
   ],
 };
 
@@ -172,6 +225,7 @@ export const componentHeadings: Record<string, Record<string, Heading[]>> = {
   [apiLinks]: {
     'python-adapter': adapterOptions.python.map(optionHeading(3)),
     'nextflow-adapter': adapterOptions.nextflow.map(optionHeading(3)),
+    'api-index-adapter': adapterOptions.apiIndex.map(optionHeading(3)),
   },
 };
 

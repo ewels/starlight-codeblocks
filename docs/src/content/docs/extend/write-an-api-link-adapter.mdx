@@ -7,7 +7,7 @@ import { Code } from '@astrojs/starlight/components';
 import adapterSource from '../../../adapters/codeblocks-api.mjs?raw';
 import Example from '../../../components/Example.astro';
 
-[API auto-linking](/starlight-codeblocks/features/api-auto-linking/) links names in code blocks through adapters. The plugin has adapters for Python and Nextflow. A site can add its own adapter for another language, or for its own library, in the `apiLinks.adapters` option.
+[API auto-linking](/starlight-codeblocks/features/api-auto-linking/) links names in code blocks through adapters. The plugin has adapters for Python and Nextflow. A site can add its own adapter for another language, or for its own library, in the `apiLinks.adapters` option. If the docs of the language or library can make an API index, the [API index adapter](/starlight-codeblocks/features/api-auto-linking/#api-index-adapter) links its names with no code.
 
 ## The interface
 

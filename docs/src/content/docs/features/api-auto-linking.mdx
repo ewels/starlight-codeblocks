@@ -173,7 +173,9 @@ A name that the package at `pydocsBase` does not have links to the first package
 
 ## Nextflow adapter
 
-The Nextflow adapter runs on `nextflow` and `nf` code blocks. It has the names of the Nextflow reference, so it needs no network. It links:
+The Nextflow adapter runs on `nextflow` and `nf` code blocks. It reads the names from the [API index](#api-index-adapter) of the [Nextflow language server](https://github.com/nextflow-io/language-server). The index has the names, signatures and descriptions of the hover hints in VS Code, and a docs link for each name. The build fetches the index of the latest language server release once, and keeps it on disk. If the index does not load, the adapter links only the modules from the `modules` option.
+
+The adapter links:
 
 - The keywords that start a declaration, such as `process`, `workflow` and `include`.
 - The section labels of processes and workflows, such as `input:`, `script:`, `take:` and `emit:`.
@@ -196,7 +198,7 @@ The adapter links an operator on a value that holds a channel. This is a channel
 
 A name that the block assigns, or that is a closure parameter or a map key, does not link to a global name. In input and output declarations, `tuple`, `env` and `file` link to the qualifiers, not to the global functions.
 
-A code block with a title that ends in `.config` is a config file. In a config file, the adapter links each setting, such as `docker.enabled`, and each setting in a scope block, such as `enabled` in `docker { enabled = true }`. It links the scope at the start of a block, such as `docker {`. A setting that the reference does not list, such as `env.GREETING`, links its scope. The `params`, `process` and `profiles` scopes link to their sections of the Nextflow configuration page. Settings in a profile link as they do outside it.
+A code block with a title that ends in `.config` is a config file. In a config file, the adapter links each setting, such as `docker.enabled`, and each setting in a scope block, such as `enabled` in `docker { enabled = true }`. It links the scope at the start of a block, such as `docker {`. A setting that the index does not list, such as `env.GREETING`, links its scope. The `params`, `process` and `profiles` scopes link to their sections of the Nextflow configuration page. Settings in a profile link as they do outside it.
 
 The adapter also links the directives in the `process` scope, such as `memory` in `process.memory` or in `process { memory = '2 GB' }`, also inside `withName` and `withLabel`. For a config file with another title or none, add `nextflow="config"` to the fence line:
 
@@ -220,6 +222,76 @@ nextflow({
 });
 ```
 
+To link to the docs of an older Nextflow version, set `version` to the language server release for it:
+
+```js title="astro.config.mjs"
+nextflow({ version: '26.10.1' });
+```
+
+## API index adapter
+
+The API index adapter links the names of any language or library that has an API index. An API index is a JSON file with each name and its docs link, and if you want, its signature, summary and type. The Nextflow language server makes one for each release. Give the adapter the code block languages and the index:
+
+```js title="astro.config.mjs"
+import codeblocks from 'starlight-codeblocks';
+import { apiIndex } from 'starlight-codeblocks/adapters/api-index';
+import { nextflow } from 'starlight-codeblocks/adapters/nextflow';
+import { python } from 'starlight-codeblocks/adapters/python';
+
+codeblocks({
+  apiLinks: {
+    adapters: [python(), nextflow(), apiIndex({ languages: ['tally'], index: 'https://tally.example/api-index.json' })],
+  },
+});
+```
+
+<Options adapter="apiIndex" />
+
+An API index looks like this:
+
+```json title="api-index.json"
+{
+  "apiIndex": 1,
+  "source": "Tally reference",
+  "base": "https://tally.example/docs/",
+  "symbols": [
+    {
+      "name": "open",
+      "kind": "function",
+      "href": "io#open",
+      "signature": "open(path: String) -> File",
+      "summary": "Opens a file.",
+      "type": "File"
+    },
+    { "name": "File", "kind": "type", "href": "file", "extends": ["Stream"] },
+    { "name": "File.lines", "kind": "property", "href": "file#lines", "type": "List<String>" }
+  ]
+}
+```
+
+| Field | Description |
+|---|---|
+| `apiIndex` | The version of the format: `1`. |
+| `source` | The name of the docs. The card shows it. |
+| `base` | The URL that each `href` is relative to. |
+| `symbols[].name` | The name. A member has its namespace or type before it, with a dot, such as `log.info` or `File.lines`. |
+| `symbols[].kind` | What the name is, such as `function` or `property`. The card shows it when there is no signature. |
+| `symbols[].href` | The docs link, relative to `base`. |
+| `symbols[].signature` | Optional. The head of the card. |
+| `symbols[].summary` | Optional. One sentence, in Markdown. |
+| `symbols[].type` | Optional. The type of the value: the return type of a function, or the type of a property. |
+| `symbols[].extends` | Optional, for a type. The types whose members the type also has. |
+| `symbols[].context` | Optional. Where the name applies, such as `process` for a Nextflow directive. |
+
+The adapter links:
+
+- Each name in the index that the block does not assign.
+- Each part of a dotted name that is in the index, such as `log` and `info` in `log.info`.
+- The members of a value whose type it knows, through the `type` of each name and the types in `extends`. In `open('a').lines`, it links `lines` as `File.lines`.
+- The members of a variable that the block declares with a type, such as `f: File`, or that each assignment sets to one type.
+
+A name with a `context` applies only in one part of the code, and only an adapter for the language knows where that part is. The API index adapter does not link these names. The Nextflow adapter reads the contexts of the Nextflow index.
+
 ## Limitations
 
 - The Python adapter does not follow assignments. After `p = Path("run.json")`, the name `p.read_text` stays plain text.
@@ -229,7 +301,8 @@ nextflow({
 - The Nextflow adapter does not know the type of a closure parameter, such as `it` or `bam` in `{ bam -> bam.name }`. The members of a closure parameter stay plain text.
 - A qualifier, a standard library type member or a global name links to its section or page, not to its own heading. The anchors of these headings come from their signatures, so they change when a signature changes.
 - In a config file, names in values, such as `params` after `=`, stay plain text. Only task properties, such as `task.attempt`, link there.
-- The files in `node_modules/.cache/starlight-codeblocks/` do not expire. Delete the folder to fetch the indexes again.
+- The files in `node_modules/.cache/starlight-codeblocks/` do not expire, also the index of the latest language server release. Delete the folder to fetch the indexes again.
+- The API index adapter knows only the comments and strings of a language. It does not link names that have a `context`.
 - A link cannot span two lines.
 - Names on the line that a `[!link]` directive targets do not link, so that a link is never inside another link.
 

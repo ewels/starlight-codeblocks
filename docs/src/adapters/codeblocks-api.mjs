@@ -18,7 +18,12 @@ const pages = {
   nextflow: {
     href: '/features/api-auto-linking/#nextflow-adapter',
     signature: 'nextflow(options?: NextflowAdapterOptions): ApiLinkAdapter',
-    summary: 'Links Nextflow channel factories, operators and modules.',
+    summary: 'Links Nextflow names from the API index of the Nextflow language server.',
+  },
+  apiIndex: {
+    href: '/features/api-auto-linking/#api-index-adapter',
+    signature: 'apiIndex(options: ApiIndexAdapterOptions): ApiLinkAdapter',
+    summary: 'Links the names in an API index.',
   },
 };
 

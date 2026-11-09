@@ -1,22 +1,19 @@
 import type { ApiLinkAdapter, Resolution, SymbolRef } from '../options.ts';
-import { factories, factoryHref, operatorHref, operators, SOURCE } from './nextflow-reference.ts';
+import { type ApiIndexSource, type ApiSymbol, baseType, loadApiIndex, SymbolIndex } from './api-index.ts';
 import {
-  directives,
-  type Entry,
-  flags,
-  globals,
-  keywords,
-  labels,
-  namespaces,
-  qualifiers,
-  scopes,
-  sections,
-  settings,
-  task,
-  typedFunctions,
-  types,
-} from './nextflow-reference-data.ts';
-import { skipBrackets, stringEnd } from './tokens.ts';
+  closes,
+  dotted,
+  endsStatement,
+  interpolations,
+  op,
+  opens,
+  type Syntax,
+  skipBrackets,
+  skipCall,
+  startsStatement,
+  type Token,
+  tokenize,
+} from './tokens.ts';
 
 export interface ModuleInput {
   /** The process or workflow name, as in the module (`FASTQC` for `include { FASTQC as QC } …`). */
@@ -31,123 +28,46 @@ export interface NextflowAdapterOptions {
    * or `undefined` to leave the name as plain text.
    */
   modules?: (module: ModuleInput) => string | (Omit<Resolution, 'source'> & { source?: string }) | undefined;
+  /** The Nextflow language server release whose API index to use, such as `26.10.1`. Default: the latest. */
+  version?: string;
+  /** Another API index: a URL, a file path from the project root, or the index itself. It replaces `version`. */
+  index?: ApiIndexSource;
 }
 
-interface Token {
-  type: 'name' | 'op' | 'string';
-  value: string;
-  start: number;
-  end: number;
-  /** The code in each `$name` and `${…}` of a double-quoted string. */
-  parts?: Token[][];
-}
+const RELEASES = 'https://github.com/nextflow-io/language-server/releases';
 
+/** The URL of the API index of a Nextflow language server release, or of the latest one. */
+export const nextflowIndex = (version?: string) =>
+  version ? `${RELEASES}/download/v${version}/api-index.json` : `${RELEASES}/latest/download/api-index.json`;
+
+const SOURCE = 'Nextflow reference';
 // Slashy strings are left out: `/` is division far more often in examples.
-const TOKEN = /(\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$))|('''|"""|'|")|([A-Za-z_$][\w$]*)|(\d[\w.]*|\s+)|(.)/y;
-const INTERPOLATED = /[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*/y;
+const SYNTAX: Syntax = { comments: ['//'], quotes: ["'''", '"""', "'", '"'], interpolated: ['"""', '"'] };
 
-/**
- * Splits Nextflow code into names, operators and strings, from `i`. Comments are left out. With `inner`, it stops
- * after the `}` that closes a `${`. Returns the tokens and the index where it stopped.
- */
-function tokenize(code: string, i = 0, inner = false): [Token[], number] {
-  const tokens: Token[] = [];
-  let depth = 0;
-  while (i < code.length) {
-    TOKEN.lastIndex = i;
-    const [match = '', , quote, name, , op] = TOKEN.exec(code) ?? [];
-    const start = i;
-    i += match.length || 1;
-    if (quote) {
-      const parts: Token[][] = [];
-      i = quote.startsWith('"') ? interpolatedEnd(code, i, quote, parts) : stringEnd(code, i, quote);
-      tokens.push({ type: 'string', value: code.slice(start + quote.length, i - quote.length), start, end: i, parts });
-    } else if (name) {
-      tokens.push({ type: 'name', value: name, start, end: i });
-    } else if (op) {
-      if (inner && op === '}' && depth-- === 0) return [tokens, i];
-      if (op === '{') depth++;
-      tokens.push({ type: 'op', value: op, start, end: i });
-    }
+/** The names of an API index, found by what they are and where they apply (the `context` of the index). */
+class Reference {
+  /** The start of each setting name, so that `aws.batch` is a group of settings and `env` takes any name. */
+  readonly prefixes: Set<string>;
+  readonly types: Set<string>;
+
+  constructor(readonly index: SymbolIndex) {
+    const settings = index.symbols.filter((s) => s.context === 'config' && s.kind === 'config setting');
+    this.prefixes = new Set(
+      settings.flatMap(({ name }) => name.split('.').map((_, n, parts) => parts.slice(0, n + 1).join('.'))),
+    );
+    this.types = new Set(index.symbols.filter((s) => s.kind === 'type').map((s) => s.name));
   }
-  return [tokens, i];
-}
 
-/**
- * The index after the double-quoted string whose `quote` ends before `i`. Adds the tokens of each `$name` and
- * `${…}` to `parts`. A `${…}` can span lines, also in a one-line string.
- */
-function interpolatedEnd(code: string, i: number, quote: string, parts: Token[][]) {
-  while (i < code.length && !code.startsWith(quote, i)) {
-    if (code[i] === '\\') {
-      i += 2;
-    } else if (code.startsWith('${', i)) {
-      const [tokens, end] = tokenize(code, i + 2, true);
-      parts.push(tokens);
-      i = end;
-    } else if (code[i] === '$') {
-      INTERPOLATED.lastIndex = i + 1;
-      const end = INTERPOLATED.test(code) ? INTERPOLATED.lastIndex : i + 1;
-      if (end > i + 1) parts.push(tokenize(code.slice(0, end), i + 1)[0]);
-      i = end;
-    } else if (quote.length === 1 && code[i] === '\n') {
-      return i;
-    } else {
-      i++;
-    }
+  get(name: string, kind: string, context?: string) {
+    return this.index.find(name, (s) => s.kind === kind && s.context === context);
   }
-  return Math.min(i + quote.length, code.length);
-}
 
-/** Each list of tokens in the strings of `tokens`, also in strings inside them. */
-const interpolations = (tokens: Token[]): Token[][] =>
-  tokens.flatMap((token) => (token.parts ?? []).flatMap((part) => [part, ...interpolations(part)]));
-
-/** The index after the arguments and closure of a call whose name ends before `tokens[i]`. */
-function skipCall(tokens: Token[], i: number) {
-  if (tokens[i]?.value === '(') i = skipBrackets(tokens, i);
-  if (tokens[i]?.value === '{') i = skipBrackets(tokens, i);
-  return i;
-}
-
-/** The names of the dotted name that starts at `tokens[i]`, such as `docker` and `enabled`. */
-function dotted(tokens: Token[], i: number) {
-  const names = [tokens[i] as Token];
-  for (let j = i; op(tokens[j + 1], '.') && tokens[j + 2]?.type === 'name'; j += 2) names.push(tokens[j + 2] as Token);
-  return names;
+  link(name: string, kind: string, context?: string) {
+    return this.index.link(this.get(name, kind, context));
+  }
 }
 
 const isChannel = (token?: Token) => token?.value === 'channel' || token?.value === 'Channel';
-
-const link = ({ href, signature, summary }: Entry, kind?: string): Resolution => ({
-  href,
-  kind,
-  signature,
-  summary,
-  source: SOURCE,
-});
-
-const resolve = (map: Record<string, Entry>, name: string, kind?: string) =>
-  Object.hasOwn(map, name) ? link(map[name] as Entry, kind) : undefined;
-
-// A string token's value is its content, so `'{'` must not count as `{`.
-const op = (token: Token | undefined, chars: string) => token?.type === 'op' && chars.includes(token.value);
-const opens = (token: Token) => op(token, '([{');
-const closes = (token: Token) => op(token, ')]}');
-
-/** Whether `tokens[i]` starts a statement: it follows `{` or `;`, or starts a line that does not continue a list. */
-function startsStatement(code: string, tokens: Token[], i: number) {
-  const prev = tokens[i - 1];
-  if (!prev || op(prev, '{;')) return true;
-  return !op(prev, ',') && code.slice(prev.end, tokens[i]?.start).includes('\n');
-}
-
-/** Whether the expression that ends before `tokens[i]` ends its statement. */
-function endsStatement(code: string, tokens: Token[], i: number) {
-  const next = tokens[i];
-  if (!next || op(next, ';})')) return true;
-  return code.slice(tokens[i - 1]?.end, next.start).includes('\n') && !op(next, '.?:+-*/|&=<>');
-}
 
 type Add = (start: Token, end: Token, name: string, resolution?: Resolution) => void;
 /** Records a type for a variable. A variable keeps a type only if every place that sets it gives the same type. */
@@ -158,14 +78,6 @@ const DECLARATIONS = new Set(['input', 'output', 'stage', 'topic']);
 // A typed process declares `name: Type` or calls `stdout()`, and the inputs and outputs page is for legacy ones.
 // Typed processes have no `val()` or `path()`.
 const LEGACY = new Set(['val', 'path', 'file', 'env', 'stdin', 'stdout', 'eval', 'tuple', 'each']);
-// `Iterable` has the members that these types share.
-const PARENTS: Record<string, string> = { Bag: 'Iterable', List: 'Iterable', Set: 'Iterable' };
-// Types that the adapter follows. `Value` is a dataflow value, which takes the same operators as a channel.
-const TYPES = new Set([...Object.keys(types), 'Channel', 'Value']);
-// The start of each setting name, so that `aws.batch` is a group of settings and `env` takes any name.
-const PREFIXES = new Set(
-  Object.keys(settings).flatMap((name) => name.split('.').map((_, n, parts) => parts.slice(0, n + 1).join('.'))),
-);
 
 const isLabel = (code: string, tokens: Token[], i: number) =>
   tokens[i]?.type === 'name' &&
@@ -186,7 +98,7 @@ function legacyAt(tokens: Token[], i: number) {
  * Returns the tokens of legacy declarations, where `tuple`, `env` and `file` are qualifiers, not the global
  * functions, and the typed functions that it linked.
  */
-function declarationLinks(code: string, tokens: Token[], add: Add, note: Note) {
+function declarationLinks(ref: Reference, code: string, tokens: Token[], add: Add, note: Note) {
   const handled = new Set<Token>();
   let section: string | undefined;
   let legacy = false;
@@ -204,10 +116,15 @@ function declarationLinks(code: string, tokens: Token[], add: Add, note: Note) {
     if (!section || !DECLARATIONS.has(section)) return;
     const next = tokens[i + 1];
     if (!legacy) {
-      const functions = section === 'stage' ? typedFunctions.stage : typedFunctions.outputs;
       const call = section === 'stage' ? startsStatement(code, tokens, i) : section !== 'input' && op(next, '(');
-      if (token.type === 'name' && call && Object.hasOwn(functions, token.value)) {
-        add(token, token, token.value, resolve(functions, token.value));
+      const symbol =
+        token.type === 'name' && call
+          ? section === 'stage'
+            ? ref.get(token.value, 'stage directive', 'process.typed.stage')
+            : ref.get(token.value, 'output function', 'process.typed.output')
+          : undefined;
+      if (symbol) {
+        add(token, token, token.value, ref.index.link(symbol));
         handled.add(token);
       }
       return;
@@ -217,39 +134,39 @@ function declarationLinks(code: string, tokens: Token[], add: Add, note: Note) {
     const statement = startsStatement(code, tokens, i);
     if (statement) first = token;
     if (token.type !== 'name') return;
-    const table = section === 'input' ? qualifiers.inputs : qualifiers.outputs;
+    const qualifier =
+      section === 'input'
+        ? ref.get(token.value, 'input qualifier', 'process.input')
+        : ref.get(token.value, 'output qualifier', 'process.output');
     const inTuple = first?.value === 'tuple' && (tokens[i - 1] === first || op(tokens[i - 1], ','));
-    if ((statement || inTuple) && Object.hasOwn(table, token.value)) {
-      add(token, token, token.value, resolve(table, token.value));
+    if ((statement || inTuple) && qualifier) {
+      add(token, token, token.value, ref.index.link(qualifier));
       const target = op(next, '(') ? (op(tokens[i + 3], ')') ? tokens[i + 2] : undefined) : next;
       if (section === 'input' && target?.type === 'name') {
         note(target.value, token.value === 'path' || token.value === 'file' ? 'Path' : undefined);
       }
     } else if (!statement && section === 'output' && op(next, ':')) {
-      add(token, token, token.value, resolve(qualifiers.options, token.value));
+      add(token, token, token.value, ref.link(token.value, 'output option', 'process.output'));
     }
   });
   return handled;
 }
 
 /** The link for a section label of a process. */
-function processLabel(tokens: Token[], i: number) {
+function processLabel(ref: Reference, tokens: Token[], i: number) {
   const { value } = tokens[i] as Token;
-  if (value === 'input' || value === 'output') {
-    return legacyAt(tokens, i + 2)
-      ? resolve(sections, value, 'process section')
-      : resolve(labels.typed, value, 'process section');
-  }
-  return resolve(value === 'stage' || value === 'topic' ? labels.typed : labels.process, value, 'process section');
+  const typed =
+    value === 'input' || value === 'output' ? !legacyAt(tokens, i + 2) : value === 'stage' || value === 'topic';
+  return ref.link(value, 'process section', typed ? 'process.typed' : 'process');
 }
 
 /** Links `process`, and the directives and section labels of each process body. Adds the process names. */
-function processLinks(code: string, tokens: Token[], add: Add, callables: Set<string>) {
+function processLinks(ref: Reference, code: string, tokens: Token[], add: Add, callables: Set<string>) {
   for (let i = 0; i < tokens.length; i++) {
     const name = tokens[i + 1];
     if (tokens[i]?.value !== 'process' || name?.type !== 'name' || tokens[i + 2]?.value !== '{') continue;
     if (!startsStatement(code, tokens, i)) continue;
-    add(tokens[i] as Token, tokens[i] as Token, 'process', resolve(keywords, 'process', 'keyword'));
+    add(tokens[i] as Token, tokens[i] as Token, 'process', ref.link('process', 'keyword'));
     callables.add(name.value);
     const end = skipBrackets(tokens, i + 2);
     let labelled = false;
@@ -259,9 +176,9 @@ function processLinks(code: string, tokens: Token[], add: Add, callables: Set<st
       if (token.type !== 'name' || !startsStatement(code, tokens, j)) continue;
       if (isLabel(code, tokens, j)) {
         labelled = true;
-        add(token, token, token.value, processLabel(tokens, j));
+        add(token, token, token.value, processLabel(ref, tokens, j));
       } else if (!labelled && !['=', '.', ':'].includes(tokens[j + 1]?.value ?? '')) {
-        add(token, token, token.value, resolve(directives, token.value, 'process directive'));
+        add(token, token, token.value, ref.link(token.value, 'process directive', 'process'));
       }
     }
     i = end - 1;
@@ -273,14 +190,14 @@ const NAMED = new Set(['enum', 'record']);
 const UNNAMED = new Set(['include', 'params', 'output']);
 
 /** Links the keywords that start a declaration, and the section labels of each workflow. Adds the workflow names. */
-function keywordLinks(code: string, tokens: Token[], add: Add, callables: Set<string>) {
+function keywordLinks(ref: Reference, code: string, tokens: Token[], add: Add, callables: Set<string>) {
   tokens.forEach((token, i) => {
     const { value } = token;
-    if (token.type !== 'name' || value === 'process' || !Object.hasOwn(keywords, value)) return;
+    if (token.type !== 'name' || value === 'process' || !ref.get(value, 'keyword')) return;
     const named = tokens[i + 1]?.type === 'name' && op(tokens[i + 2], '{');
     if (!(named || op(tokens[i + 1], '{')) || !startsStatement(code, tokens, i)) return;
     if ((NAMED.has(value) && !named) || (UNNAMED.has(value) && named)) return;
-    add(token, token, value, resolve(keywords, value, 'keyword'));
+    add(token, token, value, ref.link(value, 'keyword'));
     if (value !== 'workflow') return;
     if (named) callables.add(tokens[i + 1]?.value ?? '');
     const open = named ? i + 2 : i + 1;
@@ -288,27 +205,28 @@ function keywordLinks(code: string, tokens: Token[], add: Add, callables: Set<st
       const label = tokens[j] as Token;
       if (opens(label)) j = skipBrackets(tokens, j) - 1;
       else if (label.type === 'name' && op(tokens[j + 1], ':') && startsStatement(code, tokens, j)) {
-        add(label, label, label.value, resolve(labels.workflow, label.value, 'workflow section'));
+        add(label, label, label.value, ref.link(label.value, 'workflow section', 'workflow'));
       }
     }
   });
 }
 
 /** The link for `docker.enabled` or for `enabled` in a `docker` block: the longest setting name it starts. */
-function settingLink(code: string, names: Token[], scope: string, add: Add) {
+function settingLink(ref: Reference, code: string, names: Token[], scope: string, add: Add) {
   for (let k = names.length; k > 0; k--) {
     const full = [...(scope ? [scope] : []), ...names.slice(0, k).map((token) => token.value)].join('.');
-    if (!Object.hasOwn(settings, full)) continue;
+    const setting = ref.get(full, 'config setting', 'config');
+    if (!setting) continue;
     const [first, last] = [names[0] as Token, names[k - 1] as Token];
     const oneLine = !code.slice(first.start, last.end).includes('\n');
-    add(oneLine ? first : last, last, full, resolve(settings, full, 'config setting'));
+    add(oneLine ? first : last, last, full, ref.index.link(setting));
     return true;
   }
   return false;
 }
 
 /** Links feature flags, config settings, config scopes, and directives in the `process` scope. */
-function configLinks(code: string, tokens: Token[], add: Add) {
+function configLinks(ref: Reference, code: string, tokens: Token[], add: Add) {
   // What each open bracket holds: '' for settings at the top level and in a profile, a scope name such as `docker`
   // or `aws.batch` for its settings, `process` for directives, `profiles` for profiles, or OTHER for anything else.
   const OTHER = '#';
@@ -333,53 +251,48 @@ function configLinks(code: string, tokens: Token[], add: Add) {
     else if (token.type !== 'name') return;
     else if (within === 'process') {
       if (value === 'withName' || value === 'withLabel') block = 'process';
-      else add(token, token, value, resolve(directives, value, 'process directive'));
-    } else if (flagLink(code, tokens, i, add) || settingLink(code, dotted(tokens, i), within, add)) {
+      else add(token, token, value, ref.link(value, 'process directive', 'process'));
+    } else if (flagLink(ref, code, tokens, i, add) || settingLink(ref, code, dotted(tokens, i), within, add)) {
       return;
     } else if (within) {
-      if (op(next, '{') && PREFIXES.has(`${within}.${value}`)) block = `${within}.${value}`;
-    } else if (Object.hasOwn(scopes, value)) {
+      if (op(next, '{') && ref.prefixes.has(`${within}.${value}`)) block = `${within}.${value}`;
+    } else if (ref.get(value, 'config scope', 'config')) {
       const member = tokens[i + 2];
       const process = value === 'process';
       const setting =
         op(next, '.') &&
         member?.type === 'name' &&
-        (process ? Object.hasOwn(directives, member.value) : !PREFIXES.has(value));
-      if (op(next, '{') || setting) add(token, token, value, resolve(scopes, value, 'config scope'));
+        (process ? !!ref.get(member.value, 'process directive', 'process') : !ref.prefixes.has(value));
+      if (op(next, '{') || setting) add(token, token, value, ref.link(value, 'config scope', 'config'));
       if (op(next, '{')) block = value;
       if (process && setting && member) {
-        add(member, member, member.value, resolve(directives, member.value, 'process directive'));
+        add(member, member, member.value, ref.link(member.value, 'process directive', 'process'));
       }
     }
   });
 }
 
 /** Links the feature flag that starts at `tokens[i]`, such as `nextflow.enable.types`. */
-function flagLink(code: string, tokens: Token[], i: number, add: Add) {
+function flagLink(ref: Reference, code: string, tokens: Token[], i: number, add: Add) {
   const names = dotted(tokens, i).slice(0, 3);
   const name = names.map((token) => token.value).join('.');
-  if (names.length < 3 || !Object.hasOwn(flags, name)) return false;
+  const flag = names.length === 3 ? ref.get(name, 'feature flag') : undefined;
+  if (!flag) return false;
   const [first, last] = [names[0] as Token, names[2] as Token];
-  add(
-    code.slice(first.start, last.end).includes('\n') ? last : first,
-    last,
-    name,
-    resolve(flags, name, 'feature flag'),
-  );
+  add(code.slice(first.start, last.end).includes('\n') ? last : first, last, name, ref.index.link(flag));
   return true;
 }
 
 /** Links `task.attempt` and the other task properties, and `task.cpus` and the other directive values. */
-function taskLink(code: string, tokens: Token[], i: number, add: Add) {
+function taskLink(ref: Reference, code: string, tokens: Token[], i: number, add: Add) {
   const [first, member] = [tokens[i] as Token, tokens[i + 2]];
   if (first.value !== 'task' || op(tokens[i - 1], '.') || !op(tokens[i + 1], '.') || member?.type !== 'name') {
     return false;
   }
-  const resolution =
-    resolve(task, member.value, 'task property') ?? resolve(directives, member.value, 'task directive value');
-  if (!resolution) return false;
+  const property = ref.index.member('TaskConfig', member.value);
+  if (!property) return false;
   const oneLine = !code.slice(first.start, member.end).includes('\n');
-  add(oneLine ? first : member, member, `task.${member.value}`, resolution);
+  add(oneLine ? first : member, member, `task.${member.value}`, ref.index.link(property));
   return true;
 }
 
@@ -425,33 +338,26 @@ function boundNames(tokens: Token[]) {
 }
 
 /** Whether the global name at `tokens[i]` is used: not a map key or a `params` block, and a function is called. */
-function usesGlobal(code: string, tokens: Token[], i: number) {
+function usesGlobal(code: string, tokens: Token[], i: number, symbol: ApiSymbol) {
   const token = tokens[i] as Token;
   const next = tokens[i + 1];
   if (op(next, ':{')) return false;
-  const { signature = '' } = globals[token.value] as Entry;
-  if (!signature.includes('(')) return true;
+  if (symbol.kind !== 'function') return true;
   // Only a function that returns nothing works as a statement without brackets, such as `println 'Hello'`.
-  const statement = !signature.includes('->') && startsStatement(code, tokens, i);
+  const statement = !symbol.type && startsStatement(code, tokens, i);
   return op(next, '(') || (statement && /^[ \t]+["'\w$]/.test(code.slice(token.end)));
 }
+
+const isGlobal = (symbol: ApiSymbol) => !symbol.context && (symbol.kind === 'function' || symbol.kind === 'property');
 
 /**
  * Links Nextflow keywords, section labels, qualifiers, directives, channel factories, operators on a channel,
  * processes and workflows from `include` statements, the standard library, and members of the standard library
  * types on values whose type the block shows. In config files, it links feature flags, settings and scopes.
+ * The names come from the API index of the Nextflow language server.
  */
 export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
-  const factory = (name: string): Resolution => ({
-    href: factoryHref(name),
-    kind: 'channel factory',
-    ...(factories[name] as { signature: string; summary: string }),
-    source: SOURCE,
-  });
-  const operator = (name: string): Resolution => {
-    const [summary, returns] = operators[name] as [string, string];
-    return { href: operatorHref(name), kind: 'operator', summary: `${summary} Returns ${returns}.`, source: SOURCE };
-  };
+  let ref = new Reference(new SymbolIndex({ apiIndex: 1, symbols: [] }, SOURCE));
   const module = (input: ModuleInput): Resolution | undefined => {
     const result = options.modules?.(input);
     if (!result) return undefined;
@@ -459,25 +365,26 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
       ? { href: result, name: input.name, source: 'Module reference' }
       : { name: input.name, source: 'Module reference', ...result };
   };
+  const factory = (name?: Token) => (name ? ref.get(`channel.${name.value}`, 'channel factory') : undefined);
 
   /**
    * What `.name` gives on a value of `type`, and its link. `Outputs` is what a process or workflow call gives: a
-   * channel, or one channel for each named output.
+   * channel, or one channel for each named output. A dataflow value takes the same operators as a channel.
    */
   const member = (type: string, name: string): { type?: string; link?: Resolution } => {
     if (type === 'Channel' || type === 'Outputs') {
-      if (Object.hasOwn(operators, name)) return { type: 'Channel', link: operator(name) };
+      const operator = ref.index.member('Channel', name);
+      if (operator?.kind === 'operator') {
+        const next = operator.type && baseType(operator.type);
+        return { type: next === 'Value' ? 'Channel' : next, link: ref.index.link(operator) };
+      }
       return type === 'Outputs' ? { type: name === 'out' ? 'Outputs' : 'Channel' } : {};
     }
     // Groovy reads `ref.text` as `ref.getText()`.
     const getter = `get${name[0]?.toUpperCase()}${name.slice(1)}`;
     for (const key of [name, getter]) {
-      for (const owner of [type, PARENTS[type]]) {
-        const members = owner ? types[owner] : undefined;
-        if (members && Object.hasOwn(members, key)) {
-          return { type: (members[key] as Entry).returns, link: resolve(members, key) };
-        }
-      }
+      const found = ref.index.member(type, key);
+      if (found) return { type: found.type && baseType(found.type), link: ref.index.link(found) };
     }
     return {};
   };
@@ -489,9 +396,11 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
     languages: ['nextflow', 'nf'],
     async setup(context) {
       warn = context.warn;
+      const loaded = await loadApiIndex(options.index ?? nextflowIndex(options.version), context);
+      if (loaded) ref = new Reference(new SymbolIndex(loaded, SOURCE));
     },
     findSymbols(code, _language, attributes = {}) {
-      const [tokens] = tokenize(code);
+      const [tokens] = tokenize(code, SYNTAX);
       const segments = [tokens, ...interpolations(tokens)];
       const symbols: SymbolRef[] = [];
       const add: Add = (start, end, name, resolution) => {
@@ -506,8 +415,8 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
       // nf-test has its own `workflow` and `file()`.
       if (attributes.title?.endsWith('.nf.test')) return symbols;
       if (file === 'config' || attributes.title?.endsWith('.config')) {
-        configLinks(code, tokens, add);
-        for (const segment of segments) for (let i = 0; i < segment.length; i++) taskLink(code, segment, i, add);
+        configLinks(ref, code, tokens, add);
+        for (const segment of segments) for (let i = 0; i < segment.length; i++) taskLink(ref, code, segment, i, add);
         return symbols;
       }
 
@@ -516,9 +425,9 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
         known.set(name, known.has(name) && known.get(name) !== type ? null : (type ?? null));
       };
       const callables = new Set<string>();
-      processLinks(code, tokens, add, callables);
-      keywordLinks(code, tokens, add, callables);
-      const handled = declarationLinks(code, tokens, add, note);
+      processLinks(ref, code, tokens, add, callables);
+      keywordLinks(ref, code, tokens, add, callables);
+      const handled = declarationLinks(ref, code, tokens, add, note);
       const [bound, untyped] = boundNames(tokens);
 
       // Processes and workflows from `include { A; B as C } from '…'`.
@@ -543,25 +452,36 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
         i = close + 1;
       }
 
-      /** The global name or namespace member at `segment[i]`, with the index after its call. */
+      /** The global name or the longest namespace member at `segment[i]`, with the index after it. */
       const stdlib = (segment: Token[], i: number) => {
         const token = segment[i] as Token;
-        const name = segment[i + 2];
         if (bound.has(token.value) || handled.has(token)) return undefined;
-        if (Object.hasOwn(namespaces, token.value) && op(segment[i + 1], '.') && name?.type === 'name') {
-          const members = namespaces[token.value] as Record<string, Entry>;
-          if (!Object.hasOwn(members, name.value)) return undefined;
-          const entry = members[name.value] as Entry;
-          return { entry, name: `${token.value}.${name.value}`, last: name, after: i + 3 };
+        if (ref.get(token.value, 'namespace') && op(segment[i + 1], '.')) {
+          const names = dotted(segment, i);
+          for (let k = names.length; k > 1; k--) {
+            const name = names
+              .slice(0, k)
+              .map((part) => part.value)
+              .join('.');
+            const symbol = ref.index.find(name);
+            if (symbol && symbol.kind !== 'namespace') {
+              return { symbol, name, last: names[k - 1] as Token, after: i + 2 * k - 1 };
+            }
+          }
+          return undefined;
         }
-        if (!Object.hasOwn(globals, token.value) || !usesGlobal(code, segment, i)) return undefined;
-        return { entry: globals[token.value] as Entry, name: token.value, last: token, after: i + 1 };
+        const symbol = ref.index.find(token.value, isGlobal);
+        if (!symbol || !usesGlobal(code, segment, i, symbol)) return undefined;
+        return { symbol, name: token.value, last: token, after: i + 1 };
       };
       /** The type of what a standard library name gives, and the index after it. */
-      const stdlibType = (segment: Token[], found: { entry: Entry; after: number }): [string | undefined, number] => {
-        const { entry, after } = found;
-        if (!entry.signature?.includes('(')) return [entry.returns, after];
-        return op(segment[after], '(') ? [entry.returns, skipBrackets(segment, after)] : [undefined, after];
+      const stdlibType = (segment: Token[], found: { symbol: ApiSymbol; after: number }) => {
+        const { symbol, after } = found;
+        const type = symbol.type && baseType(symbol.type);
+        if (symbol.kind !== 'function') return [type, after] as const;
+        return op(segment[after], '(')
+          ? ([type, skipBrackets(segment, after)] as const)
+          : ([undefined, after] as const);
       };
 
       /** Follows the members after a value of `type` from `segment[i]`. Returns the type at the end and its index. */
@@ -588,8 +508,7 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
           const map = op(tokens[i + 1], ':') || (tokens[i + 1]?.type !== 'op' && op(tokens[i + 2], ':'));
           type = map ? 'Map' : 'List';
         } else if (token?.type === 'name') {
-          const name = tokens[i + 2];
-          if (isChannel(token) && op(tokens[i + 1], '.') && name && Object.hasOwn(factories, name.value)) {
+          if (isChannel(token) && op(tokens[i + 1], '.') && factory(tokens[i + 2])) {
             [type, end] = ['Channel', skipCall(tokens, i + 3)];
           } else if (callables.has(token.value)) {
             type = 'Outputs';
@@ -609,7 +528,7 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
       tokens.forEach((token, i) => {
         const type = tokens[i + 2];
         if (token.type !== 'name' || !op(tokens[i + 1], ':') || op(tokens[i - 1], '?') || type?.type !== 'name') return;
-        if (TYPES.has(type.value)) note(token.value, type.value === 'Value' ? 'Channel' : type.value);
+        if (ref.types.has(type.value)) note(token.value, type.value === 'Value' ? 'Channel' : type.value);
       });
       for (const name of untyped) note(name);
       tokens.forEach((token, i) => {
@@ -631,14 +550,14 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
       for (const segment of segments) {
         segment.forEach((token, i) => {
           if (token.type !== 'name' || op(segment[i - 1], '.') || inInclude.has(token)) return;
-          const next = segment[i + 1];
           const name = segment[i + 2];
-          if (isChannel(token) && op(next, '.') && name && Object.hasOwn(factories, name.value)) {
+          const channelFactory = isChannel(token) && op(segment[i + 1], '.') ? factory(name) : undefined;
+          if (channelFactory && name) {
             // One link for `channel.of`, unless a line break splits it.
             const oneLine = !code.slice(token.start, name.end).includes('\n');
-            add(oneLine ? token : name, name, `channel.${name.value}`, factory(name.value));
+            add(oneLine ? token : name, name, channelFactory.name, ref.index.link(channelFactory));
             walk(segment, skipCall(segment, i + 3), 'Channel', true);
-          } else if (flagLink(code, segment, i, add) || taskLink(code, segment, i, add)) {
+          } else if (flagLink(ref, code, segment, i, add) || taskLink(ref, code, segment, i, add)) {
             return;
           } else if (callables.has(token.value)) {
             add(token, token, token.value, included.get(token.value));
@@ -649,7 +568,7 @@ export function nextflow(options: NextflowAdapterOptions = {}): ApiLinkAdapter {
             const found = stdlib(segment, i);
             if (!found) return;
             const oneLine = !code.slice(token.start, found.last.end).includes('\n');
-            add(oneLine ? token : found.last, found.last, found.name, link(found.entry));
+            add(oneLine ? token : found.last, found.last, found.name, ref.index.link(found.symbol));
             const [type, after] = stdlibType(segment, found);
             walk(segment, after, type, true);
           }

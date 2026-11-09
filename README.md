@@ -378,7 +378,7 @@ x = np.linspace(0, 1, 50)
 <details>
 <summary>API auto-linking</summary>
 
-Link the names in code examples to their reference pages, with a card that shows the signature and a summary. Adapters for Python and Nextflow come with the plugin.
+Link the names in code examples to their reference pages, with a card that shows the signature and a summary. Adapters for Python, Nextflow and any language with an API index come with the plugin.
 
 ```py
 import json

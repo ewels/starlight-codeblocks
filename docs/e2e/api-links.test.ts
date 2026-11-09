@@ -77,7 +77,7 @@ test('the card is 360px wide, centred under its link, 12px inside the viewport, 
   const width = page.viewportSize()?.width ?? 0;
   const pairs = example(page, 1).getByRole('link', { name: 'channel.fromFilePairs' });
   await expect(pairs).toHaveAccessibleDescription(
-    'channel.fromFilePairs(pattern: String, [opts]) -> Channel<?>. Creates a channel that emits the file pairs that match a glob pattern, grouped by their shared prefix. Nextflow reference.',
+    'channel.fromFilePairs(opts: Map<String, ?>, pattern: String, grouping: Closure) -> Channel<?>. Create a channel that emits all file pairs matching a glob pattern. Nextflow reference.',
   );
   const fastqc = example(page, 1).getByRole('link', { name: 'FASTQC' }).first();
   await expect(fastqc).toHaveAttribute('href', 'https://nf-co.re/modules/fastqc');
@@ -94,10 +94,10 @@ test('the card is 360px wide, centred under its link, 12px inside the viewport, 
     expect(c.y - (l.y + l.height)).toBeCloseTo(8, 0);
   }
   await expect(card(page, 1).locator('.scb-api-card-head')).toHaveText(
-    'channel.fromFilePairs(pattern: String, [opts]) -> Channel<?>',
+    'channel.fromFilePairs(opts: Map<String, ?>, pattern: String, grouping: Closure) -> Channel<?>',
   );
   await expect(card(page, 1).locator('.scb-api-card-summary')).toHaveText(
-    'Creates a channel that emits the file pairs that match a glob pattern, grouped by their shared prefix.',
+    'Create a channel that emits all file pairs matching a glob pattern.',
   );
   await expect(card(page, 1).locator('.scb-api-card-source')).toHaveText('Nextflow reference');
   await expect(card(page, 1).locator('.scb-api-card-source svg')).toHaveCount(1);

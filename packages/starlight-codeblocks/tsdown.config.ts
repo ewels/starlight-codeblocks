@@ -12,6 +12,7 @@ export default defineConfig([
       'src/expressive-code/index.ts',
       'src/adapters/python.ts',
       'src/adapters/nextflow.ts',
+      'src/adapters/api-index.ts',
     ],
     format: 'esm',
     dts: true,
