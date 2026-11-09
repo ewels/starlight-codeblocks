@@ -52,6 +52,10 @@
       "types": "./dist/adapters/nextflow.d.mts",
       "default": "./dist/adapters/nextflow.mjs"
     },
+    "./adapters/api-index": {
+      "types": "./dist/adapters/api-index.d.mts",
+      "default": "./dist/adapters/api-index.mjs"
+    },
     "./runtimes/pyodide": {
       "types": "./dist/runtimes/pyodide.d.mts",
       "default": "./dist/runtimes/pyodide.mjs"

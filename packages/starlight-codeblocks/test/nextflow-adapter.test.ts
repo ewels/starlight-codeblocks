@@ -1,7 +1,5 @@
 import { expect, test } from 'vitest';
-import { type NextflowAdapterOptions, nextflow } from '../src/adapters/nextflow.ts';
-import { factories, operators } from '../src/adapters/nextflow-reference.ts';
-import { directives, globals, namespaces, scopes } from '../src/adapters/nextflow-reference-data.ts';
+import { type NextflowAdapterOptions, nextflow, nextflowIndex } from '../src/adapters/nextflow.ts';
 import { block, apiLinks as links, render } from './render.ts';
 
 const withNextflow = (options: NextflowAdapterOptions = {}) => ({ apiLinks: { adapters: [nextflow(options)] } });
@@ -29,12 +27,14 @@ test('links channel factories, operators on channels and included processes', as
     withNextflow({ modules: ({ name }) => `/reference/modules/${name.toLowerCase()}/` }),
   );
   expect(links(html)).toEqual([
+    expect.objectContaining({ text: 'include', href: `${NF}reference/syntax#include` }),
     { text: 'FASTQC', href: '/reference/modules/fastqc/', head: 'FASTQC', source: 'Module reference' },
+    expect.objectContaining({ text: 'workflow' }),
     {
       text: 'channel.fromFilePairs',
       href: 'https://docs.seqera.io/nextflow/reference/stdlib-namespaces/channel#fromfilepairs',
-      head: 'channel.fromFilePairs(pattern: String, [opts]) -> Channel<?>',
-      summary: 'Creates a channel that emits the file pairs that match a glob pattern, grouped by their shared prefix.',
+      head: 'channel.fromFilePairs(opts: Map<String, ?>, pattern: String, grouping: Closure) -> Channel<?>',
+      summary: 'Create a channel that emits all file pairs matching a glob pattern.',
       source: 'Nextflow reference',
     },
     expect.objectContaining({ text: 'params' }),
@@ -52,8 +52,8 @@ test('links operators in a chain after a factory, across lines', async () => {
     {
       text: 'map',
       href: 'https://docs.seqera.io/nextflow/reference/operator#map',
-      head: 'operator map',
-      summary: 'Applies a mapping function to each item. Returns a channel.',
+      head: 'Channel.map(transform: Function<E, R>) -> Channel<R>',
+      summary: 'The `map` operator applies a mapping function to each value from a source channel.',
       source: 'Nextflow reference',
     },
     expect.objectContaining({ text: 'filter', href: 'https://docs.seqera.io/nextflow/reference/operator#filter' }),
@@ -61,7 +61,7 @@ test('links operators in a chain after a factory, across lines', async () => {
   ]);
 });
 
-test('links operators only on channels, and never in strings, comments or Object.prototype names', async () => {
+test('links operators only on channels, and never in comments, plain strings or Object.prototype names', async () => {
   const cases: [string[], string[]][] = [
     [
       ['ch = Channel.of(1)', 'ch.map { it }.collect()'],
@@ -72,7 +72,7 @@ test('links operators only on channels, and never in strings, comments or Object
       ['channel.of', 'set', 'view'],
     ],
     [['ch = channel.of(1)', 'ch = [1, 2]', 'ch.collect()'], ['channel.of']],
-    [['list = [1, 2]', 'list.collect { it * 2 }'], []],
+    [['list = load()', 'list.collect { it * 2 }'], []],
     [['channel.of(1).map { it }.foo().view()'], ['channel.of', 'map']],
     [
       ["channel.of('a').map { it.split('(') }.view()", 'channel.of(1).view()'],
@@ -89,7 +89,7 @@ test('links operators only on channels, and never in strings, comments or Object
         'channel.of(3)',
         '"""',
       ],
-      ['println'],
+      ['println', 'channel.of'],
     ],
     [['ch = channel.of(1)', 'ch.toString()', 'channel.constructor', 'ch.hasOwnProperty("a")'], ['channel.of']],
   ];
@@ -110,21 +110,21 @@ test('follows aliases in include, uses what the modules option gives, and leaves
       },
     }),
   );
-  expect(links(html)[0]).toEqual({
+  expect(links(html)[1]).toEqual({
     text: 'FASTQC',
     href: '/m/fastqc/',
     head: 'process FASTQC',
     summary: 'Runs FastQC.',
     source: 'nf-core',
   });
-  expect(links(html).map((l) => l.text)).toEqual(['FASTQC', 'QC']);
+  expect(links(html).map((l) => l.text)).toEqual(['include', 'FASTQC', 'QC']);
   expect(seen).toEqual([
     { name: 'FASTQC', path: '../modules/qc' },
     { name: 'MULTIQC', path: '../modules/qc' },
   ]);
   const plain = await render(block('nextflow', ...lines), withNextflow({ modules: () => '/m/' }));
-  expect(links(plain.html).map((l) => l.head)).toEqual(['FASTQC', 'MULTIQC', 'FASTQC', 'MULTIQC']);
-  expect(await texts(lines)).toEqual([]);
+  expect(links(plain.html).map((l) => l.head)).toEqual(['keyword include', 'FASTQC', 'MULTIQC', 'FASTQC', 'MULTIQC']);
+  expect(await texts(lines)).toEqual(['include']);
 });
 
 test('runs for nextflow and nf blocks only', async () => {
@@ -155,14 +155,21 @@ const sayHello = [
   '}',
 ];
 
-test('links the directives and the input and output labels of a process', async () => {
+test('links the keyword, directives, labels and qualifiers of a process', async () => {
   const { html, copyText, warnings } = await render(block('nextflow', ...sayHello), withNextflow());
   expect(links(html)).toEqual([
+    {
+      text: 'process',
+      href: `${NF}reference/syntax#process`,
+      head: 'keyword process',
+      summary: 'Defines a process, which runs a task for each set of inputs.',
+      source: SOURCE,
+    },
     {
       text: 'publishDir',
       href: `${NF}reference/process/directives/publish-dir`,
       head: 'process directive publishDir',
-      summary: 'Publishes matching process output files to a target directory.',
+      summary: 'The `publishDir` directive allows you to publish the process output files to a directory.',
       source: SOURCE,
     },
     expect.objectContaining({ text: 'cpus', href: `${NF}reference/process/directives/cpus` }),
@@ -173,7 +180,23 @@ test('links the directives and the input and output labels of a process', async 
       summary: 'Declares the inputs of the process.',
       source: SOURCE,
     },
+    {
+      text: 'val',
+      href: `${NF}reference/process/inputs-outputs#inputs`,
+      head: 'val(arg)',
+      summary: 'Declare a variable input.',
+      source: SOURCE,
+    },
     expect.objectContaining({ text: 'output', href: `${NF}reference/process/inputs-outputs#outputs` }),
+    expect.objectContaining({ text: 'path', head: 'path(arg)' }),
+    {
+      text: 'script',
+      href: `${NF}process#script`,
+      head: 'process section script',
+      summary: 'Defines the script that each task runs.',
+      source: SOURCE,
+    },
+    expect.objectContaining({ text: 'workflow', href: `${NF}reference/syntax#workflow` }),
     expect.objectContaining({ text: 'channel.of' }),
     expect.objectContaining({ text: 'view' }),
   ]);
@@ -202,27 +225,306 @@ test('links a directive only at the start of a statement, before the first label
     '    memory 2.GB',
     '}',
   ];
-  expect(await texts(lines)).toEqual(['publishDir', 'params', 'input']);
-  expect(await texts(['process align {', '    cpus 2', '    debug'])).toEqual(['cpus', 'debug']);
+  expect(await texts(lines)).toEqual(['process', 'publishDir', 'params', 'input', 'val', 'exec', 'workflow']);
+  expect(await texts(['process align {', '    cpus 2', '    debug'])).toEqual(['process', 'cpus', 'debug']);
 });
 
-test('links the input and output labels only in a legacy process, and no other label', async () => {
+test('links the labels and declarations of a legacy process to the legacy reference, and of a typed one to the typed', async () => {
   const typed = ['process greet {', '    input:', '    greeting: String', '', '    output:', '    stdout()'];
-  expect(await texts([...typed, '', '    script:', '    "echo $greeting"', '}'])).toEqual([]);
+  expect(await targets('nextflow', [...typed, '', '    script:', '    "echo $greeting"', '}'])).toEqual([
+    'process reference/syntax#process',
+    'input process-typed#inputs',
+    'output process-typed#outputs',
+    'stdout reference/process/inputs-outputs-typed#outputs',
+    'script process#script',
+  ]);
   const legacy = ['process greet {', '    input:', '    tuple val(id), path(reads)', '    output:', '    stdout'];
   expect(await texts([...legacy, '    exec:', '    println id', '    stub:', '    ""', '}'])).toEqual([
+    'process',
     'input',
+    'tuple',
+    'val',
+    'path',
     'output',
+    'stdout',
+    'exec',
     'println',
+    'stub',
   ]);
   const bracketed = ['process greet {', '    input:', "    path('reads.fq')", '    script:', '    ""', '}'];
-  expect(await texts(bracketed)).toEqual(['input']);
+  expect(await texts(bracketed)).toEqual(['process', 'input', 'path', 'script']);
 });
 
-test('links config scopes and process directives in a config block', async () => {
+test('links qualifiers, output options and typed functions, also in a block with only part of a process', async () => {
+  const legacy = [
+    'input:',
+    '    tuple val(meta), path(reads, stageAs: "in/*")',
+    '    each mode',
+    'output:',
+    "    tuple val(meta), path('*.bam'), emit: bam, optional: true",
+    "    val 'done', topic: versions",
+  ];
+  expect(await targets('nextflow', legacy)).toEqual([
+    'tuple reference/process/inputs-outputs#inputs',
+    'val reference/process/inputs-outputs#inputs',
+    'path reference/process/inputs-outputs#inputs',
+    'each reference/process/inputs-outputs#inputs',
+    'tuple reference/process/inputs-outputs#outputs',
+    'val reference/process/inputs-outputs#outputs',
+    'path reference/process/inputs-outputs#outputs',
+    'emit reference/process/inputs-outputs#generic-options',
+    'optional reference/process/inputs-outputs#generic-options',
+    'val reference/process/inputs-outputs#outputs',
+    'topic reference/process/inputs-outputs#generic-options',
+  ]);
+  const typed = [
+    'stage:',
+    "    stageAs fasta, 'ref.fa'",
+    'output:',
+    "    record(id: id, stats: file('*.stats', optional: true))",
+    'topic:',
+    "    eval('samtools version') >> 'versions'",
+  ];
+  expect(await targets('nextflow', typed)).toEqual([
+    'stageAs reference/process/inputs-outputs-typed#stage-directives',
+    'record reference/stdlib-namespaces/global',
+    'file reference/process/inputs-outputs-typed#outputs',
+    'eval reference/process/inputs-outputs-typed#outputs',
+  ]);
+});
+
+test('links the keywords that start a declaration and the labels of a workflow', async () => {
+  const lines = [
+    'nextflow.enable.types = true',
+    "include { greet } from './greet'",
+    'params {',
+    '    input: Path',
+    '}',
+    'enum Day { MONDAY, TUESDAY }',
+    'record Sample {',
+    '    id: String',
+    '}',
+    'workflow hello {',
+    '    take:',
+    '    names: Channel<String>',
+    '    main:',
+    '    greetings = greet(names)',
+    '    emit:',
+    '    greetings',
+    '}',
+    'workflow {',
+    '    main:',
+    '    hello(channel.of(params.input))',
+    '    publish:',
+    '    greetings = hello.out',
+    '    onComplete:',
+    "    log.info 'Done'",
+    '}',
+    'output {',
+    "    greetings { path 'greetings' }",
+    '}',
+  ];
+  expect(await targets('nextflow', lines)).toEqual([
+    'nextflow.enable.types reference/feature-flags#nextflowenabletypes',
+    'include reference/syntax#include',
+    'params reference/syntax#params-block',
+    'enum reference/syntax#enum-type',
+    'record reference/syntax#record-type',
+    'workflow reference/syntax#workflow',
+    'take workflow#takes-and-emits',
+    'main reference/syntax#workflow',
+    'emit workflow#takes-and-emits',
+    'workflow reference/syntax#workflow',
+    'main reference/syntax#workflow',
+    'channel.of reference/stdlib-namespaces/channel#of',
+    'params reference/stdlib-namespaces/global',
+    'publish reference/syntax#workflow',
+    'onComplete reference/syntax#workflow',
+    'log.info reference/stdlib-namespaces/log',
+    'output reference/syntax#output-block',
+  ]);
+  expect(await texts(['def process = 1', 'workflow.onComplete { }', 'output: x', 'record(id: 1)'])).toEqual([
+    'workflow.onComplete',
+    'record',
+  ]);
+});
+
+test('reads an interpolation that spans lines as code, so a process does not end inside a string', async () => {
+  const lines = [
+    'process STATS {',
+    `    container "\${workflow.containerEngine == 'singularity'`,
+    "        ? 'https://example.com/samtools.sif'",
+    `        : 'quay.io/biocontainers/samtools'}"`,
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Nextflow string interpolation, not JavaScript.
+    '    ext args: { "--threads ${task.cpus}" }',
+    '    input:',
+    '    path bam',
+    '}',
+  ];
+  expect(await targets('nextflow', lines)).toEqual([
+    'process reference/syntax#process',
+    'container reference/process/directives/container',
+    'workflow.containerEngine reference/stdlib-namespaces/workflow',
+    'ext reference/process/directives/ext',
+    'task.cpus reference/process/directives/cpus',
+    'input reference/process/inputs-outputs#inputs',
+    'path reference/process/inputs-outputs#inputs',
+  ]);
+});
+
+test('links names in the interpolations of double-quoted strings only', async () => {
+  const lines = [
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Nextflow string interpolation, not JavaScript.
+    'println "${projectDir}/data $workflow.runName \\$HOME"',
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Nextflow string interpolation, not JavaScript.
+    "println '${projectDir} $launchDir'",
+    '"""',
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Nextflow string interpolation, not JavaScript.
+    'echo ${task.attempt} "$moduleDir" \\${workDir}',
+    '"""',
+  ];
+  expect(await targets('nextflow', lines)).toEqual([
+    'println reference/stdlib-namespaces/global',
+    'projectDir reference/stdlib-namespaces/global',
+    'workflow.runName reference/stdlib-namespaces/workflow',
+    'println reference/stdlib-namespaces/global',
+    'task.attempt reference/process/task-properties#taskattempt',
+    'moduleDir reference/stdlib-namespaces/global',
+  ]);
+});
+
+test('links task properties and directive values', async () => {
+  const { html } = await render(block('nextflow', 'memory { 2.GB * task.attempt }', 'cpus task.cpus'), withNextflow());
+  expect(links(html)).toEqual([
+    {
+      text: 'task.attempt',
+      href: `${NF}reference/process/task-properties#taskattempt`,
+      head: 'task.attempt: Integer',
+      summary: 'The current task attempt.',
+      source: SOURCE,
+    },
+    {
+      text: 'task.cpus',
+      href: `${NF}reference/process/directives/cpus`,
+      head: 'task.cpus: Integer',
+      summary: 'The `cpus` directive allows you to define the number of (logical) CPUs required by each task.',
+      source: SOURCE,
+    },
+  ]);
+  expect(await texts(['x.task.cpus', 'task.unknown', 'task'])).toEqual([]);
+});
+
+test('links members of a value whose type the block shows, and follows the type that each member gives', async () => {
+  const heads = async (lines: string[]) =>
+    links((await render(block('nextflow', ...lines), withNextflow())).html).map((l) => l.head);
+  const FILE = 'file(opts: Map<String, ?>, filePattern: String) -> Path';
+  const cases: [string[], string[]][] = [
+    [
+      ['def ref: Path = load()', 'println ref.name.toUpperCase()'],
+      ['println(value)', 'Path.name: String', 'String.toUpperCase() -> String'],
+    ],
+    [
+      ["ref = file('ref.fa')", 'ref.text.readLines().size()'],
+      [FILE, 'Path.text: String', 'String.readLines() -> List<String>', 'Iterable.size() -> Integer'],
+    ],
+    [['workflow.projectDir.resolve("assets")'], ['workflow.projectDir: Path', 'Path.resolve(other: String) -> Path']],
+    [
+      ["names = ['a', 'b']", "names.join(',')", 'sizes = [a: 1]', 'sizes.keySet()'],
+      ['Iterable.join(separator: String) -> String', 'Map.keySet() -> Set<K>'],
+    ],
+    [["name = 'x'", "name = file('a')", 'name.size()'], [FILE]],
+    [
+      ["ref = file('a')", 'channel.of(1).map { ref -> ref.name }'],
+      [FILE, 'channel.of(values...: E) -> Channel<E>', 'Channel.map(transform: Function<E, R>) -> Channel<R>'],
+    ],
+    [
+      ["n = file('a').size() > 0", 'n.toString()'],
+      [FILE, 'Path.size() -> Integer'],
+    ],
+  ];
+  for (const [lines, expected] of cases) expect(await heads(lines), lines.join('\n')).toEqual(expected);
+  const { html } = await render(block('nextflow', "file('ref.fa').baseName"), withNextflow());
+  expect(links(html)[1]).toEqual({
+    text: 'baseName',
+    href: `${NF}reference/stdlib-types/path`,
+    head: 'Path.baseName: String',
+    summary: 'Gets the file name without its extension, e.g. `/some/path/file.tar.gz` -> `file.tar`.',
+    source: SOURCE,
+  });
+});
+
+test('links the types of typed process inputs, legacy path inputs and typed workflow inputs', async () => {
+  const lines = [
+    'process align {',
+    '    input:',
+    '    record(id: String, reads: Path)',
+    '    script:',
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Nextflow string interpolation, not JavaScript.
+    '    "echo ${id.toUpperCase()} $reads.simpleName"',
+    '}',
+    'process sort {',
+    '    input:',
+    '    tuple val(meta), path(bam)',
+    '    script:',
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Nextflow string interpolation, not JavaScript.
+    '    "samtools sort ${bam.baseName} ${meta.id}"',
+    '}',
+    'workflow run {',
+    '    take:',
+    '    samples: Channel<Sample>',
+    '    main:',
+    '    samples.view()',
+    '}',
+  ];
+  expect(await texts(lines)).toEqual([
+    'process',
+    'input',
+    'record',
+    'script',
+    'toUpperCase',
+    'simpleName',
+    'process',
+    'input',
+    'tuple',
+    'val',
+    'path',
+    'script',
+    'baseName',
+    'workflow',
+    'take',
+    'main',
+    'view',
+  ]);
+});
+
+test('links operators on the outputs of processes and workflows', async () => {
+  const lines = [
+    "include { FASTQC } from './fastqc'",
+    'process ALIGN {',
+    '    script:',
+    "    ''",
+    '}',
+    'workflow {',
+    '    reads = load()',
+    '    bams = ALIGN(reads)',
+    '    bams.view()',
+    '    FASTQC(reads)',
+    '    FASTQC.out.html.collect().view()',
+    '    ALIGN.out.map { it }',
+    '}',
+  ];
+  expect((await texts(lines)).filter((text) => !['include', 'process', 'script', 'workflow'].includes(text))).toEqual([
+    'view',
+    'collect',
+    'view',
+    'map',
+  ]);
+});
+
+test('links config settings, scopes and process directives in a config block', async () => {
   const config = ['docker.enabled = true', '', 'process {', "    memory = '2 GB'", '}'];
   const expected = [
-    'docker reference/config/docker',
+    'docker.enabled reference/config/docker#dockerenabled',
     'process config#process-configuration',
     'memory reference/process/directives/memory',
   ];
@@ -233,22 +535,32 @@ test('links config scopes and process directives in a config block', async () =>
   expect(await targets('nextflow title="main.nf"', config)).toEqual([]);
   expect(await targets('nextflow nextflow="config"', ["process.memory = '2 GB'"])).toEqual(expected.slice(1));
   expect(await targets('nextflow nextflow="config"', ["trace.sep = ','", 'docker.enabled = true'])).toEqual([
-    'trace reference/config/trace',
-    'docker reference/config/docker',
+    'trace.sep reference/config/trace#tracesep',
+    'docker.enabled reference/config/docker#dockerenabled',
   ]);
-  const { html } = await render(block('nextflow nextflow="config"', 'docker.enabled = true'), withNextflow());
+  const { html } = await render(
+    block('nextflow nextflow="config"', 'docker.enabled = true', 'docker {'),
+    withNextflow(),
+  );
   expect(links(html)).toEqual([
+    {
+      text: 'docker.enabled',
+      href: `${NF}reference/config/docker#dockerenabled`,
+      head: 'config setting docker.enabled',
+      summary: 'Enable Docker execution (default: `false`).',
+      source: SOURCE,
+    },
     {
       text: 'docker',
       href: `${NF}reference/config/docker`,
       head: 'config scope docker',
-      summary: 'Controls how Docker containers are executed by Nextflow.',
+      summary: 'The `docker` scope controls how Docker containers are executed by Nextflow.',
       source: SOURCE,
     },
   ]);
 });
 
-test('links a config scope only at the start of a setting, and a directive only in the process scope', async () => {
+test('links a setting or scope only at the start of a setting, and a directive only in the process scope', async () => {
   const lines = [
     'profiles {',
     '    docker {',
@@ -275,16 +587,46 @@ test('links a config scope only at the start of a setting, and a directive only 
   ];
   expect(await targets('nextflow title="nextflow.config"', lines)).toEqual([
     'profiles config#config-profiles',
-    'docker reference/config/docker',
+    'docker.enabled reference/config/docker#dockerenabled',
+    'nextflow.enable.moduleBinaries reference/feature-flags#nextflowenablemodulebinaries',
     'params config#parameters',
-    'executor reference/config/executor',
+    'executor.queueSize reference/config/executor#executorqueuesize',
     'env reference/config/env',
-    'report reference/config/report',
+    'report.enabled reference/config/report#reportenabled',
     'process config#process-configuration',
     'executor reference/process/directives/executor',
     'cpus reference/process/directives/cpus',
     'memory reference/process/directives/memory',
+    'task.attempt reference/process/task-properties#taskattempt',
     'ext reference/process/directives/ext',
+    'workDir reference/config/unscoped#workdir',
+  ]);
+});
+
+test('links the settings in a scope block, also in a nested group, and leaves unknown settings plain', async () => {
+  const lines = [
+    'aws {',
+    "    region = 'eu-west-1'",
+    '    batch {',
+    '        maxParallelTransfers = 4',
+    "        cliPath = '/usr/bin/aws'",
+    '    }',
+    '}',
+    'singularity {',
+    '    enabled = true',
+    '    unknownSetting = 1',
+    '}',
+    "aws.batch.cliPath = '/usr/bin/aws'",
+    'docker.unknownSetting = 1',
+  ];
+  expect(await targets('nextflow title="nextflow.config"', lines)).toEqual([
+    'aws reference/config/aws',
+    'region reference/config/aws#awsregion',
+    'maxParallelTransfers reference/config/aws#awsbatchmaxparalleltransfers',
+    'cliPath reference/config/aws#awsbatchclipath',
+    'singularity reference/config/singularity',
+    'enabled reference/config/singularity#singularityenabled',
+    'aws.batch.cliPath reference/config/aws#awsbatchclipath',
   ]);
 });
 
@@ -314,8 +656,8 @@ test('links params and profiles in a config block, also in a profile body, but n
     'params config#parameters',
     'process config#process-configuration',
     'cpus reference/process/directives/cpus',
-    'docker reference/config/docker',
-    'docker reference/config/docker',
+    'docker.runOptions reference/config/docker#dockerrunoptions',
+    'docker.registry reference/config/docker#dockerregistry',
     'env reference/config/env',
   ]);
   const { html } = await render(block('nextflow title="nextflow.config"', 'params {', '}'), withNextflow());
@@ -324,7 +666,7 @@ test('links params and profiles in a config block, also in a profile body, but n
       text: 'params',
       href: `${NF}config#parameters`,
       head: 'config scope params',
-      summary: 'Defines pipeline parameters.',
+      summary: 'The `params` scope allows you to define parameters that will be accessible in the pipeline script.',
       source: SOURCE,
     },
   ]);
@@ -352,6 +694,7 @@ test('links the global names and the workflow, log and nextflow namespaces', asy
     'tuple reference/stdlib-namespaces/global',
     'file reference/stdlib-namespaces/global',
     'log.info reference/stdlib-namespaces/log',
+    'workflow.projectDir reference/stdlib-namespaces/workflow',
     'println reference/stdlib-namespaces/global',
     'workflow.runName reference/stdlib-namespaces/workflow',
     'error reference/stdlib-namespaces/global',
@@ -365,8 +708,8 @@ test('links the global names and the workflow, log and nextflow namespaces', asy
     {
       text: 'file',
       href: `${NF}reference/stdlib-namespaces/global`,
-      head: 'file(filePattern: String, [options]) -> Path | List<Path>',
-      summary: 'Gets a file from a file name or glob pattern.',
+      head: 'file(opts: Map<String, ?>, filePattern: String) -> Path',
+      summary: 'Get a file from a file name or glob pattern.',
       source: SOURCE,
     },
     expect.objectContaining({ text: 'println' }),
@@ -394,13 +737,23 @@ test('leaves a global name plain where the block binds it, where it is a map key
     ],
     [["projectDir = '/data'", 'launchDir = projectDir'], []],
     [["meta = [params: 1, projectDir: 'a']", "copy(file: 'a.txt')"], []],
-    [['params {', '    input: Path', '}'], []],
-    [['record Sample {', '    id: String', '}'], []],
-    [[...declarations, 'script:', 'file(id)'], ['file']],
-    [['x.log.info "a"', 'log.debug "b"', 'nextflow.enable.dsl = 2', 'workflow {', '}'], []],
+    [['params {', '    input: Path', '}'], ['params']],
+    [['record Sample {', '    id: String', '}'], ['record']],
+    [
+      ['x.log.info "a"', 'log.debug "b"', 'nextflow.enable.dsl = 2', 'workflow {', '}'],
+      ['nextflow.enable.dsl', 'workflow'],
+    ],
     [['log.constructor', 'workflow.hasOwnProperty("a")', 'constructor()', 'toString()'], []],
   ];
   for (const [lines, expected] of cases) expect(await texts(lines), lines.join('\n')).toEqual(expected);
+  expect(await targets('nextflow', [...declarations, 'script:', 'file(id)'])).toEqual([
+    'tuple reference/process/inputs-outputs#inputs',
+    'val reference/process/inputs-outputs#inputs',
+    'path reference/process/inputs-outputs#inputs',
+    'env reference/process/inputs-outputs#inputs',
+    'file reference/process/inputs-outputs-typed#outputs',
+    'file reference/stdlib-namespaces/global',
+  ]);
   expect(await targets('nextflow title="tests/main.nf.test"', ['assert workflow.success'])).toEqual([]);
 });
 
@@ -410,22 +763,31 @@ test('warns for a nextflow attribute that is not config, and links the block as 
   expect(warnings).toEqual([expect.stringContaining('nextflow="conf"')]);
 });
 
-test('the bundled map has every channel factory and operator of the reference', () => {
-  expect(Object.keys(factories)).toEqual([
-    'empty',
-    'fromFilePairs',
-    'fromLineage',
-    'fromList',
-    'fromPath',
-    'fromSRA',
-    'of',
-    'topic',
-    'value',
-    'watchPath',
+test('reads the API index of the latest language server release, of a pinned one, or another one', async () => {
+  expect(nextflowIndex()).toBe(
+    'https://github.com/nextflow-io/language-server/releases/latest/download/api-index.json',
+  );
+  expect(nextflowIndex('26.10.1')).toBe(
+    'https://github.com/nextflow-io/language-server/releases/download/v26.10.1/api-index.json',
+  );
+  const index = {
+    apiIndex: 1 as const,
+    base: 'https://example.org/docs/',
+    symbols: [{ name: 'cpus', kind: 'process directive', context: 'process', href: 'cpus' }],
+  };
+  const { html } = await render(block('nextflow', 'process A {', '    cpus 2', '}'), withNextflow({ index }));
+  expect(links(html).map((l) => [l.text, l.href, l.source])).toEqual([
+    ['cpus', 'https://example.org/docs/cpus', SOURCE],
   ]);
-  expect(Object.keys(operators)).toHaveLength(47);
-  expect(Object.keys(directives)).toHaveLength(41);
-  expect(Object.keys(scopes)).toHaveLength(35);
-  expect(Object.keys(globals)).toHaveLength(22);
-  expect(Object.keys(namespaces)).toEqual(['log', 'nextflow', 'workflow']);
+});
+
+test('links only modules, with a warning, when the API index does not load', async () => {
+  const { html, warnings } = await render(
+    block('nextflow', "include { FASTQC } from './fastqc'", 'channel.of(1)'),
+    withNextflow({ version: '0.0.0', modules: () => '/m/' }),
+  );
+  expect(links(html).map((l) => l.text)).toEqual(['FASTQC']);
+  expect(warnings).toEqual([
+    expect.stringContaining('could not fetch https://github.com/nextflow-io/language-server/releases/download/v0.0.0/'),
+  ]);
 });
