@@ -31,10 +31,14 @@ Click **Run code**. The first time, the browser downloads Python (Pyodide, a bui
 | `runnable.timeout=<ms>` | Code block fence line |
 | `runnable.packages="<name> <name>"` | Code block fence line |
 | `runnable.button="below"`, `runnable.button="title"`, `runnable.button="both"` | Code block fence line |
-| `[!output]`, `[!output stdout]`, `[!output stderr]`, `[!output end]` | Comment in the code, on its own line |
+| `runnable.autorun` | Code block fence line |
+| `[!run]`, `[!run lang=<language>]`, `[!run end]` | Comment in the code, on its own line |
+| `[!output]`, `[!output stdout]`, `[!output stderr]`, `[!output end]`, with `lang=<language>` after the stream | Comment in the code, on its own line |
 | `[!wait <ms>]` | Comment at the end of a line of output |
 | `[!code highlight]`, `[!code error]`, `[!code warning]`, `[!code info]`, `[!code success]` | Comment at the end of a line of output |
 | `runnable.output="<text>"`, `runnable.outputDelay=<ms>` | Code block fence line |
+| `runnable.outputLang=<language>` | Code block fence line |
+| `runnable.static` | Code block fence line |
 
 ### Languages
 
@@ -72,6 +76,35 @@ The block needs no `runnable` attribute and no runtime, so it works in every lan
 `[!code highlight]` and the [line state](/starlight-codeblocks/features/line-states/) directives mark a line of output, as they mark a line of code. `[!wait]` and a mark can share one comment, such as `# [!wait 1000] [!code highlight]`. Ranges on the fence line, such as `{2}`, count the lines of code only.
 
 `runnable.output` on the fence line does the same, with `\n` for each new line.
+
+### Output in a language
+
+`runnable.outputLang` on the fence line highlights the scripted output in a language. With `ansi`, the terminal colour codes in the output become colours, as in a terminal. Other languages, such as `json` or `yaml`, highlight as code does.
+
+With `ansi`, the output of a real run shows its colours too. Python libraries such as Rich print colours only to a terminal, so set the `FORCE_COLOR` environment variable in the code, or in [hidden lines](/starlight-codeblocks/features/hidden-lines/).
+
+`lang=` on an `[!output]` line sets the language of the lines after it, up to the next `[!output]` line. For example, `[!output stderr lang=txt]` keeps an error in plain text in a block of `ansi` output. `txt` and `plaintext` keep the stream colours.
+
+In `ansi` output, `\e[`, `\x1b[` and `\033[` stand for the escape character. This lets you write colour codes on the fence line, or by hand in the block.
+
+### Output from the start
+
+`runnable.static` shows the scripted output under the block when the page loads, with no button. The output is part of the page, so the block needs no JavaScript. Use it to show what a command prints, as a screenshot of a terminal would.
+
+`runnable.autorun` runs the code when the page loads, and shows the output under the block. The button reads **Run again** from the start. With scripted output, the output is part of the page, as with `runnable.static`, and **Run again** prints it again.
+
+export const autorun = `
+\`\`\`js runnable.autorun
+const reads = [1520, 1610, 1480, 1575];
+console.log('Total reads:', reads.reduce((sum, n) => sum + n, 0));
+\`\`\`
+`;
+
+<Example code={autorun} />
+
+### Other code to run
+
+The lines after `[!run]` are the code that runs, in place of the code that readers see. They leave the block, up to `[!run end]`, the next `[!output]` line or the end of the block. With `lang=`, they run on the runtime of that language. So a terminal block can show a command, and run Python that prints what the command prints. The copy button copies the command.
 
 ## Examples
 
@@ -242,6 +275,56 @@ Hello world!
 
 <Example code={outputOnly} layout="tabs" />
 
+### Coloured terminal output
+
+The help text of a command line tool has colours. `runnable.outputLang=ansi` shows them, and `runnable.static` shows the output with no button:
+
+export const ansi = `
+\`\`\`sh runnable.static runnable.outputLang=ansi
+python hello.py --help
+# [!output]
+\\e[33mUsage:\\e[0m \\e[1mhello.py\\e[0m [OPTIONS]
+
+ Greets NAME for a total of COUNT times.
+
+\\e[2m╭─ Options ───────────────────────────────╮\\e[0m
+\\e[2m│\\e[0m \\e[1;36m--count\\e[0m  \\e[1;33mINTEGER\\e[0m  Number of greetings.  \\e[2m│\\e[0m
+\\e[2m│\\e[0m \\e[1;36m--name\\e[0m   \\e[1;33mTEXT   \\e[0m  The person to greet.  \\e[2m│\\e[0m
+\\e[2m╰─────────────────────────────────────────╯\\e[0m
+\`\`\`
+`;
+
+<Example code={ansi} layout="tabs" />
+
+### Coloured output from a run
+
+The code prints terminal colour codes, and `runnable.outputLang=ansi` shows them as colours:
+
+export const ansiRun = `
+\`\`\`js runnable runnable.outputLang=ansi
+const green = (text) => \`\\x1b[32m\${text}\\x1b[0m\`;
+const bold = (text) => \`\\x1b[1m\${text}\\x1b[0m\`;
+console.log(\`\${green('✔')} Built in \${bold('2.1s')}\`);
+\`\`\`
+`;
+
+<Example code={ansiRun} layout="tabs" />
+
+### A command that runs Python
+
+The terminal shows the command, and the button runs the Python after `[!run]`:
+
+export const runOther = `
+\`\`\`sh
+python greet.py --name Ada --count 2
+# [!run lang=python]
+for _ in range(2):
+    print("Hello, Ada!")
+\`\`\`
+`;
+
+<Example code={runOther} layout="tabs" />
+
 ### The button in the title bar
 
 `runnable.button="title"` puts the button in the title bar, as the copy button is. `both` shows the button in both places:
@@ -260,7 +343,8 @@ print(sorted(["chr2", "chr10", "chr1"], key=lambda c: int(c[3:])))
   - The button is under the block, in the style of the [code walkthrough](/starlight-codeblocks/features/code-walkthrough/) buttons. The `button` option moves it to the title bar, or shows it in both places.
   - The runtime loads only when a reader clicks **Run code** for the first time. A page with runnable blocks loads a small script, and no runtime.
   - After the first run, the button reads **Run again**. Each run replaces the output of the run before it. The `label` and `againLabel` options change the two texts, for example for a site in another language.
-  - The code that runs is the copied text of the block. Directives are removed, and hidden lines are kept. The values that readers type into [fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/) are part of it too. For a Python session with `>>>` prompts, only the commands run, as **Copy commands** copies them. They run as in the Python REPL, so the output shows the value of each expression.
+  - With `runnable.autorun`, the code runs when the page loads. Several blocks on a page run one after another. The runtime downloads with the page, so a Python block makes the page load several megabytes.
+  - The code that runs is the copied text of the block, or the lines after `[!run]`. Directives are removed, and hidden lines are kept. The values that readers type into [fill-in placeholders](/starlight-codeblocks/features/fill-in-placeholders/) are part of it too. For a Python session with `>>>` prompts, only the commands run, as **Copy commands** copies them. They run as in the Python REPL, so the output shows the value of each expression.
   - Every runtime runs the code in a web worker, so the page stays responsive while code runs. Each run starts with no names from earlier runs. In Python, `__name__` is `"__main__"`.
   - In JavaScript and TypeScript, a run ends when the top-level code is done. Output from a timer or a callback that the code does not `await` is lost.
   - A run stops after 10 seconds, with a message in the panel. The download of the runtime and of the packages that the code imports does not count towards this time.
@@ -270,10 +354,13 @@ print(sorted(["chr2", "chr10", "chr1"], key=lambda c: int(c[3:])))
   - The output lines are not part of the code that readers see or copy.
   - A mark on a line of output shows the tint, the bar, the name and the message that it shows on a line of code. The text of the line takes the colour of the name, so that it stays readable on the tint.
   - A block with only output has no copy button. Its **Run code** button is in the middle of the empty code area, and fades out on the first click. Keyboard focus then moves to the output.
+  - With `runnable.static`, the output panel shows from the start, and the block has no button. A block with only output shows the panel in place of the code area.
 - Output:
   - The output panel has the label "Output". Standard output shows in green. Standard error shows in red, with a bar at its start, so the colour is not the only difference.
+  - Output in a language has the colours of the language in place of green or red. In scripted output, each colour is lightened or darkened to 4.5:1 on its background in each theme, so terminal colours and dim text stay readable. A marked line of output shows its text in the colour of the mark.
+  - In the output of a run, the 16 terminal colours come from the theme at 4.5:1, through the `codeblocksRunnable` style settings. Dim text takes the muted text colour, and a background colour shows as a light tint, so the text on it stays readable. Colours from the 256-colour palette and RGB colours show as the code prints them.
 - Keyboard and screen readers:
-  - The output panel is a polite live region. Screen readers announce the loading message and the output when they change.
+  - The output panel is a polite live region, except with `runnable.static`, where the output does not change. Screen readers announce the loading message and the output when they change.
   - Screen readers read "Error:" before standard error. Before a line of output with a line state, they read the name of the state, as for a line of code.
   - The button keeps the keyboard focus during a run, so readers can run the code again with <kbd>Enter</kbd> or <kbd>Space</kbd>.
 - Print:
@@ -309,6 +396,7 @@ The guide to [adding a runtime](/starlight-codeblocks/extend/add-a-runtime/) sho
 - TypeScript blocks with JSX (`tsx`) do not run.
 - The Python runtime loads Pyodide from the jsDelivr CDN, and packages from PyPI. Every runtime runs its worker from a `blob:` URL. A Content Security Policy must allow all three.
 - To stop a Python run, the runtime ends its worker. The next run downloads the runtime again, from the browser cache if the browser kept it.
+- In the output of a real run, `runnable.outputLang` shows `ansi` colours only. Other languages show as plain text, with a build warning.
 - Marks on lines of output need line states. With the `lineStates` option off, `[!code highlight]` on a line of output gives a warning. Other directives that mark lines, such as `[!code focus]` or `[!code ++]`, have no effect on a line of output.
 
 ## Related

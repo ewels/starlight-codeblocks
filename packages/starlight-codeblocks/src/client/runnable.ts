@@ -1,10 +1,11 @@
 import type { Runtime } from '../options.ts';
+import { ansiNodes } from './shared/ansi.ts';
 import { copiedCode, decodeCode } from './shared/copy.ts';
 
 const runtimes = new Map<string, Promise<Runtime>>();
 const loaded = new Set<string>();
 
-function line(tag: 'p' | 'pre', className: string, text: string, prefix?: string) {
+function line(tag: 'p' | 'pre', className: string, text: string, { prefix = '', ansi = false } = {}) {
   const el = document.createElement(tag);
   el.className = className;
   if (prefix) {
@@ -13,7 +14,7 @@ function line(tag: 'p' | 'pre', className: string, text: string, prefix?: string
     sr.textContent = prefix;
     el.append(sr);
   }
-  el.append(text);
+  el.append(ansi ? ansiNodes(text) : text);
   return el;
 }
 
@@ -27,14 +28,15 @@ function show(panel: HTMLElement, ...children: HTMLElement[]) {
 }
 
 const status = (text: string) => line('p', 'scb-run-status', text);
-const error = (prefix: string, text: string) => line('pre', 'scb-run-stderr', text, prefix);
+const stdout = (text: string, ansi = false) => line('pre', 'scb-run-stdout', text, { ansi });
+const error = (prefix: string, text: string, ansi = false) => line('pre', 'scb-run-stderr', text, { prefix, ansi });
 
 /** Prints the output that the author wrote, a line at a time, as if the code ran. */
 async function replay(figure: HTMLElement, panel: HTMLElement, output: string) {
   const delay = Number(figure.dataset.scbRunnableDelay) || 0;
   const waits: Record<number, number> = JSON.parse(figure.dataset.scbRunnableWaits ?? '{}');
   const streams: Record<number, string> = JSON.parse(figure.dataset.scbRunnableStreams ?? '{}');
-  const marks = figure.querySelector('.scb-run-marks');
+  const marks = figure.querySelector('.scb-run-lines');
   const t = texts(panel);
   if (delay || figure.dataset.scbRunnableWaits) show(panel, status(t.running));
   let part: HTMLElement | undefined;
@@ -43,7 +45,7 @@ async function replay(figure: HTMLElement, panel: HTMLElement, output: string) {
     if (ms) await new Promise((resolve) => setTimeout(resolve, ms));
     if (!part) show(panel);
     if (!part || i in streams) {
-      part = streams[i] === 'stderr' ? error(t.error, '') : line('pre', 'scb-run-stdout', '');
+      part = streams[i] === 'stderr' ? error(t.error, '') : stdout('');
       panel.append(part);
     } else part.append('\n');
     part.append(marks?.querySelector(`[data-scb-run-line="${i}"]`)?.cloneNode(true) ?? text);
@@ -57,8 +59,10 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
   const t = texts(panel);
   const timeout = Number(figure.dataset.scbRunnableTimeout) || 10000;
   const commands = figure.dataset.scbRunnableSession;
-  const code = decodeCode(commands ?? copiedCode(figure));
-  const session = commands !== undefined || figure.querySelector('.scb-shell-copy[data-code]') !== null;
+  const own = figure.dataset.scbRunnableCode;
+  const code = decodeCode(own ?? commands ?? copiedCode(figure));
+  const session =
+    own === undefined && (commands !== undefined || figure.querySelector('.scb-shell-copy[data-code]') !== null);
   let runtime: Runtime;
   try {
     if (!loaded.has(url)) show(panel, status(t.loading));
@@ -83,10 +87,11 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
   });
   const timer = setTimeout(() => controller.abort(new DOMException('Timed out', 'TimeoutError')), timeout);
   try {
-    const { stdout, stderr } = await Promise.race([runtime.run(code, { signal: controller.signal, session }), stopped]);
+    const output = await Promise.race([runtime.run(code, { signal: controller.signal, session }), stopped]);
     const parts = [];
-    if (stdout) parts.push(line('pre', 'scb-run-stdout', stdout));
-    if (stderr) parts.push(error(t.error, stderr));
+    const ansi = figure.hasAttribute('data-scb-runnable-ansi');
+    if (output.stdout) parts.push(stdout(output.stdout, ansi));
+    if (output.stderr) parts.push(error(t.error, output.stderr, ansi));
     show(panel, ...(parts.length ? parts : [status(t.empty)]));
   } catch (e) {
     if (controller.signal.aborted) {
@@ -105,9 +110,14 @@ async function click(event: MouseEvent) {
   const button = (event.target as Element).closest<HTMLElement>('.scb-run');
   // Found through the button, so that a copy of the block, as full screen plugins show, works too.
   const figure = button?.closest<HTMLElement>('[data-scb-runnable]');
-  const panel = figure?.querySelector<HTMLElement>('.scb-run-output');
   // aria-disabled, not disabled, so that the button keeps the keyboard focus.
-  if (!button || !figure || !panel || button.getAttribute('aria-disabled') === 'true') return;
+  if (!button || !figure || button.getAttribute('aria-disabled') === 'true') return;
+  await start(figure);
+}
+
+async function start(figure: HTMLElement) {
+  const panel = figure.querySelector<HTMLElement>('.scb-run-output');
+  if (!panel) return;
   const buttons = figure.querySelectorAll<HTMLElement>('.scb-run');
   for (const b of buttons) b.setAttribute('aria-disabled', 'true');
   try {
@@ -134,8 +144,16 @@ async function click(event: MouseEvent) {
 
 let ready = false;
 
-/** Runs a `runnable` block with its language's runtime, which loads on the first click, or prints its scripted output. */
+/**
+ * Runs a `runnable` block with its language's runtime, which loads on the first click, or prints its scripted output.
+ * `runnable.autorun` blocks run on page load, one after another, and stop when the reader leaves the page.
+ */
 export default function initRunnable() {
+  let queue = Promise.resolve();
+  for (const figure of document.querySelectorAll<HTMLElement>('[data-scb-runnable-autorun]:not([data-scb-ready])')) {
+    figure.dataset.scbReady = '';
+    queue = queue.then(() => (figure.isConnected ? start(figure) : undefined)).catch(() => {});
+  }
   if (ready) return;
   ready = true;
   document.addEventListener('click', click);

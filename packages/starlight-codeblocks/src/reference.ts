@@ -335,6 +335,34 @@ export const attributesReference: AttributeDoc[] = [
     page: 'features/run-code',
   },
   {
+    name: 'runnable.outputLang',
+    syntax: ['runnable.outputLang=<language>'],
+    description:
+      'Highlights the scripted output in a language, such as `ansi` for terminal colours or `json`. `lang=` on an `[!output]` line overrides it for the lines after it.',
+    page: 'features/run-code',
+    example: {
+      lang: 'sh',
+      meta: 'runnable.static runnable.outputLang=ansi',
+      code: 'make\n# [!output]\n\\e[32m✔\\e[0m Built in \\e[1m2.1s\\e[0m',
+    },
+  },
+  {
+    name: 'runnable.static',
+    syntax: ['runnable.static'],
+    description:
+      'Shows the scripted output under the block from the start, with no button and no JavaScript, as a record of a run.',
+    page: 'features/run-code',
+    example: { lang: 'sh', meta: 'runnable.static runnable.output="Hello world!"', code: 'nextflow run hello' },
+  },
+  {
+    name: 'runnable.autorun',
+    syntax: ['runnable.autorun'],
+    description:
+      'Runs the code when the page loads and shows the output under the block, with a **Run again** button. Scripted output shows from the start.',
+    page: 'features/run-code',
+    example: { lang: 'py', meta: 'runnable.autorun', code: 'print(sum([1, 2, 3]))' },
+  },
+  {
     name: 'focus.style',
     syntax: ['focus.style="blur"', 'focus.style="dim"'],
     description:
@@ -419,8 +447,21 @@ export interface StyleGroupDoc {
 
 const accent = 'The value of `codeblocks.accent`.';
 /** A theme colour, such as `terminal.ansiGreen`, lightened or darkened to `contrast` on the code background. */
-const fromTheme = (colour: string, contrast: string) =>
-  `The \`${colour}\` colour of the theme, with ${contrast} contrast on the code background.`;
+const fromTheme = (colour: string, contrast: string, background = 'code') =>
+  `The \`${colour}\` colour of the theme, with ${contrast} contrast on the ${background} background.`;
+const COLOURS = ['Black', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White'];
+/** The 16 terminal colours of the output panel. */
+const ansiSettings = Object.fromEntries(
+  [...COLOURS.map((c) => [c, c]), ...COLOURS.map((c) => [`Bright${c}`, `Bright ${c.toLowerCase()}`])].map(
+    ([name, label]) => [
+      `ansi${name}`,
+      {
+        description: `${label} in the output of a run with \`runnable.outputLang=ansi\`. Needs 4.5:1 contrast on the output background.`,
+        derived: fromTheme(`terminal.ansi${name}`, '4.5:1', 'output'),
+      },
+    ],
+  ),
+);
 const bracket = (depth: string, fallback: string) =>
   `The \`editorBracketHighlight.foreground${depth}\` colour of the theme, or VS Code's default (\`${fallback}\`) if the theme has none, with 4.5:1 contrast on the code background.`;
 
@@ -704,18 +745,28 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
   codeblocksRunnable: {
     page: 'features/run-code',
     settings: {
+      outputBackground: {
+        description: 'The background of the output panel.',
+        derived: 'The code background, a shade darker.',
+      },
       outputForeground: {
-        description: 'Standard output. Needs 4.5:1 contrast on the code background.',
-        derived: fromTheme('terminal.ansiGreen', '4.5:1'),
+        description: 'Standard output. Needs 4.5:1 contrast on the output background.',
+        derived: fromTheme('terminal.ansiGreen', '4.5:1', 'output'),
       },
       errorForeground: {
-        description: 'Standard error and run errors. Needs 4.5:1 contrast on the code background.',
-        derived: fromTheme('terminal.ansiRed', '4.5:1'),
+        description: 'Standard error and run errors. Needs 4.5:1 contrast on the output background.',
+        derived: fromTheme('terminal.ansiRed', '4.5:1', 'output'),
+      },
+      mutedForeground: {
+        description:
+          'The **Output** label, status messages and dim text in the output of a run. Needs 4.5:1 contrast on the output background.',
+        derived: '`codeblocks.mutedForeground`, with 4.5:1 contrast on the output background.',
       },
       buttonBorder: {
         description: 'The border of the button under the block. Needs 3:1 contrast on the code background.',
         derived: '`codeForeground` mixed 50% towards the code background, with 3:1 contrast on it.',
       },
+      ...ansiSettings,
     },
   },
   codeblocksWalkthrough: {

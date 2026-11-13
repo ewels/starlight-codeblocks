@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Run code: `runnable.outputLang` and `[!output lang=…]` highlight scripted output in a language. With `ansi`, terminal colour codes show as colours, corrected for contrast in each theme, in scripted output and in the output of real runs
+- Run code: `runnable.static` shows scripted output from the start, with no button and no JavaScript
+- Run code: `runnable.autorun` runs the code when the page loads, with a **Run again** button
+- Run code: `[!run]` runs hidden code in place of the code that readers see, so a terminal block can show a command and run Python
+
 ## 1.3.0
 
 - API links: the Nextflow adapter links process directives, input and output labels, global names such as `params`, and the scopes and process directives of config files. `nextflow="config"` marks a block as a config file (#22)
