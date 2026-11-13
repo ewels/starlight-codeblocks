@@ -2,17 +2,21 @@ import { expect, test } from '@playwright/test';
 import { css, example } from './helpers.ts';
 
 const PYTHON = 0;
-const JS = 1;
-const TS = 2;
-const PYPI = 3;
-const PACKAGES = 4;
-const ERROR = 5;
-const LOOP = 6;
-const SCRIPTED = 7;
-const FAILED = 8;
-const MARKS = 9;
-const OUTPUT_ONLY = 10;
-const TITLE = 11;
+const AUTORUN = 1;
+const JS = 2;
+const TS = 3;
+const PYPI = 4;
+const PACKAGES = 5;
+const ERROR = 6;
+const LOOP = 7;
+const SCRIPTED = 8;
+const FAILED = 9;
+const MARKS = 10;
+const OUTPUT_ONLY = 11;
+const ANSI = 12;
+const ANSI_RUN = 13;
+const RUN_OTHER = 14;
+const TITLE = 15;
 
 const oneProject = () =>
   test.skip(test.info().project.name !== 'desktop-dark', 'Slow or needs the network, so one project is enough.');
@@ -26,7 +30,12 @@ test('Run loads no runtime until selected, then shows stdout and stderr, and doe
   page.on('request', (r) => requests.push(r.url()));
   await page.reload();
   await page.waitForLoadState('networkidle');
-  expect(requests.filter((u) => u.includes('scb-runtime-') || u.includes('pyodide'))).toEqual([]);
+  // The runnable.autorun example loads the JavaScript runtime with the page.
+  expect(
+    requests.filter(
+      (u) => (u.includes('scb-runtime-') && !u.includes('scb-runtime-javascript')) || u.includes('pyodide'),
+    ),
+  ).toEqual([]);
   expect(requests.some((u) => u.includes('scb-runnable.'))).toBe(true);
 
   const block = example(page, JS);
@@ -159,7 +168,8 @@ test('scripted output prints a line at a time, and runs no runtime', async ({ pa
   await expect(stdout).not.toContainText('Hola mundo!');
   await expect(stdout).toHaveText(/Launching hello\.nf[\s\S]*Hola mundo!$/, { timeout: 8_000 });
   await expect(button).toHaveText('Run again');
-  expect(requests.filter((u) => u.includes('scb-runtime-'))).toEqual([]);
+  // The runnable.autorun example loads the JavaScript runtime with the page.
+  expect(requests.filter((u) => u.includes('scb-runtime-') && !u.includes('scb-runtime-javascript'))).toEqual([]);
 });
 
 test('scripted output prints each part in order, standard error with its bar and its Error: prefix', async ({
@@ -237,4 +247,52 @@ test('without JavaScript, the Run button is hidden', async ({ browser }) => {
   await expect(block.locator('.scb-run-controls')).toBeHidden();
   await expect(block.locator('.header')).toBeHidden();
   await context.close();
+});
+
+test('runnable.autorun runs on page load, and its button reads Run again from the start', async ({ page }) => {
+  const block = example(page, AUTORUN);
+  await expect(block.locator('.scb-run-stdout')).toHaveText('Total reads: 6185');
+  const button = block.locator('.scb-run');
+  await expect(button).toHaveText('Run again');
+  await button.focus();
+  await page.keyboard.press('Enter');
+  await expect(block.locator('.scb-run-stdout')).toHaveText('Total reads: 6185');
+  await expect(button).toBeFocused();
+});
+
+test('runnable.static shows coloured output from the start, readable in the theme, with no button', async ({
+  page,
+}) => {
+  const block = example(page, ANSI);
+  const stdout = block.locator('.scb-run-stdout');
+  await expect(block.locator('.scb-run')).toHaveCount(0);
+  await expect(block.locator('.scb-run-output')).not.toHaveAttribute('aria-live');
+  await expect(stdout).toContainText('Usage: hello.py [OPTIONS]');
+  await expect(stdout).not.toContainText('\\e[');
+  const usage = stdout.getByText('Usage:', { exact: true });
+  const plain = stdout.getByText('[OPTIONS]');
+  expect(await css(usage, 'color')).not.toBe(await css(plain, 'color'));
+  expect(await css(stdout.getByText('hello.py', { exact: true }), 'fontWeight')).toBe('700');
+  await expect(block.locator('.copy button')).toHaveAttribute('data-code', 'python hello.py --help');
+});
+
+test('[!run] runs the hidden Python, and the copy button copies the command', async ({ page }) => {
+  oneProject();
+  const block = example(page, RUN_OTHER);
+  await expect(block.locator('.copy button')).toHaveAttribute('data-code', 'python greet.py --name Ada --count 2');
+  await expect(block.locator('pre')).not.toContainText('print');
+  await block.locator('.scb-run').click();
+  await expect(block.locator('.scb-run-stdout')).toHaveText('Hello, Ada!\nHello, Ada!', { timeout: 60_000 });
+});
+
+test('a run with runnable.outputLang=ansi shows the colours that the code prints', async ({ page }) => {
+  const block = example(page, ANSI_RUN);
+  await block.locator('.scb-run').click();
+  const stdout = block.locator('.scb-run-stdout');
+  await expect(stdout).toHaveText('✔ Built in 2.1s');
+  const tick = stdout.getByText('✔');
+  const plain = stdout.getByText('Built in', { exact: false });
+  expect(await css(tick, 'color')).not.toBe(await css(stdout, 'color'));
+  expect(await css(stdout.getByText('2.1s'), 'fontWeight')).toBe('700');
+  expect(await plain.count()).toBe(1);
 });

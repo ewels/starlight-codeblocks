@@ -56,10 +56,10 @@ test.describe('in a copy of the block', () => {
 
   test('the Run button runs a copy of the block', async ({ page }) => {
     await page.goto('./features/run-code/');
-    const copy = await copyToOverlay(page, example(page, 1));
+    const copy = await copyToOverlay(page, example(page, 2));
     await copy.locator('.scb-run').click();
     await expect(copy.locator('.scb-run-stdout')).toBeVisible();
-    await expect(example(page, 1).locator('.scb-run-output')).toBeEmpty();
+    await expect(example(page, 2).locator('.scb-run-output')).toBeEmpty();
   });
 
   test('a bracket pair lights up in a copy of the block', async ({ page }) => {

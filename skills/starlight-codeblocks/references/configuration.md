@@ -73,6 +73,7 @@ Put a setting on the fence line, with its name from `codeblocks()`, to change it
 - `runnable.timeout=<ms>`
 - `runnable.button="below"`, `runnable.button="title"`, `runnable.button="both"`
 - `runnable.output="<text>"`, `runnable.outputDelay=<ms>`
+- `runnable.outputLang=<language>`, `runnable.static`, `runnable.autorun`
 
 A bad value gives a build warning, and the block uses the site setting. Options for the whole site (states, comment syntaxes, adapters, playgrounds, runtimes) have no fence line form.
 

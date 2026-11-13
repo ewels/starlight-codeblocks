@@ -331,9 +331,10 @@ const notationData = new AttachedPluginData<{
   directives: BlockDirective[];
   removed: ExpressiveCodeLine[];
   output: ExpressiveCodeLine[];
+  run: ExpressiveCodeLine[];
   specs: DirectiveSpecs;
   diffIndent: Map<ExpressiveCodeLine, number>;
-}>(() => ({ directives: [], removed: [], output: [], specs: {}, diffIndent: new Map() }));
+}>(() => ({ directives: [], removed: [], output: [], run: [], specs: {}, diffIndent: new Map() }));
 
 /** The directives in a code block, optionally only those with one name, such as `code focus`. */
 export function getDirectives(codeBlock: ExpressiveCodeBlock, name?: string): BlockDirective[] {
@@ -341,9 +342,30 @@ export function getDirectives(codeBlock: ExpressiveCodeBlock, name?: string): Bl
   return name === undefined ? directives : directives.filter((directive) => directive.name === name);
 }
 
-/** The stream that an `[!output]` directive starts, or `end`. `undefined` for an argument that it does not take. */
-export const outputMark = ({ args }: Pick<Directive, 'args'>) =>
-  args.length > 1 ? undefined : (['stdout', 'stderr', 'end'] as const).find((arg) => arg === (args[0] ?? 'stdout'));
+/** `lang=<language>` among `args`, and the other arguments. */
+function langArg(args: readonly string[]) {
+  const langs = args.filter((arg) => /^lang=./.test(arg));
+  return { langs: langs.map((arg) => arg.slice(5)), rest: args.filter((arg) => !langs.includes(arg)) };
+}
+
+/**
+ * The stream that an `[!output]` directive starts, or `end`, and the language of its lines.
+ * `undefined` for an argument that it does not take.
+ */
+export function outputMark({ args }: Pick<Directive, 'args'>) {
+  const { langs, rest } = langArg(args);
+  const stream = (['stdout', 'stderr', 'end'] as const).find((arg) => arg === (rest[0] ?? 'stdout'));
+  if (!stream || rest.length > 1 || langs.length > 1 || (stream === 'end' && langs.length > 0)) return undefined;
+  return { stream, lang: langs[0] };
+}
+
+/** `end` for `[!run end]`, or the language of the code after `[!run]`. `undefined` for an argument that it does not take. */
+export function runMark({ args }: Pick<Directive, 'args'>) {
+  const { langs, rest } = langArg(args);
+  if (langs.length > 1 || rest.length > 1 || (rest[0] !== undefined && (rest[0] !== 'end' || langs.length > 0)))
+    return undefined;
+  return { end: rest[0] === 'end', lang: langs[0] };
+}
 
 /**
  * The lines of scripted output: from the first `[!output]` to the `[!output end]` after it, or to the end of the block.
@@ -351,6 +373,13 @@ export const outputMark = ({ args }: Pick<Directive, 'args'>) =>
  */
 export const getOutputLines = (codeBlock: ExpressiveCodeBlock): readonly ExpressiveCodeLine[] =>
   notationData.getOrCreateFor(codeBlock).output;
+
+/**
+ * The lines that run instead of the code: from the first `[!run]` to the `[!run end]` or `[!output]` after it,
+ * or to the end of the block.
+ */
+export const getRunLines = (codeBlock: ExpressiveCodeBlock): readonly ExpressiveCodeLine[] =>
+  notationData.getOrCreateFor(codeBlock).run;
 
 /** The lines of the range attribute `key`, such as `focus={2}`, and the lines of the `name` directives. */
 export function markedLines(context: Parameters<typeof resolveRange>[0], key: string, name: string) {
@@ -427,25 +456,38 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
         const visible = lines.filter((_, i) => !parsed[i]?.removed);
         const marks = parsed.flatMap(({ directives }, i) =>
           directives
-            .filter((d) => d.name === 'output')
-            .map((d) => ({ at: visible.indexOf(lines[i] as ExpressiveCodeLine), mark: outputMark(d) })),
+            .filter((d) => d.name === 'output' || d.name === 'run')
+            .map((d) => ({
+              at: visible.indexOf(lines[i] as ExpressiveCodeLine),
+              output: d.name === 'output' ? outputMark(d)?.stream : undefined,
+              run: d.name === 'run' ? runMark(d) : undefined,
+            })),
         );
-        const start = marks.findIndex(({ mark }) => mark && mark !== 'end');
+        const start = marks.findIndex(({ output }) => output && output !== 'end');
         const from = marks[start]?.at ?? -1;
-        const end = marks.slice(start + 1).find(({ mark }) => mark === 'end')?.at;
+        const end = marks.slice(start + 1).find(({ output }) => output === 'end')?.at;
         const output = from === -1 ? [] : visible.slice(from, end);
-        const code = visible.toSpliced(from, output.length);
+        const runStart = marks.findIndex(({ run }) => run && !run.end);
+        const runFrom = marks[runStart]?.at ?? -1;
+        const runEnd = marks
+          .slice(runStart + 1)
+          .find(({ output, run }) => run?.end || (output && output !== 'end'))?.at;
+        const outputSet = new Set(output);
+        const run = runFrom === -1 ? [] : visible.slice(runFrom, runEnd).filter((line) => !outputSet.has(line));
+        const runSet = new Set(run);
+        const code = visible.filter((line) => !outputSet.has(line) && !runSet.has(line));
         lineData.getOrCreateFor(codeBlock).lines = code;
         const data = notationData.getOrCreateFor(codeBlock);
         data.specs = specs;
         data.removed = lines.filter((_, i) => parsed[i]?.removed);
         data.output = output;
+        data.run = run;
         if (code.length < lines.length) remapCollapse(codeBlock, lines, code);
         parsed.forEach(({ directives }, i) => {
           if (directives.length === 0) return;
           const line = lines[i] as ExpressiveCodeLine;
           // A count runs on in the output or in the code, never from one into the other.
-          const area = output.includes(line) ? output : code;
+          const area = outputSet.has(line) ? output : runSet.has(line) ? run : code;
           const target = area.indexOf(line);
           for (const directive of directives) {
             data.directives.push({ ...directive, lines: area.slice(target, target + directive.count) });
@@ -458,8 +500,8 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
         });
       },
       preprocessMetadata({ codeBlock }) {
-        const { removed, output } = notationData.getOrCreateFor(codeBlock);
-        if (removed.length === 0 && output.length === 0) return;
+        const { removed, output, run } = notationData.getOrCreateFor(codeBlock);
+        if (removed.length === 0 && output.length === 0 && run.length === 0) return;
         // Plugins before this one attached their line annotations by source line.
         const lines = codeBlock.getLines();
         const visible = numberedLines(codeBlock);

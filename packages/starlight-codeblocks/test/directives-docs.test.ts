@@ -8,6 +8,9 @@ const directives = createPlugins(resolveOptions()).flatMap((plugin) =>
   Object.entries((plugin as CodeblocksPlugin).directives ?? {}),
 );
 
+// The site has the built-in runtimes, which a render without `codeblocks()` lacks.
+const runtimes = { runnable: { runtimes: { python: '/py.js' } } };
+
 // The directives reference page in the docs renders every `docs.example` next to its source.
 test('every directive has docs with an example that renders cleanly', async () => {
   expect(directives.length).toBeGreaterThan(5);
@@ -15,7 +18,7 @@ test('every directive has docs with an example that renders cleanly', async () =
     expect(spec.docs, `add \`docs\` with an \`example\` to the [!${name}] directive`).toBeDefined();
     const { lang, code } = spec.docs?.example ?? { lang: '', code: '' };
     expect(code, name).toContain(`[!${name}`);
-    const { html, warnings } = await render(`\`\`\`${lang}\n${code}\n\`\`\``);
+    const { html, warnings } = await render(`\`\`\`${lang}\n${code}\n\`\`\``, runtimes);
     expect(warnings, name).toEqual([]);
     expect(html, name).not.toContain(`[!${name}`);
   }
