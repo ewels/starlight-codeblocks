@@ -749,6 +749,15 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
         description: 'The background of the output panel.',
         derived: 'The code background, a shade darker.',
       },
+      outputFontFamily: {
+        description:
+          'The font of the output panel. Rich and other terminal libraries draw panels with box-drawing characters, which need a font that has them, such as Fira Code.',
+        derived: '`codeFontFamily`.',
+      },
+      outputLineHeight: {
+        description: 'The line height of the output panel. A value near 1.25 joins the vertical lines of box drawings.',
+        derived: '`codeLineHeight`.',
+      },
       outputForeground: {
         description: 'Standard output. Needs 4.5:1 contrast on the output background.',
         derived: fromTheme('terminal.ansiGreen', '4.5:1', 'output'),

@@ -34,6 +34,9 @@ import { onCode, PREFIX, solidCodeBackground, solidCodeForeground, themeColour }
 export interface RunnableStyleSettings {
   /** The output panel, a shade darker than the code. */
   outputBackground: UnresolvedStyleValue;
+  /** The font of the output, such as one with box-drawing characters for terminal panels. */
+  outputFontFamily: UnresolvedStyleValue;
+  outputLineHeight: UnresolvedStyleValue;
   /** Standard output. Needs 4.5:1 on the output background. */
   outputForeground: UnresolvedStyleValue;
   /** Standard error and run errors. Needs 4.5:1 on the output background. */
@@ -85,6 +88,8 @@ const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksRunnable: {
       // The same step in contrast in both: light themes need far less darkening for it.
+      outputFontFamily: ({ resolveSetting }) => resolveSetting('codeFontFamily'),
+      outputLineHeight: ({ resolveSetting }) => resolveSetting('codeLineHeight'),
       outputBackground: (context) => darken(solidCodeBackground(context), context.theme.type === 'dark' ? 0.25 : 0.04),
       outputForeground: (context) => onOutput(context, themeColour(context, 'terminal.ansiGreen'), 4.5),
       errorForeground: (context) => onOutput(context, themeColour(context, 'terminal.ansiRed'), 4.5),
@@ -259,9 +264,9 @@ export function pluginRunnable({
   border-top: 0;
   border-radius: 0 0 ${cssVar('borderRadius')} ${cssVar('borderRadius')};
   background: ${cssVar('codeblocksRunnable.outputBackground')};
-  font-family: ${cssVar('codeFontFamily')};
+  font-family: ${cssVar('codeblocksRunnable.outputFontFamily')};
   font-size: ${cssVar('codeFontSize')};
-  line-height: ${cssVar('codeLineHeight')};
+  line-height: ${cssVar('codeblocksRunnable.outputLineHeight')};
 }
 .${cls('-output')} > * { display: block; margin: 0; padding: 0; border: 0; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
 /* Wins over Expressive Code's \`.frame pre\`, which gives a \`pre\` the code background and a scroll bar. */

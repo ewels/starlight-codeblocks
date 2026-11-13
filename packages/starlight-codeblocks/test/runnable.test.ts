@@ -615,3 +615,10 @@ test('the 16 ANSI colours for runs come from the theme, at 4.5:1 on the output b
     }
   }
 });
+
+test('the output font and line height follow the code unless a site sets its own', async () => {
+  for (const v of await variants([pluginCore(), pluginRunnable()])) {
+    expect(v.get('codeblocksRunnable.outputFontFamily')).toBe(v.get('codeFontFamily'));
+    expect(v.get('codeblocksRunnable.outputLineHeight')).toBe(v.get('codeLineHeight'));
+  }
+});

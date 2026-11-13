@@ -85,6 +85,16 @@ With `ansi`, the output of a real run shows its colours too. Python libraries su
 
 `lang=` on an `[!output]` line sets the language of the lines after it, up to the next `[!output]` line. For example, `[!output stderr lang=txt]` keeps an error in plain text in a block of `ansi` output. `txt` and `plaintext` keep the stream colours.
 
+Libraries such as Rich draw panels with box-drawing characters. Many code fonts do not have them, so the lines of a panel do not join. The `codeblocksRunnable.outputFontFamily` and `outputLineHeight` [style settings](/starlight-codeblocks/reference/style-settings/) give the output a font that has them, such as Fira Code, and a line height near 1.25:
+
+```js title="ec.config.mjs"
+export default {
+  styleOverrides: {
+    codeblocksRunnable: { outputFontFamily: "'Fira Code', monospace", outputLineHeight: '1.25' },
+  },
+};
+```
+
 In `ansi` output, `\e[`, `\x1b[` and `\033[` stand for the escape character. This lets you write colour codes on the fence line, or by hand in the block.
 
 ### Output from the start
