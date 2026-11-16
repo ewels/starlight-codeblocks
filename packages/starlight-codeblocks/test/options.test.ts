@@ -6,6 +6,7 @@ test('turns every feature on with defaults, in new objects on each call', () => 
   expect(options.focus).toEqual({ style: 'blur' });
   expect(options.callouts).toBe(true);
   expect(options.squiggles).toBe(true);
+  expect(options.splitDiff).toEqual({ view: 'unified', switch: true, sync: true });
   expect(options.annotations).toEqual({ style: 'filled' });
   expect(options.footnotes).toEqual({ sticky: false, style: 'outline' });
   expect(options.shellCopy).toEqual({ prompts: ['$ ', '> '] });
@@ -53,6 +54,8 @@ test('rejects options that are not valid, with an OptionsError that names the op
     [{ focus: true }, '`focus` must be `false` or an object, got true'],
     [{ callouts: {} }, '`callouts` must be `false` or left out'],
     [{ squiggles: true }, '`squiggles` must be `false` or left out'],
+    [{ splitDiff: { view: 'side' } }, '`splitDiff.view` must be'],
+    [{ splitDiff: { sync: 'yes' } }, '`splitDiff.sync` must be'],
     [{ annotations: { style: 'solid' } }, '`annotations.style` must be'],
     [{ footnotes: { style: 'solid' } }, '`footnotes.style` must be'],
     [{ expandable: { lines: 0 } }, '`expandable.lines` must be number, got 0'],

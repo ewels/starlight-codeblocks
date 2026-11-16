@@ -3,11 +3,8 @@ import { h, type Parents, select, selectAll } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { uiTexts } from '../translations.ts';
 import { TABS_META } from './code-tabs.ts';
-import { blockSetting, type CodeblocksPlugin } from './core.ts';
+import { blockSetting, type CodeblocksPlugin, hasCollapse } from './core.ts';
 import { PREFIX } from './styles.ts';
-
-const hasCollapse = (codeBlock: ExpressiveCodeBlock) =>
-  ((codeBlock.props as { collapse?: unknown[] }).collapse?.length ?? 0) > 0;
 
 // A bar under a variant or a Run output panel would compete with their own controls.
 const ownLayout = (codeBlock: ExpressiveCodeBlock) =>

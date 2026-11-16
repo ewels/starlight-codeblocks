@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/logotype.svg" width="800" alt="starlight-codeblocks">
 </h1>
 
-A Starlight and Astro plugin that adds 27 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
+A Starlight and Astro plugin that adds 28 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
 
 Using an agent? [Point it at the bundled skill](https://ewels.github.io/starlight-codeblocks/agent-skill/).
 
@@ -354,6 +354,24 @@ Highlight the words that changed inside each line of a diff, so readers find a s
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/word-level-diff.png" alt="A diff block where only the changed words in each line are tinted, underlined when added and struck through when removed.">
 
 [Word-level diff documentation](https://ewels.github.io/starlight-codeblocks/features/word-level-diff/)
+
+</details>
+
+<details>
+<summary>Split diff</summary>
+
+Let readers switch a diff block to a split view, with the old code on the left and the new code on the right. A **Unified** and **Split** switch shows on each block that removes and adds lines.
+
+```diff lang="js"
+ const app = express();
+-app.listen(3000);
++const port = Number(process.env.PORT ?? 3000);
++app.listen(port);
+```
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/split-diff.webp" alt="A diff block. The mouse cursor clicks Split, and the block shows the old code on the left and the new code on the right, with the unchanged lines on both sides.">
+
+[Split diff documentation](https://ewels.github.io/starlight-codeblocks/features/split-diff/)
 
 </details>
 

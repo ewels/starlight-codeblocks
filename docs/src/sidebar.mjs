@@ -36,6 +36,7 @@ export const sidebar = [
       'features/file-icons',
       'features/inline-code-highlighting',
       'features/word-level-diff',
+      'features/split-diff',
     ],
   },
   {

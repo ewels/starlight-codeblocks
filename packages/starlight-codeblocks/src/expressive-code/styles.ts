@@ -281,9 +281,9 @@ figure:has(.ec-line > .gutter > .ln) { --scb-gutter: calc(var(--lnWidth, 2ch) + 
   min-height: calc(${cssVar('uiFontSize')} * ${cssVar('uiLineHeight')} + 2 * (${cssVar('uiPaddingBlock')} + ${cssVar('frames.editorActiveTabIndicatorHeight')}) + ${cssVar('borderWidth')});
   box-sizing: border-box;
   padding-inline: ${cssVar('uiPaddingInline')} 0;
-  background: color-mix(in srgb, ${cssVar('codeForeground')} 5%, ${cssVar('codeBackground')});
-  /* The top border of the code is the line under the bar. */
-  border: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
+  /* The tab bar of titled blocks, without the tab. The top border of the code is the line under the bar. */
+  background: ${cssVar('frames.editorTabBarBackground')};
+  border: ${cssVar('borderWidth')} solid ${cssVar('frames.editorTabBarBorderColor')};
   border-bottom: 0;
   border-radius: ${cssVar('borderRadius')} ${cssVar('borderRadius')} 0 0;
 }

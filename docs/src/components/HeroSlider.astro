@@ -13,7 +13,7 @@ cfg = load(Path("config.json"))
 print(cfg["name"])  # [!code warning] KeyError if unset`;
 // The plain block is the same code without the directives, and with the features that start on their own turned off.
 const plain = code.replace(/ {2}# \[!.*$/gm, '');
-const diff = 'title="app.py" del={8} ins={9}';
+const diff = 'title="app.py" del={8} ins={9} splitDiff=false';
 ---
 
 <div class="hero-slider">

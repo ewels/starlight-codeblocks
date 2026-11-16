@@ -58,7 +58,8 @@ function select(event: MouseEvent) {
   const block = link?.closest('[data-scb-permalinks]');
   if (!link || !block || event.metaKey || event.ctrlKey || event.altKey) return;
   event.preventDefault();
-  const n = Number(link.textContent);
+  // Not the link text: split diff numbers each side on its own.
+  const n = Number(link.getAttribute('href')?.match(/-L(\d+)$/)?.[1]);
   if (!event.shiftKey || anchor?.block !== block) anchor = { block, n };
   const [from, to] = [Math.min(anchor.n, n), Math.max(anchor.n, n)];
   highlight(block, from, to);

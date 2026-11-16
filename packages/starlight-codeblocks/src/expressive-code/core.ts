@@ -142,6 +142,20 @@ export function lineNumber(codeBlock: ExpressiveCodeBlock, line: ExpressiveCodeL
   return numberedLines(codeBlock).indexOf(line) + (codeBlock.metaOptions.getInteger('startLineNumber') ?? 1);
 }
 
+/** The kind a whole-line text-markers annotation carries. The class itself is not exported by the plugin. */
+export function markerType(line: ExpressiveCodeLine): 'ins' | 'del' | undefined {
+  for (const annotation of line.getAnnotations()) {
+    if (annotation.inlineRange) continue;
+    const type = (annotation as { markerType?: string }).markerType;
+    if (type === 'ins' || type === 'del') return type;
+  }
+  return undefined;
+}
+
+/** Whether the block has collapsible sections, which wrap lines in `<details>`. */
+export const hasCollapse = (codeBlock: ExpressiveCodeBlock) =>
+  ((codeBlock.props as { collapse?: unknown[] }).collapse?.length ?? 0) > 0;
+
 const uids = new WeakMap<ExpressiveCodeBlock, string>();
 const uidCounts = new WeakMap<object, Map<string, number>>();
 

@@ -83,7 +83,12 @@ export function pluginPermalinks(): CodeblocksPlugin {
   color: ${cssVar('codeForeground')};
   text-decoration: underline;
 }
-${litLine(`.${LINK}-target`, cssVar('codeblocksPermalinks.targetBackground'), cssVar('codeblocksPermalinks.target'))}`,
+${litLine(
+  // With the split diff copy of the line on the right.
+  `.${LINK}-target, .${LINK}-target + .${PREFIX}-split-copy`,
+  cssVar('codeblocksPermalinks.targetBackground'),
+  cssVar('codeblocksPermalinks.target'),
+)}`,
     jsModules: clientJsModules,
     hooks: {
       preprocessMetadata({ codeBlock, addGutterElement, locale }) {

@@ -1,0 +1,185 @@
+---
+title: Split diff
+description: Let readers switch a diff block to a split view, with the old code on the left and the new code on the right.
+---
+
+import { LinkCard } from '@astrojs/starlight/components';
+import { CodeWalkthrough } from 'starlight-codeblocks/components';
+import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
+
+Expressive Code shows a `diff` block in one column, with each removed line above the line that replaces it. Split diff adds a switch with **Unified** and **Split** buttons to the title bar of each block that removes and adds lines. **Split** shows the old code on the left and the new code on the right, as a pull request on GitHub does.
+
+export const basic = `
+\`\`\`diff lang="js" title="server.js"
+ import express from 'express';
+
+ const app = express();
+-app.listen(3000);
++const port = Number(process.env.PORT ?? 3000);
++app.listen(port, () => {
++  console.log(\`Listening on port \${port}\`);
++});
+\`\`\`
+`;
+
+<Example code={basic} hiddenAttributes="wordDiff=false" />
+
+Click **Split** in the example. The unchanged lines show on both sides. The removed line is next to the first added line, and a shaded cell fills the left side of the other added lines.
+
+## Syntax
+
+| Syntax | Where |
+|---|---|
+| A `diff` block | Code block fence line |
+| `ins={range}`, `del={range}` | Code block fence line |
+| `[!code ++]`, `[!code --]` | Comment |
+| `splitDiff.view="unified"`, `splitDiff.view="split"` | Code block fence line |
+| `splitDiff.switch=false` | Code block fence line |
+| `splitDiff.sync=false` | Code block fence line |
+| `splitDiff=false` | Code block fence line |
+
+Each block that has a removed line and an added line, from any of these sources, gets the switch. You do not turn it on. `splitDiff=false` turns the feature off for one block, the same as `splitDiff.switch=false` in the unified view.
+
+## Examples
+
+### With directives
+
+`[!code --]` and `[!code ++]` give the same split view, without changing the language of the block:
+
+export const directives = `
+\`\`\`py title="config.py"
+DEBUG = False
+TIMEOUT = 30  # [!code --]
+RETRIES = 3  # [!code --]
+TIMEOUT = 60  # [!code ++]
+RETRIES = 5  # [!code ++]
+\`\`\`
+`;
+
+<Example code={directives} hiddenAttributes="wordDiff=false" layout="tabs" />
+
+### Start in the split view
+
+`splitDiff.view="split"` starts a block in the split view. A block without a title gets a small title bar for the switch. `splitDiff.sync=false` makes the switch change only this block, so the reader's choice on other blocks does not change it:
+
+export const start = `
+\`\`\`diff lang="js" splitDiff.view="split" splitDiff.sync=false
+-const res = await fetch(url);
++const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+ const data = await res.json();
+\`\`\`
+`;
+
+<Example code={start} hiddenAttributes="wordDiff=false" layout="tabs" />
+
+### One view only
+
+`splitDiff.switch=false` removes the switch, so the block always shows its view. Use it for a block that only makes sense side by side:
+
+export const forced = `
+\`\`\`diff lang="yaml" title="docker-compose.yml" splitDiff.view="split" splitDiff.switch=false
+ services:
+   web:
+-    image: nginx:1.25
++    image: nginx:1.27
+     ports:
+-      - "80:80"
++      - "8080:80"
+\`\`\`
+`;
+
+<Example code={forced} hiddenAttributes="wordDiff=false" layout="tabs" />
+
+### In a code walkthrough, with line permalinks
+
+Each step of a [code walkthrough](/starlight-codeblocks/features/code-walkthrough/) can be a diff. Here each step shows the change so far against the same file, and the switch changes every step. With `id`, [line permalinks](/starlight-codeblocks/features/line-permalinks/) turn the line numbers into links. In the split view, each side counts its own lines, and each link still opens its line:
+
+export const walkthrough = `
+<CodeWalkthrough>
+
+\`\`\`diff lang="js" title="server.js" step="Read the port" id="port"
+ const app = express();
+-app.listen(3000);
++const port = Number(process.env.PORT ?? 3000);
++app.listen(port);
+\`\`\`
+
+\`\`\`diff lang="js" title="server.js" step="Log the port" id="log"
+ const app = express();
+-app.listen(3000);
++const port = Number(process.env.PORT ?? 3000);
++app.listen(port, () => {
++  console.log(\`Listening on port \${port}\`);
++});
+\`\`\`
+
+</CodeWalkthrough>
+`;
+
+<Example code={walkthrough} hiddenAttributes="wordDiff=false" layout="tabs">
+
+<CodeWalkthrough>
+
+```diff lang="js" title="server.js" step="Read the port" id="port" wordDiff=false
+ const app = express();
+-app.listen(3000);
++const port = Number(process.env.PORT ?? 3000);
++app.listen(port);
+```
+
+```diff lang="js" title="server.js" step="Log the port" id="log" wordDiff=false
+ const app = express();
+-app.listen(3000);
++const port = Number(process.env.PORT ?? 3000);
++app.listen(port, () => {
++  console.log(`Listening on port ${port}`);
++});
+```
+
+</CodeWalkthrough>
+
+</Example>
+
+## Behaviour
+
+- Switching the view:
+  - By default, the switch changes every diff block on the page at once. Blocks with `splitDiff.sync=false` or with no switch keep their view.
+  - The browser remembers the choice, so synced blocks on the next page open in the same view. Before the reader makes a choice, each block starts in its `splitDiff.view`.
+  - Screen readers announce the button of the current view as pressed.
+- Layout:
+  - Unchanged lines show on both sides. Removed lines show on the left, and added lines show on the right.
+  - The plugin pairs a run of removed lines with the run of added lines below it, one by one. A shaded cell fills the side of a line that has no pair.
+  - With line numbers, from Expressive Code or from line permalinks, the left side counts the lines of the old code. The right side counts the lines of the new code.
+  - Both sides have the same width. A long line wraps inside its side, as on GitHub.
+- Copy and screen readers:
+  - The copy button copies the same text in both views.
+  - Screen readers read the block as a unified diff in both views. They skip the copies of the unchanged lines on the right.
+- Without JavaScript:
+  - The switch does not show, and every block shows the unified view, also with `splitDiff.view="split"`.
+
+## Options
+
+<Options />
+
+To start every diff block in the split view, and let each block switch alone, set both for the site:
+
+```js title="astro.config.mjs"
+codeblocks({
+  splitDiff: { view: 'split', sync: false },
+});
+```
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
+
+## Limitations
+
+- Pairing is by position, as in [word-level diff](/starlight-codeblocks/features/word-level-diff/). A block that adds or removes a different number of lines can pair the wrong lines.
+- You cannot select the text of the unchanged lines on the right. Select them on the left.
+- Features that light a line when the reader acts, such as code mentions, light the left copy of an unchanged line only. Line permalinks light both sides.
+- A block with collapsible sections (`collapse`) gets no switch.
+
+## Related
+
+- [Word-level diff](/starlight-codeblocks/features/word-level-diff/): highlight the changed words inside each pair of lines, in both views.
+- [Code walkthrough](/starlight-codeblocks/features/code-walkthrough/): show code that changes in steps, instead of as a diff.

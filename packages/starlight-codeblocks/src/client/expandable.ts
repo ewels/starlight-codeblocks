@@ -1,14 +1,22 @@
 const COLLAPSED = 'scb-expandable-collapsed';
 
 const linesOf = (pre: HTMLElement) =>
-  pre.querySelectorAll<HTMLElement>('.ec-line:not(summary > *):not(.scb-hidden-line)');
+  pre.querySelectorAll<HTMLElement>('.ec-line:not(summary > *):not(.scb-hidden-line, .scb-split-copy)');
 // Without until-found support the attribute value is ignored, and the lines are plainly hidden.
 const HIDDEN = 'onbeforematch' in HTMLElement.prototype ? 'until-found' : '';
 
+const row = (el: Element) => Number((el as HTMLElement).style.getPropertyValue('--scb-row'));
+
 function tail(pre: HTMLElement) {
   const last = linesOf(pre)[Number(pre.dataset.scbExpandable) - 1];
+  // A split diff shows a line next to its partner, which can come later in the DOM.
+  const split = pre.classList.contains('scb-split');
   return [...(last?.parentElement?.children ?? [])].filter(
-    (el) => last && last.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING,
+    // A split diff's copies and gaps follow the hidden state of the line before them.
+    (el) =>
+      last &&
+      !el.matches('.scb-split-copy, .scb-split-gap') &&
+      (split ? row(el) > row(last) : last.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING),
   );
 }
 
@@ -77,6 +85,12 @@ export default function initExpandable() {
       },
       true,
     );
+    document.addEventListener('scb-split-change', (event) => {
+      const pre = event.target as HTMLElement;
+      if (!pre.classList.contains(COLLAPSED)) return;
+      for (const line of pre.querySelectorAll('code > [hidden]')) line.removeAttribute('hidden');
+      set(pre, false);
+    });
   }
   for (const pre of document.querySelectorAll<HTMLElement>(
     'pre[data-scb-expandable]:not([data-scb-expandable-ready])',

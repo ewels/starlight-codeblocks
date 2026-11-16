@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, type Locator, type Page, test } from '@playwright/test';
 import type { CodeblocksOptions } from '../../packages/starlight-codeblocks/src/options.ts';
 import { render } from '../../packages/starlight-codeblocks/test/render.ts';
 import { clipboard } from './helpers.ts';
@@ -84,6 +84,81 @@ test('expanding shows the hidden lines, their markers and callouts, and a callou
   await expect(hiddenLine.locator('.scb-callout')).toBeVisible();
   await hiddenLine.locator('.scb-hidden-marker').click();
   await expect(hiddenLine.locator('.scb-callout')).toBeHidden();
+});
+
+test('a split diff counts each side of a block with line permalinks from its first number, and the links say it', async ({
+  page,
+}) => {
+  const block = await inject(page, [
+    '```diff lang="js" id="srv" startLineNumber=0',
+    ' a()',
+    '-b()',
+    '+c()',
+    ' d()',
+    '```',
+  ]);
+  const numbers = (side: string) => block.locator(`.scb-split-${side} .scb-permalink`).allTextContents();
+  const added = block.locator('.ec-line.ins .scb-permalink');
+  await block.getByRole('button', { name: 'Split' }).click();
+  expect(await numbers('left')).toEqual(['0', '1', '2']);
+  expect(await numbers('right')).toEqual(['0', '1', '2']);
+  await expect(added).toHaveAttribute('aria-label', 'Link to line 1');
+  await added.click();
+  await expect(block.locator('.scb-permalink-target')).toHaveClass(/\bins\b/);
+  expect(page.url()).toMatch(/#srv-L2$/);
+  const copy = block.locator('.scb-split-copy').last();
+  await expect(copy.locator('.scb-permalink')).toHaveAttribute('tabindex', '-1');
+  await copy.locator('.scb-permalink').click();
+  expect(page.url()).toMatch(/#srv-L3$/);
+  const target = block.locator('.scb-permalink-target');
+  await expect(target).toContainText('d()');
+  const background = (line: Locator) => line.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(await background(copy)).toBe(await background(target));
+  expect(await background(copy)).not.toBe(await background(block.locator('.scb-split-copy').first()));
+  await block.getByRole('button', { name: 'Unified' }).click();
+  await expect(added).toHaveText('2');
+  await expect(added).toHaveAttribute('aria-label', 'Link to line 2');
+});
+
+test('a split diff keeps a callout above its line on its side, and collapses by row', async ({ page }) => {
+  const block = await inject(page, [
+    '```js',
+    'a()',
+    'b() // [!code --]',
+    '// [!callout /c/] Calls c.',
+    'c() // [!code ++]',
+    'd()',
+    '```',
+  ]);
+  await block.getByRole('button', { name: 'Split' }).click();
+  const box = (selector: string) => block.locator(selector).boundingBox();
+  const [del, ins, callout] = [await box('.ec-line.del'), await box('.ec-line.ins'), await box('.scb-callout')];
+  expect(ins?.y).toBe(del?.y);
+  expect(callout?.x).toBeGreaterThanOrEqual(ins?.x ?? 0);
+  expect((callout?.y ?? 0) + (callout?.height ?? 0)).toBeLessThanOrEqual((ins?.y ?? 0) + 1);
+
+  const collapsed = await inject(page, [
+    // The first block stored the split view, which a synced block would start in.
+    '```diff lang="js" expandable={3} splitDiff.sync=false',
+    ' a()',
+    '-b()',
+    '-c()',
+    '+d()',
+    '+e()',
+    ' f()',
+    ' g()',
+    ' h()',
+    '```',
+  ]);
+  const line = (text: string) => collapsed.locator('.ec-line:not(.scb-split-copy)', { hasText: text });
+  await expect(line('d()')).toBeHidden();
+  await collapsed.getByRole('button', { name: 'Split' }).click();
+  await expect(line('d()')).toBeVisible();
+  await expect(line('e()')).toBeVisible();
+  await expect(line('f()')).toBeHidden();
+  await collapsed.getByRole('button', { name: 'Unified' }).click();
+  await expect(line('d()')).toBeHidden();
+  await expect(line('c()')).toBeVisible();
 });
 
 test('a new page adds no second document or window listener', async ({ page }) => {

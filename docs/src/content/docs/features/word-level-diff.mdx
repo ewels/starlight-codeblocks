@@ -20,9 +20,11 @@ const client = createClient({
 \`\`\`
 `;
 
-<Example code={basic} />
+<Example code={basic} hiddenAttributes="splitDiff=false" />
 
 The new `timeout` line adds `options.timeout ??`, and `3` becomes `options.retries`. The plugin pairs each removed line with the added line below it, and compares them word by word. The changed words get a stronger tint and a bar under them. The rest of the line keeps the plain diff tint.
+
+The example above has the [split diff](/starlight-codeblocks/features/split-diff/) turned off to avoid confusion.
 
 ## Syntax
 
@@ -49,7 +51,7 @@ const port = Number(process.env.PORT ?? 3000);
 \`\`\`
 `;
 
-<Example code={attributes} layout="tabs" />
+<Example code={attributes} hiddenAttributes="splitDiff=false" layout="tabs" />
 
 ### With directives
 
@@ -62,7 +64,7 @@ TIMEOUT = 60  # [!code ++]
 \`\`\`
 `;
 
-<Example code={directives} layout="tabs" />
+<Example code={directives} hiddenAttributes="splitDiff=false" layout="tabs" />
 
 ### Lines too different to compare
 
@@ -77,7 +79,7 @@ export const different = `
 \`\`\`
 `;
 
-<Example code={different} layout="tabs" />
+<Example code={different} hiddenAttributes="splitDiff=false" layout="tabs" />
 
 ## Behaviour
 
@@ -115,4 +117,5 @@ codeblocks({
 ## Related
 
 - [Line states](/starlight-codeblocks/features/line-states/): tint a line as an error, a warning or a note, instead of a change.
+- [Split diff](/starlight-codeblocks/features/split-diff/): show the old code and the new code side by side.
 - [Comment notation](/starlight-codeblocks/comment-notation/): the `[!code ++]` and `[!code --]` directives that word-level diff reads.

@@ -91,6 +91,15 @@ const features = [
     },
   },
   { slug: 'word-level-diff' },
+  {
+    slug: 'split-diff',
+    run: async (page, rec) => {
+      await rec.hold(1200);
+      await rec.click(block(page).locator('.scb-split-toggle[data-scb-view="split"]'));
+      await rec.include(block(page));
+      await rec.hold(2400);
+    },
+  },
   { slug: 'visible-whitespace' },
   { slug: 'colourised-brackets' },
   { slug: 'colour-swatches' },

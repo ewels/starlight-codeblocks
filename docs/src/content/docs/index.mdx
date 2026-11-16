@@ -1,10 +1,10 @@
 ---
 title: starlight-codeblocks
-description: A plugin for Starlight and Astro that adds focus, line states, annotations, API auto-linking and 23 more features to the code blocks of a site.
+description: A plugin for Starlight and Astro that adds focus, line states, annotations, API auto-linking and 24 more features to the code blocks of a site.
 template: splash
 hero:
   tagline: |
-    This plugin adds 27 features to the <a href="https://expressive-code.com">Expressive Code</a> blocks of
+    This plugin adds 28 features to the <a href="https://expressive-code.com">Expressive Code</a> blocks of
     <a href="https://starlight.astro.build">Starlight</a> and <a href="/starlight-codeblocks/install/astro/">Astro</a> sites.
     Use them to enrich code blocks.
     <span class="agent-skill">Using an agent? <a href="/starlight-codeblocks/agent-skill/">Point it at the bundled skill</a>.</span>
@@ -337,13 +337,28 @@ CMD ["node", "src/index.js"]
 
 <Feature page="features/word-level-diff">
 
-```diff lang="js"
+```diff lang="js" splitDiff=false
 -const timeout = 5000;
 +const timeout = options.timeout ?? 5000;
 const client = createClient({
 -  retries: 3,
 +  retries: options.retries,
 });
+```
+
+</Feature>
+
+<Feature page="features/split-diff">
+
+```diff lang="js" title="server.js" wordDiff=false
+ import express from 'express';
+
+ const app = express();
+-app.listen(3000);
++const port = Number(process.env.PORT ?? 3000);
++app.listen(port, () => {
++  console.log(`Listening on port ${port}`);
++});
 ```
 
 </Feature>
