@@ -60,8 +60,15 @@ export function renderTokens(code: string, language: string, variants: StyleVari
   return result;
 }
 
-/** Text forms of the escape character, for ANSI output written by hand or on a fence line. */
-const ESCAPES = /\\(?:e|x1b|033|u001b)\[/gi;
+/**
+ * Text forms of the escape character, for ANSI output written by hand or on a fence line. A second backslash before
+ * one keeps it as text, without that backslash, for output that prints `\e[` itself.
+ */
+const ESCAPES = /\\(\\?)(?:e|x1b|033|u001b)\[/gi;
+
+/** `code` with each text form of the escape character as the character. */
+const unescapeAnsi = (code: string) =>
+  code.replace(ESCAPES, (match, literal: string) => (literal ? match.slice(1) : '\x1b['));
 
 /**
  * Each token colour, with its alpha blended in, at `min` contrast on its own background or on `backgrounds`.
@@ -104,8 +111,9 @@ export async function highlightOutput(
   variants: StyleVariant[],
   min: number,
   backgrounds: string[],
+  textEscapes = true,
 ): Promise<ElementContent[][] | undefined> {
-  const ast = await renderTokens(lang === 'ansi' ? code.replace(ESCAPES, '\x1b[') : code, lang, variants);
+  const ast = await renderTokens(lang === 'ansi' && textEscapes ? unescapeAnsi(code) : code, lang, variants);
   if (!ast) return undefined;
   // Expressive Code leaves ANSI colours alone, and the output has its own background.
   correctColours(ast, variants, min, backgrounds);

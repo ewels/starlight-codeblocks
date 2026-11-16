@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1
+
+- Run code: `runnable.outputFile="<path>"` reads scripted output from a file at build time, with the path relative to the page. The block shows it from the start; `runnable` gives it the button. A `.ansi` file is in the `ansi` language. In `astro dev`, a change to the file reloads the page (#35)
+- Run code: `runnable.static` with no output gives a build warning in a block without `runnable`. Before, it had no effect and no warning (#35)
+- Run code: in `ansi` output, `\\e[` (and the `\\x1b[`, `\\033[` and `\\u001b[` forms) shows the text `\e[`, for output that prints it (#35)
+
 ## 1.4.0
 
 - Run code: `runnable.outputLang` and `[!output lang=…]` highlight scripted output in a language. With `ansi`, terminal colour codes show as colours, corrected for contrast in each theme, in scripted output and in the output of real runs (#32)

@@ -38,6 +38,7 @@ export default function codeblocks({
 }: AstroCodeblocksOptions = {}): AstroIntegration[] {
   const options = resolveOptions({ codeTabs: false, inlineHighlighting: false, ...userOptions });
   const plugins = createPlugins(options);
+  let integration: AstroIntegration | undefined;
   const setup: AstroIntegration = {
     name: 'starlight-codeblocks',
     hooks: {
@@ -75,12 +76,15 @@ export default function codeblocks({
           blockIds: new Set(),
         });
         for (const id of pageCssIds(options, false)) injectScript('page-ssr', `import ${JSON.stringify(id)};`);
-        const integration = codeblocksIntegration({
+        integration = codeblocksIntegration({
           options,
           ecConfigOverride: ownPlugins ? undefined : { file },
           apiCardPage: false,
         });
         await integration.hooks['astro:config:setup']?.(params);
+      },
+      'astro:server:setup'(params) {
+        return integration?.hooks['astro:server:setup']?.(params);
       },
       // Last, after every integration has added its plugins, so that only directives nobody claims go back to text.
       'astro:config:done'({ config }) {

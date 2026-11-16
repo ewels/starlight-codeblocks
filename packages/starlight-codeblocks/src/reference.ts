@@ -329,10 +329,17 @@ export const attributesReference: AttributeDoc[] = [
     example: { lang: 'sh', meta: 'runnable.output="Downloading…\\nDone."', code: 'nextflow run hello' },
   },
   {
+    name: 'runnable.outputFile',
+    syntax: ['runnable.outputFile="<path>"'],
+    description:
+      'Reads scripted output from a file when the site builds, with the path relative to the page. The block shows it from the start, as with `runnable.static`; `runnable` gives it the button. A `.ansi` file is in the `ansi` language. Directives and `\\e[` in the file stay as text.',
+    page: 'features/run-code',
+  },
+  {
     name: 'runnable.outputDelay',
     syntax: ['runnable.outputDelay=<ms>'],
     description:
-      'Milliseconds between the lines of `runnable.output`. `0` prints them all at once. It overrides the `runnable.outputDelay` option for the block.',
+      'Milliseconds between the lines of scripted output. `0` prints them all at once. It overrides the `runnable.outputDelay` option for the block.',
     page: 'features/run-code',
   },
   {

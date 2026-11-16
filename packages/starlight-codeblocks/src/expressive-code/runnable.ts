@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import { dirname, relative, resolve } from 'node:path';
 import {
   AttachedPluginData,
   darken,
@@ -14,6 +16,7 @@ import {
 import { type Element, type ElementContent, getClassNames, h, select, toText } from '@expressive-code/core/hast';
 import { encodeCode } from '../client/shared/copy.ts';
 import { clientJsModules } from '../client-modules.ts';
+import { trackReadFile } from '../read-files.ts';
 import { getRegistry } from '../registry.ts';
 import { themedCss, tokenRule } from '../satteri/inline-code.ts';
 import { uiTexts } from '../translations.ts';
@@ -24,6 +27,7 @@ import {
   type CodeblocksPlugin,
   keepCopiedText,
   languageId,
+  pageFile,
   warn,
 } from './core.ts';
 import { decorateLine } from './line-states.ts';
@@ -204,6 +208,7 @@ async function outputLineElements(
   texts: string[],
   lines: readonly ExpressiveCodeLine[],
   langs: Record<number, string | null>,
+  textEscapes: boolean,
 ) {
   const { codeBlock, styleVariants, config } = context;
   const backgrounds = styleVariants.map(
@@ -230,6 +235,7 @@ async function outputLineElements(
         styleVariants,
         Math.max(4.5, config.minSyntaxHighlightingColorContrast),
         backgrounds,
+        textEscapes,
       );
       if (highlighted) for (const [i, line] of highlighted.entries()) tokens[from + i] = line;
       else unknown.add(lang);
@@ -250,14 +256,35 @@ async function outputLineElements(
   return { elements, marked };
 }
 
-/** Whether the block shows its output from the start, with `runnable.static`. */
-function isStatic(context: Parameters<typeof warn>[0], scripted: boolean): boolean {
-  if (!context.codeBlock.metaOptions.getBoolean('runnable.static')) return false;
-  if (scripted) return true;
-  warn(
-    context,
-    '`runnable.static` needs output in the block, after `[!output]` or in `runnable.output`. The block keeps its button.',
-  );
+/**
+ * The text of `runnable.outputFile`, or `undefined` with a warning. The path is relative to the page, or to the project
+ * root in `<Code>`, which has no Markdown file.
+ */
+async function readOutputFile(context: Parameters<typeof warn>[0], path: string) {
+  const page = pageFile(context.codeBlock);
+  const file = resolve(page ? dirname(page) : (getRegistry()?.root ?? process.cwd()), path);
+  // Also when the file is missing, so that its creation renders the page again in `astro dev`.
+  if (page) trackReadFile(file, page);
+  try {
+    return (await readFile(file, 'utf8')).replace(/\r\n/g, '\n').replace(/\n$/, '');
+  } catch (error) {
+    const reason = (error as NodeJS.ErrnoException).code ?? String(error);
+    warn(context, `\`runnable.outputFile\` cannot read ${relative(process.cwd(), file)} (${reason}).`);
+    return undefined;
+  }
+}
+
+const NEEDS_OUTPUT = '`runnable.static` needs output: `[!output]` lines, `runnable.output` or `runnable.outputFile`.';
+
+/**
+ * Whether the block shows its output from the start: with `runnable.static`, or with output from a file and no
+ * `runnable`, which asks for the button.
+ */
+function isStatic(context: Parameters<typeof warn>[0], scripted: boolean, fromFile: boolean): boolean {
+  const { metaOptions } = context.codeBlock;
+  const own = metaOptions.getBoolean('runnable.static');
+  if (scripted) return own ?? (fromFile && !metaOptions.getBoolean('runnable'));
+  if (own) warn(context, `${NEEDS_OUTPUT} The block keeps its button.`);
   return false;
 }
 
@@ -428,21 +455,30 @@ export function pluginRunnable({
       },
       async postprocessRenderedBlock(context) {
         const { codeBlock, renderData } = context;
-        const meta = codeBlock.metaOptions.getString('runnable.output');
-        // `runnable.output` replaces the `[!output]` lines, and their waits, streams and marks with them.
-        const own = scriptedData.getOrCreateFor(codeBlock);
-        const { waits, streams, langs } = meta === undefined ? own : { waits: {}, streams: {}, langs: {} };
-        const lines = meta === undefined ? getOutputLines(codeBlock) : [];
-        // A fence line holds one line, so `\n` stands for a line break.
-        const scripted =
-          meta?.replace(/\\n/g, '\n') ?? (lines.length > 0 ? lines.map((line) => line.text).join('\n') : undefined);
-        const run = getRunLines(codeBlock);
         const { metaOptions } = codeBlock;
-        if (!metaOptions.getBoolean('runnable') && scripted === undefined && run.length === 0) return;
+        const meta = metaOptions.getString('runnable.output');
+        const path = metaOptions.getString('runnable.outputFile');
+        if (path !== undefined && meta !== undefined)
+          warn(context, 'The block has `runnable.output` and `runnable.outputFile`. It shows the output of the file.');
+        const fromFile = path === undefined ? undefined : await readOutputFile(context, path);
+        // A fence line holds one line, so `\n` stands for a line break.
+        const fence = fromFile ?? meta?.replace(/\\n/g, '\n');
+        // Output on the fence line replaces the `[!output]` lines, and their waits, streams and marks with them.
+        const own = scriptedData.getOrCreateFor(codeBlock);
+        const { waits, streams, langs } = fence === undefined ? own : { waits: {}, streams: {}, langs: {} };
+        const lines = fence === undefined ? getOutputLines(codeBlock) : [];
+        const scripted = fence ?? (lines.length > 0 ? lines.map((line) => line.text).join('\n') : undefined);
+        const run = getRunLines(codeBlock);
+        if (!metaOptions.getBoolean('runnable') && scripted === undefined && run.length === 0) {
+          // A missing `runnable.outputFile` has warned already.
+          if (metaOptions.getBoolean('runnable.static') && path === undefined) warn(context, NEEDS_OUTPUT);
+          return;
+        }
         const figure = select('figure', renderData.blockAst);
         if (!figure) return;
-        const staticOutput = isStatic(context, scripted !== undefined);
-        const outputLang = metaOptions.getString('runnable.outputLang')?.trim() || undefined;
+        const staticOutput = isStatic(context, scripted !== undefined, fromFile !== undefined);
+        const outputLang =
+          metaOptions.getString('runnable.outputLang')?.trim() || (/\.ansi$/i.test(path ?? '') ? 'ansi' : undefined);
         if (scripted !== undefined && run.length > 0)
           warn(context, '`[!run]` has no effect in a block with scripted output: the button prints the output.');
         const say = uiTexts(context.locale);
@@ -515,6 +551,8 @@ export function pluginRunnable({
             outputTexts,
             lines,
             langs,
+            // A file holds the escape character itself, so its text needs no escapes.
+            fromFile === undefined,
           );
           for (const highlight of getDirectives(codeBlock, 'code highlight')) {
             const [line] = highlight.lines;
