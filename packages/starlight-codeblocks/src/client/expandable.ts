@@ -1,14 +1,18 @@
 const COLLAPSED = 'scb-expandable-collapsed';
 
 const linesOf = (pre: HTMLElement) =>
-  pre.querySelectorAll<HTMLElement>('.ec-line:not(summary > *):not(.scb-hidden-line)');
+  pre.querySelectorAll<HTMLElement>('.ec-line:not(summary > *):not(.scb-hidden-line, .scb-split-copy)');
 // Without until-found support the attribute value is ignored, and the lines are plainly hidden.
 const HIDDEN = 'onbeforematch' in HTMLElement.prototype ? 'until-found' : '';
 
 function tail(pre: HTMLElement) {
   const last = linesOf(pre)[Number(pre.dataset.scbExpandable) - 1];
   return [...(last?.parentElement?.children ?? [])].filter(
-    (el) => last && last.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING,
+    // A split diff's copies and gaps follow the hidden state of the line before them.
+    (el) =>
+      last &&
+      !el.matches('.scb-split-copy, .scb-split-gap') &&
+      last.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING,
   );
 }
 

@@ -89,6 +89,7 @@ export interface CodeblocksOptions {
   hiddenLines?: false;
   shellCopy?: false | { prompts?: string[] };
   wordDiff?: false | { minSimilarity?: number };
+  splitDiff?: false | { view?: 'unified' | 'split'; switch?: boolean; sync?: boolean };
   whitespace?: false;
   brackets?: false | { languages?: string[] };
   swatches?:
@@ -321,6 +322,32 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         description:
           'Pairs of lines less similar than this keep whole-line tints only. From 0 to 1. A code block can set its own on its fence line.',
         valid: (value) => typeof value === 'number' && value >= 0 && value <= 1,
+      },
+    },
+  },
+  splitDiff: {
+    description: 'Adds a switch to diff blocks that shows the old code and the new code side by side.',
+    page: 'features/split-diff',
+    fields: {
+      view: {
+        type: "'unified' | 'split'",
+        default: 'unified',
+        description: 'The view that each diff block starts in. A code block can set its own on its fence line.',
+        valid: oneOf('unified', 'split'),
+      },
+      switch: {
+        type: 'boolean',
+        default: true,
+        description:
+          'Shows the Unified and Split switch. With `false`, each block stays in its `view`. A code block can set its own on its fence line.',
+        valid: (value) => typeof value === 'boolean',
+      },
+      sync: {
+        type: 'boolean',
+        default: true,
+        description:
+          'The switch changes every synced block on the page, and the browser remembers the choice. With `false`, each block switches alone. A code block can set its own on its fence line.',
+        valid: (value) => typeof value === 'boolean',
       },
     },
   },

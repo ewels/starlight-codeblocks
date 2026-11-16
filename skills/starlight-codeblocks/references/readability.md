@@ -189,3 +189,25 @@ Word-level diff highlights the words that changed inside each pair of removed an
 - Option: `wordDiff.minSimilarity` (default `0.4`, from 0 to 1). Raise it to show the highlight only for close edits. `wordDiff: false` turns it off for the site.
 - Limits: pairing is by position, so a run of removed lines pairs one by one with the run of added lines below it. It compares visible text and does not parse the language. It skips long pairs, such as minified code.
 - Add `wordDiff=false` to a block with `[!code ++]` and `[!code --]` that shows a different feature.
+
+## Split diff
+
+Docs: https://ewels.github.io/starlight-codeblocks/features/split-diff/
+
+Split diff adds a **Unified** and **Split** switch to each block that has a removed line and an added line. It reads the same sources as word-level diff. **Split** shows the old code on the left and the new code on the right, as a pull request on GitHub does. It has no attribute to turn it on.
+
+| Syntax | Where |
+|---|---|
+| `splitDiff.view="unified"`, `splitDiff.view="split"` | Code block fence line: the view that the block starts in |
+| `splitDiff.switch=false`, `splitDiff.switch=true` | Code block fence line: removes the switch, so the block stays in its view, or brings it back |
+| `splitDiff.sync=false`, `splitDiff.sync=true` | Code block fence line: the switch changes only this block, which also ignores the stored choice |
+| `splitDiff=false` | Code block fence line: turns the feature off for one block |
+
+- By default, the switch changes every synced diff block on the page at once. The browser remembers the choice for the next page. Before the reader chooses, each block starts in its `splitDiff.view`.
+- Unchanged lines show on both sides. A run of removed lines pairs one by one with the run of added lines below it. A shaded cell fills the side of a line with no pair.
+- With Expressive Code line numbers, each side counts its own lines.
+- The copied text and the screen reader text are the same in both views.
+- Needs JavaScript. Without it, the switch does not show, and every block shows the unified view.
+- Options: `splitDiff.view` (`'unified'` or `'split'`, default `'unified'`), `splitDiff.switch` (default `true`) and `splitDiff.sync` (default `true`). `splitDiff: false` turns it off for the site.
+- Limits: a block with `collapse` gets no switch. Readers cannot select the text of the unchanged lines on the right.
+- Add `splitDiff=false` to a diff block that shows a different feature.

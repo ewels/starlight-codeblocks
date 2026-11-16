@@ -130,7 +130,7 @@ class ChangedTokenAnnotation extends ExpressiveCodeAnnotation {
 }
 
 /** The kind a whole-line text-markers annotation carries. The class itself is not exported by the plugin. */
-function markerType(line: ExpressiveCodeLine): 'ins' | 'del' | undefined {
+export function markerType(line: ExpressiveCodeLine): 'ins' | 'del' | undefined {
   for (const annotation of line.getAnnotations()) {
     if (annotation.inlineRange) continue;
     const type = (annotation as { markerType?: string }).markerType;

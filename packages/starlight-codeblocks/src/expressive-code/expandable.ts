@@ -6,7 +6,7 @@ import { TABS_META } from './code-tabs.ts';
 import { blockSetting, type CodeblocksPlugin } from './core.ts';
 import { PREFIX } from './styles.ts';
 
-const hasCollapse = (codeBlock: ExpressiveCodeBlock) =>
+export const hasCollapse = (codeBlock: ExpressiveCodeBlock) =>
   ((codeBlock.props as { collapse?: unknown[] }).collapse?.length ?? 0) > 0;
 
 // A bar under a variant or a Run output panel would compete with their own controls.

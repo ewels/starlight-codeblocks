@@ -13,6 +13,8 @@ function setRun(block: Element, marker: Element, open: boolean) {
   for (const id of lines) {
     const line = block.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`);
     line?.classList.toggle(OPEN, open);
+    if (line?.nextElementSibling?.classList.contains('scb-split-copy'))
+      line.nextElementSibling.classList.toggle(OPEN, open);
     // Opens a collapsed expandable block or collapsible section that holds the line.
     if (open && line) unhide(line);
     for (let el = line?.previousElementSibling; el?.classList.contains('scb-callout'); el = el.previousElementSibling) {

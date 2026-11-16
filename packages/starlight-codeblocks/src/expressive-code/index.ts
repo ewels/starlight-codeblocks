@@ -21,6 +21,7 @@ import { pluginPlaceholders } from './placeholders.ts';
 import { pluginPlayground } from './playground.ts';
 import { pluginRunnable } from './runnable.ts';
 import { pluginShellCopy } from './shell-copy.ts';
+import { pluginSplitDiff } from './split-diff.ts';
 import { pluginSquiggles } from './squiggles.ts';
 import { pluginSwatches } from './swatches.ts';
 import { pluginWalkthrough } from './walkthrough.ts';
@@ -49,6 +50,7 @@ export {
   pluginPlayground,
   pluginRunnable,
   pluginShellCopy,
+  pluginSplitDiff,
   pluginSquiggles,
   pluginSwatches,
   pluginWalkthrough,
@@ -80,6 +82,7 @@ export function createPlugins(options: ResolvedOptions, base?: string): Expressi
     pluginFocus(options.focus || { stylesOnly: true }),
     ...(options.lineStates ? [pluginLineStates(options.lineStates)] : []),
     ...(options.wordDiff ? [pluginWordDiff(options.wordDiff)] : []),
+    ...(options.splitDiff ? [pluginSplitDiff(options.splitDiff)] : []),
     ...(options.whitespace ? [pluginWhitespace()] : []),
     ...(options.brackets
       ? [pluginBrackets({ ...options.brackets, comments: options.notation ? options.notation.comments : {} })]

@@ -56,7 +56,8 @@ const cards = await Promise.all(
     const { renderedGroupAst } = await ec.render({
       code: body,
       language,
-      meta,
+      // The gallery compares colours, and the Unified and Split switch is the same in every theme.
+      meta: `${meta} splitDiff=false`,
       // Each theme gets its own ids for notes and footnotes.
       parentDocument: { sourceFilePath: `theme-gallery/${name}` },
     });

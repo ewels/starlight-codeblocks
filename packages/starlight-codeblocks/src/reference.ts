@@ -156,6 +156,40 @@ export const attributesReference: AttributeDoc[] = [
     example: { lang: 'diff', meta: 'wordDiff=false', code: '-const port = 3000\n+const port = 8080' },
   },
   {
+    name: 'splitDiff',
+    syntax: ['splitDiff=false'],
+    description: 'Removes the **Unified** and **Split** switch from the block. The block shows as a unified diff.',
+    page: 'features/split-diff',
+    example: { lang: 'diff', meta: 'splitDiff=false', code: '-const port = 3000\n+const port = 8080' },
+  },
+  {
+    name: 'splitDiff.view',
+    syntax: ['splitDiff.view="unified"', 'splitDiff.view="split"'],
+    description: 'The view that the block starts in. It overrides the `splitDiff.view` option for the block.',
+    page: 'features/split-diff',
+    example: { lang: 'diff', meta: 'splitDiff.view="split"', code: '-const port = 3000\n+const port = 8080' },
+  },
+  {
+    name: 'splitDiff.switch',
+    syntax: ['splitDiff.switch=false', 'splitDiff.switch=true'],
+    description:
+      'With `false`, the block has no switch and stays in its view. It overrides the `splitDiff.switch` option for the block.',
+    page: 'features/split-diff',
+    example: {
+      lang: 'diff',
+      meta: 'splitDiff.view="split" splitDiff.switch=false',
+      code: '-const port = 3000\n+const port = 8080',
+    },
+  },
+  {
+    name: 'splitDiff.sync',
+    syntax: ['splitDiff.sync=false', 'splitDiff.sync=true'],
+    description:
+      'With `false`, the switch changes only this block, and the block ignores the choice that the browser remembers. It overrides the `splitDiff.sync` option for the block.',
+    page: 'features/split-diff',
+    example: { lang: 'diff', meta: 'splitDiff.sync=false', code: '-const port = 3000\n+const port = 8080' },
+  },
+  {
     name: 'apiLinks',
     syntax: ['apiLinks=false'],
     description: 'Turns off API auto-linking for the block. Names stay plain text.',
@@ -806,6 +840,15 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       themeIndex: {
         description: 'The index of the theme, which the animation reads to pick token colours. Do not change it.',
         derived: 'The index of the theme in the Expressive Code `themes` list.',
+      },
+    },
+  },
+  codeblocksSplitDiff: {
+    page: 'features/split-diff',
+    settings: {
+      gapBackground: {
+        description: 'The fill of an empty cell in the split view, on the side that has no line.',
+        derived: '`codeblocks.mutedForeground` at 8% opacity.',
       },
     },
   },

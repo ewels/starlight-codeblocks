@@ -28,6 +28,7 @@ codeblocks({
 | `hiddenLines` | None | Hidden lines |
 | `shellCopy` | `prompts`: default `['$ ', '> ']`. Python `>>>` sessions need no prompt setting | Smart shell copy |
 | `wordDiff` | `minSimilarity`: from 0 to 1, default `0.4` | Word-level diff |
+| `splitDiff` | `view`: `'unified'` or `'split'`, default `'unified'`. `switch`: default `true`. `sync`: default `true` | Split diff |
 | `whitespace` | None | Visible whitespace |
 | `brackets` | `languages`: default `[]` | Colourised brackets |
 | `swatches` | `languages`: default `'all'`. `formats`: default every format. `shape`: `'square'`, `'rounded'` or `'circle'`, default `'rounded'`. `size`: default `'0.8em'`. `hover`, `copy`: default `true`. `prose`: default `false`. `match`: `'value'` or `'all'`, default `'value'`. `delimiters`: `{ before?, after? }` lists of extra text around a value. `byLanguage`: `match` and `delimiters` per language | Colour swatches |
@@ -61,6 +62,9 @@ Put a setting on the fence line, with its name from `codeblocks()`, to change it
 - `annotations.style="outline"`
 - `shellCopy.prompts="<text>"` (repeat it for more prompts)
 - `wordDiff.minSimilarity=<0-1>`
+- `splitDiff.view="unified"`, `splitDiff.view="split"`
+- `splitDiff.switch=false`, `splitDiff.switch=true`
+- `splitDiff.sync=false`, `splitDiff.sync=true`
 - `expandable.lines=<N>`
 - `placeholders.storage="local"`
 - `placeholders.storage="session"`
