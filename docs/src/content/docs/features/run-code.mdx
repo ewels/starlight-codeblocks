@@ -366,8 +366,9 @@ print(sorted(["chr2", "chr10", "chr1"], key=lambda c: int(c[3:])))
   - A block with only output has no copy button. Its **Run code** button is in the middle of the empty code area, and fades out on the first click. Keyboard focus then moves to the output.
   - With `runnable.static`, the output panel shows from the start, and the block has no button. A block with only output shows the panel in place of the code area.
 - Output:
+  - Long lines of output scroll sideways, as code does, so that tables and panels keep their shape. With the `wrap` attribute, they wrap. The panel takes keyboard focus, so readers can scroll it with the arrow keys.
   - The output panel has the label "Output". Standard output shows in green. Standard error shows in red, with a bar at its start, so the colour is not the only difference.
-  - Output in a language has the colours of the language in place of green or red. In scripted output, each colour is lightened or darkened to 4.5:1 on its background in each theme, so terminal colours and dim text stay readable. A marked line of output shows its text in the colour of the mark.
+  - Output in a language has the colours of the language in place of green or red. In scripted output, each colour is lightened or darkened to 4.5:1 on its background in each theme, so terminal colours and dim text stay readable. A background colour shows as a light tint. A marked line of output shows its text in the colour of the mark.
   - In the output of a run, the 16 terminal colours come from the theme at 4.5:1, through the `codeblocksRunnable` style settings. Dim text takes the muted text colour, and a background colour shows as a light tint, so the text on it stays readable. Colours from the 256-colour palette and RGB colours show as the code prints them.
 - Keyboard and screen readers:
   - The output panel is a polite live region, except with `runnable.static`, where the output does not change. Screen readers announce the loading message and the output when they change.

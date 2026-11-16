@@ -16,7 +16,7 @@ const js = { runnable: { runtimes: { javascript: '/runtimes/js.js' } } };
 test('runnable adds a Run code button under the block, after an empty live output panel', async () => {
   const { html, copyText, warnings } = await render(block('js runnable', 'console.log(1)'), js);
   expect(html).toMatch(
-    /<div class="scb-run-output" aria-live="polite" data-scb-texts="[^"]*"><\/div><div class="scb-run-controls scb-no-print"><button type="button" class="scb-run scb-no-print scb-needs-js" data-scb-run-again="Run again">Run code<\/button><\/div><\/figure>/,
+    /<div class="scb-run-output" tabindex="0" aria-live="polite" data-scb-texts="[^"]*"><\/div><div class="scb-run-controls scb-no-print"><button type="button" class="scb-run scb-no-print scb-needs-js" data-scb-run-again="Run again">Run code<\/button><\/div><\/figure>/,
   );
   expect(html).not.toContain('scb-tools');
   expect(html).toContain('data-scb-runnable="/runtimes/js.js"');
@@ -520,7 +520,7 @@ test('runnable.static shows the output from the build, with no button and no cli
   expect(warnings).toEqual([]);
   expect(copyText).toBe('make');
   expect(html).toContain(
-    '<div class="scb-run-output"><span class="scb-run-label">Output</span><pre class="scb-run-stdout">a\nb</pre><pre class="scb-run-stderr"><span class="scb-sr-only">Error: </span>oops</pre></div></figure>',
+    '<div class="scb-run-output" tabindex="0"><span class="scb-run-label">Output</span><pre class="scb-run-stdout">a\nb</pre><pre class="scb-run-stderr"><span class="scb-sr-only">Error: </span>oops</pre></div></figure>',
   );
   expect(html).not.toContain('data-scb-runnable');
   expect(html).not.toContain('<button type="button" class="scb-run');
@@ -550,11 +550,11 @@ test('runnable.autorun runs on page load, with Run again as the button text from
   expect(warnings).toEqual([]);
   expect(html).toContain('data-scb-runnable-autorun=""');
   expect(html).toContain('data-scb-run-again="Run again">Run again</button>');
-  expect(html).toMatch(/<div class="scb-run-output" aria-live="polite" data-scb-texts="[^"]*"><\/div>/);
+  expect(html).toMatch(/<div class="scb-run-output" tabindex="0" aria-live="polite" data-scb-texts="[^"]*"><\/div>/);
   const scripted = await render(block('sh runnable.autorun', 'make', '# [!output]', 'a'));
   expect(scripted.html).not.toContain('data-scb-runnable-autorun');
   expect(scripted.html).toMatch(
-    /<div class="scb-run-output" aria-live="polite" data-scb-texts="[^"]*"><span class="scb-run-label">Output<\/span><pre class="scb-run-stdout">a<\/pre><\/div>/,
+    /<div class="scb-run-output" tabindex="0" aria-live="polite" data-scb-texts="[^"]*"><span class="scb-run-label">Output<\/span><pre class="scb-run-stdout">a<\/pre><\/div>/,
   );
   expect(scripted.html).toContain('data-scb-run-again="Run again">Run again</button>');
   const only = await render(block('sh runnable.autorun', '# [!output]', 'a'));
@@ -621,4 +621,22 @@ test('the output font and line height follow the code unless a site sets its own
     expect(v.get('codeblocksRunnable.outputFontFamily')).toBe(v.get('codeFontFamily'));
     expect(v.get('codeblocksRunnable.outputLineHeight')).toBe(v.get('codeLineHeight'));
   }
+});
+
+test('highlighted output keeps its empty first line, so each line stays in its place', async () => {
+  const { html } = await render(
+    block('sh runnable.static runnable.outputLang=ansi', 'make', '# [!output]', '', `${ESC}[33mUsage${ESC}[0m`, 'last'),
+  );
+  expect(html).toContain(
+    '<pre class="scb-run-stdout"><span data-scb-run-line="0"></span>\n<span data-scb-run-line="1">',
+  );
+  expect(html).toMatch(/<span data-scb-run-line="2"><span style="[^"]*">last<\/span><\/span><\/pre>/);
+  expect(html).not.toContain(ESC);
+});
+
+test('the output panel scrolls as code does, and wraps in a block with wrap', async () => {
+  const scrolls = await render(block('sh runnable.static', 'make', '# [!output]', 'a'));
+  expect(scrolls.html).toContain('<div class="scb-run-output" tabindex="0">');
+  const wraps = await render(block('sh runnable.static wrap', 'make', '# [!output]', 'a'));
+  expect(wraps.html).toContain('<div class="scb-run-output scb-run-wrap" tabindex="0">');
 });

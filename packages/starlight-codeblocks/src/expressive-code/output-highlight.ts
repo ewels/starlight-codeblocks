@@ -1,4 +1,4 @@
-import { ensureColorContrastOnBackground, onBackground, type StyleVariant } from '@expressive-code/core';
+import { ensureColorContrastOnBackground, mix, onBackground, type StyleVariant } from '@expressive-code/core';
 import {
   type Element,
   type ElementContent,
@@ -63,7 +63,10 @@ export function renderTokens(code: string, language: string, variants: StyleVari
 /** Text forms of the escape character, for ANSI output written by hand or on a fence line. */
 const ESCAPES = /\\(?:e|x1b|033|u001b)\[/gi;
 
-/** Each token colour, with its alpha blended in, at `min` contrast on its own background or on `backgrounds`. */
+/**
+ * Each token colour, with its alpha blended in, at `min` contrast on its own background or on `backgrounds`.
+ * A token background becomes a light tint of its colour, as in the output of a run, so it suits light themes too.
+ */
 function correctColours(root: Element, variants: StyleVariant[], min: number, backgrounds: string[]) {
   const corrected = new Map<string, string>();
   const readable = (fg: string, bg: string) => {
@@ -83,7 +86,9 @@ function correctColours(root: Element, variants: StyleVariant[], min: number, ba
       const base = backgrounds[i];
       if (!fg || !base) return;
       const bg = vars.get(`--${i}bg`);
-      vars.set(`--${i}`, readable(fg, bg ? onBackground(bg, base) : base));
+      const under = bg ? mix(base, onBackground(bg, base), 0.16) : base;
+      if (bg) vars.set(`--${i}bg`, under);
+      vars.set(`--${i}`, readable(fg, under));
     });
     setInlineStyles(node, vars);
   });
@@ -105,7 +110,12 @@ export async function highlightOutput(
   // Expressive Code leaves ANSI colours alone, and the output has its own background.
   correctColours(ast, variants, min, backgrounds);
   // EC fills an empty line with a line break, which would double it in the panel's `pre`.
-  return selectAll('.ec-line .code', ast).map((line) =>
+  const lines = selectAll('.ec-line .code', ast).map((line) =>
     line.children.filter((child) => !(child.type === 'text' && child.value === '\n')),
   );
+  // EC drops the empty lines at the start and the end, so put them back to keep each line in its place.
+  const source = code.split('\n');
+  const leading = source.findIndex((line) => line.trim() !== '');
+  if (leading === -1) return source.map(() => []);
+  return [...source.slice(0, leading).map(() => []), ...lines, ...source.slice(leading + lines.length).map(() => [])];
 }

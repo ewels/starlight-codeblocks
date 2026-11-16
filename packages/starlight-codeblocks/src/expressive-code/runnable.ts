@@ -268,7 +268,10 @@ export function pluginRunnable({
   font-size: ${cssVar('codeFontSize')};
   line-height: ${cssVar('codeblocksRunnable.outputLineHeight')};
 }
-.${cls('-output')} > * { display: block; margin: 0; padding: 0; border: 0; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* Output scrolls as code does, so that terminal layouts such as tables and panels keep their lines. */
+.${cls('-output')}:not(:empty) { overflow-x: auto; }
+.${cls('-output')} > * { display: block; margin: 0; padding: 0; border: 0; font: inherit; white-space: pre; }
+.${cls('-wrap')} > * { white-space: pre-wrap; overflow-wrap: anywhere; }
 /* Wins over Expressive Code's \`.frame pre\`, which gives a \`pre\` the code background and a scroll bar. */
 :is(.frame, figure) .${cls('-output')} > * { background: none; overflow: visible; }
 .${cls('-label')}, .${cls('-status')} { color: ${cssVar('codeblocksRunnable.mutedForeground')}; }
@@ -479,9 +482,11 @@ export function pluginRunnable({
           }
           figure.children.push(h('div', { class: `${cls('-controls')} ${PREFIX}-no-print` }, [runButton('')]));
         };
+        const panelClass = codeBlock.props.wrap ? `${cls('-output')} ${cls('-wrap')}` : cls('-output');
         const livePanel = (runtimeTexts = {}) =>
           h('div', {
-            class: cls('-output'),
+            class: panelClass,
+            tabindex: '0',
             ariaLive: 'polite',
             dataScbTexts: JSON.stringify({ ...texts, ...runtimeTexts }),
           });
@@ -519,7 +524,7 @@ export function pluginRunnable({
           };
           // The output of a scripted run is known, so the static and autorun modes show it from the build.
           const prefilled = mode !== 'click';
-          const panel = mode === 'static' ? h('div', { class: cls('-output') }) : livePanel();
+          const panel = mode === 'static' ? h('div', { class: panelClass, tabindex: '0' }) : livePanel();
           if (prefilled) panel.children = panelParts();
           if (outputOnly && prefilled) emptyBlock(true);
           if (mode === 'static') {
