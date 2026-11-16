@@ -82,12 +82,14 @@ The block needs no `runnable` attribute and no runtime, so it works in every lan
 `runnable.outputFile` reads the output from a file when the site builds, such as a file that a tool writes from a real run. The path is relative to the page, as the path of an image is:
 
 ````md
-```sh runnable.static runnable.outputLang=ansi runnable.outputFile="./output/check.ansi"
+```sh runnable.outputFile="./output/check.ansi"
 make check
 ```
 ````
 
-The file is the whole output, as in `runnable.output`. `runnable.outputLang`, `runnable.outputDelay` and `runnable.static` apply to it, and directives in it, such as `[!wait]`, stay as text. Output on the fence line replaces `[!output]` lines in the block. If the file is missing, the build gives a warning, and the block shows its `[!output]` lines or `runnable.output`, if it has them. In `astro dev`, a change to the file reloads the page.
+The output in a file is from a run before the build, so the block shows it from the start, as `runnable.static` does. Add `runnable` to the fence line to show the **Run code** button, which prints the output a line at a time.
+
+The file is the whole output, as in `runnable.output`. Directives in it, such as `[!wait]`, stay as text. A file that ends in `.ansi` is in the `ansi` language, unless the block sets `runnable.outputLang`. Output on the fence line replaces `[!output]` lines in the block. If the file is missing, the build gives a warning, and the block shows its `[!output]` lines or `runnable.output`, if it has them. In `astro dev`, a change to the file reloads the page.
 
 ### Output in a language
 
@@ -364,7 +366,7 @@ print(sorted(["chr2", "chr10", "chr1"], key=lambda c: int(c[3:])))
   - The output lines are not part of the code that readers see or copy.
   - A mark on a line of output shows the tint, the bar, the name and the message that it shows on a line of code. The text of the line takes the colour of the name, so that it stays readable on the tint.
   - A block with only output has no copy button. Its **Run code** button is in the middle of the empty code area, and fades out on the first click. Keyboard focus then moves to the output.
-  - With `runnable.static`, the output panel shows from the start, and the block has no button. A block with only output shows the panel in place of the code area.
+  - With `runnable.static`, or with `runnable.outputFile` and no `runnable`, the output panel shows from the start, and the block has no button. A block with only output shows the panel in place of the code area.
 - Output:
   - Long lines of output scroll sideways, as code does, so that tables and panels keep their shape. With the `wrap` attribute, they wrap. A panel with lines that scroll takes keyboard focus, so readers can scroll it with the arrow keys.
   - The output panel has no visible label; the `outputLabel` option shows the label "Output" at its top. Standard output shows in green. Standard error shows in red, with a bar at its start, so the colour is not the only difference.
@@ -408,7 +410,7 @@ The guide to [adding a runtime](/starlight-codeblocks/extend/add-a-runtime/) sho
 - The Python runtime loads Pyodide from the jsDelivr CDN, and packages from PyPI. Every runtime runs its worker from a `blob:` URL. A Content Security Policy must allow all three.
 - To stop a Python run, the runtime ends its worker. The next run downloads the runtime again, from the browser cache if the browser kept it.
 - In the output of a real run, `runnable.outputLang` shows `ansi` colours only. Other languages show as plain text, with a build warning.
-- In the `<Code>` component, the path of `runnable.outputFile` must be absolute, because the block is not on a Markdown page.
+- In the `<Code>` component, the path of `runnable.outputFile` is relative to the project root, because the block is not on a Markdown page.
 - Marks on lines of output need line states. With the `lineStates` option off, `[!code highlight]` on a line of output gives a warning. Other directives that mark lines, such as `[!code focus]` or `[!code ++]`, have no effect on a line of output.
 
 ## Related

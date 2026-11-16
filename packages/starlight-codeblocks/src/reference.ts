@@ -332,7 +332,7 @@ export const attributesReference: AttributeDoc[] = [
     name: 'runnable.outputFile',
     syntax: ['runnable.outputFile="<path>"'],
     description:
-      'Reads the output that the button prints from a file when the site builds, with the path relative to the page. It replaces `runnable.output` and `[!output]` lines. Directives in the file stay as text, and `\\e[` is text, because a file holds the escape character itself.',
+      'Reads scripted output from a file when the site builds, with the path relative to the page. The block shows it from the start, as with `runnable.static`; `runnable` gives it the button. A `.ansi` file is in the `ansi` language. Directives and `\\e[` in the file stay as text.',
     page: 'features/run-code',
   },
   {

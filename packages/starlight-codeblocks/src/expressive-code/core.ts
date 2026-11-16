@@ -164,11 +164,17 @@ export function blockUid({ codeBlock, config }: Context) {
   return uid;
 }
 
+/** The Markdown file of the block. `<Code>` gives the URL of the page instead, which is not a file. */
+export function pageFile(codeBlock: ExpressiveCodeBlock) {
+  const path = codeBlock.parentDocument?.sourceFilePath;
+  return path && !/^[a-z][\w+.-]*:\/\//i.test(path) ? path : undefined;
+}
+
 function where(codeBlock: ExpressiveCodeBlock, line?: number) {
-  const file = codeBlock.parentDocument?.sourceFilePath;
+  const file = pageFile(codeBlock);
   const title = codeBlock.metaOptions.getString('title');
   return [
-    file ? relative(process.cwd(), file) : 'unknown file',
+    file ? relative(process.cwd(), file) : codeBlock.parentDocument?.sourceFilePath || 'unknown file',
     `${codeBlock.language || 'plain text'} code block${title ? ` "${title}"` : ''}`,
     ...(line === undefined ? [] : [`line ${line}`]),
   ].join(', ');

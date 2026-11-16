@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import {
   AttachedPluginData,
   darken,
@@ -27,6 +27,7 @@ import {
   type CodeblocksPlugin,
   keepCopiedText,
   languageId,
+  pageFile,
   warn,
 } from './core.ts';
 import { decorateLine } from './line-states.ts';
@@ -255,14 +256,13 @@ async function outputLineElements(
   return { elements, marked };
 }
 
-/** The text of `runnable.outputFile`, whose path is relative to the page, or `undefined` with a warning. */
+/**
+ * The text of `runnable.outputFile`, or `undefined` with a warning. The path is relative to the page, or to the project
+ * root in `<Code>`, which has no Markdown file.
+ */
 async function readOutputFile(context: Parameters<typeof warn>[0], path: string) {
-  const page = context.codeBlock.parentDocument?.sourceFilePath;
-  if (!page && !isAbsolute(path)) {
-    warn(context, '`runnable.outputFile` needs an absolute path in a block that is not on a Markdown page.');
-    return undefined;
-  }
-  const file = resolve(page ? dirname(page) : '/', path);
+  const page = pageFile(context.codeBlock);
+  const file = resolve(page ? dirname(page) : (getRegistry()?.root ?? process.cwd()), path);
   // Also when the file is missing, so that its creation renders the page again in `astro dev`.
   if (page) trackReadFile(file, page);
   try {
@@ -274,14 +274,17 @@ async function readOutputFile(context: Parameters<typeof warn>[0], path: string)
   }
 }
 
-/** Whether the block shows its output from the start, with `runnable.static`. */
-function isStatic(context: Parameters<typeof warn>[0], scripted: boolean): boolean {
-  if (!context.codeBlock.metaOptions.getBoolean('runnable.static')) return false;
-  if (scripted) return true;
-  warn(
-    context,
-    '`runnable.static` needs output: `[!output]` lines, `runnable.output` or `runnable.outputFile`. The block keeps its button.',
-  );
+const NEEDS_OUTPUT = '`runnable.static` needs output: `[!output]` lines, `runnable.output` or `runnable.outputFile`.';
+
+/**
+ * Whether the block shows its output from the start: with `runnable.static`, or with output from a file and no
+ * `runnable`, which asks for the button.
+ */
+function isStatic(context: Parameters<typeof warn>[0], scripted: boolean, fromFile: boolean): boolean {
+  const { metaOptions } = context.codeBlock;
+  const own = metaOptions.getBoolean('runnable.static');
+  if (scripted) return own ?? (fromFile && !metaOptions.getBoolean('runnable'));
+  if (own) warn(context, `${NEEDS_OUTPUT} The block keeps its button.`);
   return false;
 }
 
@@ -466,11 +469,16 @@ export function pluginRunnable({
         const lines = fence === undefined ? getOutputLines(codeBlock) : [];
         const scripted = fence ?? (lines.length > 0 ? lines.map((line) => line.text).join('\n') : undefined);
         const run = getRunLines(codeBlock);
-        if (!metaOptions.getBoolean('runnable') && scripted === undefined && run.length === 0) return;
+        if (!metaOptions.getBoolean('runnable') && scripted === undefined && run.length === 0) {
+          // A missing `runnable.outputFile` has warned already.
+          if (metaOptions.getBoolean('runnable.static') && path === undefined) warn(context, NEEDS_OUTPUT);
+          return;
+        }
         const figure = select('figure', renderData.blockAst);
         if (!figure) return;
-        const staticOutput = isStatic(context, scripted !== undefined);
-        const outputLang = metaOptions.getString('runnable.outputLang')?.trim() || undefined;
+        const staticOutput = isStatic(context, scripted !== undefined, fromFile !== undefined);
+        const outputLang =
+          metaOptions.getString('runnable.outputLang')?.trim() || (/\.ansi$/i.test(path ?? '') ? 'ansi' : undefined);
         if (scripted !== undefined && run.length > 0)
           warn(context, '`[!run]` has no effect in a block with scripted output: the button prints the output.');
         const say = uiTexts(context.locale);
