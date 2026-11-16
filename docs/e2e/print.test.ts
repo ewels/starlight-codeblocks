@@ -1,8 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { css, lightOnly, output } from './helpers.ts';
+import { css, output } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
-  lightOnly();
   await page.emulateMedia({ media: 'print' });
 });
 

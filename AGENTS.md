@@ -19,15 +19,16 @@ pnpm build              Build the package (tsdown) into packages/starlight-codeb
 pnpm test               Build, then Vitest unit tests, a build of examples/astro and the node:test checks in scripts/
 pnpm lint               Build, then Biome and type checks (tsc, astro check)
 pnpm lint:docs          Writing-style lint for docs/, the READMEs and skills/
-pnpm docs:build         Build the package, the docs site into docs/dist and examples/astro into docs/dist/examples/astro, then render the share cards
-pnpm test:e2e           docs:build, then Playwright against astro preview of docs/dist
+pnpm docs:site          Build the package, the docs site into docs/dist and examples/astro into docs/dist/examples/astro
+pnpm docs:build         docs:site, then render the share cards
+pnpm test:e2e           docs:site, then Playwright against astro preview of docs/dist
 pnpm readme:media [slug...]   docs:build, then regenerate the README images in .github/assets/readme/
 ```
 
 - Docs dev server: `pnpm build && pnpm --filter docs dev`. The docs import the package from `dist`, so rebuild after each package change.
 - One Vitest test: `pnpm --filter starlight-codeblocks exec vitest run test/focus.test.ts -t "blur"`. Tests read `dist/client`, so build first after client changes.
 - One script test: `node --test scripts/examples.test.mjs`.
-- One Playwright spec against an existing `docs/dist`: `pnpm --filter docs exec playwright test e2e/focus.test.ts --project=desktop-dark`. Projects: `desktop-light`, `desktop-dark`, `phone-light`, `phone-dark`, `reduced-motion`. Port 4329, or set `SCB_E2E_PORT`.
+- One Playwright spec against an existing `docs/dist`: `pnpm --filter docs exec playwright test e2e/focus.test.ts --project=desktop-light`. Projects: `desktop-light` and `phone` run every test, `desktop-dark` only tests tagged `@theme`, `reduced-motion` only tests tagged `@motion`. Port 4329, or set `SCB_E2E_PORT`.
 
 ## Where things live
 
@@ -93,6 +94,7 @@ Tests and docs:
 
 - `render(markdown, options?, extraPlugins?)` from `test/render.ts` returns `{ html, copyText, warnings }`. Cover every attribute and directive, the copied text and the warnings. Check that a block that does not use the feature is unchanged with it off. Tests have no network (`test/setup.ts`).
 - Playwright goes against the feature's docs page: keyboard, pointer and `reduced-motion`. Set the theme with `document.documentElement.dataset.theme`.
+- Tag a Playwright test `{ tag: '@theme' }` when its result depends on the site theme (contrast, axe), and `{ tag: '@motion' }` when it calls `reduced()`. Untagged tests do not run in the dark or reduced-motion projects. `once()` runs a test in `desktop-light` only.
 - Write the page from the template in WRITING-STYLE.md, and update the skill.
 
 ## Platform facts

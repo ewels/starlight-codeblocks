@@ -1,8 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { lightOnly, phone } from './helpers.ts';
+import { phone } from './helpers.ts';
 
 test('directives reference puts source and output side by side, and stacks them on a phone', async ({ page }) => {
-  lightOnly();
   await page.goto('reference/directives/');
   const panes = page
     .locator('#code-focus')

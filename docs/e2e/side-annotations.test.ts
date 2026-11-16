@@ -152,9 +152,9 @@ test('a click on a note or its number keeps the highlight, a second click or a c
   await expect(line(2)).not.toHaveClass(/scb-annotation-pin/);
 });
 
-test('focusing a note with the keyboard highlights its line, and the border changes at once under reduced motion', async ({
-  page,
-}) => {
+test('focusing a note with the keyboard highlights its line, and the border changes at once under reduced motion', {
+  tag: '@motion',
+}, async ({ page }) => {
   const block = example(page);
   const notes = block.locator('.scb-annotation-notes li');
   expect(await css(notes.first(), 'transitionDuration')).toBe(reduced() ? '0s' : '0.15s, 0.15s');

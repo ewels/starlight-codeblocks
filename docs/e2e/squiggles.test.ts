@@ -49,7 +49,9 @@ test('keyboard focus opens the message above the text at once, and Escape closes
 test.describe('hover', () => {
   test.skip(({ isMobile }) => isMobile, 'Phones have no hover.');
 
-  test('hovering shows the message after a delay, and it stays while the pointer moves into it', async ({ page }) => {
+  test('hovering shows the message after a delay, and it stays while the pointer moves into it', {
+    tag: '@motion',
+  }, async ({ page }) => {
     const block = example(page);
     const squiggle = block.locator('.scb-squiggle-warning');
     const message = squiggle.locator('.scb-squiggle-popover');

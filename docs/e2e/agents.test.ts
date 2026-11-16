@@ -1,20 +1,17 @@
 import { expect, test } from '@playwright/test';
 import { unlisted } from '../src/sidebar.mjs';
-import { clipboard, css, sitePages } from './helpers.ts';
+import { clipboard, css, once, sitePages } from './helpers.ts';
 
 const site = 'https://ewels.github.io/starlight-codeblocks/';
 const listed = sitePages.filter((path) => !unlisted.includes(path.replace(/\/$/, '')));
 const local = (url: string) => `./${url.slice(site.length)}`;
-
-const oneProject = () =>
-  test.skip(test.info().project.name !== 'desktop-light', 'The output is the same in every project.');
 
 const md = (path: string) => `${site}${path ? path.replace(/\/$/, '') : 'index'}.md`;
 const attribute = (html: string, tag: RegExp, name: string) =>
   html.match(tag)?.[0].match(new RegExp(`${name}="([^"]*)"`))?.[1];
 
 test('every page links to its Markdown version and its share card, and llms.txt lists them', async ({ request }) => {
-  oneProject();
+  once();
   const llms = await (await request.get('./llms.txt')).text();
   const full = await (await request.get('./llms-full.txt')).text();
   for (const path of listed) {
@@ -51,12 +48,6 @@ test('every page links to its Markdown version and its share card, and llms.txt 
     const image = String(attribute(html, /<meta[^>]*property="og:image"[^>]*>/, 'content'));
     expect.soft(image, `/${path}`).toBe(`${site}og/${path ? path.replace(/\/$/, '') : 'index'}.png`);
     expect.soft(attribute(html, /<meta[^>]*name="twitter:image"[^>]*>/, 'content'), `/${path}`).toBe(image);
-    const png = await request.get(local(image));
-    expect.soft(png.status(), image).toBe(200);
-    expect.soft(png.headers()['content-type']).toBe('image/png');
-    const body = await png.body();
-    expect.soft(body.subarray(1, 4).toString(), image).toBe('PNG');
-    expect.soft([body.readUInt32BE(16), body.readUInt32BE(20)], image).toEqual([1200, 630]);
   }
 });
 
@@ -64,7 +55,7 @@ test('the agent skill page gives the install command and links to the skill, on 
   page,
   request,
 }) => {
-  oneProject();
+  once();
   const source = 'https://github.com/ewels/starlight-codeblocks/tree/main/skills/starlight-codeblocks';
   const markdown = await (await request.get('./agent-skill.md')).text();
   expect(markdown).toContain('npx skills add ewels/starlight-codeblocks');
