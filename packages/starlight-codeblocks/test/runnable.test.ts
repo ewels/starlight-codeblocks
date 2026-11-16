@@ -1,3 +1,6 @@
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, relative, resolve } from 'node:path';
 import { getColorContrast, mix, onBackground } from '@expressive-code/core';
 import { h, toHtml } from '@expressive-code/core/hast';
 import { afterEach, expect, test } from 'vitest';
@@ -11,6 +14,7 @@ import {
   runtimeModules,
 } from '../src/expressive-code/runnable.ts';
 import { runtimePlugins } from '../src/integration.ts';
+import { loadReadFiles, readFilesDigest } from '../src/read-files.ts';
 import { setRegistry } from '../src/registry.ts';
 import { variants } from './contrast.ts';
 import { block, lineClasses, render } from './render.ts';
@@ -446,6 +450,80 @@ test('runnable.outputLang highlights the output, and ANSI escapes, raw or writte
   expect(plain.html).not.toContain('scb-run-lines');
 });
 
+test('a second backslash keeps a text escape as text, and other backslashes stay', async () => {
+  const { html, warnings } = await render(
+    block(
+      'sh runnable.static runnable.outputLang=ansi',
+      'grep',
+      '# [!output]',
+      '\\\\e[1m \\\\x1b[2m \\\\033[3m \\\\U001B[4m \\e[1mbold\\e[0m',
+      'C:\\new \\\\n',
+    ),
+  );
+  expect(warnings).toEqual([]);
+  const panel = html.match(/<pre class="scb-run-stdout">([\s\S]*?)<\/pre>/)?.[1] ?? '';
+  expect(panel.replace(/<[^>]+>/g, '')).toBe('\\e[1m \\x1b[2m \\033[3m \\U001B[4m bold\nC:\\new \\\\n');
+  expect(panel).toMatch(/<span style="[^"]*--0fw:bold[^"]*">bold<\/span>/);
+  expect(panel).not.toContain(ESC);
+});
+
+const outputDir = mkdtempSync(join(tmpdir(), 'scb-output-'));
+const outputFile = (name: string, text: string) => {
+  const file = join(outputDir, name);
+  writeFileSync(file, text);
+  // Relative to the page that `render()` gives each block.
+  return relative(resolve('src/content/docs'), file);
+};
+
+test('runnable.outputFile reads the output from a file next to the page, with raw ANSI escapes', async () => {
+  const path = outputFile('check.ansi', `${ESC}[32mok${ESC}[0m \\e[1m\r\nC:\\new\r\n`);
+  const { html, copyText, warnings } = await render(
+    block(`sh runnable.static runnable.outputLang=ansi runnable.outputFile="${path}"`, 'make check'),
+  );
+  expect(warnings).toEqual([]);
+  expect(copyText).toBe('make check');
+  const panel = html.match(/<pre class="scb-run-stdout">([\s\S]*?)<\/pre>/)?.[1] ?? '';
+  expect(panel).toMatch(/^<span data-scb-run-line="0"><span style="--0:[^"]+">ok<\/span>/);
+  // A file can hold the escape character itself, so `\e[` in it is text.
+  expect(panel.replace(/<[^>]+>/g, '')).toBe('ok \\e[1m\nC:\\new');
+  const live = await render(block(`sh runnable.outputFile="${path}" runnable.outputDelay=0`, 'make check'));
+  expect(live.html).toContain('data-scb-runnable-output="\x1b[32mok\x1b[0m \\e[1m\x7FC:\\new"');
+  expect(live.html).toContain('data-scb-runnable-delay="0"');
+});
+
+test('runnable.outputFile replaces [!output], and warns with runnable.output or without a file', async () => {
+  const path = outputFile('build.txt', 'from the file');
+  const inline = await render(block(`sh runnable.outputFile="${path}"`, 'make', '# [!output]', 'inline # [!wait 500]'));
+  expect(inline.warnings).toEqual([]);
+  expect(inline.copyText).toBe('make');
+  expect(inline.html).toContain('data-scb-runnable-output="from the file"');
+  expect(inline.html).not.toContain('data-scb-runnable-waits');
+  const both = await render(block(`sh runnable.output="fence" runnable.outputFile="${path}"`, 'make'));
+  expect(both.html).toContain('data-scb-runnable-output="from the file"');
+  expect(both.warnings).toEqual([
+    'src/content/docs/example.md, sh code block: The block has `runnable.output` and `runnable.outputFile`. It shows the output of the file.',
+  ]);
+  const missing = await render(block('sh runnable.outputFile="./output/none.ansi"', 'make', '# [!output]', 'inline'));
+  expect(missing.warnings).toEqual([
+    `src/content/docs/example.md, sh code block: \`runnable.outputFile\` cannot read ${join('src', 'content', 'docs', 'output', 'none.ansi')} (ENOENT).`,
+  ]);
+  expect(missing.html).toContain('data-scb-runnable-output="inline"');
+  const only = await render(block('sh runnable.outputFile="./output/none.ansi"', 'make'));
+  expect(only.html).not.toContain('scb-run');
+});
+
+test('the registry lists each file that a page reads, and the digest follows the contents', async () => {
+  const path = outputFile('digest.txt', 'one');
+  const file = resolve('src/content/docs', path);
+  const cacheDir = join(outputDir, 'cache');
+  setRegistry({ options: {}, plugins: [], cacheDir, readFiles: new Map() } as never);
+  await render(block(`sh runnable.outputFile="${path}"`, 'make'));
+  expect(loadReadFiles(cacheDir)).toEqual(new Map([[file, new Set(['src/content/docs/example.md'])]]));
+  const before = readFilesDigest([file]);
+  writeFileSync(file, 'two');
+  expect(readFilesDigest([file])).not.toBe(before);
+});
+
 test('lang= on [!output] sets the language of the lines after it, and txt keeps them plain', async () => {
   const { html, warnings } = await render(
     block(
@@ -542,7 +620,7 @@ test('runnable.static needs scripted output', async () => {
   const noOutput = await render(block('js runnable runnable.static', 'console.log(1)'), js);
   expect(noOutput.html).toContain('>Run code</button>');
   expect(noOutput.warnings).toEqual([
-    'src/content/docs/example.md, js code block: `runnable.static` needs output in the block, after `[!output]` or in `runnable.output`. The block keeps its button.',
+    'src/content/docs/example.md, js code block: `runnable.static` needs output: `[!output]` lines, `runnable.output` or `runnable.outputFile`. The block keeps its button.',
   ]);
 });
 

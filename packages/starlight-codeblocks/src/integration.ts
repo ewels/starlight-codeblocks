@@ -10,6 +10,7 @@ import { PLUGIN_PREFIX } from './expressive-code/index.ts';
 import { runtimeFileName, runtimeModules } from './expressive-code/runnable.ts';
 import { proseSwatchStyles, SWATCH_CSS_ID } from './expressive-code/swatches.ts';
 import type { ResolvedOptions } from './options.ts';
+import { loadReadFiles, readFilesDigest } from './read-files.ts';
 import { getRegistry } from './registry.ts';
 import { mdastPlugins } from './satteri/index.ts';
 import { INLINE_CSS_ID, inlineStyles } from './satteri/inline-code.ts';
@@ -45,6 +46,7 @@ export function codeblocksIntegration({
   ecConfigOverride,
   apiCardPage = true,
 }: IntegrationOptions): AstroIntegration {
+  let refreshDigest = () => false;
   return {
     name: 'starlight-codeblocks',
     hooks: {
@@ -56,10 +58,18 @@ export function codeblocksIntegration({
               options?: { mdastPlugins?: unknown[]; remarkPlugins?: unknown[]; starlightCodeblocks?: string };
             }
           | undefined;
+        const registry = getRegistry();
+        if (registry?.cacheDir) registry.readFiles = loadReadFiles(registry.cacheDir);
         // The content layer keeps rendered Markdown until its digest of the Astro config changes. That digest
-        // skips integrations and functions but covers these options and the site's UI texts, which both
-        // processors otherwise ignore.
-        if (processor?.options) processor.options.starlightCodeblocks = optionsDigest(options, getRegistry()?.texts);
+        // skips integrations and functions but covers these options, the site's UI texts and the files that
+        // code blocks read, which both processors otherwise ignore.
+        refreshDigest = () => {
+          if (!processor?.options) return false;
+          const files = readFilesDigest(registry?.readFiles?.keys() ?? []);
+          processor.options.starlightCodeblocks = `${optionsDigest(options, registry?.texts)}.${files}`;
+          return true;
+        };
+        refreshDigest();
         if (processor?.name === 'unified') {
           processor.options?.remarkPlugins?.push(remarkFromSatteri(mdastPlugins(options, logger)));
         } else processor?.options?.mdastPlugins?.push(...mdastPlugins(options, logger));
@@ -85,6 +95,21 @@ export function codeblocksIntegration({
           );
         }
         updateConfig({ vite: { plugins: plugins as never } });
+      },
+      'astro:server:setup'({ server, refreshContent }) {
+        const registry = getRegistry();
+        const files = registry?.readFiles;
+        if (!files) return;
+        registry.watchFile = (file) => server.watcher.add(file);
+        server.watcher.add([...files.keys()]);
+        server.watcher.on('all', async (_, path) => {
+          const pages = files.get(path);
+          if (!pages) return;
+          // The content layer renders `.md` once and keeps it while its digest stands; Vite renders `.mdx`.
+          if ([...pages].some((page) => !page.endsWith('.mdx')) && refreshDigest()) await refreshContent?.({});
+          for (const page of pages) server.watcher.emit('change', page);
+          server.ws.send({ type: 'full-reload' });
+        });
       },
     },
   };

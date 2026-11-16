@@ -22,6 +22,10 @@ export interface Registry {
   texts?: PluginTexts<Record<string, string>>;
   /** Starlight's `absolutePathToLang()`, for the language of a Markdown page. */
   pageLang?: (path: string) => string;
+  /** The files that code blocks read, such as `runnable.outputFile`, each with the pages that read them. */
+  readFiles?: Map<string, Set<string>>;
+  /** Set in `astro dev`, to watch a file that a page has started to read. */
+  watchFile?: (file: string) => void;
 }
 
 // A global, because Astro loads the config and renders pages through different module instances.

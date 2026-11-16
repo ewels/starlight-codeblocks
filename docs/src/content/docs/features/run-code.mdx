@@ -36,6 +36,7 @@ Click **Run code**. The first time, the browser downloads Python (Pyodide, a bui
 | `[!wait <ms>]` | Comment at the end of a line of output |
 | `[!code highlight]`, `[!code error]`, `[!code warning]`, `[!code info]`, `[!code success]` | Comment at the end of a line of output |
 | `runnable.output="<text>"`, `runnable.outputDelay=<ms>` | Code block fence line |
+| `runnable.outputFile="<path>"` | Code block fence line |
 | `runnable.outputLang=<language>` | Code block fence line |
 | `runnable.static` | Code block fence line |
 
@@ -76,6 +77,18 @@ The block needs no `runnable` attribute and no runtime, so it works in every lan
 
 `runnable.output` on the fence line does the same, with `\n` for each new line.
 
+### Output from a file
+
+`runnable.outputFile` reads the output from a file when the site builds, such as a file that a tool writes from a real run. The path is relative to the page, as the path of an image is:
+
+````md
+```sh runnable.static runnable.outputLang=ansi runnable.outputFile="./output/check.ansi"
+make check
+```
+````
+
+The file is the whole output, as in `runnable.output`. `runnable.outputLang`, `runnable.outputDelay` and `runnable.static` apply to it, and directives in it, such as `[!wait]`, stay as text. Output on the fence line replaces `[!output]` lines in the block. If the file is missing, the build gives a warning, and the block shows its `[!output]` lines or `runnable.output`, if it has them. In `astro dev`, a change to the file reloads the page.
+
 ### Output in a language
 
 `runnable.outputLang` on the fence line highlights the scripted output in a language. With `ansi`, the terminal colour codes in the output become colours, as in a terminal. Other languages, such as `json` or `yaml`, highlight as code does.
@@ -94,7 +107,7 @@ export default {
 };
 ```
 
-In `ansi` output, `\e[`, `\x1b[` and `\033[` stand for the escape character. This lets you write colour codes on the fence line, or by hand in the block.
+In `ansi` output, `\e[`, `\x1b[`, `\033[` and `\u001b[` stand for the escape character. This lets you write colour codes on the fence line, or by hand in the block. For output that prints `\e[` itself, such as a regular expression, write `\\e[`. On the fence line, Expressive Code removes one backslash first, so write `\\\\e[` there. A file from `runnable.outputFile` holds the escape character itself, so `\e[` in a file stays as text.
 
 ### Output from the start
 
@@ -395,6 +408,7 @@ The guide to [adding a runtime](/starlight-codeblocks/extend/add-a-runtime/) sho
 - The Python runtime loads Pyodide from the jsDelivr CDN, and packages from PyPI. Every runtime runs its worker from a `blob:` URL. A Content Security Policy must allow all three.
 - To stop a Python run, the runtime ends its worker. The next run downloads the runtime again, from the browser cache if the browser kept it.
 - In the output of a real run, `runnable.outputLang` shows `ansi` colours only. Other languages show as plain text, with a build warning.
+- In the `<Code>` component, the path of `runnable.outputFile` must be absolute, because the block is not on a Markdown page.
 - Marks on lines of output need line states. With the `lineStates` option off, `[!code highlight]` on a line of output gives a warning. Other directives that mark lines, such as `[!code focus]` or `[!code ++]`, have no effect on a line of output.
 
 ## Related
