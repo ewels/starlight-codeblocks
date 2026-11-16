@@ -46,7 +46,7 @@ const at = async (marker: Locator) => {
   return [(box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2] as const;
 };
 
-test('a marker opens its note, and a selection outside closes it', async ({ page }) => {
+test('a marker opens its note, and a selection outside closes it', { tag: '@motion' }, async ({ page }) => {
   const block = example(page);
   const note = block.locator('.scb-annotation-popover').first();
   await expect(note).toBeHidden();
@@ -72,7 +72,9 @@ test('a marker opens its note, and a selection outside closes it', async ({ page
 test.describe('hover', () => {
   test.skip(({ isMobile }) => isMobile, 'Phones have no hover.');
 
-  test('hovering over a marker fades in its note, which stays while the pointer moves into it', async ({ page }) => {
+  test('hovering over a marker fades in its note, which stays while the pointer moves into it', {
+    tag: '@motion',
+  }, async ({ page }) => {
     const block = example(page);
     const marker = block.getByRole('button', { name: 'Annotation 1' });
     const note = block.locator('.scb-annotation-popover').first();
@@ -221,7 +223,10 @@ test('with the keyboard, several notes can stay open, the badge shows focus, and
   await expect(second).toBeFocused();
 });
 
-test('the marker fades to the hover colour on the timing of the hover note', async ({ page, isMobile }) => {
+test('the marker fades to the hover colour on the timing of the hover note', { tag: '@motion' }, async ({
+  page,
+  isMobile,
+}) => {
   const marker = example(page).locator('.scb-annotation').first();
   const timing = () =>
     marker.evaluate((el) => [getComputedStyle(el).transitionDuration, getComputedStyle(el).transitionDelay]);

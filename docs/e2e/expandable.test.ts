@@ -59,9 +59,9 @@ test('collapses a long block under a fade, and the button or find in page opens 
   await expect(pre).not.toHaveClass(/scb-expandable-collapsed/);
 });
 
-test('eases open and closed, keeps the button in place, and does not animate under reduced motion', async ({
-  page,
-}) => {
+test('eases open and closed, keeps the button in place, and does not animate under reduced motion', {
+  tag: '@motion',
+}, async ({ page }) => {
   const pre = example(page).locator('pre');
   const button = example(page).locator('.scb-expandable-toggle');
   const animations = () => pre.evaluate((el) => el.getAnimations().length);

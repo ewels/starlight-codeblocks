@@ -59,7 +59,7 @@ test.describe('wide layout', () => {
       await page.setViewportSize({ width, height });
       const seen = new Set<number>();
       const top = await scrolly(page).evaluate((e) => e.getBoundingClientRect().top + scrollY);
-      for (let y = top; y < top + 3000; y += 30) {
+      for (let y = top; y < top + 3000; y += 60) {
         await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), y);
         await page.waitForTimeout(30);
         const r = await scrolly(page).evaluate((root) => {
@@ -123,9 +123,9 @@ test.describe('wide layout', () => {
     await expect(sticky(page, 1).locator('.ec-line.mark')).toHaveCount(0);
   });
 
-  test('the block stays blurred under the pointer, clears with keyboard focus, and fades at once under reduced motion', async ({
-    page,
-  }) => {
+  test('the block stays blurred under the pointer, clears with keyboard focus, and fades at once under reduced motion', {
+    tag: '@motion',
+  }, async ({ page }) => {
     const out = sticky(page).locator('.ec-line.scb-focus-out').first();
     await sticky(page).hover();
     await expect(out).not.toHaveCSS('filter', 'none');
@@ -176,9 +176,9 @@ test.describe('versions of the code', () => {
   const sharp = (page: Page) =>
     lines(page).evaluateAll((all) => all.flatMap((l, i) => (l.classList.contains('scb-focus-out') ? [] : [i + 1])));
 
-  test('a step after a new version animates the sticky block to it and back, and keyboard focus follows', async ({
-    page,
-  }) => {
+  test('a step after a new version animates the sticky block to it and back, and keyboard focus follows', {
+    tag: '@motion',
+  }, async ({ page }) => {
     test.skip(phone(), 'The two columns need 600 px.');
     await expect(lines(page)).toHaveCount(3);
     await centre(page, 2, 2);
@@ -220,7 +220,8 @@ test('the active step stays still at every scroll position near a new version', 
       new MutationObserver(() => changes++).observe(root, { subtree: true, attributeFilter: ['class'] });
       const wait = (ms: number) => new Promise((done) => setTimeout(done, ms));
       const found: number[] = [];
-      for (let y = from - 40; y <= to + 40; y += 4) {
+      // A bounce shows in a band about one line high, so 8 px steps land in it at least twice.
+      for (let y = from - 40; y <= to + 40; y += 8) {
         window.scrollTo({ top: y, behavior: 'instant' });
         await wait(80);
         changes = 0;

@@ -73,7 +73,9 @@ test('works with the keyboard, with a focus ring round the number', async ({ pag
   await expect(line(page, 3)).toHaveClass(target);
 });
 
-test('selects and scrolls to the lines in the address on load and when it changes', async ({ page }) => {
+test('selects and scrolls to the lines in the address on load and when it changes', { tag: '@motion' }, async ({
+  page,
+}) => {
   await page.goto('./features/line-permalinks/#cfg-L6-L8');
   for (const n of [6, 7, 8]) await expect(line(page, n)).toHaveClass(target);
   // Under reduced motion the scroll is instant, not smooth.

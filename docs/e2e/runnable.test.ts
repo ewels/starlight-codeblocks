@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { css, example } from './helpers.ts';
+import { css, example, once } from './helpers.ts';
 
 const PYTHON = 0;
 const JS = 1;
@@ -16,9 +16,6 @@ const ANSI = 11;
 const ANSI_RUN = 12;
 const RUN_OTHER = 13;
 const TITLE = 14;
-
-const oneProject = () =>
-  test.skip(test.info().project.name !== 'desktop-dark', 'Slow or needs the network, so one project is enough.');
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/run-code/');
@@ -75,7 +72,7 @@ test('works with the keyboard, and keeps the focus on the button', async ({ page
 });
 
 test('a run stops after the timeout, with a message', async ({ page }) => {
-  oneProject();
+  once();
   test.setTimeout(30_000);
   const block = example(page, LOOP);
   const button = block.locator('.scb-run');
@@ -89,7 +86,7 @@ test('a run stops after the timeout, with a message', async ({ page }) => {
 });
 
 test('runs Python with Pyodide in a web worker, shows its errors, and a stop ends the worker', async ({ page }) => {
-  oneProject();
+  once();
   test.setTimeout(240_000);
   const block = example(page, PYTHON);
   const panel = block.locator('.scb-run-output');
@@ -131,7 +128,7 @@ test('runs TypeScript after removing the types, with no set-up', async ({ page }
 });
 
 test('installs Python packages from PyPI, by import name or from runnable.packages', async ({ page }) => {
-  oneProject();
+  once();
   test.setTimeout(240_000);
   const pypi = example(page, PYPI);
   await pypi.locator('.scb-run').click();
@@ -260,7 +257,7 @@ test('runnable.static shows coloured output from the start, readable in the them
 });
 
 test('[!run] runs the hidden Python, and the copy button copies the command', async ({ page }) => {
-  oneProject();
+  once();
   const block = example(page, RUN_OTHER);
   await expect(block.locator('.copy button')).toHaveAttribute('data-code', 'python greet.py --name Ada --count 2');
   await expect(block.locator('pre')).not.toContainText('print');

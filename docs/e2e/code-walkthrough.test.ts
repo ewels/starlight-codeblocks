@@ -87,9 +87,9 @@ test('Tab and the arrow keys, Next, Previous and the numbered steps move between
   await expect(current(page).getByRole('button', { name: 'Step 3: Add a health route' })).toBeFocused();
 });
 
-test('animates the tokens in the theme colours with a green tint on new lines, or changes at once under reduced motion, and copies the new step', async ({
-  page,
-}) => {
+test('animates the tokens in the theme colours with a green tint on new lines, or changes at once under reduced motion, and copies the new step', {
+  tag: '@motion',
+}, async ({ page }) => {
   const final = await css(current(page).locator('.ec-line span', { hasText: /^listen$/ }), 'color');
   await current(page).getByRole('button', { name: 'Next' }).click();
   const anim = current(page).locator('.scb-steps-anim');
@@ -168,7 +168,9 @@ test('every step, done or not, changes its border under the pointer', async ({ p
   }
 });
 
-test('start="last" opens on the last step, copies it, and Previous animates back to the first', async ({ page }) => {
+test('start="last" opens on the last step, copies it, and Previous animates back to the first', {
+  tag: '@motion',
+}, async ({ page }) => {
   const shown = current(page, 3);
   await expect(steps(page, 3)).toHaveAttribute('data-scb-steps-ready');
   await expect(shown.locator('.scb-steps-count')).toHaveText('Step 2 of 2');

@@ -230,7 +230,7 @@ test('works with the keyboard, and the dots use a roving tabindex and arrow keys
   await expect(dot(page, 'Run code')).toBeFocused();
 });
 
-test('does not rotate or animate under reduced motion', async ({ page }) => {
+test('does not rotate or animate under reduced motion', { tag: '@motion' }, async ({ page }) => {
   test.skip(!reduced(), 'Only for the reduced-motion project.');
   await page.clock.install();
   await page.goto('./');
@@ -254,7 +254,7 @@ test('fits a phone screen', async ({ page }) => {
   }
 });
 
-test('has no accessibility violations apart from the fade', async ({ page }) => {
+test('has no accessibility violations apart from the fade', { tag: '@theme' }, async ({ page }) => {
   await load(page);
   // Expressive Code makes a block that scrolls focusable after the page loads.
   await page.waitForFunction(() =>
@@ -269,7 +269,7 @@ test('has no accessibility violations apart from the fade', async ({ page }) => 
   for (const node of contrast?.nodes ?? []) expect(`${node.target} ${node.html}`).toMatch(/scb-focus-out|scb-mention/);
 });
 
-test('scrolls the chosen example into view only as far as it needs to', async ({ page }) => {
+test('scrolls the chosen example into view only as far as it needs to', { tag: '@motion' }, async ({ page }) => {
   const clickFocus = () => tile(page, 'Focus').evaluate((el) => (el as HTMLElement).click());
 
   await load(page);

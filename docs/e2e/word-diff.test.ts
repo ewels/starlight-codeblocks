@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { css, example } from './helpers.ts';
 
-test('marks changed words with a bar, strikes removed ones in the code colour, keeps some syntax colour, and pads the markers', async ({
-  page,
-}) => {
+test('marks changed words with a bar, strikes removed ones in the code colour, keeps some syntax colour, and pads the markers', {
+  tag: '@theme',
+}, async ({ page }) => {
   await page.goto('./features/word-level-diff/');
   const block = example(page);
   const decoration = (selector: string) => css(block.locator(selector).first(), 'textDecorationLine');

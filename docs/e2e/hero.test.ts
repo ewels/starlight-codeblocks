@@ -47,7 +47,7 @@ test('dragging on the block moves the divider', async ({ page }) => {
   await expect(handle(page)).toHaveAttribute('aria-valuenow', '20');
 });
 
-test('the divider sweeps in, except with reduced motion', async ({ page }) => {
+test('the divider sweeps in, except with reduced motion', { tag: '@motion' }, async ({ page }) => {
   await page.goto('./');
   const start = Number(await handle(page).getAttribute('aria-valuenow'));
   if (reduced()) {

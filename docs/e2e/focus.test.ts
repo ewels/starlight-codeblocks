@@ -8,7 +8,9 @@ test.beforeEach(async ({ page }) => {
   await page.goto('./features/focus/');
 });
 
-test('blurs the lines outside the focus, and shows them all under the pointer', async ({ page }) => {
+test('blurs the lines outside the focus, and shows them all under the pointer', { tag: '@motion' }, async ({
+  page,
+}) => {
   const block = example(page);
   const out = block.locator('.ec-line.scb-focus-out').first();
   const focused = block.locator('.ec-line:not(.scb-focus-out)').first();
@@ -25,7 +27,9 @@ test('blurs the lines outside the focus, and shows them all under the pointer', 
   await expect.poll(() => filter(out)).toBe('blur(1.1px)');
 });
 
-test('shows every line when keyboard focus is in the block, with a visible focus ring', async ({ page }) => {
+test('shows every line when keyboard focus is in the block, with a visible focus ring', { tag: '@theme' }, async ({
+  page,
+}) => {
   const block = example(page);
   const code = block.locator('pre > code');
   await page

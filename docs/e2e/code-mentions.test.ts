@@ -22,10 +22,9 @@ test('a link with nothing after it in its section pairs with the block before it
   await expect(page.locator('[data-scb-mention="x"]')).toHaveClass(/scb-mention-on/);
 });
 
-test('the pointer highlights the lines of a link and fades the others, and a click scrolls to them', async ({
-  page,
-  isMobile,
-}) => {
+test('the pointer highlights the lines of a link and fades the others, and a click scrolls to them', {
+  tag: '@motion',
+}, async ({ page, isMobile }) => {
   await page.goto('./features/code-mentions/');
   const link = output(page).getByRole('link', { name: 'base case' });
   const figure = output(page).locator('figure');

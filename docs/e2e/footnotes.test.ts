@@ -90,7 +90,9 @@ test('hovering over a badge or a note highlights both until the pointer leaves, 
   await expect(note).not.toHaveClass(/scb-footnote-peek/);
 });
 
-test('a hover highlight fades in after a short delay, a click highlight and the badge at once', async ({ page }) => {
+test('a hover highlight fades in after a short delay, a click highlight and the badge at once', {
+  tag: '@motion',
+}, async ({ page }) => {
   const note = example(page).locator('.scb-footnotes li').first();
   const badge = example(page).locator('.scb-footnote-badge').first();
   expect(await css(badge, 'transitionDuration')).toBe(reduced() ? '0s' : '0.16s, 0.16s, 0.16s');
@@ -107,9 +109,9 @@ test('a hover highlight fades in after a short delay, a click highlight and the 
   expect((await timing())[1]).toBe('0s, 0s, 0s');
 });
 
-test('a sticky list stays at the bottom of the window, above a focused badge, and its notes scroll to their lines', async ({
-  page,
-}) => {
+test('a sticky list stays at the bottom of the window, above a focused badge, and its notes scroll to their lines', {
+  tag: '@motion',
+}, async ({ page }) => {
   const block = example(page, 1);
   const line = block.locator('.ec-line').filter({ hasText: 'log = logging' });
   await block.locator('.scb-footnotes').scrollIntoViewIfNeeded();
