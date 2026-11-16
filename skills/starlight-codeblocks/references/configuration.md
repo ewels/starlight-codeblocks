@@ -43,7 +43,7 @@ codeblocks({
 | `walkthrough` | `start`: `1` (default) or `'last'`, the step that each walkthrough opens on | Code walkthrough |
 | `scrollycoding` | None | Scrollycoding |
 | `inlineHighlighting` | `defaultLanguage`: default `false` | Inline code highlighting |
-| `runnable` | `runtimes`: language to module path, added to the built-in Python, JavaScript and TypeScript runtimes, or replacing them. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run code'`, or its translation. `againLabel`: default `'Run again'`, or its translation. Both replace the translations. `button`: `'below'` (default), `'title'` or `'both'`. `outputDelay`: default `200` ms | Run code |
+| `runnable` | `runtimes`: language to module path, added to the built-in Python, JavaScript and TypeScript runtimes, or replacing them. `timeout`: default `10000` ms, at most `2147483647`. `label`: default `'Run code'`, or its translation. `againLabel`: default `'Run again'`, or its translation. Both replace the translations. `button`: `'below'` (default), `'title'` or `'both'`. `outputDelay`: default `200` ms. `outputLabel`: `true` shows an **Output** label above the output (default `false`) | Run code |
 
 ### Options for one block
 
@@ -73,6 +73,7 @@ Put a setting on the fence line, with its name from `codeblocks()`, to change it
 - `runnable.timeout=<ms>`
 - `runnable.button="below"`, `runnable.button="title"`, `runnable.button="both"`
 - `runnable.output="<text>"`, `runnable.outputDelay=<ms>`
+- `runnable.outputLang=<language>`, `runnable.static`
 
 A bad value gives a build warning, and the block uses the site setting. Options for the whole site (states, comment syntaxes, adapters, playgrounds, runtimes) have no fence line form.
 

@@ -3,6 +3,7 @@ import { select } from '@expressive-code/core/hast';
 import { ExpressiveCode } from 'expressive-code';
 import type { InlineCode, Nodes, Text } from 'mdast';
 import type { MdastVisitorContext } from 'satteri';
+import { isPlain, renderTokens } from '../expressive-code/output-highlight.ts';
 import { getRegistry } from '../registry.ts';
 
 export const INLINE_CSS_ID = 'virtual:starlight-codeblocks/inline-code.css';
@@ -68,56 +69,30 @@ export function themedCss(rules: (index: number) => string, variants = styleVari
   return css;
 }
 
-/** Theme styles for inline code outside any block. */
-export function inlineStyles(variants = styleVariants(), ec = siteOptions()) {
-  const rules = (index: number) => {
-    const settings = variants[index]?.resolvedStyleSettings;
-    return `code.${CLASS} { background: ${settings?.get('codeBackground')}; color: ${settings?.get('codeForeground')}; }
-code.${CLASS} span[style^='--'] {
+/** The rule that gives token spans under `selector` the colours and styles of style variant `index`. */
+export const tokenRule = (selector: string, index: number) => `${selector} {
   color: var(--${index}, inherit);
   background-color: var(--${index}bg, transparent);
   font-style: var(--${index}fs, inherit);
   font-weight: var(--${index}fw, inherit);
   text-decoration: var(--${index}td, inherit);
 }`;
+
+/** Theme styles for inline code outside any block. */
+export function inlineStyles(variants = styleVariants(), ec = siteOptions()) {
+  const rules = (index: number) => {
+    const settings = variants[index]?.resolvedStyleSettings;
+    return `code.${CLASS} { background: ${settings?.get('codeBackground')}; color: ${settings?.get('codeForeground')}; }
+${tokenRule(`code.${CLASS} span[style^='--']`, index)}`;
   };
   // A chip that wraps keeps its padding and corners on each line.
   return `code.${CLASS} { border-radius: 4px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }\n${themedCss(rules, variants, ec)}`;
 }
 
-let engine: { variants: StyleVariant[]; ec: ExpressiveCode } | undefined;
-let failed = false;
-let queue: Promise<unknown> = Promise.resolve();
-
 /** The token spans for `code`, or `undefined` when Expressive Code does not know the language. */
-function highlight(code: string, language: string) {
-  const variants = styleVariants();
-  // A dev server restart keeps this module but sets new site themes.
-  if (!engine || engine.variants !== variants) {
-    engine = {
-      variants,
-      ec: new ExpressiveCode({
-        themes: variants.map((v) => v.theme),
-        // The site engine already corrected the contrast of these themes against its own backgrounds.
-        minSyntaxHighlightingColorContrast: 0,
-        frames: false,
-        textMarkers: false,
-        useStyleReset: false,
-        shiki: siteOptions().shiki,
-        logger: { warn: () => (failed = true), error: () => (failed = true) },
-      }),
-    };
-  }
-  const { ec } = engine;
-  // One render at a time, so that a warning belongs to the render that logged it.
-  const result = queue.then(async () => {
-    failed = false;
-    const { renderedGroupAst } = (await ec.render({ code, language })) ?? {};
-    const line = renderedGroupAst && select('.ec-line .code', renderedGroupAst);
-    return failed || !line ? undefined : line.children;
-  });
-  queue = result.catch(() => {});
-  return result;
+async function highlight(code: string, language: string) {
+  const ast = await renderTokens(code, language, styleVariants());
+  return (ast && select('.ec-line .code', ast)?.children) ?? undefined;
 }
 
 /** The `{:lang}` after an inline code node: its language and the nodes, with the text to keep, that it spans. */
@@ -151,7 +126,6 @@ function suffix(siblings: readonly Nodes[], index: number) {
   }
 }
 
-const PLAIN = new Set(['txt', 'text', 'plain', 'plaintext']);
 const warnedDefaults = new Set<string>();
 
 export async function inlineCode(
@@ -174,7 +148,7 @@ export async function inlineCode(
   const code = inner ? (inner[1] as string) : node.value;
   const lang = inner?.[2] ?? found?.lang ?? (defaultLanguage as string);
   const plain = inner ? ({ type: 'inlineCode', value: code } as const) : undefined;
-  if (PLAIN.has(lang)) return plain;
+  if (isPlain(lang)) return plain;
   const tokens = await highlight(code, lang);
   if (tokens === undefined) {
     if (!found && !inner) {

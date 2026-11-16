@@ -91,10 +91,13 @@ Use for short Python, JavaScript or TypeScript examples that readers can run in 
 | `runnable` | Code block fence line |
 | `runnable.packages="<name> <name>"` | Code block fence line |
 | `runnable.button="below"`, `runnable.button="title"`, `runnable.button="both"` | Code block fence line |
-| `[!output]`, `[!output stdout]`, `[!output stderr]`, `[!output end]` | Comment in the code, on its own line |
+| `[!run]`, `[!run lang=<language>]`, `[!run end]` | Comment in the code, on its own line |
+| `[!output]`, `[!output stdout]`, `[!output stderr]`, `[!output end]`, with `lang=<language>` after the stream | Comment in the code, on its own line |
 | `[!wait <ms>]` | Comment at the end of a line of output |
 | `[!code highlight]`, `[!code error]`, `[!code warning]`, `[!code info]`, `[!code success]` | Comment at the end of a line of output |
 | `runnable.output="<text>"`, `runnable.outputDelay=<ms>` | Code block fence line |
+| `runnable.outputLang=<language>` | Code block fence line |
+| `runnable.static` | Code block fence line |
 
 ````md
 ```py runnable
@@ -108,7 +111,10 @@ print(mean([1520, 1610, 1480]))
 - Standard output and standard error show in the output panel. A run stops after the timeout. The download of the runtime and of imported packages does not count towards the timeout.
 - A Python session with `>>>` prompts runs its commands only, as in the Python REPL: the output shows the value of each expression.
 - `runnable.button` puts the button under the block (default), in the title bar, or both.
-- For code that cannot run in the browser, such as a command line tool, write its output after an `[!output]` comment. The button prints it instead of running the code, one line every `outputDelay` ms (default `200`; `0` prints it at once). The output lines leave the code and the copied text. `[!output end]` ends the output; without it, the output goes to the end of the block. `[!output stderr]` starts lines that print as standard error, as for a failed run, and `[!output stdout]` switches back. Each switch starts a new part of the output. `[!wait <ms>]` at the end of an output line changes the wait after it. `[!code highlight]` and line state directives at the end of an output line mark it in the output, as in the code. They need line states on. `[!wait]` and a mark can share one comment. Ranges on the fence line, such as `{2}`, count the code lines only. The block needs no `runnable` attribute and no runtime. A block with only output shows the button in the middle of the empty code area. `runnable.output="…"` on the fence line does the same, with `\n` for new lines.
+- For code that cannot run in the browser, such as a command line tool, write its output after an `[!output]` comment. The button prints it instead of running the code, one line every `outputDelay` ms (default `200`; `0` prints it at once). The output lines leave the code and the copied text. `[!output end]` ends the output; without it, the output goes to the next `[!run]` line or the end of the block. `[!output stderr]` starts lines that print as standard error, as for a failed run, and `[!output stdout]` switches back. Each switch starts a new part of the output. `[!wait <ms>]` at the end of an output line changes the wait after it. `[!code highlight]` and line state directives at the end of an output line mark it in the output, as in the code. They need line states on. `[!wait]` and a mark can share one comment. Ranges on the fence line, such as `{2}`, count the code lines only. The block needs no `runnable` attribute and no runtime. A block with only output shows the button in the middle of the empty code area. `runnable.output="…"` on the fence line does the same, with `\n` for new lines.
+- To colour scripted output, add `runnable.outputLang=ansi` to the fence line, and write the output with its terminal colour codes. `\e[`, `\x1b[` and `\033[` stand for the escape character. Other languages, such as `json`, highlight as code. `lang=<language>` on an `[!output]` line sets the language of the lines after it, such as `[!output stderr lang=txt]` for a plain error. `txt` keeps the stream colours. The plugin corrects each colour to 4.5:1 in each theme. With `ansi`, the output of a real run shows its colours too. Rich and similar libraries print colours only with `FORCE_COLOR=1` in the environment of the code.
+- `runnable.static` shows the scripted output from the start, with no button and no JavaScript: a terminal screenshot as text. It needs scripted output.
+- To show one command and run other code, put the code after a `[!run]` comment, with `lang=<language>` for its runtime. The lines leave the block, up to `[!run end]`, the next `[!output]` line or the end. The copy button copies the visible code. Example: a `sh` block with `python greet.py`, then `# [!run lang=python]` and the Python that prints the same output.
 
 ````md
 ```sh
@@ -121,5 +127,5 @@ ERROR ~ Error executing process > 'sayHello' # [!code error]
 ```
 ````
 - Python packages: the runtime reads the `import` lines and installs Pyodide's packages (NumPy, pandas and about 350 more). It installs any other import from PyPI with micropip, under the import name. PyPI packages must be pure Python. When the package name differs from the import name, name it: ` ```py runnable runnable.packages="python-slugify" ` for `import slugify`. Separate several names with spaces; `name==1.2` pins a version.
-- Options: `runnable.timeout` (default `10000` ms), `runnable.button` and `runnable.outputDelay` set the defaults for blocks. `runnable.runtimes` is a map of language to a runtime module (a package path or a path from the project root). To wrap or replace a built-in runtime, import it from `starlight-codeblocks/runtimes/pyodide`, `/javascript` or `/typescript`. Guide: https://ewels.github.io/starlight-codeblocks/extend/add-a-runtime/
+- Options: `runnable.timeout` (default `10000` ms), `runnable.button` and `runnable.outputDelay` set the defaults for blocks. `runnable.outputLabel: true` shows an **Output** label above the output. `runnable.runtimes` is a map of language to a runtime module (a package path or a path from the project root). To wrap or replace a built-in runtime, import it from `starlight-codeblocks/runtimes/pyodide`, `/javascript` or `/typescript`. Guide: https://ewels.github.io/starlight-codeblocks/extend/add-a-runtime/
 - Limits: Pyodide loads from the jsDelivr CDN and packages from PyPI. Every runtime runs its worker from a `blob:` URL. A Content Security Policy must allow all three. Without JavaScript, the button is hidden.

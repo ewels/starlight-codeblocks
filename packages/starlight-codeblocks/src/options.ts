@@ -134,6 +134,7 @@ export interface CodeblocksOptions {
         againLabel?: string;
         button?: 'below' | 'title' | 'both';
         outputDelay?: number;
+        outputLabel?: boolean;
       };
 }
 
@@ -630,6 +631,13 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
         description:
           'Milliseconds between the lines of scripted output (`runnable.output`), so that it prints as if the code ran. `0` prints it all at once. A code block can set its own on its fence line.',
         valid: (value) => typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 2 ** 31 - 1,
+      },
+      outputLabel: {
+        type: 'boolean',
+        default: false,
+        description:
+          'Shows an **Output** label at the top of the output panel. Screen readers hear the label either way.',
+        valid: (value) => typeof value === 'boolean',
       },
     },
   },

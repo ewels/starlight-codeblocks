@@ -205,7 +205,7 @@ test('scripted standard error and the marks on output lines take the texts of th
   const { html } = await output();
   expect(html).toContain('data-scb-runnable-streams="{&#x22;1&#x22;:&#x22;stderr&#x22;}"');
   expect(texts(html, 'class="scb-run-output"').error).toBe('Fehler: ');
-  const marks = html.match(/<div class="scb-run-marks" hidden>(.*?)<\/div>/)?.[1] ?? '';
+  const marks = html.match(/<div class="scb-run-lines" hidden>(.*?)<\/div>/)?.[1] ?? '';
   expect(marks).toContain('<span class="scb-state-prefix scb-sr-only">Fehler:</span>No rule');
   expect(marks).toContain('<strong aria-hidden="true">Fehler</strong>');
   expect(marks).toContain('<strong aria-hidden="true">Success</strong>');

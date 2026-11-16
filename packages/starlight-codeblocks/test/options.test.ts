@@ -20,6 +20,7 @@ test('turns every feature on with defaults, in new objects on each call', () => 
     againLabel: undefined,
     button: 'below',
     outputDelay: 200,
+    outputLabel: false,
   });
   if (options.shellCopy) options.shellCopy.prompts.push('% ');
   expect(resolveOptions().shellCopy).toEqual({ prompts: ['$ ', '> '] });
@@ -69,6 +70,7 @@ test('rejects options that are not valid, with an OptionsError that names the op
     [{ runnable: { againLabel: 3 } }, '`runnable.againLabel`'],
     [{ runnable: { button: 'top' } }, '`runnable.button`'],
     [{ runnable: { outputDelay: -1 } }, '`runnable.outputDelay`'],
+    [{ runnable: { outputLabel: 'yes' } }, '`runnable.outputLabel`'],
     [{ apiLinks: { adapters: [{ name: 'x', languages: ['js'] }] } }, '`apiLinks.adapters`'],
     [{ walkthrough: { start: 2 } }, "`walkthrough.start` must be 1 | 'last', got 2"],
     [{ walkthrough: { start: 'first' } }, '`walkthrough.start` must be'],

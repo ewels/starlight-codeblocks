@@ -66,11 +66,13 @@ function setup(block: HTMLElement) {
       button.dataset.code = raw(template);
     });
   }
-  if (block.dataset.scbCode !== undefined) {
-    block.dataset.scbCodeTemplate ??= block.dataset.scbCode;
-    const template = block.dataset.scbCodeTemplate;
+  // The code on the figure when the copy button is off, and the hidden `[!run]` code.
+  for (const key of ['scbCode', 'scbRunnableCode'] as const) {
+    if (block.dataset[key] === undefined) continue;
+    block.dataset[`${key}Template`] ??= block.dataset[key];
+    const template = block.dataset[`${key}Template`] as string;
     targets.push(() => {
-      block.dataset.scbCode = raw(template);
+      block.dataset[key] = raw(template);
     });
   }
   // A link with data-scb-playground is rebuilt from the copied text by its own module.

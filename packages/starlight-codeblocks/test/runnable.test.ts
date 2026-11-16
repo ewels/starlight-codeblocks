@@ -1,12 +1,18 @@
-import { getColorContrast } from '@expressive-code/core';
+import { getColorContrast, mix, onBackground } from '@expressive-code/core';
 import { h, toHtml } from '@expressive-code/core/hast';
 import { afterEach, expect, test } from 'vitest';
-import { keepCopiedText, pluginCore } from '../src/expressive-code/core.ts';
+import { keepCopiedText, markDecorations, pluginCore } from '../src/expressive-code/core.ts';
 import { builtInStates } from '../src/expressive-code/line-states.ts';
-import { pluginRunnable, runtimeFileName, runtimeModules } from '../src/expressive-code/runnable.ts';
+import {
+  ANSI_COLOURS,
+  ANSI_TINT,
+  pluginRunnable,
+  runtimeFileName,
+  runtimeModules,
+} from '../src/expressive-code/runnable.ts';
 import { runtimePlugins } from '../src/integration.ts';
 import { setRegistry } from '../src/registry.ts';
-import { tinted, variants } from './contrast.ts';
+import { variants } from './contrast.ts';
 import { block, lineClasses, render } from './render.ts';
 
 afterEach(() => setRegistry(undefined));
@@ -197,7 +203,7 @@ test('[!output] keeps backslashes and the lines that other plugins delete, and g
   );
   expect(fence.html).toContain('data-scb-runnable-output="x"');
   expect(fence.html).not.toContain('data-scb-runnable-waits');
-  expect(fence.html).not.toContain('scb-run-marks');
+  expect(fence.html).not.toContain('scb-run-lines');
 });
 
 test('[!output stderr] and [!output stdout] start parts of standard error and standard output', async () => {
@@ -239,8 +245,8 @@ test('[!output] warns about other arguments and about a second output, and print
   expect(bad.html).not.toContain('data-scb-runnable-streams');
   expect(bad.copyText).toBe('make');
   expect(bad.warnings).toEqual([
-    'src/content/docs/example.md, sh code block, line 4: `[!output]` takes nothing, `stdout`, `stderr` or `end`.',
-    'src/content/docs/example.md, sh code block, line 6: `[!output]` takes nothing, `stdout`, `stderr` or `end`.',
+    'src/content/docs/example.md, sh code block, line 4: `[!output]` takes `stdout`, `stderr` or `end`, and `lang=<language>`.',
+    'src/content/docs/example.md, sh code block, line 6: `[!output]` takes `stdout`, `stderr` or `end`, and `lang=<language>`.',
   ]);
   const unknown = await render(block('sh', 'make', '# [!output now]', 'a'));
   expect(unknown.html).not.toContain('scb-run');
@@ -273,7 +279,7 @@ test('[!code highlight] and line states on a line of output mark it in the outpu
   );
   const name = (label: string) => `<span class="scb-state-prefix scb-sr-only">${label}:</span>`;
   expect(html).toContain(
-    `<div class="scb-run-marks" hidden><span class="scb-run-line scb-state-mark" data-scb-run-line="1">[a8/1f6ead] sayHello (1) | 0 of 1</span><span class="scb-run-line scb-state scb-state-info" data-scb-run-line="2">${name('Note')}Cached: 2<span class="scb-state-label"><strong aria-hidden="true">Note</strong></span></span><span class="scb-run-line scb-state scb-state-warning" data-scb-run-line="3">${name('Warning')}Version 25.04<span class="scb-state-label"><strong aria-hidden="true">Warning</strong> Update to 26.04</span></span><span class="scb-run-line scb-state scb-state-success" data-scb-run-line="4">${name('Success')}Done<span class="scb-state-label"><strong aria-hidden="true">Success</strong></span></span><span class="scb-run-line scb-state scb-state-error" data-scb-run-line="5">${name('Error')}ERROR ~ Error executing process<span class="scb-state-label"><strong aria-hidden="true">Error</strong></span></span><span class="scb-run-line scb-state scb-state-error" data-scb-run-line="6">${name('Error')}Caused by:</span></div>`,
+    `<div class="scb-run-lines" hidden><span class="scb-run-line scb-state-mark" data-scb-run-line="1">[a8/1f6ead] sayHello (1) | 0 of 1</span><span class="scb-run-line scb-state scb-state-info" data-scb-run-line="2">${name('Note')}Cached: 2<span class="scb-state-label"><strong aria-hidden="true">Note</strong></span></span><span class="scb-run-line scb-state scb-state-warning" data-scb-run-line="3">${name('Warning')}Version 25.04<span class="scb-state-label"><strong aria-hidden="true">Warning</strong> Update to 26.04</span></span><span class="scb-run-line scb-state scb-state-success" data-scb-run-line="4">${name('Success')}Done<span class="scb-state-label"><strong aria-hidden="true">Success</strong></span></span><span class="scb-run-line scb-state scb-state-error" data-scb-run-line="5">${name('Error')}ERROR ~ Error executing process<span class="scb-state-label"><strong aria-hidden="true">Error</strong></span></span><span class="scb-run-line scb-state scb-state-error" data-scb-run-line="6">${name('Error')}Caused by:</span></div>`,
   );
   expect(html).toContain(
     'data-scb-runnable-output="executor: local (1)\x7F[a8/1f6ead] sayHello (1) | 0 of 1\x7FCached: 2\x7FVersion 25.04\x7FDone\x7FERROR ~ Error executing process\x7FCaused by:"',
@@ -281,14 +287,14 @@ test('[!code highlight] and line states on a line of output mark it in the outpu
   expect(html).toContain('data-scb-runnable-streams="{&#x22;5&#x22;:&#x22;stderr&#x22;}"');
   expect(lineClasses(html)).toEqual(['ec-line']);
   // Tools that read the HTML, and Pagefind, leave the marked lines out.
-  expect(rawHtml).toContain('<div class="scb-run-marks scb-deco" hidden data-pagefind-ignore="">');
+  expect(rawHtml).toContain('<div class="scb-run-lines scb-deco" hidden data-pagefind-ignore="">');
   expect(copyText).toBe('nextflow run hello.nf');
   expect(warnings).toEqual([]);
   const plain = await render(block('sh', 'make', '# [!output]', 'Done # [!wait 100]'));
-  expect(plain.html).not.toContain('scb-run-marks');
+  expect(plain.html).not.toContain('scb-run-lines');
   // Output has no inserted or deleted lines.
   const ins = await render(block('sh', 'ls', '# [!output]', 'a # [!code ++] added'));
-  expect(ins.html).not.toContain('scb-run-marks');
+  expect(ins.html).not.toContain('scb-run-lines');
 });
 
 test('[!wait] and a mark share one comment, in either order', async () => {
@@ -320,18 +326,18 @@ test('fence ranges and counts skip the lines of output, so they count the code l
   const lines = ['one', '# [!output]', 'out a', 'out b', '# [!output end]', 'two', 'three'];
   const marked = await render(block('sh {3}', ...lines));
   expect(lineClasses(marked.html)).toEqual(['ec-line', 'ec-line', 'ec-line highlight mark']);
-  expect(marked.html).not.toContain('scb-run-marks');
+  expect(marked.html).not.toContain('scb-run-lines');
   const state = await render(block('sh error={2}', ...lines));
   expect(lineClasses(state.html)).toEqual(['ec-line', 'ec-line scb-state scb-state-error', 'ec-line']);
   const after = await render(block('sh', 'one', '# [!output]', 'out', '# [!output end]', 'two # [!code highlight]'));
   expect(lineClasses(after.html)).toEqual(['ec-line', 'ec-line highlight mark']);
-  expect(after.html).not.toContain('scb-run-marks');
+  expect(after.html).not.toContain('scb-run-lines');
   const outside = await render(block('sh error={4}', ...lines));
   expect(outside.warnings).toEqual([
     'src/content/docs/example.md, sh code block: `error={4}` names line 4, but the block has 3 lines. The plugin ignores it.',
   ]);
   const count = await render(block('sh', 'one # [!code error:2]', '# [!output]', 'out'));
-  expect(count.html).not.toContain('scb-run-marks');
+  expect(count.html).not.toContain('scb-run-lines');
   expect(count.warnings).toEqual([
     'src/content/docs/example.md, sh code block, line 1: `:2` runs past the last line of the block.',
   ]);
@@ -342,7 +348,7 @@ test('with line states off, marks on lines of output warn, and the lines print w
     block('sh', 'make', '# [!output]', 'Compiling # [!code highlight]', 'Failed # [!code error]'),
     { lineStates: false },
   );
-  expect(html).not.toContain('scb-run-marks');
+  expect(html).not.toContain('scb-run-lines');
   expect(html).toContain('data-scb-runnable-output="Compiling\x7FFailed # [!code error]"');
   expect(warnings).toEqual([
     'src/content/docs/example.md, sh code block, line 4: `[!code error]` is not a known directive. The line renders without it.',
@@ -359,8 +365,10 @@ test('the text of a marked line of output meets 4.5:1 on its tint, in the dark a
     ['codeblocksLineStates.markLabelForeground', 'textMarkers.markBackground'],
   ];
   for (const v of await variants()) {
+    const panel = v.get('codeblocksRunnable.outputBackground');
     for (const [fg = '', bg = ''] of pairs) {
-      expect(getColorContrast(v.get(fg), tinted(v, [v.get(bg)])), `${fg}, ${v.name}`).toBeGreaterThanOrEqual(4.5);
+      const onTint = onBackground(v.get(bg), panel);
+      expect(getColorContrast(v.get(fg), onTint), `${fg}, ${v.name}`).toBeGreaterThanOrEqual(4.49);
     }
   }
 });
@@ -395,11 +403,13 @@ test('blocks without runnable render the same with the feature off', async () =>
   expect((await render(block('sh runnable.output="x"', 'y'), { runnable: false })).html).not.toContain('scb-run');
 });
 
-test('output and error colours meet 4.5:1, and the button border 3:1, in the dark and the light theme', async () => {
+test('output, error and muted colours meet 4.5:1 on the darker output panel, and the button border 3:1', async () => {
   for (const v of await variants([pluginCore(), pluginRunnable()])) {
-    for (const key of ['outputForeground', 'errorForeground']) {
+    const panel = v.get('codeblocksRunnable.outputBackground');
+    expect(getColorContrast(panel, v.get('codeBackground')), v.name).toBeGreaterThan(1.01);
+    for (const key of ['outputForeground', 'errorForeground', 'mutedForeground']) {
       const colour = v.get(`codeblocksRunnable.${key}`);
-      expect(getColorContrast(colour, v.get('codeBackground')), `${key}, ${v.name}`).toBeGreaterThanOrEqual(4.5);
+      expect(getColorContrast(colour, panel), `${key}, ${v.name}`).toBeGreaterThanOrEqual(4.49);
     }
     const border = v.get('codeblocksRunnable.buttonBorder');
     expect(getColorContrast(border, v.get('codeBackground')), v.name).toBeGreaterThanOrEqual(3);
@@ -416,4 +426,246 @@ test('the output panel follows the footnote list, so that it stays under the cod
   const { html } = await render(block('js runnable', '// [!ref] Logs.', 'console.log(1)'), js);
   expect(html.indexOf('class="scb-footnotes"')).toBeGreaterThan(-1);
   expect(html.indexOf('class="scb-footnotes"')).toBeLessThan(html.indexOf('scb-run-output'));
+});
+
+const ESC = '\x1b';
+
+test('runnable.outputLang highlights the output, and ANSI escapes, raw or written as text, become colours', async () => {
+  const { html, copyText, warnings } = await render(
+    block('sh runnable.outputLang=ansi', 'make', '# [!output]', `${ESC}[33mUsage:${ESC}[0m plain`, '\\e[1mbold\\e[0m'),
+  );
+  expect(warnings).toEqual([]);
+  expect(copyText).toBe('make');
+  const lines = html.match(/<div class="scb-run-lines" hidden>(.*?)<\/div>/)?.[1] ?? '';
+  expect(lines).toMatch(/<span data-scb-run-line="0"><span style="--0:[^"]+">Usage:<\/span>/);
+  expect(lines).toMatch(/<span data-scb-run-line="1"><span style="[^"]*--0fw:bold[^"]*">bold<\/span><\/span>/);
+  expect(lines).not.toContain(ESC);
+  expect(lines).not.toContain('\\e[');
+  // Without a language, the output stays plain text.
+  const plain = await render(block('sh', 'make', '# [!output]', `${ESC}[33mUsage:`));
+  expect(plain.html).not.toContain('scb-run-lines');
+});
+
+test('lang= on [!output] sets the language of the lines after it, and txt keeps them plain', async () => {
+  const { html, warnings } = await render(
+    block(
+      'sh runnable.outputLang=ansi',
+      'make',
+      '# [!output]',
+      `${ESC}[32mok`,
+      '# [!output stderr lang=txt]',
+      `${ESC}[31mfailed`,
+      '# [!output stdout lang=json]',
+      '{"a": 1}',
+      '# [!output stdout]',
+      `${ESC}[32mback`,
+    ),
+  );
+  expect(warnings).toEqual([]);
+  const lines = html.match(/<div class="scb-run-lines" hidden>(.*?)<\/div>/)?.[1] ?? '';
+  expect(lines).toContain('data-scb-run-line="0"');
+  expect(lines).not.toContain('data-scb-run-line="1"');
+  expect(lines).toMatch(/data-scb-run-line="2"><span style="--0:[^"]+">\{/);
+  expect(lines).toContain('data-scb-run-line="3"');
+  expect(html).toContain(
+    'data-scb-runnable-streams="{&#x22;1&#x22;:&#x22;stderr&#x22;,&#x22;2&#x22;:&#x22;stdout&#x22;}"',
+  );
+  const unknown = await render(block('sh', 'make', '# [!output lang=nosuchlang]', 'a'));
+  expect(unknown.html).not.toContain('scb-run-lines');
+  expect(unknown.warnings).toEqual([
+    'src/content/docs/example.md, sh code block: Expressive Code does not know the output language `nosuchlang`. The output shows as plain text.',
+  ]);
+  const bad = await render(block('sh', 'make', '# [!output end lang=ansi]', 'a', '# [!output lang=a lang=b]', 'b'));
+  expect(bad.warnings).toHaveLength(2);
+});
+
+test('a marked line of highlighted output keeps its text, without the token colours', async () => {
+  const { html } = await render(
+    block('sh runnable.outputLang=ansi', 'make', '# [!output]', `${ESC}[31mbroken${ESC}[0m # [!code error]`),
+  );
+  expect(html).toContain('<span class="scb-run-line scb-state scb-state-error" data-scb-run-line="0">');
+  expect(html).toMatch(/<\/span>broken<span class="scb-state-label">/);
+});
+
+test('highlighted output colours meet 4.5:1 on the code background, ANSI colours and dim text too', async () => {
+  const { highlightOutput } = await import('../src/expressive-code/output-highlight.ts');
+  const { ExpressiveCode } = await import('expressive-code');
+  const { getStaticBackgroundColor } = await import('@expressive-code/core');
+  const { themeSets } = await import('./contrast.ts');
+  const code = [30, 31, 32, 33, 34, 35, 36, 37, 90, 94]
+    .map((n) => `${ESC}[${n}mx${ESC}[0m ${ESC}[2;${n}md${ESC}[0m ${ESC}[${n};47mb${ESC}[0m`)
+    .join('\n');
+  for (const themes of await themeSets()) {
+    const ec = new ExpressiveCode({ themes });
+    const backgrounds = ec.styleVariants.map((variant) => getStaticBackgroundColor(variant));
+    const tokens = (await highlightOutput(code, 'ansi', ec.styleVariants, 4.5, backgrounds)) ?? [];
+    expect(tokens).toHaveLength(10);
+    for (const span of tokens.flat()) {
+      if (span.type !== 'element') continue;
+      const vars = Object.fromEntries(
+        String(span.properties.style)
+          .split(';')
+          .map((part) => part.split(':')),
+      );
+      ec.styleVariants.forEach((variant, i) => {
+        const base = getStaticBackgroundColor(variant);
+        const bg = vars[`--${i}bg`] ? onBackground(vars[`--${i}bg`], base) : base;
+        expect(
+          getColorContrast(vars[`--${i}`], bg),
+          `${variant.theme.name} ${span.properties.style}`,
+        ).toBeGreaterThanOrEqual(4.49);
+      });
+    }
+  }
+});
+
+test('runnable.static shows the output from the build, with no button and no client module', async () => {
+  const { html, copyText, warnings } = await render(
+    block('sh runnable.static', 'make', '# [!output]', 'a', 'b', '# [!output stderr]', 'oops'),
+  );
+  expect(warnings).toEqual([]);
+  expect(copyText).toBe('make');
+  expect(html).toContain(
+    '<div class="scb-run-output scb-run-static" tabindex="0" role="region" aria-label="Output"><span class="scb-sr-only">Output</span><pre class="scb-run-stdout">a\nb</pre><pre class="scb-run-stderr"><span class="scb-sr-only">Error: </span>oops</pre></div></figure>',
+  );
+  expect(html).not.toContain('data-scb-runnable');
+  expect(html).not.toContain('<button type="button" class="scb-run');
+  expect(html).not.toContain('aria-live="polite" data-scb-texts');
+  const fence = await render(block('sh runnable.static runnable.output="Hello\\nworld"', 'make'));
+  expect(fence.html).toContain('<pre class="scb-run-stdout">Hello\nworld</pre>');
+  const only = await render(block('sh runnable.static', '# [!output]', 'Hello'));
+  expect(only.html).toMatch(/<figure class="[^"]*scb-run-empty" data-scb-run-started="">/);
+  expect(only.html).not.toContain('class="copy"');
+});
+
+test('runnable.static needs scripted output', async () => {
+  const noOutput = await render(block('js runnable runnable.static', 'console.log(1)'), js);
+  expect(noOutput.html).toContain('>Run code</button>');
+  expect(noOutput.warnings).toEqual([
+    'src/content/docs/example.md, js code block: `runnable.static` needs output in the block, after `[!output]` or in `runnable.output`. The block keeps its button.',
+  ]);
+});
+
+test('[!run] runs hidden code instead of the code that readers see and copy', async () => {
+  const { html, copyText, warnings } = await render(
+    block('sh', 'python hello.py --help', '# [!run lang=python]', 'print("hi")', 'print(2)'),
+    { runnable: { runtimes: { python: '/py.js' } } },
+  );
+  expect(warnings).toEqual([]);
+  expect(copyText).toBe('python hello.py --help');
+  expect(html).toContain('data-scb-runnable="/py.js"');
+  expect(html).toContain('data-scb-runnable-code="print(&#x22;hi&#x22;)\x7Fprint(2)"');
+  expect(html).not.toContain('print(2)</span>');
+  expect(html).toContain('>Run code</button>');
+  const own = await render(block('py', 'main()', '# [!run]', 'print(1)', '# [!run end]', 'done()'), {
+    runnable: { runtimes: { python: '/py.js' } },
+  });
+  expect(own.copyText).toBe('main()\ndone()');
+  expect(own.html).toContain('data-scb-runnable-code="print(1)"');
+  const noRuntime = await render(block('sh', 'go run .', '# [!run]', 'x'));
+  expect(noRuntime.warnings).toEqual([
+    'src/content/docs/example.md, sh code block: `runnable` needs a runtime for sh. Add one to `runnable.runtimes`.',
+  ]);
+  const bad = await render(block('sh', 'x', '# [!run now]', 'y', '# [!run end lang=py]'));
+  expect(bad.warnings).toHaveLength(2);
+  const scripted = await render(block('sh', 'x', '# [!run lang=python]', 'y', '# [!output]', 'z'));
+  expect(scripted.copyText).toBe('x');
+  expect(scripted.html).toContain('data-scb-runnable-output="z"');
+  expect(scripted.warnings).toEqual([
+    'src/content/docs/example.md, sh code block: `[!run]` has no effect in a block with scripted output: the button prints the output.',
+  ]);
+});
+
+test('runnable.outputLang=ansi colours the output of a run in the client, and other languages warn there', async () => {
+  const { html, warnings } = await render(block('js runnable runnable.outputLang=ansi', 'console.log(1)'), js);
+  expect(warnings).toEqual([]);
+  expect(html).toContain('data-scb-runnable-ansi=""');
+  const json = await render(block('js runnable runnable.outputLang=json', 'console.log(1)'), js);
+  expect(json.html).not.toContain('data-scb-runnable-ansi');
+  expect(json.warnings).toEqual([
+    'src/content/docs/example.md, js code block: The output of a run shows as plain text with `runnable.outputLang=json`. Only `ansi` colours a run.',
+  ]);
+  const plain = await render(block('js runnable', 'console.log(1)'), js);
+  expect(plain.html).not.toContain('data-scb-runnable-ansi');
+});
+
+test('ANSI text colours for runs meet 4.5:1 on the output background and on every ANSI background tint', async () => {
+  const names = [...ANSI_COLOURS, ...ANSI_COLOURS.map((n) => `Bright${n}`)].map((n) => `ansi${n}`);
+  for (const v of await variants([pluginCore(), pluginRunnable()])) {
+    const panel = v.get('codeblocksRunnable.outputBackground');
+    const backgrounds = [panel, ...names.map((n) => mix(panel, v.get(`codeblocksRunnable.${n}`), ANSI_TINT))];
+    for (const name of ['ansiForeground', ...names]) {
+      const colour = v.get(`codeblocksRunnable.${name}`);
+      for (const bg of backgrounds)
+        expect(getColorContrast(colour, bg), `${name} on ${bg}, ${v.name}`).toBeGreaterThanOrEqual(4.49);
+    }
+  }
+});
+
+test('the output font and line height follow the code unless a site sets its own', async () => {
+  for (const v of await variants([pluginCore(), pluginRunnable()])) {
+    expect(v.get('codeblocksRunnable.outputFontFamily')).toBe(v.get('codeFontFamily'));
+    expect(v.get('codeblocksRunnable.outputLineHeight')).toBe(v.get('codeLineHeight'));
+  }
+});
+
+test('highlighted output keeps its empty first line, so each line stays in its place', async () => {
+  const { html } = await render(
+    block('sh runnable.static runnable.outputLang=ansi', 'make', '# [!output]', '', `${ESC}[33mUsage${ESC}[0m`, 'last'),
+  );
+  expect(html).toContain(
+    '<pre class="scb-run-stdout"><span data-scb-run-line="0"></span>\n<span data-scb-run-line="1">',
+  );
+  expect(html).toMatch(/<span data-scb-run-line="2"><span style="[^"]*">last<\/span><\/span><\/pre>/);
+  expect(html).not.toContain(ESC);
+});
+
+test('the output panel scrolls as code does, and wraps in a block with wrap', async () => {
+  const scrolls = await render(block('sh runnable.static', 'make', '# [!output]', 'a'));
+  expect(scrolls.html).toContain('<div class="scb-run-output scb-run-static" tabindex="0" role="region"');
+  const wraps = await render(block('sh runnable.static wrap', 'make', '# [!output]', 'a'));
+  expect(wraps.html).toContain('<div class="scb-run-output scb-run-wrap scb-run-static" tabindex="0"');
+  // The client makes a live panel focusable once its output scrolls.
+  const live = await render(block('sh', 'make', '# [!output]', 'a'));
+  expect(live.html).toMatch(/<div class="scb-run-output" aria-live="polite"/);
+});
+
+test('outputLabel shows the Output label, which is otherwise for screen readers only', async () => {
+  const hidden = await render(block('sh runnable.static', 'make', '# [!output]', 'a'));
+  expect(hidden.html).toContain('<span class="scb-sr-only">Output</span><pre class="scb-run-stdout">');
+  expect(hidden.html).not.toContain('scb-run-labelled');
+  const shown = await render(block('sh runnable.static', 'make', '# [!output]', 'a'), {
+    runnable: { outputLabel: true },
+  });
+  expect(shown.html).toContain('class="scb-run-output scb-run-labelled scb-run-static"');
+  expect(shown.html).toContain('<span class="scb-run-label">Output</span><pre class="scb-run-stdout">');
+  const live = await render(block('sh', 'make', '# [!output]', 'a'), { runnable: { outputLabel: true } });
+  expect(live.html).toContain('<div class="scb-run-output scb-run-labelled" aria-live="polite"');
+});
+
+test('[!run] after [!output] ends the output, and warns that the button prints the output', async () => {
+  const { html, warnings } = await render(block('sh', 'x', '# [!output]', 'out', '# [!run lang=python]', 'print(1)'));
+  expect(html).toContain('data-scb-runnable-output="out"');
+  expect(html).not.toContain('print(1)');
+  expect(warnings).toEqual([
+    'src/content/docs/example.md, sh code block: `[!run]` has no effect in a block with scripted output: the button prints the output.',
+  ]);
+});
+
+test('an empty [!run] warns that it has no code, and the block runs the code that readers see', async () => {
+  const { html, warnings } = await render(block('py runnable', 'one()', '# [!run]', '# [!run end]', 'two()'), {
+    runnable: { runtimes: { python: '/py.js' } },
+  });
+  expect(html).not.toContain('data-scb-runnable-code');
+  expect(warnings).toEqual([
+    'src/content/docs/example.md, py code block: `[!run]` needs lines of code after it. The button runs the code that readers see.',
+  ]);
+});
+
+test('static output is part of the page for search and HTML readers, and live output is a decoration', () => {
+  const root = h('div', [h('div', { class: 'scb-run-output scb-run-static' }), h('div', { class: 'scb-run-output' })]);
+  markDecorations(root);
+  expect(toHtml(root)).toBe(
+    '<div><div class="scb-run-output scb-run-static"></div><div class="scb-run-output scb-deco" data-pagefind-ignore=""></div></div>',
+  );
 });

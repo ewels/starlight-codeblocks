@@ -38,16 +38,16 @@ const site = {
   runnable: { runtimes: { python: 'starlight-codeblocks/runtimes/pyodide' } },
 };
 
-test('every attribute example renders cleanly and uses the attribute', async () => {
-  for (const { name, example } of attributesReference) {
-    if (!example) continue;
+test.each(attributesReference.flatMap(({ name, example }) => (example ? [{ name, example }] : [])))(
+  'the $name example renders cleanly and uses the attribute',
+  async ({ name, example }) => {
     const { lang, meta, code } = example;
     const withAttribute = await render(`\`\`\`${lang} ${meta}\n${code}\n\`\`\``, site);
     const without = await render(`\`\`\`${lang}\n${code}\n\`\`\``, site);
     expect(withAttribute.warnings, name).toEqual([]);
     expect(withAttribute.html, name).not.toEqual(without.html);
-  }
-});
+  },
+);
 
 test('every style setting is in the style settings reference, with a derivation for computed defaults', () => {
   const states = Object.keys(builtInStates);

@@ -12,7 +12,10 @@ const SCRIPTED = 7;
 const FAILED = 8;
 const MARKS = 9;
 const OUTPUT_ONLY = 10;
-const TITLE = 11;
+const ANSI = 11;
+const ANSI_RUN = 12;
+const RUN_OTHER = 13;
+const TITLE = 14;
 
 const oneProject = () =>
   test.skip(test.info().project.name !== 'desktop-dark', 'Slow or needs the network, so one project is enough.');
@@ -38,7 +41,8 @@ test('Run loads no runtime until selected, then shows stdout and stderr, and doe
   await expect(panel).toBeEmpty();
   await expect(panel).toHaveAttribute('aria-live', 'polite');
   await button.click();
-  await expect(panel.locator('.scb-run-label')).toHaveText('Output');
+  await expect(panel.locator('.scb-sr-only').first()).toHaveText('Output');
+  await expect(panel.locator('.scb-run-label')).toHaveCount(0);
   await expect(stdout).toHaveText('Total: 14');
   await expect(stderr).toHaveText('Error: Sizes of 1 are deprecated.');
   await expect(button).toHaveText('Run again');
@@ -237,4 +241,60 @@ test('without JavaScript, the Run button is hidden', async ({ browser }) => {
   await expect(block.locator('.scb-run-controls')).toBeHidden();
   await expect(block.locator('.header')).toBeHidden();
   await context.close();
+});
+
+test('runnable.static shows coloured output from the start, readable in the theme, with no button', async ({
+  page,
+}) => {
+  const block = example(page, ANSI);
+  const stdout = block.locator('.scb-run-stdout');
+  await expect(block.locator('.scb-run')).toHaveCount(0);
+  await expect(block.locator('.scb-run-output')).not.toHaveAttribute('aria-live');
+  await expect(stdout).toContainText('Usage: hello.py [OPTIONS]');
+  await expect(stdout).not.toContainText('\\e[');
+  const usage = stdout.getByText('Usage:', { exact: true });
+  const plain = stdout.getByText('[OPTIONS]');
+  expect(await css(usage, 'color')).not.toBe(await css(plain, 'color'));
+  expect(await css(stdout.getByText('hello.py', { exact: true }), 'fontWeight')).toBe('700');
+  await expect(block.locator('.copy button')).toHaveAttribute('data-code', 'python hello.py --help');
+});
+
+test('[!run] runs the hidden Python, and the copy button copies the command', async ({ page }) => {
+  oneProject();
+  const block = example(page, RUN_OTHER);
+  await expect(block.locator('.copy button')).toHaveAttribute('data-code', 'python greet.py --name Ada --count 2');
+  await expect(block.locator('pre')).not.toContainText('print');
+  await block.locator('.scb-run').click();
+  await expect(block.locator('.scb-run-stdout')).toHaveText('Hello, Ada!\nHello, Ada!', { timeout: 60_000 });
+});
+
+test('a run with runnable.outputLang=ansi shows the colours that the code prints', async ({ page }) => {
+  const block = example(page, ANSI_RUN);
+  await block.locator('.scb-run').click();
+  const stdout = block.locator('.scb-run-stdout');
+  await expect(stdout).toHaveText('✔ Built in 2.1s');
+  const tick = stdout.getByText('✔');
+  const plain = stdout.getByText('Built in', { exact: false });
+  expect(await css(tick, 'color')).not.toBe(await css(stdout, 'color'));
+  expect(await css(stdout.getByText('2.1s'), 'fontWeight')).toBe('700');
+  expect(await plain.count()).toBe(1);
+});
+
+test('an output panel is a focusable region only while its output scrolls', async ({ page }) => {
+  const staticPanel = example(page, ANSI).locator('.scb-run-output');
+  await expect(staticPanel).toHaveAttribute('role', 'region');
+  await expect(staticPanel).toHaveAttribute('tabindex', '0');
+  const block = example(page, ANSI_RUN);
+  const panel = block.locator('.scb-run-output');
+  await expect(panel).not.toHaveAttribute('tabindex');
+  await block.locator('.scb-run').click();
+  await expect(block.locator('.scb-run-stdout')).toHaveText('✔ Built in 2.1s');
+  await expect(panel).toHaveAttribute('tabindex', '-1');
+  await expect(panel).not.toHaveAttribute('role');
+  await panel.evaluate((el) => {
+    el.style.width = '40px';
+  });
+  await expect(panel).toHaveAttribute('tabindex', '0');
+  await expect(panel).toHaveAttribute('role', 'region');
+  await expect(panel).toHaveAttribute('aria-label', 'Output');
 });

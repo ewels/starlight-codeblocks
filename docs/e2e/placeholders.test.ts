@@ -107,6 +107,19 @@ test.describe('storage option', () => {
     await expect(key(page)).toHaveValue('');
   });
 
+  test('the hidden [!run] code of a runnable block takes the value too', async ({ page }) => {
+    await serveClient(
+      page,
+      origin,
+      'placeholders',
+      `<figure data-scb-placeholders="none" data-scb-runnable-code='print("MY KEY")&#x7F;print(1)'><input class="scb-placeholder" placeholder="MY KEY" aria-label="MY KEY"></figure>
+      <script type="module">import init from '/placeholders.js'; init();</script>`,
+    );
+    await page.goto(`${origin}/`);
+    await key(page).fill('tok');
+    await expect(page.locator('figure')).toHaveAttribute('data-scb-runnable-code', 'print("tok")\x7Fprint(1)');
+  });
+
   test('storage="session" saves the value in sessionStorage only, and it survives a reload', async ({ page }) => {
     await serve(page, 'session');
     await page.goto(`${origin}/`);
