@@ -88,6 +88,7 @@ Client module, only when static HTML cannot do the job:
 - Popovers stay inside the block's `.expressive-code`, which holds the theme variables. Use `scb-float` with `place()`, `follow()` or `below()`.
 - To reach a hidden line, call `unhide()`. It opens tabs and `<details>` and sends `beforematch` for each feature to handle.
 - For placeholder values, read `data-code` when you need it, and listen for `scb-placeholders-change`.
+- Split diff moves lines into rows of a grid and adds inert copies (`.scb-split-copy`) and gaps (`.scb-split-gap`). A module that counts lines or cuts a block by position skips those, and listens for `scb-split-change` on the `pre`.
 - Texts come filled in from the build: the plugin writes them as JSON in `data-scb-texts` on an element that the module owns, such as its button.
 
 Tests and docs:

@@ -10,13 +10,19 @@ const remembered = () => {
   }
 };
 
-const lineNumber = (el: Element) => el.querySelector<HTMLElement>('.gutter .ln');
+// Line permalinks replace the number with a link.
+const lineNumber = (el: Element) => el.querySelector<HTMLElement>('.gutter :is(.ln, a.scb-permalink)');
 
 function renumber(el: Element, n: number) {
   const ln = lineNumber(el);
   if (!ln) return;
   ln.dataset.scbLn ??= ln.textContent ?? '';
   ln.textContent = String(n);
+  // A permalink's name says its number, and must keep saying the one that readers see.
+  const label = ln.getAttribute('aria-label');
+  if (!label) return;
+  ln.dataset.scbLabel ??= label;
+  ln.setAttribute('aria-label', ln.dataset.scbLabel.replace(ln.dataset.scbLn, String(n)));
 }
 
 function place(el: HTMLElement, row: number, side?: 'left' | 'right') {
@@ -40,39 +46,47 @@ function split(pre: HTMLElement) {
   const code = pre.querySelector('code');
   if (!code) return;
   pre.classList.add(S);
-  const start = Number(lineNumber(code)?.textContent) || 1;
+  const start = Number(lineNumber(code)?.textContent || 1);
   let before = start;
   let after = start;
   let row = 0;
-  let dels: HTMLElement[] = [];
-  let adds: HTMLElement[] = [];
+  // Callouts and hidden-line markers sit above the line they belong to, on its side.
+  const above: HTMLElement[] = [];
+  let dels: { el: HTMLElement; above: HTMLElement[] }[] = [];
+  let adds: typeof dels = [];
   const flush = () => {
     for (let i = 0; i < Math.max(dels.length, adds.length); i++) {
-      row++;
       const del = dels[i];
       const add = adds[i];
+      for (let j = 0; j < Math.max(del?.above.length ?? 0, add?.above.length ?? 0); j++) {
+        row++;
+        if (del?.above[j]) place(del.above[j], row, 'left');
+        if (add?.above[j]) place(add.above[j], row, 'right');
+      }
+      row++;
       if (del) {
-        place(del, row, 'left');
-        renumber(del, before++);
-        if (!add) gap(del, row, 'right');
+        place(del.el, row, 'left');
+        renumber(del.el, before++);
+        if (!add) gap(del.el, row, 'right');
       }
       if (add) {
-        place(add, row, 'right');
-        renumber(add, after++);
-        if (!del) gap(add, row, 'left');
+        place(add.el, row, 'right');
+        renumber(add.el, after++);
+        if (!del) gap(add.el, row, 'left');
       }
     }
     dels = [];
     adds = [];
   };
   for (const el of [...code.children] as HTMLElement[]) {
-    if (el.matches('.ec-line.del')) dels.push(el);
-    else if (el.matches('.ec-line.ins')) adds.push(el);
+    if (el.matches('.ec-line.del')) dels.push({ el, above: above.splice(0) });
+    else if (el.matches('.ec-line.ins')) adds.push({ el, above: above.splice(0) });
+    else if (!el.matches('.ec-line')) above.push(el);
     else {
       flush();
-      place(el, ++row);
-      if (!el.matches('.ec-line')) continue;
+      for (const deco of above.splice(0)) place(deco, ++row);
       const copy = el.cloneNode(true) as HTMLElement;
+      place(el, ++row, 'left');
       for (const node of [copy, ...copy.querySelectorAll('[id]')]) node.removeAttribute('id');
       // Expandable and mentions act on the original line only. CSS shows or hides the copy with it.
       copy.removeAttribute('hidden');
@@ -80,7 +94,6 @@ function split(pre: HTMLElement) {
       copy.classList.add(`${S}-copy`);
       copy.inert = true;
       copy.ariaHidden = 'true';
-      el.classList.add(`${S}-left`);
       place(copy, row, 'right');
       renumber(el, before++);
       renumber(copy, after++);
@@ -88,6 +101,7 @@ function split(pre: HTMLElement) {
     }
   }
   flush();
+  for (const deco of above) place(deco, ++row);
 }
 
 function unsplit(pre: HTMLElement) {
@@ -101,12 +115,19 @@ function unsplit(pre: HTMLElement) {
       ln.textContent = ln.dataset.scbLn;
       delete ln.dataset.scbLn;
     }
+    if (ln?.dataset.scbLabel !== undefined) {
+      ln.setAttribute('aria-label', ln.dataset.scbLabel);
+      delete ln.dataset.scbLabel;
+    }
   }
 }
 
 function apply(pre: HTMLElement, view?: string) {
   const on = view === 'split';
-  if (pre.classList.contains(S) !== on) (on ? split : unsplit)(pre);
+  if (pre.classList.contains(S) !== on) {
+    (on ? split : unsplit)(pre);
+    pre.dispatchEvent(new Event('scb-split-change', { bubbles: true }));
+  }
   for (const toggle of pre.closest('.expressive-code')?.querySelectorAll<HTMLElement>('.scb-split-toggle') ?? []) {
     toggle.setAttribute('aria-pressed', String((toggle.dataset.scbView === 'split') === on));
   }

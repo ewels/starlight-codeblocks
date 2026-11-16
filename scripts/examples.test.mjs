@@ -67,7 +67,7 @@ test('the source pane of an <Example> shows no attribute that only turns another
     for (const [, name, source] of text.matchAll(/export const (\w+) = `([\s\S]*?)`;\n/g)) {
       assert.doesNotMatch(
         source,
-        /^(\\`){3}\S.* (apiLinks|wordDiff)=false/m,
+        /^(\\`){3}\S.* (apiLinks|wordDiff|splitDiff)=false/m,
         `${page}: ${name} shows a feature-off attribute`,
       );
     }

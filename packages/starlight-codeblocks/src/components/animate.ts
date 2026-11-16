@@ -40,6 +40,8 @@ export function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
   // The tokens end every line with a line break. A different count means that the reader opened or closed
   // lines since the build, so the animation would not match the block.
   if (real.length !== lines(to).length - 1) return () => {};
+  // The tokens run in one column, and a split diff shows two.
+  if (pre.classList.contains('scb-split')) return () => {};
   // Callouts, hidden-line markers and section summaries take up height but have no tokens, so the block would jump.
   const rows = code.querySelectorAll(':scope > :not(.ec-line, details), summary');
   if ([...rows].some((row) => row.checkVisibility())) return () => {};
