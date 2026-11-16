@@ -4,6 +4,7 @@
 
 - Run code: `runnable.outputLang` and `[!output lang=…]` highlight scripted output in a language. With `ansi`, terminal colour codes show as colours, corrected for contrast in each theme, in scripted output and in the output of real runs
 - Run code: `runnable.static` shows scripted output from the start, with no button and no JavaScript
+- Run code: the output panel has no visible **Output** label, which screen readers still hear. The `outputLabel` option shows it
 - Run code: `[!run]` runs hidden code in place of the code that readers see, so a terminal block can show a command and run Python
 
 ## 1.3.0

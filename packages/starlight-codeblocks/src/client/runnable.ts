@@ -22,7 +22,7 @@ const texts = (panel: HTMLElement): Record<string, string> => JSON.parse(panel.d
 
 function show(panel: HTMLElement, ...children: HTMLElement[]) {
   const label = document.createElement('span');
-  label.className = 'scb-run-label';
+  label.className = panel.classList.contains('scb-run-labelled') ? 'scb-run-label' : 'scb-sr-only';
   label.textContent = texts(panel).output;
   panel.replaceChildren(label, ...children);
 }

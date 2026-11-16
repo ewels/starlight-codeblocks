@@ -41,7 +41,8 @@ test('Run loads no runtime until selected, then shows stdout and stderr, and doe
   await expect(panel).toBeEmpty();
   await expect(panel).toHaveAttribute('aria-live', 'polite');
   await button.click();
-  await expect(panel.locator('.scb-run-label')).toHaveText('Output');
+  await expect(panel.locator('.scb-sr-only').first()).toHaveText('Output');
+  await expect(panel.locator('.scb-run-label')).toHaveCount(0);
   await expect(stdout).toHaveText('Total: 14');
   await expect(stderr).toHaveText('Error: Sizes of 1 are deprecated.');
   await expect(button).toHaveText('Run again');

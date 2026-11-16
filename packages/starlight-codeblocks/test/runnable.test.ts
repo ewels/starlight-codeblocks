@@ -526,7 +526,7 @@ test('runnable.static shows the output from the build, with no button and no cli
   expect(warnings).toEqual([]);
   expect(copyText).toBe('make');
   expect(html).toContain(
-    '<div class="scb-run-output scb-run-static" tabindex="0" role="region" aria-label="Output"><span class="scb-run-label">Output</span><pre class="scb-run-stdout">a\nb</pre><pre class="scb-run-stderr"><span class="scb-sr-only">Error: </span>oops</pre></div></figure>',
+    '<div class="scb-run-output scb-run-static" tabindex="0" role="region" aria-label="Output"><span class="scb-sr-only">Output</span><pre class="scb-run-stdout">a\nb</pre><pre class="scb-run-stderr"><span class="scb-sr-only">Error: </span>oops</pre></div></figure>',
   );
   expect(html).not.toContain('data-scb-runnable');
   expect(html).not.toContain('<button type="button" class="scb-run');
@@ -628,6 +628,19 @@ test('the output panel scrolls as code does, and wraps in a block with wrap', as
   // The client makes a live panel focusable once its output scrolls.
   const live = await render(block('sh', 'make', '# [!output]', 'a'));
   expect(live.html).toMatch(/<div class="scb-run-output" aria-live="polite"/);
+});
+
+test('outputLabel shows the Output label, which is otherwise for screen readers only', async () => {
+  const hidden = await render(block('sh runnable.static', 'make', '# [!output]', 'a'));
+  expect(hidden.html).toContain('<span class="scb-sr-only">Output</span><pre class="scb-run-stdout">');
+  expect(hidden.html).not.toContain('scb-run-labelled');
+  const shown = await render(block('sh runnable.static', 'make', '# [!output]', 'a'), {
+    runnable: { outputLabel: true },
+  });
+  expect(shown.html).toContain('class="scb-run-output scb-run-labelled scb-run-static"');
+  expect(shown.html).toContain('<span class="scb-run-label">Output</span><pre class="scb-run-stdout">');
+  const live = await render(block('sh', 'make', '# [!output]', 'a'), { runnable: { outputLabel: true } });
+  expect(live.html).toContain('<div class="scb-run-output scb-run-labelled" aria-live="polite"');
 });
 
 test('[!run] after [!output] ends the output, and warns that the button prints the output', async () => {

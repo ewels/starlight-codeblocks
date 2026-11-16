@@ -149,6 +149,7 @@ interface RunnableSettings {
   againLabel?: string;
   button?: RunButton;
   outputDelay?: number;
+  outputLabel?: boolean;
 }
 
 const runButtons = ['below', 'title', 'both'] as const;
@@ -269,6 +270,7 @@ export function pluginRunnable({
   againLabel,
   button = 'below',
   outputDelay = 200,
+  outputLabel = false,
 }: RunnableSettings = {}): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:runnable',
@@ -495,7 +497,9 @@ export function pluginRunnable({
           }
           figure.children.push(h('div', { class: `${cls('-controls')} ${PREFIX}-no-print` }, [runButton('')]));
         };
-        const panelClass = codeBlock.props.wrap ? `${cls('-output')} ${cls('-wrap')}` : cls('-output');
+        const panelClass = [cls('-output'), codeBlock.props.wrap && cls('-wrap'), outputLabel && cls('-labelled')]
+          .filter(Boolean)
+          .join(' ');
         // The client makes a live panel focusable when its output scrolls, as Expressive Code does for code.
         const livePanel = (runtimeTexts = {}) =>
           h('div', {
@@ -533,7 +537,8 @@ export function pluginRunnable({
               const element = lineElements[i];
               part.children.push(element ? structuredClone(element) : { type: 'text', value: line });
             });
-            return [h('span', { class: cls('-label') }, texts.output), ...parts];
+            // Screen readers hear the label even when it is hidden, as they hear the Error: prefix.
+            return [h('span', { class: outputLabel ? cls('-label') : `${PREFIX}-sr-only` }, texts.output), ...parts];
           };
           if (staticOutput) {
             // Focusable, because without JavaScript nothing can tell whether the output scrolls.
