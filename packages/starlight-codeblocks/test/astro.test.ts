@@ -56,7 +56,11 @@ test('changes nothing outside code blocks unless the site turns on code tabs or 
   const { processor, scripts } = await setup();
   expect(scripts).toEqual([]);
   expect(processor.options.features?.directive).toBeUndefined();
-  expect(processor.options.mdastPlugins).toHaveLength(1);
+  expect(processor.options.mdastPlugins.map((p) => (p as { name: string }).name)).toEqual([
+    'starlight-codeblocks:whitespace',
+    'starlight-codeblocks:mentions',
+    'starlight-codeblocks:permalinks',
+  ]);
   expect(getRegistry()?.options).toMatchObject({ codeTabs: false, inlineHighlighting: false });
 });
 

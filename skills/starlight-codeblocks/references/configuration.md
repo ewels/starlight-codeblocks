@@ -151,6 +151,14 @@ export default {
 
 Keep `codeblocks()` in `astro.config.mjs`, and give it all the options. `pluginCodeblocks()` with no argument reads the same options. `styleOverrides` can stay in `ec.config.mjs`. `pluginCodeblocks()` can go before or after most other plugins. `pluginCollapsibleSections()` must come before it, or the build stops.
 
+Plugins of the package can also go in `expressiveCode.plugins` of the Starlight config, or `codeblocks({ expressiveCode: { plugins } })` on an Astro site. Each one takes the place of the plugin with the same name that `codeblocks()` adds. `codeblocks()` keeps its plugins in order, and puts them all where the list has the first one, such as `pluginCore()`. A plugin for a feature that is off stops the build.
+
+## Markdown plugins
+
+Docs: https://ewels.github.io/starlight-codeblocks/reference/markdown-plugins/
+
+`starlight-codeblocks/markdown` exports a Markdown plugin for each feature that changes Markdown, such as `mdastCodeTabs()`, and `mdastCodeblocks()` for all of them. Put them in `satteri({ mdastPlugins })` to control their order among other Markdown plugins. `codeblocks()` then adds only the ones that are not in the list. With `unified()`, wrap them in `remarkFromSatteri([…])`.
+
 ## Other plugins
 
 Docs: https://ewels.github.io/starlight-codeblocks/reference/plugin-compatibility/
@@ -186,6 +194,6 @@ export default defineConfig({
 
 It takes the same options as on Starlight, plus `expressiveCode` for the options of `astro-expressive-code`. Code tabs and inline code highlighting are off until the site sets `codeTabs: {}` and `inlineHighlighting: {}`, because they change Markdown outside the code blocks. API cards show on links in code blocks only. Side annotations and scrollycoding stay inside the content column. With `unified()`, code tabs need `remark-directive` in its `remarkPlugins`.
 
-A site that keeps its own `expressiveCode()` gives the options to `pluginCodeblocks()` in `ec.config.mjs`, with `tabWidth: 0`. If the site has a `base`, give it as the second argument, `pluginCodeblocks(options, { base: '/docs' })`. Code tabs and inline code highlighting then do not work.
+A site that keeps its own `expressiveCode()` gives the options to `pluginCodeblocks()` in `ec.config.mjs`, with `tabWidth: 0`. If the site has a `base`, give it as the second argument, `pluginCodeblocks(options, { base: '/docs' })`. For code tabs, add `mdastCodeTabs()` from `starlight-codeblocks/markdown` and turn on directives with `satteri({ features: { directive: true } })`. Inline code highlighting needs `codeblocks()`.
 
 Without `codeblocks()`, `runnable.runtimes` values are URLs that the browser imports as they are, and there are no built-in runtimes. Map each language to the URL of its runtime module, such as `https://cdn.jsdelivr.net/npm/starlight-codeblocks/dist/runtimes/pyodide.mjs`. The JavaScript and TypeScript runtimes are `javascript.mjs` and `typescript.mjs` in the same folder. The single plugins, such as `pluginFocus()`, are in https://ewels.github.io/starlight-codeblocks/reference/expressive-code-plugins/

@@ -1,9 +1,10 @@
 import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 import remarkDirective from 'remark-directive';
+import { markdownToHtml } from 'satteri';
 import { expect, test } from 'vitest';
 import { codeblocksIntegration } from '../src/integration.ts';
 import { resolveOptions } from '../src/options.ts';
-import { mdastPlugins } from '../src/satteri/index.ts';
+import { markdownPluginNames, mdastCodeblocks, mdastCodeTabs, mdastPlugins } from '../src/satteri/index.ts';
 import { remarkFromSatteri } from '../src/satteri/remark.ts';
 
 async function md(markdown: string, options = {}) {
@@ -61,19 +62,18 @@ test('changes nothing with the features off', async () => {
   expect((await md(source, off)).html).toBe(expected);
 });
 
+const setup = (processor: object) => {
+  const hook = codeblocksIntegration({ options: resolveOptions() }).hooks['astro:config:setup'] as (p: unknown) => void;
+  hook({
+    config: { markdown: { processor }, base: '/', build: { assets: '_astro' } },
+    updateConfig() {},
+    injectScript() {},
+    logger: { warn() {} },
+  });
+  return processor;
+};
+
 test('registers the remark plugin only for the unified() processor', () => {
-  const setup = (processor: object) => {
-    const hook = codeblocksIntegration({ options: resolveOptions() }).hooks['astro:config:setup'] as (
-      p: unknown,
-    ) => void;
-    hook({
-      config: { markdown: { processor }, base: '/', build: { assets: '_astro' } },
-      updateConfig() {},
-      injectScript() {},
-      logger: { warn() {} },
-    });
-    return processor;
-  };
   const unified = setup({ name: 'unified', options: { remarkPlugins: [], mdastPlugins: [] } }) as never as {
     options: { remarkPlugins: unknown[]; mdastPlugins: unknown[] };
   };
@@ -81,5 +81,54 @@ test('registers the remark plugin only for the unified() processor', () => {
   const satteri = setup({ name: 'satteri', options: { mdastPlugins: [] } }) as never as {
     options: { mdastPlugins: unknown[] };
   };
-  expect(satteri.options.mdastPlugins).toHaveLength(1);
+  expect(satteri.options.mdastPlugins).toHaveLength(5);
+});
+
+test('adds only the Markdown plugins that the site has not added itself', () => {
+  const names = (list: unknown[]) => [...markdownPluginNames(list)];
+  const satteri = setup({ name: 'satteri', options: { mdastPlugins: [[mdastCodeTabs({ control: 'menu' })]] } }) as {
+    options: { mdastPlugins: unknown[] };
+  };
+  expect(names(satteri.options.mdastPlugins)).toEqual([
+    'starlight-codeblocks:code-tabs',
+    'starlight-codeblocks:whitespace',
+    'starlight-codeblocks:mentions',
+    'starlight-codeblocks:permalinks',
+    'starlight-codeblocks:inline-highlighting',
+  ]);
+  const group = setup({ name: 'satteri', options: { mdastPlugins: [mdastCodeblocks()] } }) as {
+    options: { mdastPlugins: unknown[] };
+  };
+  expect(group.options.mdastPlugins).toHaveLength(1);
+  const unified = setup({
+    name: 'unified',
+    options: { remarkPlugins: [[remarkFromSatteri([mdastCodeTabs()]), {}]] },
+  }) as { options: { remarkPlugins: unknown[] } };
+  expect(unified.options.remarkPlugins).toHaveLength(2);
+  expect(names(unified.options.remarkPlugins)).toHaveLength(5);
+});
+
+test('runs the group and single plugins on unified(), with their own settings', async () => {
+  const render = async (plugins: Parameters<typeof remarkFromSatteri>[0], markdown: string) => {
+    const processor = await createMarkdownProcessor({
+      syntaxHighlight: false,
+      remarkPlugins: [remarkDirective, remarkFromSatteri(plugins)],
+    });
+    return (await processor.render(markdown, { fileURL: new URL('file:///site/page.md') })).code;
+  };
+  const tabs = [':::code-tabs', '```sh', 'npm i x', '```', ':::'].join('\n');
+  expect(await render([mdastCodeTabs({ control: 'menu' })], tabs)).toContain('data-scb-control="menu"');
+  const group = await render([mdastCodeblocks({ swatches: { prose: true } })], `${tabs}\n\nRed is #f00.`);
+  expect(group).toContain('data-scb-control="tabs"');
+  expect(group).toContain('data-scb-colour="#f00"');
+  expect(await render([mdastCodeblocks({ codeTabs: false })], tabs)).not.toContain('scb-tabs');
+});
+
+test('runs the group on Sätteri, which calls its factories for each document', async () => {
+  const { html } = await markdownToHtml('Call `fetch(url){:js}` and see #f00.', {
+    mdastPlugins: [mdastCodeblocks({ swatches: { prose: true } })],
+    fileURL: new URL('file:///site/page.md'),
+  });
+  expect(html).toContain('data-lang="js"');
+  expect(html).toContain('data-scb-colour="#f00"');
 });

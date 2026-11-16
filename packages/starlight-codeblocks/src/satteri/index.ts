@@ -15,7 +15,7 @@ import { bundledLanguage } from '../expressive-code/core.ts';
 import { parseNotation } from '../expressive-code/notation.ts';
 import { findColours, SWATCH, type SwatchSettings, swatchTexts, wholeColour } from '../expressive-code/swatches.ts';
 import { withTrailingWhitespace } from '../expressive-code/whitespace.ts';
-import type { ResolvedOptions } from '../options.ts';
+import { type CodeblocksOptions, type ResolvedOptions, resolveOptions } from '../options.ts';
 import { getRegistry } from '../registry.ts';
 import { type Say, uiTexts } from '../translations.ts';
 import { inlineCode } from './inline-code.ts';
@@ -170,66 +170,166 @@ function inlineSwatch(node: InlineCode, { formats }: SwatchSettings, texts: stri
   } as InlineCode;
 }
 
-/** The Sätteri plugins for syntax outside code blocks, one instance for each document. */
-export function mdastPlugins(options: ResolvedOptions, logger: Logger): MdastPluginEntry[] {
-  const defaultLanguage = options.inlineHighlighting ? options.inlineHighlighting.defaultLanguage : false;
-  const prose = options.swatches !== false && options.swatches.prose ? options.swatches : undefined;
-  return [
-    ({ fileURL }: PluginFactoryContext): MdastPluginDefinition => {
-      const file = fileName(fileURL);
-      const warn = (message: string) => logger.warn(`${file}: ${message}`);
-      const say = uiTexts(getRegistry()?.pageLang?.(fileURL ? fileURLToPath(fileURL) : '') ?? 'en');
-      const swatches = prose?.copy ? swatchTexts(say) : undefined;
-      return {
-        name: 'starlight-codeblocks',
-        before(root, ctx) {
-          const codes: Code[] = [];
-          const events: Event[] = [];
-          const malformed: Link[] = [];
-          let section = 0;
-          // A render with no file, such as a starlight-pydocs docstring, is part of a page: the client pairs its links.
-          const checkLinks = options.mentions && fileURL;
-          walk(root as Nodes, (node) => {
-            if (node.type === 'heading') section++;
-            if (node.type === 'code') {
-              codes.push(node);
-              const meta = withTrailingWhitespace(node.value, node.meta ?? '');
-              if (options.whitespace && meta !== (node.meta ?? '')) ctx.setProperty(node, 'meta', meta);
-              if (checkLinks) events.push({ section, names: mentionNames(node, options.notation) });
-            }
-            if (node.type === 'link' && node.url.startsWith(MENTION)) {
-              try {
-                const name = decodeURIComponent(node.url.slice(MENTION.length));
-                if (checkLinks) events.push({ section, link: node, name });
-              } catch {
-                malformed.push(node);
-              }
-            }
-          });
-          for (const link of malformed) {
-            warn(`the link to \`${link.url}\` has a malformed % escape. It shows as plain text.`);
-            ctx.replaceNode(link, [...link.children]);
-          }
-          if (options.permalinks) checkIds(codes, warn);
-          if (checkLinks) checkMentions(events, ctx, warn);
-        },
-        containerDirective(node) {
-          if (options.codeTabs && node.name === 'code-tabs') return codeTabs(node, file, options.codeTabs.control, say);
-        },
-        ...((options.inlineHighlighting || prose) && {
-          inlineCode: async (node, ctx) =>
-            ((options.inlineHighlighting && (await inlineCode(node, ctx, warn, defaultLanguage))) ||
-              (prose && inlineSwatch(node, prose, swatches))) as never,
-        }),
-        ...(prose && {
-          text(node, ctx) {
-            const nodes = proseSwatches(node, prose, swatches);
-            if (nodes) ctx.replaceNode(node, nodes as never);
-          },
-        }),
-      };
+const PREFIX = 'starlight-codeblocks:';
+export const MARKDOWN_GROUP = `${PREFIX}markdown`;
+const consoleLogger: Logger = { warn: (message) => console.warn(`[starlight-codeblocks] ${message}`) };
+
+/** One option, resolved with its defaults and checked as `codeblocks()` checks it. */
+const resolve = <K extends keyof CodeblocksOptions>(key: K, value: CodeblocksOptions[K]) =>
+  resolveOptions({ [key]: value })[key];
+
+/** What a plugin needs for one document: its file, warnings that name the file, and the texts of its language. */
+function page({ fileURL }: PluginFactoryContext, logger: Logger) {
+  const file = fileName(fileURL);
+  return {
+    file,
+    fileURL,
+    warn: (message: string) => logger.warn(`${file}: ${message}`),
+    say: uiTexts(getRegistry()?.pageLang?.(fileURL ? fileURLToPath(fileURL) : '') ?? 'en'),
+  };
+}
+
+/**
+ * A factory, so that each document gets its own state, with the plugin name as the function name,
+ * so that `codeblocks()` finds the plugins that a site added itself without calling them.
+ */
+function plugin(
+  name: string,
+  logger: Logger,
+  define: (doc: ReturnType<typeof page>) => Omit<MdastPluginDefinition, 'name'>,
+): MdastPluginEntry {
+  const factory = (ctx: PluginFactoryContext) => ({ name: PREFIX + name, ...define(page(ctx, logger)) });
+  return Object.defineProperty(factory, 'name', { value: PREFIX + name });
+}
+
+/**
+ * The names of this package's plugins in a list of Sätteri or remark plugins, without calling any factory.
+ * It looks into nested lists, remark's `[plugin, options]` and plugins from `remarkFromSatteri()`.
+ */
+export function markdownPluginNames(list: unknown, names = new Set<string>()): Set<string> {
+  if (Array.isArray(list)) for (const entry of list) markdownPluginNames(entry, names);
+  else if (list && (typeof list === 'function' || typeof list === 'object')) {
+    const { name, mdastPlugins } = list as { name?: unknown; mdastPlugins?: unknown };
+    if (typeof name === 'string' && name.startsWith(PREFIX)) names.add(name);
+    if (mdastPlugins) markdownPluginNames(mdastPlugins, names);
+  }
+  return names;
+}
+
+/** Turns `:::code-tabs` directives into code tabs. */
+export function mdastCodeTabs(settings?: CodeblocksOptions['codeTabs'], logger = consoleLogger): MdastPluginEntry {
+  const { control } = resolve('codeTabs', settings || {}) as { control: TabsVariant['control'] };
+  return plugin('code-tabs', logger, ({ file, say }) => ({
+    containerDirective(node) {
+      if (node.name === 'code-tabs') return codeTabs(node, file, control, say);
     },
-  ];
+  }));
+}
+
+/** Highlights inline code with a `{:lang}` suffix, or all inline code with `defaultLanguage`. */
+export function mdastInlineHighlighting(
+  settings?: CodeblocksOptions['inlineHighlighting'],
+  logger = consoleLogger,
+): MdastPluginEntry {
+  const { defaultLanguage } = resolve('inlineHighlighting', settings || {}) as { defaultLanguage: string | false };
+  return plugin('inline-highlighting', logger, ({ warn }) => ({
+    inlineCode: async (node, ctx) => (await inlineCode(node, ctx, warn, defaultLanguage)) as never,
+  }));
+}
+
+/** Adds a swatch before each colour in the text of the page, and in inline code that is one colour. */
+export function mdastSwatches(settings?: CodeblocksOptions['swatches'], logger = consoleLogger): MdastPluginEntry {
+  const swatches = resolve('swatches', settings || {}) as SwatchSettings;
+  return plugin('swatches', logger, ({ say }) => {
+    const texts = swatches.copy ? swatchTexts(say) : undefined;
+    return {
+      // Inline code that another plugin rendered, such as with inline highlighting, has `data`.
+      inlineCode: (node) => (node.data ? undefined : inlineSwatch(node, swatches, texts)) as never,
+      text(node, ctx) {
+        const nodes = proseSwatches(node, swatches, texts);
+        if (nodes) ctx.replaceNode(node, nodes as never);
+      },
+    };
+  });
+}
+
+/** Keeps the trailing whitespace of each line of code, which Expressive Code trims, for visible whitespace. */
+export function mdastWhitespace(logger = consoleLogger): MdastPluginEntry {
+  return plugin('whitespace', logger, () => ({
+    before(root, ctx) {
+      walk(root as Nodes, (node) => {
+        if (node.type !== 'code') return;
+        const meta = withTrailingWhitespace(node.value, node.meta ?? '');
+        if (meta !== (node.meta ?? '')) ctx.setProperty(node, 'meta', meta);
+      });
+    },
+  }));
+}
+
+/** Turns each code mention link that no block tags into plain text, with a warning. */
+export function mdastMentions(settings?: CodeblocksOptions['notation'], logger = consoleLogger): MdastPluginEntry {
+  // Without notation, no block can tag a name.
+  const notation = settings === false ? false : resolve('notation', settings ?? {});
+  return plugin('mentions', logger, ({ warn, fileURL }) => ({
+    before(root, ctx) {
+      const events: Event[] = [];
+      const malformed: Link[] = [];
+      let section = 0;
+      walk(root as Nodes, (node) => {
+        if (node.type === 'heading') section++;
+        if (node.type === 'code') events.push({ section, names: mentionNames(node, notation) });
+        if (node.type === 'link' && node.url.startsWith(MENTION)) {
+          try {
+            events.push({ section, link: node, name: decodeURIComponent(node.url.slice(MENTION.length)) });
+          } catch {
+            malformed.push(node);
+          }
+        }
+      });
+      for (const link of malformed) {
+        warn(`the link to \`${link.url}\` has a malformed % escape. It shows as plain text.`);
+        ctx.replaceNode(link, [...link.children]);
+      }
+      // A render with no file, such as a starlight-pydocs docstring, is part of a page: the client pairs its links.
+      if (fileURL) checkMentions(events, ctx, warn);
+    },
+  }));
+}
+
+/** Warns about two code blocks with the same `id`, which line permalinks need to tell apart. */
+export function mdastPermalinks(logger = consoleLogger): MdastPluginEntry {
+  return plugin('permalinks', logger, ({ warn }) => ({
+    before(root) {
+      const codes: Code[] = [];
+      walk(root as Nodes, (node) => {
+        if (node.type === 'code') codes.push(node);
+      });
+      checkIds(codes, warn);
+    },
+  }));
+}
+
+/** The Markdown plugins of the features that are on, in the order they must run. */
+export function mdastPlugins(options: ResolvedOptions, logger: Logger = consoleLogger): MdastPluginEntry[] {
+  return [
+    options.whitespace && mdastWhitespace(logger),
+    options.mentions && mdastMentions(options.notation, logger),
+    options.permalinks && mdastPermalinks(logger),
+    options.codeTabs && mdastCodeTabs(options.codeTabs, logger),
+    // Before swatches, so that highlighted inline code keeps its colours as text.
+    options.inlineHighlighting && mdastInlineHighlighting(options.inlineHighlighting, logger),
+    options.swatches !== false && options.swatches.prose && mdastSwatches(options.swatches, logger),
+  ].filter((entry): entry is MdastPluginEntry => Boolean(entry));
+}
+
+/**
+ * Every Markdown plugin, with the options of `codeblocks()`. With no options on a site with `codeblocks()`,
+ * it reads the options given to `codeblocks()` when it renders a page, so it can go in `astro.config.mjs`.
+ */
+export function mdastCodeblocks(options?: CodeblocksOptions, logger = consoleLogger): MdastPluginEntry {
+  const resolved = options && resolveOptions(options);
+  const group = () => mdastPlugins(resolved ?? getRegistry()?.options ?? resolveOptions(), logger);
+  return Object.defineProperty(group, 'name', { value: MARKDOWN_GROUP });
 }
 
 /**

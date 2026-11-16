@@ -6,9 +6,9 @@ import { createPlugins } from './expressive-code/index.ts';
 import {
   checkEcConfigPlugins,
   codeblocksIntegration,
-  hideFunctions,
   loadEcConfig,
   mergeEcOptions,
+  mergeEcPlugins,
   pageCssIds,
 } from './integration.ts';
 import { type CodeblocksOptions, resolveOptions } from './options.ts';
@@ -37,7 +37,7 @@ export default function codeblocks({
   ...userOptions
 }: AstroCodeblocksOptions = {}): AstroIntegration[] {
   const options = resolveOptions({ codeTabs: false, inlineHighlighting: false, ...userOptions });
-  const plugins = createPlugins(options);
+  const { plugins, list } = mergeEcPlugins(ec.plugins, createPlugins(options));
   let integration: AstroIntegration | undefined;
   const setup: AstroIntegration = {
     name: 'starlight-codeblocks',
@@ -98,6 +98,6 @@ export default function codeblocks({
   return [
     setup,
     // `ec.config.mjs` overrides these, as it does any `expressiveCode()` option.
-    astroExpressiveCode({ tabWidth: 0, ...ec, plugins: [...(ec.plugins ?? []), ...plugins.map(hideFunctions)] }),
+    astroExpressiveCode({ tabWidth: 0, ...ec, plugins: list as AstroExpressiveCodeOptions['plugins'] }),
   ];
 }

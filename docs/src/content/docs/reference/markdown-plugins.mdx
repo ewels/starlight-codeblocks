@@ -1,0 +1,77 @@
+---
+title: Markdown plugins
+description: The Markdown plugins that the package exports, for sites that put their Markdown plugins in order themselves.
+---
+
+Some features change the Markdown of a page outside its code blocks, such as code tabs and inline code highlighting. `codeblocks()` adds a Markdown plugin for each of these features. The `starlight-codeblocks/markdown` subpath exports the same plugins, for sites that put their Markdown plugins in order themselves.
+
+## Add the plugins yourself
+
+Astro 7 gives its Markdown to Sätteri. Add the plugins to `mdastPlugins` of the Sätteri processor. `codeblocks()` then adds only the plugins that are not in the list:
+
+```js title="astro.config.mjs"
+import { satteri } from '@astrojs/markdown-satteri';
+import { mdastCodeTabs } from 'starlight-codeblocks/markdown';
+
+export default defineConfig({
+  markdown: {
+    processor: satteri({ mdastPlugins: [glossaryLinks(), mdastCodeTabs({ control: 'menu' })] }),
+  },
+  integrations: [starlight({ plugins: [codeblocks()] })],
+});
+```
+
+In this example, `glossaryLinks()` runs before code tabs. Each plugin takes the settings of its option in the [options reference](/starlight-codeblocks/reference/options/). The settings that you give to a plugin apply in place of the options of `codeblocks()`.
+
+## The group
+
+`mdastCodeblocks(options)` returns the plugins of every feature that is on, in the correct order. With no argument on a site with `codeblocks()`, it reads the options that you gave to `codeblocks()`. With the group in the list, `codeblocks()` adds no Markdown plugin.
+
+```js title="astro.config.mjs"
+import { mdastCodeblocks } from 'starlight-codeblocks/markdown';
+
+processor: satteri({ mdastPlugins: [mdastCodeblocks(), glossaryLinks()] }),
+```
+
+## Plugins
+
+The table gives the plugins in the order that the group adds them.
+
+| Plugin | Option | Feature |
+|---|---|---|
+| `mdastWhitespace()` | `whitespace` | [Visible whitespace](/starlight-codeblocks/features/visible-whitespace/): keeps the spaces at the end of each line of code |
+| `mdastMentions(notation)` | `mentions` | [Code mentions](/starlight-codeblocks/features/code-mentions/): changes each mention link with no code block into text |
+| `mdastPermalinks()` | `permalinks` | [Line permalinks](/starlight-codeblocks/features/line-permalinks/): warns about two code blocks with the same `id` |
+| `mdastCodeTabs(settings)` | `codeTabs` | [Code tabs](/starlight-codeblocks/features/code-tabs/) |
+| `mdastInlineHighlighting(settings)` | `inlineHighlighting` | [Inline code highlighting](/starlight-codeblocks/features/inline-code-highlighting/) |
+| `mdastSwatches(settings)` | `swatches` | [Colour swatches](/starlight-codeblocks/features/colour-swatches/) in the text of a page and in inline code |
+
+`mdastMentions()` takes the settings of the `notation` option, because it reads directives with the same comment syntax as the code blocks. `mdastInlineHighlighting()` must come before `mdastSwatches()`, so that highlighted inline code gets no swatch.
+
+Each plugin also takes a logger as its last argument, an object with a `warn(message)` function. The default writes to the console.
+
+## The unified() processor
+
+On a site with Astro's `unified()` processor, put the plugins in `remarkFromSatteri()`. It changes a list of Sätteri plugins into one remark plugin:
+
+```js title="astro.config.mjs"
+import { unified } from '@astrojs/markdown-remark';
+import { mdastCodeTabs, remarkFromSatteri } from 'starlight-codeblocks/markdown';
+
+markdown: {
+  processor: unified({ remarkPlugins: [remarkFromSatteri([mdastCodeTabs({ control: 'menu' })])] }),
+},
+```
+
+## Without codeblocks()
+
+The plugins work without `codeblocks()`, with these differences:
+
+- Code tabs need the `directive` feature of the processor. Starlight turns it on; on another site, use `satteri({ features: { directive: true } })`.
+- Inline code highlighting and swatches in the text of a page need stylesheets that only `codeblocks()` adds.
+- The texts of code tabs and swatches are in English.
+
+## Related
+
+- [Expressive Code plugins](/starlight-codeblocks/reference/expressive-code-plugins/): the plugins for code blocks, and how to put them in order.
+- [Plugin compatibility](/starlight-codeblocks/reference/plugin-compatibility/): other plugins and Markdown processors.

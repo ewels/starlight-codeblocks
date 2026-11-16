@@ -25,6 +25,25 @@ On a site without `codeblocks()`, give the preset Astro's `base` as the second a
 plugins: [pluginCodeblocks({}, { base: '/docs' })],
 ```
 
+## Plugins in the Astro config
+
+With `codeblocks()`, you can also list plugins of the package in `expressiveCode.plugins`, in the Starlight config. On an Astro site, use `codeblocks({ expressiveCode: { plugins } })`. Each plugin that you list takes the place of the plugin with the same name that `codeblocks()` adds. `codeblocks()` keeps its plugins in the correct order, and puts them all where you list the first one:
+
+```js title="astro.config.mjs"
+import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
+import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
+import { pluginCore } from 'starlight-codeblocks/expressive-code';
+
+starlight({
+  plugins: [codeblocks()],
+  expressiveCode: {
+    plugins: [pluginCollapsibleSections(), pluginCore(), pluginLineNumbers()],
+  },
+}),
+```
+
+In this example, `pluginCore()` marks the place of the plugins of `codeblocks()`, so `pluginLineNumbers()` comes after them. With no plugin of the package in the list, `codeblocks()` adds its plugins after yours. A plugin for a feature that is off in `codeblocks()` stops the build.
+
 ## Plugins
 
 Each plugin takes the settings of its option, as the [options reference](/starlight-codeblocks/reference/options/) lists them. The table gives the plugins in the order that the preset adds them.
@@ -74,7 +93,7 @@ The order matters. For example, `pluginPlayground()` sends the copied text, so i
 
 Some features need more than an Expressive Code plugin. On an Astro site without Starlight, use `codeblocks()` from `starlight-codeblocks/astro`, as [Astro setup](/starlight-codeblocks/install/astro/) shows. Without `codeblocks()`, these parts are not there:
 
-- The `:::code-tabs` directive and [inline code highlighting](/starlight-codeblocks/features/inline-code-highlighting/) need the Markdown plugin that `codeblocks()` adds.
+- The `:::code-tabs` directive and [inline code highlighting](/starlight-codeblocks/features/inline-code-highlighting/) need the [Markdown plugins](/starlight-codeblocks/reference/markdown-plugins/), which `codeblocks()` adds. Inline code highlighting also needs a stylesheet that only `codeblocks()` adds.
 - `runnable.runtimes` values are URLs that the browser imports as they are, because `codeblocks()` is not there to bundle the runtime modules. There are no built-in runtimes. Map each language to the URL of its runtime module, such as `https://cdn.jsdelivr.net/npm/starlight-codeblocks/dist/runtimes/pyodide.mjs`. The JavaScript and TypeScript runtimes are `javascript.mjs` and `typescript.mjs` in the same folder.
 - Expressive Code turns each tab into spaces, because `codeblocks()` is not there to set `tabWidth: 0`. Set `tabWidth: 0` in `ec.config.mjs`, so that tabs reach the code blocks unchanged.
 

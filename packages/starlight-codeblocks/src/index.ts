@@ -5,9 +5,9 @@ import { createPlugins } from './expressive-code/index.ts';
 import {
   checkEcConfigPlugins,
   codeblocksIntegration,
-  hideFunctions,
   loadEcConfig,
   mergeEcOptions,
+  mergeEcPlugins,
   pageCssIds,
 } from './integration.ts';
 import { type CodeblocksOptions, resolveOptions } from './options.ts';
@@ -33,7 +33,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
         }
         const { file: ecConfigFile, config: ecConfig } = await loadEcConfig(astroConfig.root);
         const ec = typeof config.expressiveCode === 'object' ? config.expressiveCode : {};
-        const plugins = createPlugins(options);
+        const { plugins, list } = mergeEcPlugins(ec.plugins, createPlugins(options));
         setRegistry({
           options,
           plugins,
@@ -63,7 +63,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
           expressiveCode: {
             ...ec,
             ...(keepTabs && { tabWidth: 0 }),
-            plugins: [...(ec.plugins ?? []), ...plugins.map(hideFunctions)],
+            plugins: list,
           },
         });
         addIntegration(codeblocksIntegration({ options, ecConfigOverride: { file: ecConfigFile } }));

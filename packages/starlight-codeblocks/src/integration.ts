@@ -12,7 +12,7 @@ import { proseSwatchStyles, SWATCH_CSS_ID } from './expressive-code/swatches.ts'
 import type { ResolvedOptions } from './options.ts';
 import { loadReadFiles, readFilesDigest } from './read-files.ts';
 import { getRegistry } from './registry.ts';
-import { mdastPlugins } from './satteri/index.ts';
+import { MARKDOWN_GROUP, markdownPluginNames, mdastPlugins } from './satteri/index.ts';
 import { INLINE_CSS_ID, inlineStyles } from './satteri/inline-code.ts';
 import { remarkFromSatteri } from './satteri/remark.ts';
 
@@ -70,9 +70,13 @@ export function codeblocksIntegration({
           return true;
         };
         refreshDigest();
-        if (processor?.name === 'unified') {
-          processor.options?.remarkPlugins?.push(remarkFromSatteri(mdastPlugins(options, logger)));
-        } else processor?.options?.mdastPlugins?.push(...mdastPlugins(options, logger));
+        const unified = processor?.name === 'unified';
+        const list = unified ? processor.options?.remarkPlugins : processor?.options?.mdastPlugins;
+        const own = markdownPluginNames(list);
+        const missing = own.has(MARKDOWN_GROUP)
+          ? []
+          : mdastPlugins(options, logger).filter((entry) => !own.has((entry as { name: string }).name));
+        if (missing.length > 0) list?.push(...(unified ? [remarkFromSatteri(missing)] : missing));
         const plugins = clientModulePlugins(config.build.assets);
         if (ecConfigOverride) plugins.push(ecConfigPlugin(ecConfigOverride.file));
         if (options.inlineHighlighting) plugins.push(cssPlugin(INLINE_CSS_ID, inlineStyles));
@@ -141,6 +145,29 @@ export function checkEcConfigPlugins(plugins: unknown[]) {
     'starlight-codeblocks cannot add its Expressive Code plugins, because `ec.config.mjs` has its own `plugins` list.',
     "Add `pluginCodeblocks()` to `plugins` in `ec.config.mjs`. Import it from 'starlight-codeblocks/expressive-code'.",
   );
+}
+
+/**
+ * The site's own `expressiveCode.plugins` with the preset. A plugin of this package in the site's list
+ * takes the place of the preset plugin with the same name, and the preset goes where the site lists its
+ * first one, or after the site's plugins. `plugins` is the real preset, for `<Code>`.
+ */
+export function mergeEcPlugins(site: unknown[] = [], preset: ExpressiveCodePlugin[]) {
+  const flat = site.flat(Infinity) as ExpressiveCodePlugin[];
+  const own = new Map(flat.filter(isOurs).map((plugin) => [plugin.name, plugin]));
+  const names = new Set(preset.map((plugin) => plugin.name));
+  const off = [...own.keys()].find((name) => !names.has(name));
+  if (off) {
+    throw new AstroError(
+      `\`expressiveCode.plugins\` has the \`${off}\` plugin, but its feature is off in \`codeblocks()\`.`,
+      'Turn the feature on in the options of `codeblocks()`, or remove the plugin from `plugins`.',
+    );
+  }
+  const plugins = preset.map((plugin) => own.get(plugin.name) ?? plugin);
+  const first = flat.findIndex(isOurs);
+  const others = flat.filter((plugin) => !isOurs(plugin));
+  const at = first < 0 ? others.length : flat.slice(0, first).filter((plugin) => !isOurs(plugin)).length;
+  return { plugins, list: [...others.slice(0, at), ...plugins.map(hideFunctions), ...others.slice(at)] };
 }
 
 /** The stylesheets for elements outside code blocks, which every page gets. */
