@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Split diff: a **Unified** and **Split** switch in the title bar of each block that removes and adds lines. **Split** shows the old code on the left and the new code on the right, as a GitHub pull request does. `splitDiff.view`, `splitDiff.switch` and `splitDiff.sync` set the start view, remove the switch and stop it syncing across the page (#37)
+- Untitled blocks with title bar controls use the tab bar colours of titled blocks (#37)
+
 ## 1.4.1
 
 - Run code: `runnable.outputFile="<path>"` reads scripted output from a file at build time, with the path relative to the page. The block shows it from the start; `runnable` gives it the button. A `.ansi` file is in the `ansi` language. In `astro dev`, a change to the file reloads the page (#35)
