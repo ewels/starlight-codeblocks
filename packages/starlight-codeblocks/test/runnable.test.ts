@@ -1,9 +1,15 @@
-import { getColorContrast, onBackground } from '@expressive-code/core';
+import { getColorContrast, mix, onBackground } from '@expressive-code/core';
 import { h, toHtml } from '@expressive-code/core/hast';
 import { afterEach, expect, test } from 'vitest';
-import { keepCopiedText, pluginCore } from '../src/expressive-code/core.ts';
+import { keepCopiedText, markDecorations, pluginCore } from '../src/expressive-code/core.ts';
 import { builtInStates } from '../src/expressive-code/line-states.ts';
-import { pluginRunnable, runtimeFileName, runtimeModules } from '../src/expressive-code/runnable.ts';
+import {
+  ANSI_COLOURS,
+  ANSI_TINT,
+  pluginRunnable,
+  runtimeFileName,
+  runtimeModules,
+} from '../src/expressive-code/runnable.ts';
 import { runtimePlugins } from '../src/integration.ts';
 import { setRegistry } from '../src/registry.ts';
 import { variants } from './contrast.ts';
@@ -16,7 +22,7 @@ const js = { runnable: { runtimes: { javascript: '/runtimes/js.js' } } };
 test('runnable adds a Run code button under the block, after an empty live output panel', async () => {
   const { html, copyText, warnings } = await render(block('js runnable', 'console.log(1)'), js);
   expect(html).toMatch(
-    /<div class="scb-run-output" tabindex="0" aria-live="polite" data-scb-texts="[^"]*"><\/div><div class="scb-run-controls scb-no-print"><button type="button" class="scb-run scb-no-print scb-needs-js" data-scb-run-again="Run again">Run code<\/button><\/div><\/figure>/,
+    /<div class="scb-run-output" aria-live="polite" data-scb-texts="[^"]*"><\/div><div class="scb-run-controls scb-no-print"><button type="button" class="scb-run scb-no-print scb-needs-js" data-scb-run-again="Run again">Run code<\/button><\/div><\/figure>/,
   );
   expect(html).not.toContain('scb-tools');
   expect(html).toContain('data-scb-runnable="/runtimes/js.js"');
@@ -520,7 +526,7 @@ test('runnable.static shows the output from the build, with no button and no cli
   expect(warnings).toEqual([]);
   expect(copyText).toBe('make');
   expect(html).toContain(
-    '<div class="scb-run-output" tabindex="0"><span class="scb-run-label">Output</span><pre class="scb-run-stdout">a\nb</pre><pre class="scb-run-stderr"><span class="scb-sr-only">Error: </span>oops</pre></div></figure>',
+    '<div class="scb-run-output scb-run-static" tabindex="0" role="region" aria-label="Output"><span class="scb-run-label">Output</span><pre class="scb-run-stdout">a\nb</pre><pre class="scb-run-stderr"><span class="scb-sr-only">Error: </span>oops</pre></div></figure>',
   );
   expect(html).not.toContain('data-scb-runnable');
   expect(html).not.toContain('<button type="button" class="scb-run');
@@ -532,34 +538,12 @@ test('runnable.static shows the output from the build, with no button and no cli
   expect(only.html).not.toContain('class="copy"');
 });
 
-test('runnable.static needs scripted output, and turns off runnable.autorun', async () => {
+test('runnable.static needs scripted output', async () => {
   const noOutput = await render(block('js runnable runnable.static', 'console.log(1)'), js);
   expect(noOutput.html).toContain('>Run code</button>');
   expect(noOutput.warnings).toEqual([
     'src/content/docs/example.md, js code block: `runnable.static` needs output in the block, after `[!output]` or in `runnable.output`. The block keeps its button.',
   ]);
-  const both = await render(block('sh runnable.static runnable.autorun', 'make', '# [!output]', 'a'));
-  expect(both.html).not.toContain('<button type="button" class="scb-run');
-  expect(both.warnings).toEqual([
-    'src/content/docs/example.md, sh code block: `runnable.autorun` has no effect with `runnable.static`, which has no button.',
-  ]);
-});
-
-test('runnable.autorun runs on page load, with Run again as the button text from the start', async () => {
-  const { html, warnings } = await render(block('js runnable.autorun', 'console.log(1)'), js);
-  expect(warnings).toEqual([]);
-  expect(html).toContain('data-scb-runnable-autorun=""');
-  expect(html).toContain('data-scb-run-again="Run again">Run again</button>');
-  expect(html).toMatch(/<div class="scb-run-output" tabindex="0" aria-live="polite" data-scb-texts="[^"]*"><\/div>/);
-  const scripted = await render(block('sh runnable.autorun', 'make', '# [!output]', 'a'));
-  expect(scripted.html).not.toContain('data-scb-runnable-autorun');
-  expect(scripted.html).toMatch(
-    /<div class="scb-run-output" tabindex="0" aria-live="polite" data-scb-texts="[^"]*"><span class="scb-run-label">Output<\/span><pre class="scb-run-stdout">a<\/pre><\/div>/,
-  );
-  expect(scripted.html).toContain('data-scb-run-again="Run again">Run again</button>');
-  const only = await render(block('sh runnable.autorun', '# [!output]', 'a'));
-  expect(only.html).toMatch(/<figure class="[^"]*scb-run-empty"[^>]*data-scb-run-started=""/);
-  expect(only.html).toContain('<div class="scb-run-controls scb-no-print">');
 });
 
 test('[!run] runs hidden code instead of the code that readers see and copy', async () => {
@@ -605,13 +589,15 @@ test('runnable.outputLang=ansi colours the output of a run in the client, and ot
   expect(plain.html).not.toContain('data-scb-runnable-ansi');
 });
 
-test('the 16 ANSI colours for runs come from the theme, at 4.5:1 on the output background', async () => {
-  const names = ['Black', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White'];
+test('ANSI text colours for runs meet 4.5:1 on the output background and on every ANSI background tint', async () => {
+  const names = [...ANSI_COLOURS, ...ANSI_COLOURS.map((n) => `Bright${n}`)].map((n) => `ansi${n}`);
   for (const v of await variants([pluginCore(), pluginRunnable()])) {
-    for (const name of [...names, ...names.map((n) => `Bright${n}`)]) {
-      const colour = v.get(`codeblocksRunnable.ansi${name}`);
-      const panel = v.get('codeblocksRunnable.outputBackground');
-      expect(getColorContrast(colour, panel), `${name}, ${v.name}`).toBeGreaterThanOrEqual(4.49);
+    const panel = v.get('codeblocksRunnable.outputBackground');
+    const backgrounds = [panel, ...names.map((n) => mix(panel, v.get(`codeblocksRunnable.${n}`), ANSI_TINT))];
+    for (const name of ['ansiForeground', ...names]) {
+      const colour = v.get(`codeblocksRunnable.${name}`);
+      for (const bg of backgrounds)
+        expect(getColorContrast(colour, bg), `${name} on ${bg}, ${v.name}`).toBeGreaterThanOrEqual(4.49);
     }
   }
 });
@@ -636,7 +622,37 @@ test('highlighted output keeps its empty first line, so each line stays in its p
 
 test('the output panel scrolls as code does, and wraps in a block with wrap', async () => {
   const scrolls = await render(block('sh runnable.static', 'make', '# [!output]', 'a'));
-  expect(scrolls.html).toContain('<div class="scb-run-output" tabindex="0">');
+  expect(scrolls.html).toContain('<div class="scb-run-output scb-run-static" tabindex="0" role="region"');
   const wraps = await render(block('sh runnable.static wrap', 'make', '# [!output]', 'a'));
-  expect(wraps.html).toContain('<div class="scb-run-output scb-run-wrap" tabindex="0">');
+  expect(wraps.html).toContain('<div class="scb-run-output scb-run-wrap scb-run-static" tabindex="0"');
+  // The client makes a live panel focusable once its output scrolls.
+  const live = await render(block('sh', 'make', '# [!output]', 'a'));
+  expect(live.html).toMatch(/<div class="scb-run-output" aria-live="polite"/);
+});
+
+test('[!run] after [!output] ends the output, and warns that the button prints the output', async () => {
+  const { html, warnings } = await render(block('sh', 'x', '# [!output]', 'out', '# [!run lang=python]', 'print(1)'));
+  expect(html).toContain('data-scb-runnable-output="out"');
+  expect(html).not.toContain('print(1)');
+  expect(warnings).toEqual([
+    'src/content/docs/example.md, sh code block: `[!run]` has no effect in a block with scripted output: the button prints the output.',
+  ]);
+});
+
+test('an empty [!run] warns that it has no code, and the block runs the code that readers see', async () => {
+  const { html, warnings } = await render(block('py runnable', 'one()', '# [!run]', '# [!run end]', 'two()'), {
+    runnable: { runtimes: { python: '/py.js' } },
+  });
+  expect(html).not.toContain('data-scb-runnable-code');
+  expect(warnings).toEqual([
+    'src/content/docs/example.md, py code block: `[!run]` needs lines of code after it. The button runs the code that readers see.',
+  ]);
+});
+
+test('static output is part of the page for search and HTML readers, and live output is a decoration', () => {
+  const root = h('div', [h('div', { class: 'scb-run-output scb-run-static' }), h('div', { class: 'scb-run-output' })]);
+  markDecorations(root);
+  expect(toHtml(root)).toBe(
+    '<div><div class="scb-run-output scb-run-static"></div><div class="scb-run-output scb-deco" data-pagefind-ignore=""></div></div>',
+  );
 });

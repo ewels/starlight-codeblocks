@@ -106,6 +106,22 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
   }
 }
 
+/** Focusable only while the output scrolls, as Expressive Code makes code. */
+function syncScroll(panel: HTMLElement) {
+  const scrolls = panel.scrollWidth > panel.clientWidth;
+  // -1 rather than no tabindex, so that focus moved onto the panel stays there.
+  panel.tabIndex = scrolls ? 0 : -1;
+  if (scrolls) {
+    panel.setAttribute('role', 'region');
+    panel.setAttribute('aria-label', texts(panel).output ?? '');
+  } else {
+    panel.removeAttribute('role');
+    panel.removeAttribute('aria-label');
+  }
+}
+
+let resized: ResizeObserver | undefined;
+
 async function click(event: MouseEvent) {
   const button = (event.target as Element).closest<HTMLElement>('.scb-run');
   // Found through the button, so that a copy of the block, as full screen plugins show, works too.
@@ -133,7 +149,12 @@ async function start(figure: HTMLElement) {
         panel.focus();
       }
     }
+    resized ??= new ResizeObserver((entries) => {
+      for (const entry of entries) syncScroll(entry.target as HTMLElement);
+    });
+    resized.observe(panel);
     await run(figure, panel);
+    syncScroll(panel);
   } finally {
     for (const b of buttons) {
       b.removeAttribute('aria-disabled');
@@ -144,16 +165,8 @@ async function start(figure: HTMLElement) {
 
 let ready = false;
 
-/**
- * Runs a `runnable` block with its language's runtime, which loads on the first click, or prints its scripted output.
- * `runnable.autorun` blocks run on page load, one after another, and stop when the reader leaves the page.
- */
+/** Runs a `runnable` block with its language's runtime, which loads on the first click, or prints its scripted output. */
 export default function initRunnable() {
-  let queue = Promise.resolve();
-  for (const figure of document.querySelectorAll<HTMLElement>('[data-scb-runnable-autorun]:not([data-scb-ready])')) {
-    figure.dataset.scbReady = '';
-    queue = queue.then(() => (figure.isConnected ? start(figure) : undefined)).catch(() => {});
-  }
   if (ready) return;
   ready = true;
   document.addEventListener('click', click);

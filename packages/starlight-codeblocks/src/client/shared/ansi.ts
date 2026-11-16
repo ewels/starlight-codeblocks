@@ -77,6 +77,7 @@ export function ansiNodes(output: string): DocumentFragment {
     const span = document.createElement('span');
     span.textContent = text;
     span.style.color = fg ?? (dim ? 'var(--scb-ansi-dim)' : '');
+    // 16%: the ANSI colours meet 4.5:1 on this tint. Keep in step with `ANSI_TINT`.
     if (bg) span.style.backgroundColor = `color-mix(in srgb, ${bg} 16%, transparent)`;
     if (bold) span.style.fontWeight = '700';
     if (italic) span.style.fontStyle = 'italic';

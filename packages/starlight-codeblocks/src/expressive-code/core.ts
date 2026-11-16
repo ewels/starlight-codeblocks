@@ -79,7 +79,8 @@ const decorations = [
   'expandable-bar',
   'steps-stepper',
   'steps-controls',
-  'run-output',
+  // Static output is the page's own text, for search and for tools that read the HTML.
+  `run-output:not(.${PREFIX}-run-static)`,
   'run-start',
   'run-lines',
   'permalink',

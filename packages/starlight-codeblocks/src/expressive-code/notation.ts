@@ -465,7 +465,8 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
         );
         const start = marks.findIndex(({ output }) => output && output !== 'end');
         const from = marks[start]?.at ?? -1;
-        const end = marks.slice(start + 1).find(({ output }) => output === 'end')?.at;
+        // Output ends at `[!output end]` or at a `[!run]`, as `[!run]` code ends at an `[!output]`.
+        const end = marks.slice(start + 1).find(({ output, run }) => output === 'end' || (run && !run.end))?.at;
         const output = from === -1 ? [] : visible.slice(from, end);
         const runStart = marks.findIndex(({ run }) => run && !run.end);
         const runFrom = marks[runStart]?.at ?? -1;

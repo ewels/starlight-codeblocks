@@ -1,5 +1,6 @@
 /** Docs for the attributes and style settings reference pages. `test/reference.test.ts` keeps them complete. */
 
+import { ANSI_COLOURS } from './expressive-code/runnable.ts';
 import { severities } from './expressive-code/squiggles.ts';
 
 export interface AttributeDoc {
@@ -355,14 +356,6 @@ export const attributesReference: AttributeDoc[] = [
     example: { lang: 'sh', meta: 'runnable.static runnable.output="Hello world!"', code: 'nextflow run hello' },
   },
   {
-    name: 'runnable.autorun',
-    syntax: ['runnable.autorun'],
-    description:
-      'Runs the code when the page loads and shows the output under the block, with a **Run again** button. Scripted output shows from the start.',
-    page: 'features/run-code',
-    example: { lang: 'py', meta: 'runnable.autorun', code: 'print(sum([1, 2, 3]))' },
-  },
-  {
     name: 'focus.style',
     syntax: ['focus.style="blur"', 'focus.style="dim"'],
     description:
@@ -449,15 +442,14 @@ const accent = 'The value of `codeblocks.accent`.';
 /** A theme colour, such as `terminal.ansiGreen`, lightened or darkened to `contrast` on the code background. */
 const fromTheme = (colour: string, contrast: string, background = 'code') =>
   `The \`${colour}\` colour of the theme, with ${contrast} contrast on the ${background} background.`;
-const COLOURS = ['Black', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White'];
 /** The 16 terminal colours of the output panel. */
 const ansiSettings = Object.fromEntries(
-  [...COLOURS.map((c) => [c, c]), ...COLOURS.map((c) => [`Bright${c}`, `Bright ${c.toLowerCase()}`])].map(
+  [...ANSI_COLOURS.map((c) => [c, c]), ...ANSI_COLOURS.map((c) => [`Bright${c}`, `Bright ${c.toLowerCase()}`])].map(
     ([name, label]) => [
       `ansi${name}`,
       {
-        description: `${label} in the output of a run with \`runnable.outputLang=ansi\`. Needs 4.5:1 contrast on the output background.`,
-        derived: fromTheme(`terminal.ansi${name}`, '4.5:1', 'output'),
+        description: `${label} in the output of a run with \`runnable.outputLang=ansi\`. Needs 4.5:1 contrast on the output background and on each ANSI background.`,
+        derived: `The \`terminal.ansi${name}\` colour of the theme, with 4.5:1 contrast on the output and ANSI backgrounds.`,
       },
     ],
   ),
@@ -774,6 +766,11 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       buttonBorder: {
         description: 'The border of the button under the block. Needs 3:1 contrast on the code background.',
         derived: '`codeForeground` mixed 50% towards the code background, with 3:1 contrast on it.',
+      },
+      ansiForeground: {
+        description:
+          'Uncoloured text in the output of a run with `runnable.outputLang=ansi`. Needs 4.5:1 contrast on the output background and on each ANSI background.',
+        derived: '`codeForeground`, with 4.5:1 contrast on the output and ANSI backgrounds.',
       },
       ...ansiSettings,
     },

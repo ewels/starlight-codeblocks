@@ -2,21 +2,20 @@ import { expect, test } from '@playwright/test';
 import { css, example } from './helpers.ts';
 
 const PYTHON = 0;
-const AUTORUN = 1;
-const JS = 2;
-const TS = 3;
-const PYPI = 4;
-const PACKAGES = 5;
-const ERROR = 6;
-const LOOP = 7;
-const SCRIPTED = 8;
-const FAILED = 9;
-const MARKS = 10;
-const OUTPUT_ONLY = 11;
-const ANSI = 12;
-const ANSI_RUN = 13;
-const RUN_OTHER = 14;
-const TITLE = 15;
+const JS = 1;
+const TS = 2;
+const PYPI = 3;
+const PACKAGES = 4;
+const ERROR = 5;
+const LOOP = 6;
+const SCRIPTED = 7;
+const FAILED = 8;
+const MARKS = 9;
+const OUTPUT_ONLY = 10;
+const ANSI = 11;
+const ANSI_RUN = 12;
+const RUN_OTHER = 13;
+const TITLE = 14;
 
 const oneProject = () =>
   test.skip(test.info().project.name !== 'desktop-dark', 'Slow or needs the network, so one project is enough.');
@@ -30,12 +29,7 @@ test('Run loads no runtime until selected, then shows stdout and stderr, and doe
   page.on('request', (r) => requests.push(r.url()));
   await page.reload();
   await page.waitForLoadState('networkidle');
-  // The runnable.autorun example loads the JavaScript runtime with the page.
-  expect(
-    requests.filter(
-      (u) => (u.includes('scb-runtime-') && !u.includes('scb-runtime-javascript')) || u.includes('pyodide'),
-    ),
-  ).toEqual([]);
+  expect(requests.filter((u) => u.includes('scb-runtime-') || u.includes('pyodide'))).toEqual([]);
   expect(requests.some((u) => u.includes('scb-runnable.'))).toBe(true);
 
   const block = example(page, JS);
@@ -168,8 +162,7 @@ test('scripted output prints a line at a time, and runs no runtime', async ({ pa
   await expect(stdout).not.toContainText('Hola mundo!');
   await expect(stdout).toHaveText(/Launching hello\.nf[\s\S]*Hola mundo!$/, { timeout: 8_000 });
   await expect(button).toHaveText('Run again');
-  // The runnable.autorun example loads the JavaScript runtime with the page.
-  expect(requests.filter((u) => u.includes('scb-runtime-') && !u.includes('scb-runtime-javascript'))).toEqual([]);
+  expect(requests.filter((u) => u.includes('scb-runtime-'))).toEqual([]);
 });
 
 test('scripted output prints each part in order, standard error with its bar and its Error: prefix', async ({
@@ -249,17 +242,6 @@ test('without JavaScript, the Run button is hidden', async ({ browser }) => {
   await context.close();
 });
 
-test('runnable.autorun runs on page load, and its button reads Run again from the start', async ({ page }) => {
-  const block = example(page, AUTORUN);
-  await expect(block.locator('.scb-run-stdout')).toHaveText('Total reads: 6185');
-  const button = block.locator('.scb-run');
-  await expect(button).toHaveText('Run again');
-  await button.focus();
-  await page.keyboard.press('Enter');
-  await expect(block.locator('.scb-run-stdout')).toHaveText('Total reads: 6185');
-  await expect(button).toBeFocused();
-});
-
 test('runnable.static shows coloured output from the start, readable in the theme, with no button', async ({
   page,
 }) => {
@@ -295,4 +277,23 @@ test('a run with runnable.outputLang=ansi shows the colours that the code prints
   expect(await css(tick, 'color')).not.toBe(await css(stdout, 'color'));
   expect(await css(stdout.getByText('2.1s'), 'fontWeight')).toBe('700');
   expect(await plain.count()).toBe(1);
+});
+
+test('an output panel is a focusable region only while its output scrolls', async ({ page }) => {
+  const staticPanel = example(page, ANSI).locator('.scb-run-output');
+  await expect(staticPanel).toHaveAttribute('role', 'region');
+  await expect(staticPanel).toHaveAttribute('tabindex', '0');
+  const block = example(page, ANSI_RUN);
+  const panel = block.locator('.scb-run-output');
+  await expect(panel).not.toHaveAttribute('tabindex');
+  await block.locator('.scb-run').click();
+  await expect(block.locator('.scb-run-stdout')).toHaveText('✔ Built in 2.1s');
+  await expect(panel).toHaveAttribute('tabindex', '-1');
+  await expect(panel).not.toHaveAttribute('role');
+  await panel.evaluate((el) => {
+    el.style.width = '40px';
+  });
+  await expect(panel).toHaveAttribute('tabindex', '0');
+  await expect(panel).toHaveAttribute('role', 'region');
+  await expect(panel).toHaveAttribute('aria-label', 'Output');
 });

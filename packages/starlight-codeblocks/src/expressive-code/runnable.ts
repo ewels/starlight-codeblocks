@@ -3,6 +3,7 @@ import {
   darken,
   type ExpressiveCodeLine,
   ensureColorContrastOnBackground,
+  getColorContrast,
   getFirstStaticColor,
   getStaticBackgroundColor,
   mix,
@@ -45,6 +46,8 @@ export interface RunnableStyleSettings {
   mutedForeground: UnresolvedStyleValue;
   /** The border of the button under the block. Needs 3:1 on the code background. */
   buttonBorder: UnresolvedStyleValue;
+  /** Uncoloured text in the ANSI output of a run. Needs 4.5:1 on the output background and on every ANSI background. */
+  ansiForeground: UnresolvedStyleValue;
   ansiBlack: UnresolvedStyleValue;
   ansiRed: UnresolvedStyleValue;
   ansiGreen: UnresolvedStyleValue;
@@ -63,10 +66,15 @@ export interface RunnableStyleSettings {
   ansiBrightWhite: UnresolvedStyleValue;
 }
 
-const COLOURS = ['Black', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White'] as const;
-type AnsiName = `ansi${'' | 'Bright'}${(typeof COLOURS)[number]}`;
+export const ANSI_COLOURS = ['Black', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White'] as const;
+type AnsiName = `ansi${'' | 'Bright'}${(typeof ANSI_COLOURS)[number]}`;
 /** The 16 terminal colours, in the order of their ANSI codes, for the output of real runs. */
-const ANSI: AnsiName[] = [...COLOURS.map((c) => `ansi${c}` as const), ...COLOURS.map((c) => `ansiBright${c}` as const)];
+const ANSI: AnsiName[] = [
+  ...ANSI_COLOURS.map((c) => `ansi${c}` as const),
+  ...ANSI_COLOURS.map((c) => `ansiBright${c}` as const),
+];
+/** How much of its colour an ANSI background mixes into the output background. Keep in step with `client/shared/ansi.ts`. */
+export const ANSI_TINT = 0.16;
 
 declare module '@expressive-code/core' {
   export interface StyleSettings {
@@ -84,12 +92,31 @@ const outputBackground = (context: Context) =>
 const onOutput = (context: Context, colour: string, min: number) =>
   ensureColorContrastOnBackground(colour, outputBackground(context), min);
 
+/**
+ * `colour` at 4.5:1 on the output background and on each ANSI background, which the client draws as a tint of the
+ * ANSI colour over it. The tints here come from the colours before this correction, so the target has a margin.
+ */
+const onAnsi = (context: Context, colour: string) => {
+  const panel = outputBackground(context);
+  const tints = ANSI.map((name) =>
+    mix(panel, onOutput(context, themeColour(context, `terminal.${name}`), 4.5), ANSI_TINT),
+  );
+  let result = colour;
+  for (let i = 0; i < 4; i++) {
+    const nearest = [panel, ...tints].reduce((a, b) =>
+      getColorContrast(result, b) < getColorContrast(result, a) ? b : a,
+    );
+    result = ensureColorContrastOnBackground(result, nearest, 4.6);
+  }
+  return result;
+};
+
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksRunnable: {
-      // The same step in contrast in both: light themes need far less darkening for it.
       outputFontFamily: ({ resolveSetting }) => resolveSetting('codeFontFamily'),
       outputLineHeight: ({ resolveSetting }) => resolveSetting('codeLineHeight'),
+      // The same step in contrast in both: light themes need far less darkening for it.
       outputBackground: (context) => darken(solidCodeBackground(context), context.theme.type === 'dark' ? 0.25 : 0.04),
       outputForeground: (context) => onOutput(context, themeColour(context, 'terminal.ansiGreen'), 4.5),
       errorForeground: (context) => onOutput(context, themeColour(context, 'terminal.ansiRed'), 4.5),
@@ -101,11 +128,9 @@ const styleSettings = new PluginStyleSettings({
         ),
       buttonBorder: (context) =>
         onCode(context, mix(solidCodeForeground(context), solidCodeBackground(context), 0.5), 3),
+      ansiForeground: (context) => onAnsi(context, solidCodeForeground(context)),
       ...(Object.fromEntries(
-        ANSI.map((name) => [
-          name,
-          (context: Context) => onOutput(context, themeColour(context, `terminal.${name}`), 4.5),
-        ]),
+        ANSI.map((name) => [name, (context: Context) => onAnsi(context, themeColour(context, `terminal.${name}`))]),
       ) as Record<AnsiName, (context: Context) => string>),
     },
   },
@@ -224,23 +249,15 @@ async function outputLineElements(
   return { elements, marked };
 }
 
-type Mode = 'click' | 'autorun' | 'static';
-
-/** How the block shows its output, from `runnable.static` and `runnable.autorun`. Warns about a mode it cannot have. */
-function runMode(context: Parameters<typeof warn>[0], scripted: boolean): Mode {
-  const { metaOptions } = context.codeBlock;
-  const autorun = metaOptions.getBoolean('runnable.autorun') ? 'autorun' : 'click';
-  if (!metaOptions.getBoolean('runnable.static')) return autorun;
-  if (!scripted) {
-    warn(
-      context,
-      '`runnable.static` needs output in the block, after `[!output]` or in `runnable.output`. The block keeps its button.',
-    );
-    return autorun;
-  }
-  if (autorun === 'autorun')
-    warn(context, '`runnable.autorun` has no effect with `runnable.static`, which has no button.');
-  return 'static';
+/** Whether the block shows its output from the start, with `runnable.static`. */
+function isStatic(context: Parameters<typeof warn>[0], scripted: boolean): boolean {
+  if (!context.codeBlock.metaOptions.getBoolean('runnable.static')) return false;
+  if (scripted) return true;
+  warn(
+    context,
+    '`runnable.static` needs output in the block, after `[!output]` or in `runnable.output`. The block keeps its button.',
+  );
+  return false;
 }
 
 /** Adds a Run button to `runnable` blocks, and an output panel under the code. */
@@ -278,7 +295,7 @@ export function pluginRunnable({
 .${cls('-label')} { display: block; margin-bottom: 2px; font-size: 0.72rem; }
 .${cls('-stdout')} { color: ${cssVar('codeblocksRunnable.outputForeground')}; }
 .${cls('-output')} { ${ANSI.map((name, i) => `--scb-ansi-${i}: ${cssVar(`codeblocksRunnable.${name}`)};`).join(' ')} --scb-ansi-dim: ${cssVar('codeblocksRunnable.mutedForeground')}; }
-[data-scb-runnable-ansi] .${cls('-stdout')} { color: ${cssVar('codeForeground')}; }
+[data-scb-runnable-ansi] .${cls('-stdout')} { color: ${cssVar('codeblocksRunnable.ansiForeground')}; }
 .${cls('-stderr')} {
   color: ${cssVar('codeblocksRunnable.errorForeground')};
   border-inline-start: 2px solid currentColor;
@@ -330,7 +347,7 @@ export function pluginRunnable({
       output: {
         docs: {
           description:
-            'Starts the output that the **Run code** button prints instead of running the code. `[!output stderr]` starts lines that print as standard error, and `[!output stdout]` switches back. `lang=<language>` highlights the lines after it in that language, such as `ansi` for terminal colours. `[!output end]` ends the output; without it, the output goes to the end of the block. `[!code highlight]` and line states mark lines of output. The block needs no `runnable` and no runtime.',
+            'Starts the output that the **Run code** button prints instead of running the code. `[!output stderr]` starts lines that print as standard error, and `[!output stdout]` switches back. `lang=<language>` highlights the lines after it in that language, such as `ansi` for terminal colours. `[!output end]` ends the output; without it, the output goes to the next `[!run]` or the end of the block. `[!code highlight]` and line states mark lines of output. The block needs no `runnable` and no runtime.',
           args: 'Optional. `stdout`, `stderr` or `end`, and `lang=<language>`.',
           example: { lang: 'sh', code: 'nextflow run hello.nf\n# [!output]\nHello world!' },
           page: 'features/run-code',
@@ -367,7 +384,9 @@ export function pluginRunnable({
         for (const mark of runMarks.filter((d) => !runMark(d)))
           warn(context, '`[!run]` takes nothing, `lang=<language>` or `end`.', mark.sourceLine);
         const run = getRunLines(codeBlock);
-        if (run.length === 0 && runMarks.some((d) => runMark(d)?.end))
+        if (run.length === 0 && runMarks.some((d) => runMark(d) && !runMark(d)?.end))
+          warn(context, '`[!run]` needs lines of code after it. The button runs the code that readers see.');
+        else if (run.length === 0 && runMarks.some((d) => runMark(d)?.end))
           warn(context, '`[!run end]` needs a `[!run]` line before it.');
         data.runLang = runMarks.map(runMark).find((mark) => mark && !mark.end)?.lang;
         const output = getOutputLines(codeBlock);
@@ -417,16 +436,10 @@ export function pluginRunnable({
           meta?.replace(/\\n/g, '\n') ?? (lines.length > 0 ? lines.map((line) => line.text).join('\n') : undefined);
         const run = getRunLines(codeBlock);
         const { metaOptions } = codeBlock;
-        if (
-          !metaOptions.getBoolean('runnable') &&
-          !metaOptions.getBoolean('runnable.autorun') &&
-          scripted === undefined &&
-          run.length === 0
-        )
-          return;
+        if (!metaOptions.getBoolean('runnable') && scripted === undefined && run.length === 0) return;
         const figure = select('figure', renderData.blockAst);
         if (!figure) return;
-        const mode = runMode(context, scripted !== undefined);
+        const staticOutput = isStatic(context, scripted !== undefined);
         const outputLang = metaOptions.getString('runnable.outputLang')?.trim() || undefined;
         if (scripted !== undefined && run.length > 0)
           warn(context, '`[!run]` has no effect in a block with scripted output: the button prints the output.');
@@ -470,12 +483,12 @@ export function pluginRunnable({
                 class: `${cls('')} ${extra}${PREFIX}-no-print ${PREFIX}-needs-js`,
                 dataScbRunAgain: again,
               },
-              mode === 'autorun' ? again : buttonText,
+              buttonText,
             );
           if (where !== 'below') addTitleBarControl(renderData.blockAst, runButton(`${PREFIX}-btn `), context.locale);
           figure.children.push(panel);
           if (where === 'title') return;
-          if (outputOnly && mode === 'click' && pre) {
+          if (outputOnly && pre) {
             emptyBlock(false);
             pre.children.push(runButton(`${cls('-start')} `));
             return;
@@ -483,10 +496,10 @@ export function pluginRunnable({
           figure.children.push(h('div', { class: `${cls('-controls')} ${PREFIX}-no-print` }, [runButton('')]));
         };
         const panelClass = codeBlock.props.wrap ? `${cls('-output')} ${cls('-wrap')}` : cls('-output');
+        // The client makes a live panel focusable when its output scrolls, as Expressive Code does for code.
         const livePanel = (runtimeTexts = {}) =>
           h('div', {
             class: panelClass,
-            tabindex: '0',
             ariaLive: 'polite',
             dataScbTexts: JSON.stringify({ ...texts, ...runtimeTexts }),
           });
@@ -522,15 +535,18 @@ export function pluginRunnable({
             });
             return [h('span', { class: cls('-label') }, texts.output), ...parts];
           };
-          // The output of a scripted run is known, so the static and autorun modes show it from the build.
-          const prefilled = mode !== 'click';
-          const panel = mode === 'static' ? h('div', { class: panelClass, tabindex: '0' }) : livePanel();
-          if (prefilled) panel.children = panelParts();
-          if (outputOnly && prefilled) emptyBlock(true);
-          if (mode === 'static') {
+          if (staticOutput) {
+            // Focusable, because without JavaScript nothing can tell whether the output scrolls.
+            const panel = h(
+              'div',
+              { class: `${panelClass} ${cls('-static')}`, tabindex: '0', role: 'region', ariaLabel: texts.output },
+              panelParts(),
+            );
+            if (outputOnly) emptyBlock(true);
             figure.children.push(panel);
             return;
           }
+          const panel = livePanel();
           figure.properties.dataScbRunnable = '';
           figure.properties.dataScbRunnableOutput = encodeCode(scripted);
           if (Object.keys(waits).length > 0) figure.properties.dataScbRunnableWaits = JSON.stringify(waits);
@@ -565,7 +581,6 @@ export function pluginRunnable({
         figure.properties.dataScbRunnable = registry
           ? `${(registry.base ?? '/').replace(/\/?$/, '/')}${registry.assets ?? '_astro'}/${runtimeFileName(language)}`
           : modules[language];
-        if (mode === 'autorun') figure.properties.dataScbRunnableAutorun = '';
         if (outputLang === 'ansi') figure.properties.dataScbRunnableAnsi = '';
         else if (!isPlain(outputLang))
           warn(
