@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { contrast, css, example } from './helpers.ts';
+import { contrast, css, example, once, output } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/split-diff/');
@@ -21,7 +21,7 @@ test('the keyboard switches every diff block to a split view and back, and the n
   await page.keyboard.press('Enter');
   await expect(button).toHaveAttribute('aria-pressed', 'true');
   await expect(unified).toHaveAttribute('aria-pressed', 'false');
-  await expect(page.locator('pre.scb-split[data-scb-split-sync]')).toHaveCount(2);
+  await expect(page.locator('pre.scb-split[data-scb-split-sync]')).toHaveCount(4);
 
   const box = (selector: string, n = 0) => block.locator(selector).nth(n).boundingBox();
   const [line, copy] = [await box('.ec-line.scb-split-left'), await box('.scb-split-copy')];
@@ -31,7 +31,7 @@ test('the keyboard switches every diff block to a split view and back, and the n
   expect(ins?.y).toBe(del?.y);
   await expect(block.locator('.scb-split-gap')).toHaveCount(3);
   await expect(block.locator('.scb-split-copy').first()).toHaveAttribute('aria-hidden', 'true');
-  await expect(block.locator('.scb-split-copy').first()).toHaveAttribute('inert', '');
+  await expect(block.locator('.scb-split-copy .code').first()).toHaveAttribute('inert', '');
   expect(await block.locator('.scb-split-copy [id]').count()).toBe(0);
 
   await page.reload();
@@ -87,4 +87,15 @@ test('the pressed button stands apart from the other by more than its text colou
   const [unified, split] = ['Unified', 'Split'].map((name) => example(page).getByRole('button', { name }));
   expect(await css(unified, 'backgroundColor')).not.toBe(await css(split, 'backgroundColor'));
   expect(await css(split, 'backgroundColor')).toBe('rgba(0, 0, 0, 0)');
+});
+
+test('a walkthrough of diffs changes step without the token animation, which would drop the diff colours', async ({
+  page,
+}) => {
+  once();
+  const walkthrough = output(page, 4);
+  await walkthrough.getByRole('button', { name: 'Next' }).click();
+  // The click handler starts the animation, so it is there at once or not at all.
+  expect(await walkthrough.locator('.scb-steps-anim').count()).toBe(0);
+  await expect(walkthrough.locator('.scb-steps-current .ec-line.ins')).toHaveCount(4);
 });

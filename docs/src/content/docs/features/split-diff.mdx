@@ -4,6 +4,7 @@ description: Let readers switch a diff block to a split view, with the old code 
 ---
 
 import { LinkCard } from '@astrojs/starlight/components';
+import { CodeWalkthrough } from 'starlight-codeblocks/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
@@ -90,6 +91,56 @@ export const forced = `
 
 <Example code={forced} hiddenAttributes="wordDiff=false" layout="tabs" />
 
+### In a code walkthrough, with line permalinks
+
+Each step of a [code walkthrough](/starlight-codeblocks/features/code-walkthrough/) can be a diff. Here each step shows the change so far against the same file, and the switch changes every step. With `id`, [line permalinks](/starlight-codeblocks/features/line-permalinks/) turn the line numbers into links. In the split view, each side counts its own lines, and each link still opens its line:
+
+export const walkthrough = `
+<CodeWalkthrough>
+
+\`\`\`diff lang="js" title="server.js" step="Read the port" id="port"
+ const app = express();
+-app.listen(3000);
++const port = Number(process.env.PORT ?? 3000);
++app.listen(port);
+\`\`\`
+
+\`\`\`diff lang="js" title="server.js" step="Log the port" id="log"
+ const app = express();
+-app.listen(3000);
++const port = Number(process.env.PORT ?? 3000);
++app.listen(port, () => {
++  console.log(\`Listening on port \${port}\`);
++});
+\`\`\`
+
+</CodeWalkthrough>
+`;
+
+<Example code={walkthrough} hiddenAttributes="wordDiff=false" layout="tabs">
+
+<CodeWalkthrough>
+
+```diff lang="js" title="server.js" step="Read the port" id="port" wordDiff=false
+ const app = express();
+-app.listen(3000);
++const port = Number(process.env.PORT ?? 3000);
++app.listen(port);
+```
+
+```diff lang="js" title="server.js" step="Log the port" id="log" wordDiff=false
+ const app = express();
+-app.listen(3000);
++const port = Number(process.env.PORT ?? 3000);
++app.listen(port, () => {
++  console.log(`Listening on port ${port}`);
++});
+```
+
+</CodeWalkthrough>
+
+</Example>
+
 ## Behaviour
 
 - Switching the view:
@@ -99,7 +150,7 @@ export const forced = `
 - Layout:
   - Unchanged lines show on both sides. Removed lines show on the left, and added lines show on the right.
   - The plugin pairs a run of removed lines with the run of added lines below it, one by one. A shaded cell fills the side of a line that has no pair.
-  - With Expressive Code line numbers, the left side counts the lines of the old code. The right side counts the lines of the new code.
+  - With line numbers, from Expressive Code or from line permalinks, the left side counts the lines of the old code. The right side counts the lines of the new code.
   - Both sides have the same width. A long line wraps inside its side, as on GitHub.
 - Copy and screen readers:
   - The copy button copies the same text in both views.
@@ -125,7 +176,7 @@ codeblocks({
 
 - Pairing is by position, as in [word-level diff](/starlight-codeblocks/features/word-level-diff/). A block that adds or removes a different number of lines can pair the wrong lines.
 - You cannot select the text of the unchanged lines on the right. Select them on the left.
-- Features that light a line when the reader acts, such as code mentions and line permalinks, light the left copy of an unchanged line only.
+- Features that light a line when the reader acts, such as code mentions, light the left copy of an unchanged line only. Line permalinks light both sides.
 - A block with collapsible sections (`collapse`) gets no switch.
 
 ## Related

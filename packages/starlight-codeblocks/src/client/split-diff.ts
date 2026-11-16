@@ -40,7 +40,7 @@ function gap(after: Element, row: number, side: 'left' | 'right') {
 
 /**
  * Lays the lines out in two columns: unchanged lines on both sides, each run of removed lines next to the added
- * lines that follow it. The right side's unchanged lines are inert copies, so the DOM still reads as a unified diff.
+ * lines that follow it. The right side's unchanged lines are copies, inert apart from a permalink, so the DOM still reads as a unified diff.
  */
 function split(pre: HTMLElement) {
   const code = pre.querySelector('code');
@@ -92,7 +92,9 @@ function split(pre: HTMLElement) {
       copy.removeAttribute('hidden');
       delete copy.dataset.scbMention;
       copy.classList.add(`${S}-copy`);
-      copy.inert = true;
+      // A pointer can use the copy's permalink, which opens the same line. Keyboards use the one on the left.
+      for (const part of copy.children) if (!part.classList.contains('gutter')) (part as HTMLElement).inert = true;
+      copy.querySelector('a.scb-permalink')?.setAttribute('tabindex', '-1');
       copy.ariaHidden = 'true';
       place(copy, row, 'right');
       renumber(el, before++);

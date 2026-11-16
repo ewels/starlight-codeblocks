@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, type Locator, type Page, test } from '@playwright/test';
 import type { CodeblocksOptions } from '../../packages/starlight-codeblocks/src/options.ts';
 import { render } from '../../packages/starlight-codeblocks/test/render.ts';
 import { clipboard } from './helpers.ts';
@@ -103,6 +103,18 @@ test('a split diff counts each side of a block with line permalinks from its fir
   expect(await numbers('left')).toEqual(['0', '1', '2']);
   expect(await numbers('right')).toEqual(['0', '1', '2']);
   await expect(added).toHaveAttribute('aria-label', 'Link to line 1');
+  await added.click();
+  await expect(block.locator('.scb-permalink-target')).toHaveClass(/\bins\b/);
+  expect(page.url()).toMatch(/#srv-L2$/);
+  const copy = block.locator('.scb-split-copy').last();
+  await expect(copy.locator('.scb-permalink')).toHaveAttribute('tabindex', '-1');
+  await copy.locator('.scb-permalink').click();
+  expect(page.url()).toMatch(/#srv-L3$/);
+  const target = block.locator('.scb-permalink-target');
+  await expect(target).toContainText('d()');
+  const background = (line: Locator) => line.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(await background(copy)).toBe(await background(target));
+  expect(await background(copy)).not.toBe(await background(block.locator('.scb-split-copy').first()));
   await block.getByRole('button', { name: 'Unified' }).click();
   await expect(added).toHaveText('2');
   await expect(added).toHaveAttribute('aria-label', 'Link to line 2');
