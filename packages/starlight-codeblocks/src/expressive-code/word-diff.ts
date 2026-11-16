@@ -7,7 +7,7 @@ import {
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
 import { h } from '@expressive-code/core/hast';
-import { blockSetting, type CodeblocksPlugin, ensureTextContrast } from './core.ts';
+import { blockSetting, type CodeblocksPlugin, ensureTextContrast, markerType } from './core.ts';
 import { PREFIX, themeColour } from './styles.ts';
 
 export interface WordDiffStyleSettings {
@@ -127,16 +127,6 @@ class ChangedTokenAnnotation extends ExpressiveCodeAnnotation {
     const role = this.type === 'ins' ? 'insertion' : 'deletion';
     return nodesToTransform.map((node) => h('span', { class: `${PREFIX}-worddiff-${this.type}`, role }, [node]));
   }
-}
-
-/** The kind a whole-line text-markers annotation carries. The class itself is not exported by the plugin. */
-export function markerType(line: ExpressiveCodeLine): 'ins' | 'del' | undefined {
-  for (const annotation of line.getAnnotations()) {
-    if (annotation.inlineRange) continue;
-    const type = (annotation as { markerType?: string }).markerType;
-    if (type === 'ins' || type === 'del') return type;
-  }
-  return undefined;
 }
 
 /** Highlights the words that changed between a removed line and the added line directly below it. */

@@ -27,7 +27,6 @@ function place(el: HTMLElement, row: number, side?: 'left' | 'right') {
 function gap(after: Element, row: number, side: 'left' | 'right') {
   const el = document.createElement('div');
   el.className = `${S}-gap`;
-  el.ariaHidden = 'true';
   place(el, row, side);
   // Next to its row partner, so that CSS can hide it with a hidden line.
   after.after(el);
@@ -75,6 +74,9 @@ function split(pre: HTMLElement) {
       if (!el.matches('.ec-line')) continue;
       const copy = el.cloneNode(true) as HTMLElement;
       for (const node of [copy, ...copy.querySelectorAll('[id]')]) node.removeAttribute('id');
+      // Expandable and mentions act on the original line only. CSS shows or hides the copy with it.
+      copy.removeAttribute('hidden');
+      delete copy.dataset.scbMention;
       copy.classList.add(`${S}-copy`);
       copy.inert = true;
       copy.ariaHidden = 'true';
@@ -102,7 +104,8 @@ function unsplit(pre: HTMLElement) {
   }
 }
 
-function apply(pre: HTMLElement, on: boolean) {
+function apply(pre: HTMLElement, view?: string) {
+  const on = view === 'split';
   if (pre.classList.contains(S) !== on) (on ? split : unsplit)(pre);
   for (const toggle of pre.closest('.expressive-code')?.querySelectorAll<HTMLElement>('.scb-split-toggle') ?? []) {
     toggle.setAttribute('aria-pressed', String((toggle.dataset.scbView === 'split') === on));
@@ -113,13 +116,13 @@ function apply(pre: HTMLElement, on: boolean) {
 function choose(button: HTMLElement) {
   const pre = button.closest('.expressive-code')?.querySelector<HTMLElement>('pre[data-scb-split-diff]');
   if (!pre) return;
-  const on = button.dataset.scbView === 'split';
-  if (!pre.hasAttribute('data-scb-split-sync')) return apply(pre, on);
+  const view = button.dataset.scbView ?? 'unified';
+  if (!pre.hasAttribute('data-scb-split-sync')) return apply(pre, view);
   try {
-    localStorage.setItem(KEY, on ? 'split' : 'unified');
+    localStorage.setItem(KEY, view);
   } catch {}
   const top = button.getBoundingClientRect().top;
-  for (const other of document.querySelectorAll<HTMLElement>('pre[data-scb-split-sync]')) apply(other, on);
+  for (const other of document.querySelectorAll<HTMLElement>('pre[data-scb-split-sync]')) apply(other, view);
   // Blocks above the button change height. Keep the button where the reader clicked it.
   scrollBy({ top: button.getBoundingClientRect().top - top, behavior: 'instant' });
 }
@@ -138,7 +141,6 @@ export default function initSplitDiff() {
   const stored = remembered();
   for (const pre of document.querySelectorAll<HTMLElement>('pre[data-scb-split-diff]:not([data-scb-split-ready])')) {
     pre.dataset.scbSplitReady = '';
-    const view = pre.hasAttribute('data-scb-split-sync') && stored ? stored : pre.dataset.scbSplitDiff;
-    apply(pre, view === 'split');
+    apply(pre, pre.hasAttribute('data-scb-split-sync') && stored ? stored : pre.dataset.scbSplitDiff);
   }
 }

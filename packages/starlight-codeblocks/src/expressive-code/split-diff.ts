@@ -2,10 +2,15 @@ import { PluginStyleSettings, setAlpha, type UnresolvedStyleValue } from '@expre
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
 import { uiTexts } from '../translations.ts';
-import { addTitleBarControl, blockSetting, type CodeblocksPlugin, parseBoolean } from './core.ts';
-import { hasCollapse } from './expandable.ts';
+import {
+  addTitleBarControl,
+  blockSetting,
+  type CodeblocksPlugin,
+  hasCollapse,
+  markerType,
+  parseBoolean,
+} from './core.ts';
 import { PREFIX } from './styles.ts';
-import { markerType } from './word-diff.ts';
 
 export interface SplitDiffStyleSettings {
   gapBackground: UnresolvedStyleValue;
@@ -47,7 +52,6 @@ export function pluginSplitDiff({
     name: 'starlight-codeblocks:split-diff',
     styleSettings,
     baseStyles: ({ cssVar }) => `
-.${S}-copy, .${S}-gap { display: none; }
 ${SPLIT} { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 /* Sideways scrolling would hide the right side in a docs column. */
 ${SPLIT} > .ec-line .code { white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -57,10 +61,8 @@ ${SPLIT} > .${S}-right {
   grid-column: 2;
   box-shadow: inset ${cssVar('borderWidth')} 0 ${cssVar('borderColor')};
 }
-/* A copy of a hidden line follows the hidden lines rules. */
-${SPLIT} > .${S}-copy:not(.${PREFIX}-hidden-line) { display: grid; }
 ${SPLIT} > .${S}-copy { user-select: none; -webkit-user-select: none; }
-${SPLIT} > .${S}-gap { display: block; background: ${cssVar('codeblocksSplitDiff.gapBackground')}; }
+${SPLIT} > .${S}-gap { background: ${cssVar('codeblocksSplitDiff.gapBackground')}; }
 ${SPLIT} > :is([hidden], .${PREFIX}-hidden-line:not(.${PREFIX}-hidden-open)) + :is(.${S}-copy, .${S}-gap) { display: none; }
 .${S}-switch { display: inline-flex; }
 .${S}-switch > .${PREFIX}-btn:first-child { border-start-end-radius: 0; border-end-end-radius: 0; }
