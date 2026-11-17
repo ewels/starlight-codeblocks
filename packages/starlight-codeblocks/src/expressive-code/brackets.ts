@@ -9,6 +9,7 @@ import {
 } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
+import { getRegistry } from '../registry.ts';
 import { type CommentSyntax, commentSyntaxFor } from './comments.ts';
 import { type CodeblocksPlugin, languageId } from './core.ts';
 import { onCode, PREFIX } from './styles.ts';
@@ -184,10 +185,13 @@ class BracketAnnotation extends ExpressiveCodeAnnotation {
   }
 }
 
-/** Colours matching brackets by nesting depth. `brackets.languages` turns it on for every block of a language. */
+/**
+ * Colours matching brackets by nesting depth. `brackets.languages` turns it on for every block of a language.
+ * `comments` defaults to the `notation` comments given to `codeblocks()`.
+ */
 export function pluginBrackets({
   languages = [],
-  comments = {},
+  comments,
 }: {
   languages?: string[];
   comments?: Record<string, string[]>;
@@ -204,6 +208,8 @@ export function pluginBrackets({
       annotateCode({ codeBlock, styleVariants }) {
         const on = codeBlock.metaOptions.getBoolean('brackets') ?? ids.has(languageId(codeBlock.language));
         if (!on) return;
+        const notation = getRegistry()?.options.notation;
+        comments ??= notation ? notation.comments : {};
         const lines = codeBlock.getLines();
         const matches = findBrackets(
           lines.map((line) => line.text),

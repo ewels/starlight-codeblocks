@@ -35,7 +35,11 @@ test('adds its plugins with only the name visible, and fills the registry', asyn
   const plugins = (updates[0] as { expressiveCode: { plugins: object[] } }).expressiveCode.plugins;
   expect(plugins[0]).toEqual({ name: 'other' });
   expect(JSON.parse(JSON.stringify(plugins[1]))).toEqual({ name: 'starlight-codeblocks:core' });
-  expect(getRegistry()?.plugins[0]?.name).toBe('starlight-codeblocks:core');
+  expect(
+    getRegistry()
+      ?.plugins.slice(0, 2)
+      .map((p) => p.name),
+  ).toEqual(['other', 'starlight-codeblocks:core']);
   expect(getRegistry()?.cacheDir).toMatch(/node_modules\/\.astro\/?$/);
   expect(integrations.map((i) => i.name)).toEqual(['starlight-codeblocks']);
 });
@@ -61,6 +65,13 @@ test('fails when the site lists a plugin whose feature is off', async () => {
   await expect(setup(undefined, { plugins: [pluginFootnotes({})] }, { footnotes: false })).rejects.toThrow(
     'has the `starlight-codeblocks:footnotes` plugin, but its feature is off',
   );
+  // The preset keeps the focus styles with focus off, under another name.
+  await expect(setup(undefined, { plugins: [pluginFocus({})] }, { focus: false })).rejects.toThrow(
+    'has the `starlight-codeblocks:focus` plugin, but its feature is off',
+  );
+  // `ec.config.mjs` plugins replace the inline list, so it is not checked.
+  const ecConfig = "export default { plugins: [{ name: 'starlight-codeblocks:core' }] };";
+  await expect(setup(ecConfig, { plugins: [pluginFootnotes({})] }, { footnotes: false })).resolves.toBeDefined();
 });
 
 test('adds its plugins when ec.config.mjs has no plugins list, and fails when it has one without the preset', async () => {

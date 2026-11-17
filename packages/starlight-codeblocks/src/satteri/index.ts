@@ -11,7 +11,7 @@ import type {
 } from 'satteri';
 import { encodeVariant, TABS_META, type TabsVariant } from '../expressive-code/code-tabs.ts';
 import { commentSyntaxFor } from '../expressive-code/comments.ts';
-import { bundledLanguage } from '../expressive-code/core.ts';
+import { bundledLanguage, PLUGIN_PREFIX } from '../expressive-code/core.ts';
 import { parseNotation } from '../expressive-code/notation.ts';
 import { findColours, SWATCH, type SwatchSettings, swatchTexts, wholeColour } from '../expressive-code/swatches.ts';
 import { withTrailingWhitespace } from '../expressive-code/whitespace.ts';
@@ -170,15 +170,13 @@ function inlineSwatch(node: InlineCode, { formats }: SwatchSettings, texts: stri
   } as InlineCode;
 }
 
-const PREFIX = 'starlight-codeblocks:';
-export const MARKDOWN_GROUP = `${PREFIX}markdown`;
 const consoleLogger: Logger = { warn: (message) => console.warn(`[starlight-codeblocks] ${message}`) };
 
-/** One option, resolved with its defaults and checked as `codeblocks()` checks it. */
-const resolve = <K extends keyof CodeblocksOptions>(key: K, value: CodeblocksOptions[K]) =>
-  resolveOptions({ [key]: value })[key];
+type Settings<K extends keyof CodeblocksOptions> = Exclude<CodeblocksOptions[K], false>;
 
-/** What a plugin needs for one document: its file, warnings that name the file, and the texts of its language. */
+const resolve = <K extends 'codeTabs' | 'inlineHighlighting' | 'swatches' | 'notation'>(key: K, value: Settings<K>) =>
+  resolveOptions({ [key]: value ?? {} })[key] as Exclude<ResolvedOptions[K], false>;
+
 function page({ fileURL }: PluginFactoryContext, logger: Logger) {
   const file = fileName(fileURL);
   return {
@@ -190,36 +188,43 @@ function page({ fileURL }: PluginFactoryContext, logger: Logger) {
 }
 
 /**
- * A factory, so that each document gets its own state, with the plugin name as the function name,
- * so that `codeblocks()` finds the plugins that a site added itself without calling them.
+ * A factory, for per-document state. Its name and `settings` let `codeblocks()` find the plugins that a site
+ * added itself, and put their settings in the content cache digest, without calling them.
  */
 function plugin(
   name: string,
   logger: Logger,
+  settings: unknown,
   define: (doc: ReturnType<typeof page>) => Omit<MdastPluginDefinition, 'name'>,
 ): MdastPluginEntry {
-  const factory = (ctx: PluginFactoryContext) => ({ name: PREFIX + name, ...define(page(ctx, logger)) });
-  return Object.defineProperty(factory, 'name', { value: PREFIX + name });
+  const factory = (ctx: PluginFactoryContext) => ({ name: PLUGIN_PREFIX + name, ...define(page(ctx, logger)) });
+  Object.defineProperty(factory, 'settings', { value: settings });
+  return Object.defineProperty(factory, 'name', { value: PLUGIN_PREFIX + name });
+}
+
+export interface ListedPlugin {
+  name: string;
+  settings?: unknown;
 }
 
 /**
- * The names of this package's plugins in a list of Sätteri or remark plugins, without calling any factory.
- * It looks into nested lists, remark's `[plugin, options]` and plugins from `remarkFromSatteri()`.
+ * This package's plugins in a list of Sätteri or remark plugins, without calling any factory.
+ * It looks into nested lists, remark's `[plugin, options]`, `remarkFromSatteri()` and `mdastCodeblocks()`.
  */
-export function markdownPluginNames(list: unknown, names = new Set<string>()): Set<string> {
-  if (Array.isArray(list)) for (const entry of list) markdownPluginNames(entry, names);
+export function listedMarkdownPlugins(list: unknown, found: ListedPlugin[] = []): ListedPlugin[] {
+  if (Array.isArray(list)) for (const entry of list) listedMarkdownPlugins(entry, found);
   else if (list && (typeof list === 'function' || typeof list === 'object')) {
-    const { name, mdastPlugins } = list as { name?: unknown; mdastPlugins?: unknown };
-    if (typeof name === 'string' && name.startsWith(PREFIX)) names.add(name);
-    if (mdastPlugins) markdownPluginNames(mdastPlugins, names);
+    const entry = list as { name?: unknown; mdastPlugins?: unknown };
+    if (entry.mdastPlugins) listedMarkdownPlugins(entry.mdastPlugins, found);
+    else if (typeof entry.name === 'string' && entry.name.startsWith(PLUGIN_PREFIX)) found.push(entry as ListedPlugin);
   }
-  return names;
+  return found;
 }
 
 /** Turns `:::code-tabs` directives into code tabs. */
-export function mdastCodeTabs(settings?: CodeblocksOptions['codeTabs'], logger = consoleLogger): MdastPluginEntry {
-  const { control } = resolve('codeTabs', settings || {}) as { control: TabsVariant['control'] };
-  return plugin('code-tabs', logger, ({ file, say }) => ({
+export function mdastCodeTabs(settings?: Settings<'codeTabs'>, logger = consoleLogger): MdastPluginEntry {
+  const { control } = resolve('codeTabs', settings);
+  return plugin('code-tabs', logger, settings, ({ file, say }) => ({
     containerDirective(node) {
       if (node.name === 'code-tabs') return codeTabs(node, file, control, say);
     },
@@ -228,19 +233,19 @@ export function mdastCodeTabs(settings?: CodeblocksOptions['codeTabs'], logger =
 
 /** Highlights inline code with a `{:lang}` suffix, or all inline code with `defaultLanguage`. */
 export function mdastInlineHighlighting(
-  settings?: CodeblocksOptions['inlineHighlighting'],
+  settings?: Settings<'inlineHighlighting'>,
   logger = consoleLogger,
 ): MdastPluginEntry {
-  const { defaultLanguage } = resolve('inlineHighlighting', settings || {}) as { defaultLanguage: string | false };
-  return plugin('inline-highlighting', logger, ({ warn }) => ({
-    inlineCode: async (node, ctx) => (await inlineCode(node, ctx, warn, defaultLanguage)) as never,
+  const { defaultLanguage } = resolve('inlineHighlighting', settings);
+  return plugin('inline-highlighting', logger, settings, ({ warn }) => ({
+    inlineCode: (node, ctx) => inlineCode(node, ctx, warn, defaultLanguage) as never,
   }));
 }
 
 /** Adds a swatch before each colour in the text of the page, and in inline code that is one colour. */
-export function mdastSwatches(settings?: CodeblocksOptions['swatches'], logger = consoleLogger): MdastPluginEntry {
-  const swatches = resolve('swatches', settings || {}) as SwatchSettings;
-  return plugin('swatches', logger, ({ say }) => {
+export function mdastSwatches(settings?: Settings<'swatches'>, logger = consoleLogger): MdastPluginEntry {
+  const swatches = resolve('swatches', settings);
+  return plugin('swatches', logger, settings, ({ say }) => {
     const texts = swatches.copy ? swatchTexts(say) : undefined;
     return {
       // Inline code that another plugin rendered, such as with inline highlighting, has `data`.
@@ -255,7 +260,7 @@ export function mdastSwatches(settings?: CodeblocksOptions['swatches'], logger =
 
 /** Keeps the trailing whitespace of each line of code, which Expressive Code trims, for visible whitespace. */
 export function mdastWhitespace(logger = consoleLogger): MdastPluginEntry {
-  return plugin('whitespace', logger, () => ({
+  return plugin('whitespace', logger, undefined, () => ({
     before(root, ctx) {
       walk(root as Nodes, (node) => {
         if (node.type !== 'code') return;
@@ -268,9 +273,8 @@ export function mdastWhitespace(logger = consoleLogger): MdastPluginEntry {
 
 /** Turns each code mention link that no block tags into plain text, with a warning. */
 export function mdastMentions(settings?: CodeblocksOptions['notation'], logger = consoleLogger): MdastPluginEntry {
-  // Without notation, no block can tag a name.
-  const notation = settings === false ? false : resolve('notation', settings ?? {});
-  return plugin('mentions', logger, ({ warn, fileURL }) => ({
+  const notation = settings === false ? false : resolve('notation', settings);
+  return plugin('mentions', logger, settings, ({ warn, fileURL }) => ({
     before(root, ctx) {
       const events: Event[] = [];
       const malformed: Link[] = [];
@@ -298,7 +302,7 @@ export function mdastMentions(settings?: CodeblocksOptions['notation'], logger =
 
 /** Warns about two code blocks with the same `id`, which line permalinks need to tell apart. */
 export function mdastPermalinks(logger = consoleLogger): MdastPluginEntry {
-  return plugin('permalinks', logger, ({ warn }) => ({
+  return plugin('permalinks', logger, undefined, ({ warn }) => ({
     before(root) {
       const codes: Code[] = [];
       walk(root as Nodes, (node) => {
@@ -324,12 +328,18 @@ export function mdastPlugins(options: ResolvedOptions, logger: Logger = consoleL
 
 /**
  * Every Markdown plugin, with the options of `codeblocks()`. With no options on a site with `codeblocks()`,
- * it reads the options given to `codeblocks()` when it renders a page, so it can go in `astro.config.mjs`.
+ * it reads the options given to `codeblocks()` on first use, after `codeblocks()` has run, so it can go in
+ * `astro.config.mjs`. `mdastPlugins` holds the plugins, so that `codeblocks()` can find them.
  */
 export function mdastCodeblocks(options?: CodeblocksOptions, logger = consoleLogger): MdastPluginEntry {
-  const resolved = options && resolveOptions(options);
-  const group = () => mdastPlugins(resolved ?? getRegistry()?.options ?? resolveOptions(), logger);
-  return Object.defineProperty(group, 'name', { value: MARKDOWN_GROUP });
+  let plugins: MdastPluginEntry[] | undefined;
+  const list = () =>
+    (plugins ??= mdastPlugins(
+      options ? resolveOptions(options) : (getRegistry()?.options ?? resolveOptions()),
+      logger,
+    ));
+  const group = Object.defineProperty(() => list(), 'name', { value: `${PLUGIN_PREFIX}markdown` });
+  return Object.defineProperty(group, 'mdastPlugins', { get: list });
 }
 
 /**

@@ -157,7 +157,7 @@ Plugins of the package can also go in `expressiveCode.plugins` of the Starlight 
 
 Docs: https://ewels.github.io/starlight-codeblocks/reference/markdown-plugins/
 
-`starlight-codeblocks/markdown` exports a Markdown plugin for each feature that changes Markdown, such as `mdastCodeTabs()`, and `mdastCodeblocks()` for all of them. Put them in `satteri({ mdastPlugins })` to control their order among other Markdown plugins. `codeblocks()` then adds only the ones that are not in the list. With `unified()`, wrap them in `remarkFromSatteri([…])`.
+`starlight-codeblocks/markdown` exports a Markdown plugin for each feature that changes Markdown, such as `mdastCodeTabs()`, and `mdastCodeblocks()` for all of them. Put them in `satteri({ mdastPlugins })` to control their order among other Markdown plugins. `codeblocks()` then adds only the ones that are not in the list, in the correct order among the listed ones. A plugin for a feature that is off, or a plugin in the list two times, stops the build. With `unified()`, wrap them in `remarkFromSatteri([…])`.
 
 ## Other plugins
 

@@ -29,6 +29,7 @@ import { pluginWhitespace } from './whitespace.ts';
 import { pluginWordDiff } from './word-diff.ts';
 
 export type * from '../options.ts';
+export { PLUGIN_PREFIX } from './core.ts';
 export {
   pluginAnnotations,
   pluginApiLinks,
@@ -57,9 +58,6 @@ export {
   pluginWhitespace,
   pluginWordDiff,
 };
-
-/** Plugin names start with this, so `codeblocks()` can find its plugins in `ec.config.mjs`. */
-export const PLUGIN_PREFIX = 'starlight-codeblocks:';
 
 /**
  * Every feature as Expressive Code plugins. With no options on a Starlight site,

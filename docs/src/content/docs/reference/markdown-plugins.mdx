@@ -7,7 +7,7 @@ Some features change the Markdown of a page outside its code blocks, such as cod
 
 ## Add the plugins yourself
 
-Astro 7 gives its Markdown to Sätteri. Add the plugins to `mdastPlugins` of the Sätteri processor. `codeblocks()` then adds only the plugins that are not in the list:
+Astro 7 gives its Markdown to Sätteri. Add the plugins to `mdastPlugins` of the Sätteri processor. `codeblocks()` then adds only the plugins that are not in the list. It puts each one before the listed plugin that comes after it in the [table](#plugins), so the plugins stay in the correct order:
 
 ```js title="astro.config.mjs"
 import { satteri } from '@astrojs/markdown-satteri';
@@ -21,11 +21,13 @@ export default defineConfig({
 });
 ```
 
-In this example, `glossaryLinks()` runs before code tabs. Each plugin takes the settings of its option in the [options reference](/starlight-codeblocks/reference/options/). The settings that you give to a plugin apply in place of the options of `codeblocks()`.
+In this example, `glossaryLinks()` runs before all the plugins of the package. Each plugin takes the settings of its option in the [options reference](/starlight-codeblocks/reference/options/). The settings that you give to a plugin apply in place of the options of `codeblocks()`.
+
+A plugin for a feature that is off in `codeblocks()` stops the build. The feature also needs parts that `codeblocks()` adds only when the feature is on. A plugin in the list two times also stops the build.
 
 ## The group
 
-`mdastCodeblocks(options)` returns the plugins of every feature that is on, in the correct order. With no argument on a site with `codeblocks()`, it reads the options that you gave to `codeblocks()`. With the group in the list, `codeblocks()` adds no Markdown plugin.
+`mdastCodeblocks(options)` returns the plugins of every feature that is on, in the correct order. With no argument on a site with `codeblocks()`, it reads the options that you gave to `codeblocks()`, and `codeblocks()` adds no Markdown plugin. Do not also list a plugin that is in the group.
 
 ```js title="astro.config.mjs"
 import { mdastCodeblocks } from 'starlight-codeblocks/markdown';

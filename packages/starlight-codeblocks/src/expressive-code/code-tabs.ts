@@ -1,6 +1,7 @@
 import { AttachedPluginData, type ExpressiveCodeBlock } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { clientJsModules } from '../client-modules.ts';
+import { getRegistry } from '../registry.ts';
 import { uiTexts } from '../translations.ts';
 import { addTitleBarControl, type CodeblocksPlugin } from './core.ts';
 import { type FileIconSettings, fileIconResolver } from './file-icons.ts';
@@ -38,9 +39,9 @@ function readVariant(codeBlock: ExpressiveCodeBlock | undefined) {
 /**
  * Gives each block in a `:::code-tabs` directive an editor tab, which the client module turns into a tab for
  * every variant, or the variant menu with the icon of the language. `fileIcons` takes the settings of the
- * `fileIcons` option, for custom icons in the menu.
+ * `fileIcons` option, for custom icons in the menu, and defaults to the ones given to `codeblocks()`.
  */
-export function pluginCodeTabs(fileIcons: Partial<FileIconSettings> = {}): CodeblocksPlugin {
+export function pluginCodeTabs(fileIcons?: Partial<FileIconSettings>): CodeblocksPlugin {
   let icons: ReturnType<typeof fileIconResolver> | undefined;
   return {
     name: 'starlight-codeblocks:code-tabs',
@@ -120,7 +121,7 @@ export function pluginCodeTabs(fileIcons: Partial<FileIconSettings> = {}): Codeb
           }
           return;
         }
-        icons ??= fileIconResolver(fileIcons);
+        icons ??= fileIconResolver(fileIcons ?? (getRegistry()?.options.fileIcons || {}));
         const { index, labels } = variant;
         const resolved = await icons;
         const name = resolved.forLanguage(codeBlock.language);
