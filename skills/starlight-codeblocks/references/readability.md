@@ -50,7 +50,7 @@ Use where an example shows part of a file and leaves code out. A marker takes th
 | `[!code skip]` | Comment on its own line where the code is left out, or at the end of the line below that place |
 | `[!code skip] text` | The same, with `text` on the marker in place of "Code not shown" |
 | `// ...` | Comment that holds only `...`, on its own line, in the comment syntax of the language (`# ...`) |
-| `...` | On its own line, in a language with no comments, such as JSON |
+| `...` | On its own line, in JSON |
 
 ```js
 app.get('/users', async (req, res) => {
@@ -64,7 +64,7 @@ app.get('/users', async (req, res) => {
 - The copied code has no marker, and no skipped code. Do not use it in a block with a playground or the **Run code** button.
 - Line numbers do not jump over the marker.
 - A comment with other text, such as `// ... more`, stays in the code. For a marker with text, use `[!code skip] text`.
-- `...` alone on its line is a marker only in languages with no comments. In Python and YAML, it stays as code.
+- `...` alone on its line is a marker only in JSON. In Python and YAML, it stays as code.
 - Option: `skippedCode.aliases` (default `['...']`) sets the lines that are the same as `[!code skip]`. `[]` turns them off. `skippedCode: false` leaves `[!code skip]` and `...` in the code.
 
 ## Expandable blocks

@@ -35,7 +35,10 @@ export interface CommentSyntax {
   close?: string;
 }
 
-/** `undefined` for a language with no comment syntax. `[]` for a language whose comments the site turned off. */
+/**
+ * `undefined` for JSON, which has no comment syntax.
+ * `[]` for a language whose comments the site turned off, or that has no entry.
+ */
 export function commentSyntaxFor(
   language: string,
   overrides: Record<string, string[]> = {},
@@ -46,7 +49,8 @@ export function commentSyntaxFor(
   const own = (syntaxes: Record<string, string[]>) =>
     keys.map((k) => (Object.hasOwn(syntaxes, k) ? syntaxes[k] : undefined)).find(Boolean);
   const syntax = own(overrides) ?? own(defaultCommentSyntax);
-  return syntax?.map((entry) => {
+  if (!syntax && keys.includes('json')) return undefined;
+  return (syntax ?? []).map((entry) => {
     const [open = '', close] = entry.trim().split(/\s+/);
     return { open, close };
   });

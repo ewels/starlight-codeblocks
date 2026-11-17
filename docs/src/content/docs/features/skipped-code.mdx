@@ -36,7 +36,7 @@ The first marker replaces the body of the `get` handler and shows the text after
 | `[!code skip]` | Comment on its own line, or at the end of a line |
 | `[!code skip] text` | Comment on its own line, or at the end of a line |
 | `// ...` | Comment that holds only `...`, on its own line. Use the comment syntax of the language, such as `# ...` |
-| `...` | On its own line, in a language with no comments, such as JSON |
+| `...` | On its own line, in JSON |
 
 Put the directive on its own line where the code is left out. The marker takes the place of that line, with the same indentation. At the end of a line, the marker goes above that line. Without text, the marker reads "Code not shown". The text can hold inline code, links and bold text.
 
@@ -86,7 +86,7 @@ export const json = `
 
 <Example code={json} layout="tabs" />
 
-`...` alone on its line is a marker only in languages with no comments. In Python, `...` is code, and in YAML it ends a document, so these blocks keep it.
+`...` alone on its line is a marker only in JSON. In Python, `...` is code, and in YAML it ends a document, so these blocks keep it.
 
 ### Skip the start of a file
 
@@ -158,7 +158,7 @@ Turn the feature off for the whole site with `skippedCode: false`. The plugin th
 
 ## Limitations
 
-- The directive needs a comment. A language with no comments, such as JSON, can use only `...`, so its markers have no text.
+- The directive needs a comment. JSON has no comments and can use only `...`, so its markers have no text.
 - Line numbers do not jump over the skipped code. To start a block at a later number, use the `startLineNumber` attribute of Expressive Code.
 - The copied code is incomplete, so it can fail to run. Do not use skipped code in a block with a **Run code** or playground button.
 

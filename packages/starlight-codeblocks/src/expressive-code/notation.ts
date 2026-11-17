@@ -9,7 +9,7 @@ export interface DirectiveSpec {
   endOfBlock?: boolean;
   /**
    * A line that holds only one of these, in a comment, is read as the directive.
-   * In a language with no comment syntax, the alias alone on its line.
+   * In JSON, which has no comments, the alias alone on its line.
    */
   aliases?: string[];
   /** For the directives reference page. */
@@ -38,6 +38,8 @@ export interface Directive {
   sourceLine: number;
   /** The directive comes after its line: see `DirectiveSpec.endOfBlock`. */
   after?: boolean;
+  /** The leading whitespace of the directive's source line. */
+  indent?: string;
 }
 
 const wordChar = /[\w$]/;
@@ -311,7 +313,7 @@ function aliasOf(line: string, syntaxes: CommentSyntax[] | undefined, aliases: [
 
 /**
  * Parses every line, and moves the directives of removed lines to the line below them.
- * `syntaxes` is `undefined` for a language with no comment syntax: only aliases apply there.
+ * `syntaxes` is `undefined` for JSON, which has no comments: only aliases apply there.
  */
 export function parseNotation(
   lines: string[],
@@ -321,12 +323,17 @@ export function parseNotation(
   diff = false,
 ): ParsedLine[] {
   const aliases = Object.entries(specs).flatMap(([name, spec]) =>
-    (spec.aliases ?? []).map((alias): [string, string] => [alias.trim(), name]),
+    (spec.aliases ?? []).map((alias): [string, string] => [alias, name]),
   );
   const parsed = lines.map((text, i): ParsedLine => {
-    const name = aliases.length > 0 ? aliasOf(text, syntaxes, aliases) : undefined;
-    if (name) return { text: '', removed: true, directives: [{ name, count: 1, args: [], sourceLine: i + 1 }] };
-    return syntaxes ? parseLine(text, syntaxes, specs, report, i + 1, diff) : { text, removed: false, directives: [] };
+    const name = aliasOf(text, syntaxes, aliases);
+    const line: ParsedLine = name
+      ? { text: '', removed: true, directives: [{ name, count: 1, args: [], sourceLine: i + 1 }] }
+      : syntaxes
+        ? parseLine(text, syntaxes, specs, report, i + 1, diff)
+        : { text, removed: false, directives: [] };
+    for (const directive of line.directives) directive.indent = text.match(/^\s*/)?.[0];
+    return line;
   });
   let pending: Directive[] = [];
   for (const line of parsed) {
@@ -476,9 +483,11 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
           {},
           ...config.plugins.map((plugin) => (plugin as CodeblocksPlugin).directives ?? {}),
         );
-        const aliases = Object.values(specs).flatMap((spec) => spec.aliases ?? []);
         const hasDirectives = syntaxes !== undefined && /\[\\?!/.test(codeBlock.code);
-        if (!hasDirectives && !aliases.some((alias) => codeBlock.code.includes(alias.trim()))) return;
+        const mayHaveAliases = Object.values(specs).some((spec) =>
+          spec.aliases?.some((alias) => codeBlock.code.includes(alias)),
+        );
+        if (!hasDirectives && !mayHaveAliases) return;
         const lines = codeBlock.getLines();
         const parsed = parseNotation(
           lines.map((line) => line.text),
@@ -488,6 +497,8 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
           // The text markers plugin reads the `useDiffSyntax` meta option only in `preprocessMetadata`.
           codeBlock.metaOptions.getBoolean('useDiffSyntax') ?? Boolean(codeBlock.props.useDiffSyntax),
         );
+        // `...` as spread or rest syntax passes the alias check above.
+        if (!hasDirectives && !parsed.some((line) => line.removed)) return;
         const visible = lines.filter((_, i) => !parsed[i]?.removed);
         const marks = parsed.flatMap(({ directives }, i) =>
           directives

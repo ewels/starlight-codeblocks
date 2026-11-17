@@ -51,6 +51,7 @@ test('leaves `...` that is code, or that has more text, as written', async () =>
     block('yaml', 'a: 1', '...'),
     block('js', 'f(...args) // ...', '// ... more', '// [...]'),
     block('json', '[', '  "..."', ']'),
+    block('fsharp', 'let f () =', '    ...'),
   ]) {
     expect(marker((await render(md)).html)).toEqual([]);
   }

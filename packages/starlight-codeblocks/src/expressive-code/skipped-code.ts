@@ -1,15 +1,9 @@
-import {
-  AttachedPluginData,
-  onBackground,
-  PluginStyleSettings,
-  setAlpha,
-  type UnresolvedStyleValue,
-} from '@expressive-code/core';
+import { onBackground, PluginStyleSettings, setAlpha, type UnresolvedStyleValue } from '@expressive-code/core';
 import { h, select } from '@expressive-code/core/hast';
 import { uiTexts } from '../translations.ts';
 import { type CodeblocksPlugin, insertAfter, insertBefore, lineElement } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
-import { getDirectives, getRenderedDirectives } from './notation.ts';
+import { getRenderedDirectives } from './notation.ts';
 import { PREFIX, solidCodeBackground } from './styles.ts';
 
 export interface SkippedCodeStyleSettings {
@@ -33,9 +27,6 @@ const styleSettings = new PluginStyleSettings({
   },
 });
 
-/** The indentation of each directive's source line, by source line. */
-const indentData = new AttachedPluginData<Map<number, string>>(() => new Map());
-
 export interface SkippedCodeSettings {
   /** Lines that stand for `[!code skip]`, alone or as the whole of a comment. */
   aliases?: string[];
@@ -49,7 +40,7 @@ export function pluginSkippedCode({ aliases = ['...'] }: SkippedCodeSettings = {
       'code skip': {
         text: true,
         endOfBlock: true,
-        aliases,
+        aliases: aliases.map((alias) => alias.trim()),
         docs: {
           description: 'Shows a marker in place of code that the block leaves out.',
           args: 'Optional. The text of the marker.',
@@ -90,23 +81,14 @@ export function pluginSkippedCode({ aliases = ['...'] }: SkippedCodeSettings = {
 }
 `,
     hooks: {
-      // The notation plugin deletes the directive's own line in `preprocessCode`.
-      preprocessMetadata({ codeBlock }) {
-        const lines = codeBlock.getLines();
-        const indents = indentData.getOrCreateFor(codeBlock);
-        for (const { sourceLine } of getDirectives(codeBlock, 'code skip')) {
-          indents.set(sourceLine, lines[sourceLine - 1]?.text.match(/^\s*/)?.[0] ?? '');
-        }
-      },
       postprocessRenderedBlock(context) {
-        const code = select('pre > code', context.renderData.blockAst);
+        const directives = getRenderedDirectives(context, 'code skip');
+        const code = directives.length > 0 && select('pre > code', context.renderData.blockAst);
         if (!code) return;
         const say = uiTexts(context.locale);
-        const indents = indentData.getOrCreateFor(context.codeBlock);
-        for (const { lines, text, after, sourceLine } of getRenderedDirectives(context, 'code skip')) {
+        for (const { lines, text, after, indent } of directives) {
           const line = lines[0] && lineElement(lines[0]);
           if (!line) continue;
-          const indent = indents.get(sourceLine);
           const marker = h('div', { class: `${PREFIX}-skip-marker` }, [
             ...(indent ? [h('span', { class: `${PREFIX}-skip-indent` }, indent)] : []),
             h('span', { class: `${PREFIX}-skip-text` }, text ? inlineMarkdown(text) : say('skippedCode.marker')),

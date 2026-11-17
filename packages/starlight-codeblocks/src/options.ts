@@ -328,7 +328,7 @@ export const optionsReference: Record<FeatureName, Feature> = {
         type: 'string[]',
         default: ['...'],
         description:
-          'Lines that stand for `[!code skip]`: a comment that holds only an alias, or the alias alone on its line in a language with no comments, such as JSON. `[]` turns them off.',
+          'Lines that stand for `[!code skip]`: a comment that holds only an alias, or the alias alone on its line in JSON, which has no comments. `[]` turns them off.',
         valid: (value) => isStringArray(value) && (value as string[]).every((alias) => alias.trim() !== ''),
       },
     },
