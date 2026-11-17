@@ -84,7 +84,8 @@
     "build": "tsdown",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "prepack": "node -e \"fs.rmSync('skills',{recursive:true,force:true});fs.cpSync('../../skills','skills',{recursive:true})\""
+    "prepack": "node -e \"fs.rmSync('skills',{recursive:true,force:true});fs.cpSync('../../skills','skills',{recursive:true})\"",
+    "prepare": "pnpm build"
   },
   "peerDependencies": {
     "@astrojs/starlight": ">=0.42.0",
