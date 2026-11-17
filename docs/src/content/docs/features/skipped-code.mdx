@@ -1,0 +1,116 @@
+---
+title: Skipped code
+description: Show a marker where a code block leaves out code, so readers know the file has more lines there.
+---
+
+import { LinkCard } from '@astrojs/starlight/components';
+import Example from '../../../components/Example.astro';
+
+An example often shows only part of a file. Authors then write a comment such as `// ...` where code is left out, and readers can mistake it for code. The `[!code skip]` directive puts a marker in its place, which looks different from the code and is not part of the copied text.
+
+export const basic = `
+\`\`\`js title="routes.js"
+const app = express();
+
+app.get('/users', async (req, res) => {
+  // [!code skip] Read the users from the database
+});
+
+app.post('/users', async (req, res) => {
+  const user = await db.users.create(req.body);
+  res.status(201).json(user);
+});
+// [!code skip]
+\`\`\`
+`;
+
+<Example code={basic} />
+
+The first marker replaces the body of the `get` handler and shows the text after the directive. The second marker shows that the file goes on after the last line. Copying the block gives the code without the markers.
+
+## Syntax
+
+| Syntax | Where |
+|---|---|
+| `[!code skip]` | Comment on its own line, or at the end of a line |
+| `[!code skip] text` | Comment on its own line, or at the end of a line |
+
+Put the directive on its own line where the code is left out. The marker takes the place of that line, with the same indentation. At the end of a line, the marker goes above that line. Without text, the marker reads "Code not shown". The text can hold inline code, links and bold text.
+
+## Examples
+
+### Skip the start of a file
+
+A marker on the first line shows that the example starts in the middle of a file:
+
+export const start = `
+\`\`\`py title="report.py"
+# [!code skip] Imports and settings
+def summarise(rows):
+    totals = {}
+    for row in rows:
+        totals[row["status"]] = totals.get(row["status"], 0) + 1
+    return totals
+\`\`\`
+`;
+
+<Example code={start} layout="tabs" hiddenAttributes="apiLinks=false" />
+
+### Skip a section of a configuration file
+
+YAML uses `#` comments. For JSON, use `jsonc`, because JSON has no comments:
+
+export const config = `
+\`\`\`yaml title="docker-compose.yml"
+services:
+  web:
+    image: nginx:1.27
+    ports:
+      - "8080:80"
+  # [!code skip] The database and cache services
+volumes:
+  data:
+\`\`\`
+`;
+
+<Example code={config} layout="tabs" />
+
+## Behaviour
+
+- The marker:
+  - A dotted rule across the block, with the text in a badge at the indentation of the directive line.
+  - The marker is not a button. Readers cannot open it, because the code is not in the block.
+- Line numbers:
+  - The marker has no line number, and the line numbers do not jump over it.
+- Copy and selection:
+  - The copy button copies the code without the markers. A manual selection never includes the text of a marker.
+- Screen readers:
+  - Screen readers read the text of the marker in its place among the lines.
+- Print:
+  - Markers print.
+
+## Options
+
+Skipped code has no options. Turn the feature off for the whole site with `skippedCode: false`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  skippedCode: false,
+});
+```
+
+With `skippedCode: false`, the plugin does not know the `[!code skip]` directive. It leaves the directive in the code as written, and logs a build warning.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
+
+## Limitations
+
+- The directive needs a comment. A language without comments, such as JSON, cannot use it. Use `jsonc` for JSON.
+- Line numbers do not jump over the skipped code. To start a block at a later number, use the `startLineNumber` attribute of Expressive Code.
+- The copied code is incomplete, so it can fail to run. Do not use skipped code in a block with a **Run code** or playground button.
+
+## Related
+
+- [Hidden lines](/starlight-codeblocks/features/hidden-lines/): keep the lines in the block and the copied code, behind a marker that readers can open.
+- [Expandable blocks](/starlight-codeblocks/features/expandable-blocks/): show a full file, cut to its first lines until the reader asks for the rest.
+- [Comment notation](/starlight-codeblocks/comment-notation/): the directive syntax that `[!code skip]` uses.

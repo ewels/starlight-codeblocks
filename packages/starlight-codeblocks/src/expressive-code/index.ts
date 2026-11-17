@@ -21,6 +21,7 @@ import { pluginPlaceholders } from './placeholders.ts';
 import { pluginPlayground } from './playground.ts';
 import { pluginRunnable } from './runnable.ts';
 import { pluginShellCopy } from './shell-copy.ts';
+import { pluginSkippedCode } from './skipped-code.ts';
 import { pluginSplitDiff } from './split-diff.ts';
 import { pluginSquiggles } from './squiggles.ts';
 import { pluginSwatches } from './swatches.ts';
@@ -51,6 +52,7 @@ export {
   pluginPlayground,
   pluginRunnable,
   pluginShellCopy,
+  pluginSkippedCode,
   pluginSplitDiff,
   pluginSquiggles,
   pluginSwatches,
@@ -92,6 +94,8 @@ export function createPlugins(options: ResolvedOptions, base?: string): Expressi
     ...(options.placeholders ? [pluginPlaceholders(options.placeholders)] : []),
     ...(options.mentions ? [pluginMentions()] : []),
     ...(options.permalinks ? [pluginPermalinks()] : []),
+    // Before hidden lines, so that its marker sits above a hidden lines marker on the same line.
+    ...(options.skippedCode ? [pluginSkippedCode()] : []),
     ...(options.hiddenLines ? [pluginHiddenLines()] : []),
     ...(options.expandable ? [pluginExpandable(options.expandable)] : []),
     // After shell copy, which changes the copied text that the playground gets, and after placeholders.

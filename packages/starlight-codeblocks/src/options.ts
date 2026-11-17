@@ -89,6 +89,7 @@ export interface CodeblocksOptions {
   annotations?: false | { style?: 'filled' | 'outline' };
   footnotes?: false | { sticky?: boolean; style?: 'filled' | 'outline' };
   hiddenLines?: false;
+  skippedCode?: false;
   shellCopy?: false | { prompts?: string[] };
   wordDiff?: false | { minSimilarity?: number };
   splitDiff?: false | { view?: 'unified' | 'split'; switch?: boolean; sync?: boolean };
@@ -206,7 +207,7 @@ const isDelimiters = (value: unknown) =>
 
 // Attributes and directives of other features, which a custom state name would clash with.
 const reservedStateNames = new Set(
-  'title frame mark ins del collapse wrap lang focus hidden hide highlight whitespace brackets swatches expandable playground id placeholder annotations footnotes label prefix step runnable note warn'.split(
+  'title frame mark ins del collapse wrap lang focus hidden hide skip highlight whitespace brackets swatches expandable playground id placeholder annotations footnotes label prefix step runnable note warn'.split(
     ' ',
   ),
 );
@@ -316,6 +317,12 @@ export const optionsReference: Record<FeatureName, Feature> = {
     directives: true,
     description: 'Hides lines that readers need to run the code but not to understand it.',
     page: 'features/hidden-lines',
+  },
+  skippedCode: {
+    directives: true,
+    description: 'Shows a marker in place of code that a block leaves out.',
+    page: 'features/skipped-code',
+    off: '`[!code skip]` then stays in the code as written.',
   },
   shellCopy: {
     description: 'Adds a Copy commands button to terminal blocks with prompts, which copies the commands only.',

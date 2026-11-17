@@ -18,6 +18,7 @@ export default {
   'hiddenLines.marker_other': '숨겨진 줄 {{count}}개',
   'hiddenLines.show_other': '숨겨진 줄 {{count}}개 표시',
   'hiddenLines.hide_other': '{{count}}줄 숨기기',
+  'skippedCode.marker': '코드 생략',
   'expandable.showAll_other': '전체 {{count}}줄 표시',
   'expandable.showFewer': '더 적은 줄 표시',
   'splitDiff.view': '차이 보기',

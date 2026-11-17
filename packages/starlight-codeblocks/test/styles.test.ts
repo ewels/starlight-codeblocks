@@ -29,6 +29,7 @@ test('muted text meets 4.5:1 on the tinted surfaces it sits on', async () => {
     const bg = get('codeBackground');
     const surfaces = [
       get('codeblocksHiddenLines.badgeBackground'),
+      get('codeblocksSkippedCode.badgeBackground'),
       mix(bg, get('codeForeground'), 0.05),
       getFirstStaticColor(get('frames.editorTabBarBackground')),
     ];

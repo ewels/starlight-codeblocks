@@ -10,6 +10,7 @@ const specs: DirectiveSpecs = {
   mention: {},
   callout: { text: true },
   link: {},
+  'code skip': { text: true, endOfBlock: true },
 };
 const js = commentSyntaxFor('js');
 
@@ -156,6 +157,13 @@ describe('parseNotation', () => {
     expect(parseBlock(['a', '// [!callout] Last']).problems).toEqual([
       [expect.stringContaining('has no line below it'), 2],
     ]);
+  });
+
+  test('moves an endOfBlock directive at the end of the block to the last line, after it', () => {
+    const { parsed, problems } = parseBlock(['a()', 'b()', '// [!code skip] Rest', '// [!code focus]']);
+    expect(problems).toEqual([[expect.stringContaining('has no line below it'), 4]]);
+    expect(parsed[1]?.directives).toMatchObject([{ name: 'code skip', text: 'Rest', after: true }]);
+    expect(parseBlock(['// [!code skip]']).problems).toEqual([[expect.stringContaining('has no line below it'), 1]]);
   });
 });
 

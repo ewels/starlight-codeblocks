@@ -21,6 +21,7 @@ export default {
   'hiddenLines.show_other': '{{count}} छिपी हुई पंक्तियाँ दिखाएँ',
   'hiddenLines.hide_one': '{{count}} पंक्ति छिपाएँ',
   'hiddenLines.hide_other': '{{count}} पंक्तियाँ छिपाएँ',
+  'skippedCode.marker': 'कोड नहीं दिखाया गया',
   'expandable.showAll_one': '{{count}} पंक्ति दिखाएँ',
   'expandable.showAll_other': 'सभी {{count}} पंक्तियाँ दिखाएँ',
   'expandable.showFewer': 'कम पंक्तियाँ दिखाएँ',

@@ -79,6 +79,7 @@ const decorations = [
   'squiggle-popover',
   'squiggle-list',
   'hidden-marker',
+  'skip-marker',
   'expandable-bar',
   'steps-stepper',
   'steps-controls',
@@ -111,17 +112,24 @@ const lineElements = new WeakMap<ExpressiveCodeLine, Element>();
  */
 export const lineElement = (line: ExpressiveCodeLine) => lineElements.get(line);
 
-/** Inserts `nodes` before `target`, wherever it is in `root`. */
-export function insertBefore(root: Parents, target: Element, ...nodes: ElementContent[]) {
+function insertAt(offset: number, root: Parents, target: Element, nodes: ElementContent[]) {
   visit(
     root,
     (node) => node === target,
     (_, index, parent) => {
-      if (parent && index !== undefined) parent.children.splice(index, 0, ...nodes);
+      if (parent && index !== undefined) parent.children.splice(index + offset, 0, ...nodes);
       return EXIT;
     },
   );
 }
+
+/** Inserts `nodes` before `target`, wherever it is in `root`. */
+export const insertBefore = (root: Parents, target: Element, ...nodes: ElementContent[]) =>
+  insertAt(0, root, target, nodes);
+
+/** Inserts `nodes` after `target`, wherever it is in `root`. */
+export const insertAfter = (root: Parents, target: Element, ...nodes: ElementContent[]) =>
+  insertAt(1, root, target, nodes);
 
 type Context = Pick<ExpressiveCodeHookContextBase, 'codeBlock' | 'config'>;
 

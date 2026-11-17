@@ -18,6 +18,7 @@ export default {
   'hiddenLines.marker_other': '{{count}} baris tersembunyi',
   'hiddenLines.show_other': 'Tampilkan {{count}} baris tersembunyi',
   'hiddenLines.hide_other': 'Sembunyikan {{count}} baris',
+  'skippedCode.marker': 'Kode tidak ditampilkan',
   'expandable.showAll_other': 'Tampilkan semua {{count}} baris',
   'expandable.showFewer': 'Tampilkan lebih sedikit baris',
   'splitDiff.view': 'Tampilan diff',

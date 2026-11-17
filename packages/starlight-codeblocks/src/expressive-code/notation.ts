@@ -5,6 +5,8 @@ import { type CodeblocksPlugin, lineData, lineElement, numberedLines, resolveRan
 export interface DirectiveSpec {
   /** The directive takes the text after it, up to the next directive or the end of the comment. */
   text?: boolean;
+  /** On a line of its own at the end of the block, the directive applies after the last line, with `after`. */
+  endOfBlock?: boolean;
   /** For the directives reference page. */
   docs?: {
     description: string;
@@ -29,6 +31,8 @@ export interface Directive {
   text?: string;
   /** The line of the directive in the code block source, from 1. */
   sourceLine: number;
+  /** The directive comes after its line: see `DirectiveSpec.endOfBlock`. */
+  after?: boolean;
 }
 
 const wordChar = /[\w$]/;
@@ -316,8 +320,10 @@ export function parseNotation(
       return false;
     });
   }
+  const last = parsed.findLast((line) => !line.removed);
   for (const directive of pending) {
-    report(`\`[!${directive.name}]\` has no line below it.`, directive.sourceLine);
+    if (last && specs[directive.name]?.endOfBlock) last.directives.push({ ...directive, after: true });
+    else report(`\`[!${directive.name}]\` has no line below it.`, directive.sourceLine);
   }
   return parsed;
 }

@@ -21,6 +21,7 @@ export default {
   'hiddenLines.show_other': '{{count}} gizli satırı göster',
   'hiddenLines.hide_one': '{{count}} satırı gizle',
   'hiddenLines.hide_other': '{{count}} satırı gizle',
+  'skippedCode.marker': 'Kod gösterilmiyor',
   'expandable.showAll_one': '{{count}} satırı göster',
   'expandable.showAll_other': 'Tüm {{count}} satırı göster',
   'expandable.showFewer': 'Daha az satır göster',

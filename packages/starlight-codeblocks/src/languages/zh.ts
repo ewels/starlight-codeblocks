@@ -18,6 +18,7 @@ export default {
   'hiddenLines.marker_other': '已隐藏 {{count}} 行',
   'hiddenLines.show_other': '显示隐藏的 {{count}} 行',
   'hiddenLines.hide_other': '隐藏 {{count}} 行',
+  'skippedCode.marker': '代码已省略',
   'expandable.showAll_other': '显示全部 {{count}} 行',
   'expandable.showFewer': '显示较少的行',
   'splitDiff.view': '差异视图',

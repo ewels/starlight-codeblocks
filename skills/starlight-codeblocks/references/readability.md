@@ -3,6 +3,7 @@
 Seven features make a block, or the code in the prose, easier to read. None of them changes the copied text.
 
 - If lines are needed to run the code but not to understand it, hide them with hidden lines.
+- If the example leaves code out, mark the place with skipped code, in place of a `// ...` comment.
 - If the whole file matters but readers scan it, cap it with an expandable block.
 - If every line matters but a few matter more, use focus, in [draw-attention.md](draw-attention.md).
 - If the exact whitespace changes the meaning, show it with visible whitespace.
@@ -37,6 +38,31 @@ createServer(handler).listen(port);
 - Without JavaScript, hidden lines stay hidden.
 - Option: `hiddenLines: false` ignores `hidden` and leaves `[!code hide]` in the code.
 - Expressive Code's `collapse={range}` comes from `@expressive-code/plugin-collapsible-sections`. It keeps a summary line for each section and works without JavaScript. Hidden lines take only a thin marker, have a directive and a show-all button, and need JavaScript to open. The docs compare them: https://ewels.github.io/starlight-codeblocks/features/hidden-lines/#hidden-lines-or-collapsible-sections
+
+## Skipped code
+
+Docs: https://ewels.github.io/starlight-codeblocks/features/skipped-code/
+
+Use where an example shows part of a file and leaves code out. A marker takes the place of a `// ...` comment, so readers do not read it as code. Use hidden lines instead if the copied code must run.
+
+| Syntax | Where |
+|---|---|
+| `[!code skip]` | Comment on its own line where the code is left out, or at the end of the line below that place |
+| `[!code skip] text` | The same, with `text` on the marker in place of "Code not shown" |
+
+```js
+app.get('/users', async (req, res) => {
+  // [!code skip] Read the users from the database
+});
+// [!code skip]
+```
+
+- The marker is a dotted rule with a badge, at the indentation of the directive line. It is not a button.
+- A directive line at the end of the block puts the marker after the last line.
+- The copied code has no marker, and no skipped code. Do not use it in a block with a playground or the **Run code** button.
+- Line numbers do not jump over the marker.
+- JSON has no comments. Use `jsonc`.
+- Option: `skippedCode: false` leaves `[!code skip]` in the code.
 
 ## Expandable blocks
 

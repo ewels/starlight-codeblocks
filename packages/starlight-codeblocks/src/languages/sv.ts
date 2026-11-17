@@ -21,6 +21,7 @@ export default {
   'hiddenLines.show_other': 'Visa {{count}} dolda rader',
   'hiddenLines.hide_one': 'Dölj {{count}} rad',
   'hiddenLines.hide_other': 'Dölj {{count}} rader',
+  'skippedCode.marker': 'Kod utelämnad',
   'expandable.showAll_one': 'Visa {{count}} rad',
   'expandable.showAll_other': 'Visa alla {{count}} rader',
   'expandable.showFewer': 'Visa färre rader',

@@ -27,6 +27,7 @@ export default {
   'hiddenLines.hide_few': 'Скрыть {{count}} строки',
   'hiddenLines.hide_many': 'Скрыть {{count}} строк',
   'hiddenLines.hide_other': 'Скрыть {{count}} строки',
+  'skippedCode.marker': 'Код опущен',
   'expandable.showAll_one': 'Показать все {{count}} строку',
   'expandable.showAll_few': 'Показать все {{count}} строки',
   'expandable.showAll_many': 'Показать все {{count}} строк',

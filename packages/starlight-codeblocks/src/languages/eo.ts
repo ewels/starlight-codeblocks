@@ -21,6 +21,7 @@ export default {
   'hiddenLines.show_other': 'Montri {{count}} kaŝitajn liniojn',
   'hiddenLines.hide_one': 'Kaŝi {{count}} linion',
   'hiddenLines.hide_other': 'Kaŝi {{count}} liniojn',
+  'skippedCode.marker': 'Kodo ne montrita',
   'expandable.showAll_one': 'Montri {{count}} linion',
   'expandable.showAll_other': 'Montri ĉiujn {{count}} liniojn',
   'expandable.showFewer': 'Montri malpli da linioj',

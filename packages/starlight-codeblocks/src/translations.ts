@@ -32,6 +32,7 @@ export const uiStrings = {
   'hiddenLines.show_other': 'Show {{count}} hidden lines',
   'hiddenLines.hide_one': 'Hide {{count}} line',
   'hiddenLines.hide_other': 'Hide {{count}} lines',
+  'skippedCode.marker': 'Code not shown',
   'expandable.showAll_one': 'Show all {{count}} line',
   'expandable.showAll_other': 'Show all {{count}} lines',
   'expandable.showFewer': 'Show fewer lines',

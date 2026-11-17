@@ -18,6 +18,7 @@ export default {
   'hiddenLines.marker_other': '非表示の {{count}} 行',
   'hiddenLines.show_other': '非表示の {{count}} 行を表示',
   'hiddenLines.hide_other': '{{count}} 行を非表示',
+  'skippedCode.marker': 'コードは省略',
   'expandable.showAll_other': '全 {{count}} 行を表示',
   'expandable.showFewer': '表示する行を減らす',
   'splitDiff.view': '差分の表示',
