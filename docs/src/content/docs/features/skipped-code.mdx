@@ -7,7 +7,7 @@ import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
 import Options from '../../../components/Options.astro';
 
-An example often shows only part of a file. Authors then write a comment such as `// ...` where code is left out, and readers can mistake it for code. Skipped code puts a marker in its place, which looks different from the code and is not part of the copied text. Write the `[!code skip]` directive, with optional text. A site can also [read its `// ...` comments as markers](#read---as-markers).
+An example often shows only part of a file. Authors then write a comment such as `// ...` where code is left out, and readers can mistake it for code. Skipped code puts a marker in its place, which looks different from the code and is not part of the copied text. Write the `[!code skip]` directive, with optional text. A site can also read its `// ...` comments as markers, with [aliases](#aliases).
 
 export const basic = `
 \`\`\`js title="routes.js"
@@ -35,10 +35,56 @@ The first marker replaces the body of the `get` handler and shows the text after
 |---|---|
 | `[!code skip]` | Comment on its own line, or at the end of a line |
 | `[!code skip] text` | Comment on its own line, or at the end of a line |
-| `// ...` | Comment that holds only `...`, on its own line, with `aliases: ['...']`. Use the comment syntax of the language, such as `# ...` |
-| `...` | On its own line, in JSON, with `aliases: ['...']` |
 
 Put the directive on its own line where the code is left out. The marker takes the place of that line, with the same indentation. At the end of a line, the marker goes above that line. Without text, the marker reads "Code not shown". The text can hold inline code, links and bold text.
+
+:::tip
+Does your site already use `// ...` comments for code that is left out? Set [aliases](#aliases) to show them as markers, without rewriting them as directives. Aliases are off by default, because they change the line ranges of existing blocks.
+:::
+
+## Aliases
+
+Many pages already use `// ...` for code that they leave out. By default, these comments stay in the code as written. To read them as markers, set `skippedCode.aliases`:
+
+```js title="astro.config.mjs"
+codeblocks({
+  skippedCode: { aliases: ['...'] },
+});
+```
+
+A line is then the same as `[!code skip]` if it holds one of these, and nothing else:
+
+- A comment with only `...` in it, in the comment syntax of the language: `// ...`, `# ...`, `/* ... */` or `<!-- ... -->`.
+- `...` with no comment, in JSON. JSON has no comments, so the directive cannot go in a JSON block.
+
+Add more aliases to the list, such as `'…'`. An alias takes no text: for a marker with text, write `[!code skip] text`. This site sets `['...']`, so this JSON block shows two markers:
+
+export const json = `
+\`\`\`json title="package.json"
+{
+  "name": "my-site",
+  "scripts": {
+    "dev": "astro dev",
+    ...
+  },
+  ...
+}
+\`\`\`
+`;
+
+<Example code={json} layout="tabs" />
+
+In Python, `...` is code, and in YAML it ends a document, so a `...` with no comment stays in these blocks.
+
+:::caution
+Aliases change existing pages. Check the pages that use `// ...` after you set them:
+
+- The `// ...` lines leave the code, so line ranges count different lines. In a block with `// ...` on line 2, `{4}` marks the line that was line 5. This applies to every range attribute, such as `ins={4}` and `focus={4}`.
+- The `// ...` lines also leave the copied code.
+- A [code walkthrough](/starlight-codeblocks/features/code-walkthrough/) or [scrollycoding](/starlight-codeblocks/features/scrollycoding/) step with a marker changes without the animation.
+:::
+
+To keep `// ...` as code in one block, add text to the comment, such as `// ... and so on`. A comment with more than an alias in it stays in the code. A language with `[]` in `notation.comments` reads no directives and no aliases.
 
 ## Examples
 
@@ -62,27 +108,6 @@ export class Cache<T> {
 `;
 
 <Example code={noText} layout="tabs" />
-
-### Skip code in JSON
-
-JSON has no comments, so the directive cannot go in a JSON block. With the `...` alias, `...` on its own line is the marker. This site sets the alias:
-
-export const json = `
-\`\`\`json title="package.json"
-{
-  "name": "my-site",
-  "scripts": {
-    "dev": "astro dev",
-    ...
-  },
-  ...
-}
-\`\`\`
-`;
-
-<Example code={json} layout="tabs" />
-
-`...` alone on its line is a marker only in JSON. In Python, `...` is code, and in YAML it ends a document, so these blocks keep it. Without the alias, use `jsonc`, which has comments.
 
 ### Skip the start of a file
 
@@ -137,30 +162,6 @@ volumes:
 ## Options
 
 <Options />
-
-### Read `// ...` as markers
-
-Many pages already use `// ...` for code that they leave out. By default, these comments stay in the code as written. To read them as markers, set `aliases`:
-
-```js title="astro.config.mjs"
-codeblocks({
-  skippedCode: { aliases: ['...'] },
-});
-```
-
-A comment with only an alias in it is then the same as `[!code skip]`, such as `// ...`, `# ...` or `/* ... */`. It must be alone on its line. In JSON, `...` alone on its line is a marker. Add more aliases to the list, such as `'…'`.
-
-:::caution
-The aliases change existing pages. Check the pages that use `// ...` after you set them:
-
-- The `// ...` lines leave the code, so line ranges count different lines. In a block with `// ...` on line 2, `{4}` marks the line that was line 5. This applies to every range attribute, such as `ins={4}` and `focus={4}`.
-- The `// ...` lines also leave the copied code.
-- A [code walkthrough](/starlight-codeblocks/features/code-walkthrough/) or [scrollycoding](/starlight-codeblocks/features/scrollycoding/) step with a marker changes without the animation.
-:::
-
-To keep `// ...` as code in one block, add text to the comment, such as `// ... and so on`. A comment with text other than an alias stays in the code. A language with `[]` in `notation.comments` reads no directives and no aliases.
-
-### Turn the feature off
 
 Turn the feature off for the whole site with `skippedCode: false`. The plugin then does not know the `[!code skip]` directive. It leaves the directive in the code as written, and logs a build warning.
 

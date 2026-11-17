@@ -49,8 +49,6 @@ Use where an example shows part of a file and leaves code out. A marker takes th
 |---|---|
 | `[!code skip]` | Comment on its own line where the code is left out, or at the end of the line below that place |
 | `[!code skip] text` | The same, with `text` on the marker in place of "Code not shown" |
-| `// ...` | Comment that holds only `...`, on its own line, in the comment syntax of the language (`# ...`). Only with `skippedCode.aliases: ['...']` |
-| `...` | On its own line, in JSON. Only with `skippedCode.aliases: ['...']` |
 
 ```js
 app.get('/users', async (req, res) => {
@@ -63,7 +61,7 @@ app.get('/users', async (req, res) => {
 - A directive line at the end of the block puts the marker after the last line.
 - The copied code has no marker, and no skipped code. Do not use it in a block with a playground or the **Run code** button.
 - Line numbers do not jump over the marker.
-- Option: `skippedCode.aliases` (default `[]`) sets the lines that are the same as `[!code skip]`. By default, `// ...` stays in the code as written. `['...']` reads a comment that holds only `...` as a marker, and `...` alone on its line in JSON. In Python and YAML, a bare `...` stays as code.
+- Aliases: `skippedCode.aliases` (default `[]`) sets the lines that are the same as `[!code skip]`. By default, `// ...` stays in the code as written. `['...']` reads a line that holds only a comment with only `...` in it (`// ...`, `# ...`) as a marker. In JSON, which has no comments, it reads `...` alone on its line. In Python and YAML, a bare `...` stays as code.
 - The aliases change existing pages: the `// ...` lines leave the code, so line ranges after them, such as `{4}` or `ins={4}`, count different lines. Check those blocks when you set the option.
 - With the aliases, a comment with other text, such as `// ... and so on`, stays in the code. Use it to keep `// ...` as code in one block. For a marker with text, use `[!code skip] text`.
 - A code walkthrough or scrollycoding step with a marker changes without the animation.
