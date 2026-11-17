@@ -95,6 +95,12 @@ test('fails with a fix when the site also lists expressiveCode(), lists mdx() fi
   await expect(setup({}, "export default { plugins: [{ name: 'starlight-codeblocks:core' }] };")).resolves.toBeTruthy();
 });
 
+test('only turns on code tabs and inline code highlighting when it lists them', async () => {
+  const { processor } = await setup({ only: ['codeTabs'] });
+  expect(processor.options.features?.directive).toBe(true);
+  expect(getRegistry()?.options).toMatchObject({ codeTabs: { control: 'tabs' }, inlineHighlighting: false });
+});
+
 test('validates options when the integration is created', () => {
   expect(() => codeblocks({ fokus: {} } as never)).toThrow('unknown option `fokus`');
 });

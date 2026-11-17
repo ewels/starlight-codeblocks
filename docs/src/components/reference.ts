@@ -71,39 +71,50 @@ const show = (value: unknown) => code(JSON.stringify(value).replaceAll('"', "'")
 const optionId = (label: string) => label.toLowerCase().replaceAll('.', '-').replace(/[<>]/g, '');
 
 /** Every option of `codeblocks()`, in the order of the options object. */
-export const options: OptionEntry[] = Object.entries(optionsReference).flatMap(([key, feature]) => {
-  const settings = !!(feature.fields || feature.entries);
-  return [
-    {
-      id: optionId(key),
-      label: key,
-      type: code(settings ? 'false | object' : 'false'),
-      default: 'On',
-      description: `${feature.description} Set it to \`false\` to turn the feature off.${feature.off ? ` ${feature.off}` : ''}`,
-      page: feature.page,
-    },
-    ...Object.entries(feature.fields ?? {}).map(([field, spec]) => ({
-      id: optionId(`${key}.${field}`),
-      label: `${key}.${field}`,
-      type: code(spec.type),
-      default: spec.defaultText ?? show(typeof spec.default === 'function' ? spec.default() : spec.default),
-      description: spec.description,
-      page: feature.page,
-    })),
-    ...(feature.entries
-      ? [
-          {
-            id: optionId(`${key}.<name>`),
-            label: `${key}.<name>`,
-            type: code(feature.entries.type),
-            default: 'None',
-            description: feature.entries.description,
-            page: feature.page,
-          },
-        ]
-      : []),
-  ];
-});
+export const options: OptionEntry[] = [
+  {
+    id: 'only',
+    label: 'only',
+    type: code('string[]'),
+    default: 'None',
+    description:
+      'The keys of the features to turn on. Every other feature is then off. A feature that reads directives in comments also turns on `notation`.',
+    page: 'configuration',
+  },
+  ...Object.entries(optionsReference).flatMap(([key, feature]) => {
+    const settings = !!(feature.fields || feature.entries);
+    return [
+      {
+        id: optionId(key),
+        label: key,
+        type: code(settings ? 'false | object' : 'false'),
+        default: 'On',
+        description: `${feature.description} Set it to \`false\` to turn the feature off.${feature.off ? ` ${feature.off}` : ''}`,
+        page: feature.page,
+      },
+      ...Object.entries(feature.fields ?? {}).map(([field, spec]) => ({
+        id: optionId(`${key}.${field}`),
+        label: `${key}.${field}`,
+        type: code(spec.type),
+        default: spec.defaultText ?? show(typeof spec.default === 'function' ? spec.default() : spec.default),
+        description: spec.description,
+        page: feature.page,
+      })),
+      ...(feature.entries
+        ? [
+            {
+              id: optionId(`${key}.<name>`),
+              label: `${key}.<name>`,
+              type: code(feature.entries.type),
+              default: 'None',
+              description: feature.entries.description,
+              page: feature.page,
+            },
+          ]
+        : []),
+    ];
+  }),
+];
 
 const apiLinks = 'features/api-auto-linking';
 

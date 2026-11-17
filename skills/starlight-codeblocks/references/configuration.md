@@ -16,6 +16,12 @@ codeblocks({
 });
 ```
 
+To turn on only some features, list their keys in `only`. Every other feature is then off. A feature that reads directives in comments also turns on `notation`, unless `notation: false`. These are focus, line states, callouts, squiggles, annotations, footnotes, hidden lines, code links, code mentions and run code. Settings for a feature that is not in `only` stop the build.
+
+```js
+codeblocks({ only: ['focus', 'codeTabs'], codeTabs: { control: 'menu' } });
+```
+
 | Key | Settings | Feature |
 |---|---|---|
 | `focus` | `style`: `'blur'` or `'dim'`, default `'blur'` | Focus |

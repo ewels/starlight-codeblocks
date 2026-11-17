@@ -30,13 +30,15 @@ export interface AstroCodeblocksOptions extends CodeblocksOptions {
 /**
  * `codeblocks()` for Astro sites without Starlight. It adds Expressive Code with the plugins, so it
  * takes the place of `expressiveCode()` in `integrations`, before `mdx()`. Code tabs and inline code
- * highlighting change every Markdown page, so they start only when the site turns them on.
+ * highlighting change every Markdown page, so they start only when the site turns them on, or lists them in `only`.
  */
 export default function codeblocks({
   expressiveCode: ec = {},
   ...userOptions
 }: AstroCodeblocksOptions = {}): AstroIntegration[] {
-  const options = resolveOptions({ codeTabs: false, inlineHighlighting: false, ...userOptions });
+  const options = resolveOptions(
+    userOptions.only ? userOptions : { codeTabs: false, inlineHighlighting: false, ...userOptions },
+  );
   const { plugins, list } = mergeEcPlugins(ec.plugins, createPlugins(options));
   let integration: AstroIntegration | undefined;
   const setup: AstroIntegration = {

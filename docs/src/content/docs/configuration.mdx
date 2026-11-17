@@ -26,6 +26,19 @@ starlight({
 });
 ```
 
+## Only some features
+
+To turn on only some features, list their keys in `only`. Every other feature is then off. Settings for a listed feature go under its own key, as before:
+
+```js title="astro.config.mjs" {2-3}
+codeblocks({
+  only: ['focus', 'codeTabs'],
+  codeTabs: { control: 'menu' },
+}),
+```
+
+A feature that reads directives in comments, such as focus, also turns on `notation`. To turn it off, set `notation: false`. Settings for a feature that is not in `only` stop the build.
+
 <LinkCard title="Options reference" description="See every option, with its type and its default." href="/starlight-codeblocks/reference/options/" />
 
 ## Options for one block
