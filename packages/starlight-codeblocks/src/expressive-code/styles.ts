@@ -68,6 +68,55 @@ const tabBarBackground = ({ resolveSetting }: Context) => {
   }
 };
 
+/** Colours of a marker across the code, for the hidden lines and skipped code settings groups. */
+export const markerColours = {
+  badgeBackground: (context: Context) =>
+    onBackground(setAlpha(context.resolveSetting('codeblocks.mutedForeground'), 0.1), solidCodeBackground(context)),
+  rule: ({ resolveSetting }: Context) => setAlpha(resolveSetting('codeblocks.mutedForeground'), 0.35),
+};
+
+/**
+ * A marker across the code, with a badge on a rule, as hidden lines and skipped code draw it.
+ * `group` holds the `markerColours` settings.
+ */
+export const markerStyles = (
+  cssVar: ResolverContext['cssVar'],
+  marker: string,
+  badge: string,
+  group: 'codeblocksHiddenLines' | 'codeblocksSkippedCode',
+  border: 'dashed' | 'dotted',
+) => `
+.${marker} {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin: 2px 0;
+  color: ${cssVar('codeblocks.mutedForeground')};
+  user-select: none;
+  -webkit-user-select: none;
+}
+.${marker}::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  inset-inline: calc(var(--scb-gutter, 0px) + ${cssVar('codePaddingInline')}) ${cssVar('codePaddingInline')};
+  border-top: 1px ${border} ${cssVar(`${group}.rule` as never)};
+  transform: translateY(-50%);
+}
+/* Where the copy button always shows, it sits over the end of the first line. */
+@media (hover: none) {
+  .${marker}:first-child::before { inset-inline-end: calc(${cssVar('codePaddingInline')} + 2.5rem); }
+}
+.${badge} {
+  position: relative;
+  z-index: 1;
+  padding: 0.05em 0.65em;
+  border-radius: 999px;
+  background: ${cssVar(`${group}.badgeBackground` as never)};
+  font-size: 0.8125em;
+  line-height: 1.6;
+}`;
+
 /** `colour`, lightened or darkened to at least `min` contrast on the code background. */
 export const onCode = (context: Context, colour: string, min: number) =>
   ensureColorContrastOnBackground(colour, solidCodeBackground(context), min);

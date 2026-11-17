@@ -77,7 +77,7 @@ Use scrollycoding when prose explains the code step by step as the reader scroll
 | Goal | Use | Why |
 |---|---|---|
 | Imports and set-up that readers need to run the code but not to understand it | Hidden lines: `hidden={1-3}` or `[!code hide]` | Named lines go behind a marker. The copy button still copies them. |
-| Code that the example leaves out, where authors write `// ...` | Skipped code: `[!code skip]`, or keep `// ...` | A marker takes the place of the code. The copied code is incomplete. |
+| Code that the example leaves out, where authors write `// ...` | Skipped code: `[!code skip]`, or `// ...` with `skippedCode.aliases` | A marker takes the place of the code. The copied code is incomplete. |
 | A long file that readers scan | Expandable block: `expandable` or `expandable={N}` | Shows the first lines, with a button that shows the rest. |
 | Indentation or tabs change the meaning (Make, Python, YAML) | Visible whitespace: `whitespace` or `whitespace="all"` | Shows spaces and tabs as faint glyphs. |
 | Deep nesting on dense lines | Colourised brackets: `brackets` | Colours bracket pairs by depth. |
@@ -166,6 +166,7 @@ These features need no attribute. Know them, because they can change a block tha
 - File icons apply to every block with a title in an editor frame. Turn them off for a block with `icon=false`, or for a file type or a language with `false` in `fileIcons.files` or `fileIcons.languages`.
 - Expandable blocks apply to every block longer than `expandable.auto` lines, if the site sets that option. Turn it off for a block with `expandable=false`.
 - Inline code highlighting applies to all inline code, if the site sets `inlineHighlighting.defaultLanguage`. Keep one piece plain with `{:txt}`.
+- Skipped code reads every comment that holds only `...`, such as `// ...` or `# ...`, as a marker, if the site sets `skippedCode.aliases: ['...']`. It also reads `...` alone on its line in JSON. Those lines leave the code and the copied code, so line ranges after them, such as `{4}` or `ins={4}`, count different lines. Check the ranges of each block with `// ...` when the site turns this on. To keep `// ...` as code in one block, add text to the comment, such as `// ... and so on`.
 
 If a page shows one feature, keep the others out of its examples with these attributes.
 

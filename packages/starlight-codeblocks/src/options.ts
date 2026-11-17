@@ -322,13 +322,13 @@ export const optionsReference: Record<FeatureName, Feature> = {
     directives: true,
     description: 'Shows a marker in place of code that a block leaves out.',
     page: 'features/skipped-code',
-    off: '`[!code skip]` and `...` lines then stay in the code as written.',
+    off: '`[!code skip]` then stays in the code as written.',
     fields: {
       aliases: {
         type: 'string[]',
-        default: ['...'],
+        default: [],
         description:
-          'Lines that stand for `[!code skip]`: a comment that holds only an alias, or the alias alone on its line in JSON, which has no comments. `[]` turns them off.',
+          "Lines that stand for `[!code skip]`: a comment that holds only an alias, such as `// ...`, or the alias alone on its line in JSON, which has no comments. `['...']` reads the `// ...` comments of existing pages as markers, which changes those pages: see the feature page.",
         valid: (value) => isStringArray(value) && (value as string[]).every((alias) => alias.trim() !== ''),
       },
     },

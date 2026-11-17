@@ -14,7 +14,7 @@ test('turns every feature on with defaults, in new objects on each call', () => 
   expect(options.footnotes).toEqual({ sticky: false, style: 'outline' });
   expect(options.shellCopy).toEqual({ prompts: ['$ ', '> '] });
   expect(options.expandable).toEqual({ lines: 12, auto: false });
-  expect(options.skippedCode).toEqual({ aliases: ['...'] });
+  expect(options.skippedCode).toEqual({ aliases: [] });
   expect(options.inlineHighlighting).toEqual({ defaultLanguage: false });
   expect(options.playgrounds).toEqual({});
   expect(options.walkthrough).toEqual({ start: 1 });

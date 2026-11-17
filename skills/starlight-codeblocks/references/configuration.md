@@ -32,7 +32,7 @@ codeblocks({ only: ['focus', 'codeTabs'], codeTabs: { control: 'menu' } });
 | `annotations` | `style`: `'filled'` or `'outline'`, default `'filled'` | Annotations and side annotations |
 | `footnotes` | `sticky`: default `false`. `style`: `'filled'` or `'outline'`, default `'outline'` | Footnotes |
 | `hiddenLines` | None | Hidden lines |
-| `skippedCode` | `aliases`: lines that are the same as `[!code skip]`, default `['...']` | Skipped code |
+| `skippedCode` | `aliases`: comments, and JSON lines, that are the same as `[!code skip]`, default `[]`. `['...']` reads `// ...` as a marker and changes existing pages | Skipped code |
 | `shellCopy` | `prompts`: default `['$ ', '> ']`. Python `>>>` sessions need no prompt setting | Smart shell copy |
 | `wordDiff` | `minSimilarity`: from 0 to 1, default `0.4` | Word-level diff |
 | `splitDiff` | `view`: `'unified'` or `'split'`, default `'unified'`. `switch`: default `true`. `sync`: default `true` | Split diff |

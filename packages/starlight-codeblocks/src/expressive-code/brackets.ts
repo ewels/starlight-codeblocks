@@ -213,7 +213,7 @@ export function pluginBrackets({
         const lines = codeBlock.getLines();
         const matches = findBrackets(
           lines.map((line) => line.text),
-          commentSyntaxFor(codeBlock.language, comments) ?? [],
+          commentSyntaxFor(codeBlock.language, comments),
           charLiteralLanguages.has(codeBlock.language),
         );
         for (const { line, column, depth, pairId } of matches) {

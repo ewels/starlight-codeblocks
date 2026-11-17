@@ -35,23 +35,26 @@ export interface CommentSyntax {
   close?: string;
 }
 
-/**
- * `undefined` for JSON, which has no comment syntax.
- * `[]` for a language whose comments the site turned off, or that has no entry.
- */
-export function commentSyntaxFor(
-  language: string,
-  overrides: Record<string, string[]> = {},
-): CommentSyntax[] | undefined {
+function commentEntry(language: string, overrides: Record<string, string[]>) {
   const key = language.toLowerCase();
   const info = bundledLanguage(key);
   const keys = [key, ...(info ? [info.id, ...(info.aliases ?? [])] : [])];
   const own = (syntaxes: Record<string, string[]>) =>
     keys.map((k) => (Object.hasOwn(syntaxes, k) ? syntaxes[k] : undefined)).find(Boolean);
-  const syntax = own(overrides) ?? own(defaultCommentSyntax);
-  if (!syntax && keys.includes('json')) return undefined;
-  return (syntax ?? []).map((entry) => {
+  return { keys, syntax: own(overrides) ?? own(defaultCommentSyntax) };
+}
+
+export function commentSyntaxFor(language: string, overrides: Record<string, string[]> = {}): CommentSyntax[] {
+  return (commentEntry(language, overrides).syntax ?? []).map((entry) => {
     const [open = '', close] = entry.trim().split(/\s+/);
     return { open, close };
   });
+}
+
+/**
+ * JSON, unless the site gives it a comment syntax. Other languages with no entry may still have comments (F#, Elixir).
+ */
+export function hasNoComments(language: string, overrides: Record<string, string[]> = {}) {
+  const { keys, syntax } = commentEntry(language, overrides);
+  return !syntax && keys.includes('json');
 }
