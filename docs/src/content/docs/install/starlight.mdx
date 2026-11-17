@@ -68,6 +68,16 @@ For an Astro site that does not use Starlight, follow [Astro setup](/starlight-c
 
 Pick a feature from the sidebar and add its attribute or directive to a code block to turn it on.
 
+## Options
+
+With no options, `codeblocks()` turns on every feature. To turn on only some features, list their keys in `only`. Every other feature is then off:
+
+```js title="astro.config.mjs"
+plugins: [codeblocks({ only: ['focus', 'codeTabs'] })],
+```
+
+The [configuration](/starlight-codeblocks/configuration/#only-some-features) page shows how to turn single features off and change their settings.
+
 ## Sites with an `ec.config.mjs` file
 
 Some sites keep their Expressive Code options in an `ec.config.mjs` file. If that file has no `plugins` list, the plugin works with no change.
