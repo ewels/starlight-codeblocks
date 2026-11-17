@@ -7,9 +7,9 @@ import { setRegistry } from '../src/registry.ts';
 import { variants } from './contrast.ts';
 import { block, render } from './render.ts';
 
-const js = commentSyntaxFor('js');
+const js = commentSyntaxFor('js') ?? [];
 const at = (lines: string[], lang: string) =>
-  findBrackets(lines, commentSyntaxFor(lang)).map(({ line, column }) => [line, column]);
+  findBrackets(lines, commentSyntaxFor(lang) ?? []).map(({ line, column }) => [line, column]);
 
 test('findBrackets pairs brackets by nesting depth, and leaves out unmatched ones and ones in strings and comments', () => {
   const text = 'const a = (1 + [2, 3]);';
@@ -52,7 +52,9 @@ test('findBrackets counts brackets in template literal interpolations, also in a
 
 test('findBrackets reads quotes, comments and strings per language', () => {
   const rust = ['impl Foo {', "    fn name<'a>(&'a self) -> &'static str {", "        let c = '{';", '    }', '}'];
-  const closers = findBrackets(rust, commentSyntaxFor('rust'), true).filter((m) => rust[m.line]?.[m.column] === '}');
+  const closers = findBrackets(rust, commentSyntaxFor('rust') ?? [], true).filter(
+    (m) => rust[m.line]?.[m.column] === '}',
+  );
   expect(closers.map((m) => m.line)).toEqual([3, 4]);
   expect(findBrackets(["it's (fine)"], [])).toHaveLength(2);
   const python = ['result = run(', '    """', '    Steps: 1) load', "    ''' [ '''", '    """,', ')'];
@@ -63,7 +65,7 @@ test('findBrackets reads quotes, comments and strings per language', () => {
     [0, 9],
     [4, 0],
   ]);
-  const hash = findBrackets(['count() {', `  n=\${#items[@]} # (note)`, '}'], commentSyntaxFor('bash'));
+  const hash = findBrackets(['count() {', `  n=\${#items[@]} # (note)`, '}'], commentSyntaxFor('bash') ?? []);
   expect(hash).toHaveLength(8);
   expect(hash.at(-1)).toMatchObject({ line: 2, column: 0, depth: 0 });
 });

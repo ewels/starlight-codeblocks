@@ -35,6 +35,35 @@ test('puts a marker above a line with a trailing [!code skip]', async () => {
   expect(html).toMatch(/>a<.*scb-skip-marker.*>b</);
 });
 
+test('reads `...` alone in a comment, or alone on its line in a language with no comments, as [!code skip]', async () => {
+  const js = await render(block('js', 'function connect() {', '  // ...', '  return socket;', '}'));
+  const directive = await render(block('js', 'function connect() {', '  // [!code skip]', '  return socket;', '}'));
+  expect(js.html).toBe(directive.html);
+  const json = await render(block('json', '{', '  "a": 1,', '  ...', '}'));
+  expect(marker(json.html)).toHaveLength(1);
+  expect(json.copyText).toBe('{\n  "a": 1,\n}');
+  expect(json.warnings).toEqual([]);
+});
+
+test('leaves `...` that is code, or that has more text, as written', async () => {
+  for (const md of [
+    block('py', 'def f():', '    ...'),
+    block('yaml', 'a: 1', '...'),
+    block('js', 'f(...args) // ...', '// ... more', '// [...]'),
+    block('json', '[', '  "..."', ']'),
+  ]) {
+    expect(marker((await render(md)).html)).toEqual([]);
+  }
+});
+
+test('takes custom aliases, and none with `aliases: []`', async () => {
+  const md = block('js', 'a();', '// …', '// [...]', 'b();');
+  expect(marker((await render(md, { skippedCode: { aliases: ['…', '[...]'] } })).html)).toHaveLength(2);
+  const { html, copyText } = await render(block('js', 'a();', '// ...', 'b();'), { skippedCode: { aliases: [] } });
+  expect(marker(html)).toEqual([]);
+  expect(copyText).toBe('a();\n// ...\nb();');
+});
+
 test('renders as without the feature when a block skips nothing, and leaves the directive when it is off', async () => {
   const md = block('js title="a.js" {1}', 'a()', 'b()');
   expect((await render(md)).html).toBe((await render(md, { skippedCode: false })).html);

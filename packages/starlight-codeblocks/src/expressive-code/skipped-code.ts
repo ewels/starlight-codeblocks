@@ -36,14 +36,20 @@ const styleSettings = new PluginStyleSettings({
 /** The indentation of each directive's source line, by source line. */
 const indentData = new AttachedPluginData<Map<number, string>>(() => new Map());
 
+export interface SkippedCodeSettings {
+  /** Lines that stand for `[!code skip]`, alone or as the whole of a comment. */
+  aliases?: string[];
+}
+
 /** Shows a marker where `[!code skip]` stands for code that the block leaves out. */
-export function pluginSkippedCode(): CodeblocksPlugin {
+export function pluginSkippedCode({ aliases = ['...'] }: SkippedCodeSettings = {}): CodeblocksPlugin {
   return {
     name: 'starlight-codeblocks:skipped-code',
     directives: {
       'code skip': {
         text: true,
         endOfBlock: true,
+        aliases,
         docs: {
           description: 'Shows a marker in place of code that the block leaves out.',
           args: 'Optional. The text of the marker.',

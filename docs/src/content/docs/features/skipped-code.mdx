@@ -5,8 +5,9 @@ description: Show a marker where a code block leaves out code, so readers know t
 
 import { LinkCard } from '@astrojs/starlight/components';
 import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
 
-An example often shows only part of a file. Authors then write a comment such as `// ...` where code is left out, and readers can mistake it for code. The `[!code skip]` directive puts a marker in its place, which looks different from the code and is not part of the copied text.
+An example often shows only part of a file. Authors then write a comment such as `// ...` where code is left out, and readers can mistake it for code. Skipped code puts a marker in its place, which looks different from the code and is not part of the copied text. Write the `[!code skip]` directive, with optional text, or keep the `// ...` comment.
 
 export const basic = `
 \`\`\`js title="routes.js"
@@ -34,8 +35,12 @@ The first marker replaces the body of the `get` handler and shows the text after
 |---|---|
 | `[!code skip]` | Comment on its own line, or at the end of a line |
 | `[!code skip] text` | Comment on its own line, or at the end of a line |
+| `...` | Comment that holds only `...`, on its own line |
+| `...` | On its own line, in a language with no comments, such as JSON |
 
 Put the directive on its own line where the code is left out. The marker takes the place of that line, with the same indentation. At the end of a line, the marker goes above that line. Without text, the marker reads "Code not shown". The text can hold inline code, links and bold text.
+
+A comment that holds only `...`, such as `// ...` or `# ...`, is the same as `[!code skip]`. For a marker with text, use `[!code skip] text`. A comment with other text, such as `// ... more`, stays in the code.
 
 ## Examples
 
@@ -59,6 +64,27 @@ export class Cache<T> {
 `;
 
 <Example code={noText} layout="tabs" />
+
+### Skip code in JSON
+
+JSON has no comments. On its own line, `...` is the marker:
+
+export const json = `
+\`\`\`json title="package.json"
+{
+  "name": "my-site",
+  "scripts": {
+    "dev": "astro dev",
+    ...
+  },
+  ...
+}
+\`\`\`
+`;
+
+<Example code={json} layout="tabs" />
+
+`...` alone on its line is a marker only in languages with no comments. In Python, `...` is code, and in YAML it ends a document, so these blocks keep it.
 
 ### Skip the start of a file
 
@@ -112,21 +138,25 @@ volumes:
 
 ## Options
 
-Skipped code has no options. Turn the feature off for the whole site with `skippedCode: false`:
+<Options />
+
+To add an alias, such as `…`, or to change `...`, set `aliases`:
 
 ```js title="astro.config.mjs"
 codeblocks({
-  skippedCode: false,
+  skippedCode: { aliases: ['...', '…'] },
 });
 ```
 
-With `skippedCode: false`, the plugin does not know the `[!code skip]` directive. It leaves the directive in the code as written, and logs a build warning.
+A language with `[]` in `notation.comments` reads no directives, so `...` stays in its blocks too.
+
+Turn the feature off for the whole site with `skippedCode: false`. The plugin then does not know the `[!code skip]` directive. It leaves the directive in the code as written, and logs a build warning. `...` lines also stay as written.
 
 <LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
 
 ## Limitations
 
-- The directive needs a comment. A language without comments, such as JSON, cannot use it. Use `jsonc` for JSON.
+- The directive needs a comment. A language with no comments, such as JSON, can use only `...`, so its markers have no text.
 - Line numbers do not jump over the skipped code. To start a block at a later number, use the `startLineNumber` attribute of Expressive Code.
 - The copied code is incomplete, so it can fail to run. Do not use skipped code in a block with a **Run code** or playground button.
 

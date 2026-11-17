@@ -35,14 +35,18 @@ export interface CommentSyntax {
   close?: string;
 }
 
-export function commentSyntaxFor(language: string, overrides: Record<string, string[]> = {}): CommentSyntax[] {
+/** `undefined` for a language with no comment syntax. `[]` for a language whose comments the site turned off. */
+export function commentSyntaxFor(
+  language: string,
+  overrides: Record<string, string[]> = {},
+): CommentSyntax[] | undefined {
   const key = language.toLowerCase();
   const info = bundledLanguage(key);
   const keys = [key, ...(info ? [info.id, ...(info.aliases ?? [])] : [])];
   const own = (syntaxes: Record<string, string[]>) =>
     keys.map((k) => (Object.hasOwn(syntaxes, k) ? syntaxes[k] : undefined)).find(Boolean);
-  const syntax = own(overrides) ?? own(defaultCommentSyntax) ?? [];
-  return syntax.map((entry) => {
+  const syntax = own(overrides) ?? own(defaultCommentSyntax);
+  return syntax?.map((entry) => {
     const [open = '', close] = entry.trim().split(/\s+/);
     return { open, close };
   });

@@ -89,7 +89,7 @@ export interface CodeblocksOptions {
   annotations?: false | { style?: 'filled' | 'outline' };
   footnotes?: false | { sticky?: boolean; style?: 'filled' | 'outline' };
   hiddenLines?: false;
-  skippedCode?: false;
+  skippedCode?: false | { aliases?: string[] };
   shellCopy?: false | { prompts?: string[] };
   wordDiff?: false | { minSimilarity?: number };
   splitDiff?: false | { view?: 'unified' | 'split'; switch?: boolean; sync?: boolean };
@@ -322,7 +322,16 @@ export const optionsReference: Record<FeatureName, Feature> = {
     directives: true,
     description: 'Shows a marker in place of code that a block leaves out.',
     page: 'features/skipped-code',
-    off: '`[!code skip]` then stays in the code as written.',
+    off: '`[!code skip]` and `...` lines then stay in the code as written.',
+    fields: {
+      aliases: {
+        type: 'string[]',
+        default: ['...'],
+        description:
+          'Lines that stand for `[!code skip]`: a comment that holds only an alias, or the alias alone on its line in a language with no comments, such as JSON. `[]` turns them off.',
+        valid: (value) => isStringArray(value) && (value as string[]).every((alias) => alias.trim() !== ''),
+      },
+    },
   },
   shellCopy: {
     description: 'Adds a Copy commands button to terminal blocks with prompts, which copies the commands only.',

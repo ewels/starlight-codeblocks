@@ -7,6 +7,11 @@ export interface DirectiveSpec {
   text?: boolean;
   /** On a line of its own at the end of the block, the directive applies after the last line, with `after`. */
   endOfBlock?: boolean;
+  /**
+   * A line that holds only one of these, in a comment, is read as the directive.
+   * In a language with no comment syntax, the alias alone on its line.
+   */
+  aliases?: string[];
   /** For the directives reference page. */
   docs?: {
     description: string;
@@ -293,15 +298,36 @@ export function parseLine(
   return { text: newText, removed: false, directives };
 }
 
-/** Parses every line, and moves the directives of removed lines to the line below them. */
+/** The name of the directive whose alias is all of `line`, or all of a comment that is all of `line`. */
+function aliasOf(line: string, syntaxes: CommentSyntax[] | undefined, aliases: [alias: string, name: string][]) {
+  const text = line.trim();
+  const bodies = syntaxes
+    ? syntaxes
+        .filter(({ open, close }) => text.startsWith(open) && (!close || text.endsWith(close)))
+        .map(({ open, close }) => text.slice(open.length, close ? -close.length : undefined).trim())
+    : [text];
+  return aliases.find(([alias]) => bodies.includes(alias))?.[1];
+}
+
+/**
+ * Parses every line, and moves the directives of removed lines to the line below them.
+ * `syntaxes` is `undefined` for a language with no comment syntax: only aliases apply there.
+ */
 export function parseNotation(
   lines: string[],
-  syntaxes: CommentSyntax[],
+  syntaxes: CommentSyntax[] | undefined,
   specs: DirectiveSpecs,
   report: Report,
   diff = false,
 ): ParsedLine[] {
-  const parsed = lines.map((text, i) => parseLine(text, syntaxes, specs, report, i + 1, diff));
+  const aliases = Object.entries(specs).flatMap(([name, spec]) =>
+    (spec.aliases ?? []).map((alias): [string, string] => [alias.trim(), name]),
+  );
+  const parsed = lines.map((text, i): ParsedLine => {
+    const name = aliases.length > 0 ? aliasOf(text, syntaxes, aliases) : undefined;
+    if (name) return { text: '', removed: true, directives: [{ name, count: 1, args: [], sourceLine: i + 1 }] };
+    return syntaxes ? parseLine(text, syntaxes, specs, report, i + 1, diff) : { text, removed: false, directives: [] };
+  });
   let pending: Directive[] = [];
   for (const line of parsed) {
     if (line.removed) {
@@ -445,11 +471,14 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
       preprocessLanguage(context) {
         const { codeBlock, config } = context;
         const syntaxes = commentSyntaxFor(codeBlock.language, comments);
-        if (syntaxes.length === 0 || !/\[\\?!/.test(codeBlock.code)) return;
+        if (syntaxes?.length === 0) return;
         const specs: DirectiveSpecs = Object.assign(
           {},
           ...config.plugins.map((plugin) => (plugin as CodeblocksPlugin).directives ?? {}),
         );
+        const aliases = Object.values(specs).flatMap((spec) => spec.aliases ?? []);
+        const hasDirectives = syntaxes !== undefined && /\[\\?!/.test(codeBlock.code);
+        if (!hasDirectives && !aliases.some((alias) => codeBlock.code.includes(alias.trim()))) return;
         const lines = codeBlock.getLines();
         const parsed = parseNotation(
           lines.map((line) => line.text),
@@ -527,14 +556,15 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
       preprocessCode({ codeBlock }) {
         const syntaxes = commentSyntaxFor(codeBlock.language, comments);
         const { removed, specs, diffIndent } = notationData.getOrCreateFor(codeBlock);
-        if (syntaxes.length === 0 || !/\[\\?!/.test(codeBlock.code)) return;
         for (const [line, columns] of diffIndent) line.editText(0, columns, '');
-        for (const line of codeBlock.getLines()) {
-          // Other plugins can edit lines after the first parse, so parse the current text again.
-          const { text, removed: gone } = parseLine(line.text, syntaxes, specs, () => {});
-          // The first parse kept this line, and blanking it would leave an empty line behind.
-          if (gone && !removed.includes(line)) continue;
-          if (text !== line.text) line.editText(0, line.text.length, text);
+        if (syntaxes?.length && /\[\\?!/.test(codeBlock.code)) {
+          for (const line of codeBlock.getLines()) {
+            // Other plugins can edit lines after the first parse, so parse the current text again.
+            const { text, removed: gone } = parseLine(line.text, syntaxes, specs, () => {});
+            // The first parse kept this line, and blanking it would leave an empty line behind.
+            if (gone && !removed.includes(line)) continue;
+            if (text !== line.text) line.editText(0, line.text.length, text);
+          }
         }
         for (const line of removed) {
           const index = codeBlock.getLines().indexOf(line);

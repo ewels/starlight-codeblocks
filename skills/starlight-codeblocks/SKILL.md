@@ -77,7 +77,7 @@ Use scrollycoding when prose explains the code step by step as the reader scroll
 | Goal | Use | Why |
 |---|---|---|
 | Imports and set-up that readers need to run the code but not to understand it | Hidden lines: `hidden={1-3}` or `[!code hide]` | Named lines go behind a marker. The copy button still copies them. |
-| Code that the example leaves out, where authors write `// ...` | Skipped code: `[!code skip]` | A marker takes the place of the code. The copied code is incomplete. |
+| Code that the example leaves out, where authors write `// ...` | Skipped code: `[!code skip]`, or keep `// ...` | A marker takes the place of the code. The copied code is incomplete. |
 | A long file that readers scan | Expandable block: `expandable` or `expandable={N}` | Shows the first lines, with a button that shows the rest. |
 | Indentation or tabs change the meaning (Make, Python, YAML) | Visible whitespace: `whitespace` or `whitespace="all"` | Shows spaces and tabs as faint glyphs. |
 | Deep nesting on dense lines | Colourised brackets: `brackets` | Colours bracket pairs by depth. |
