@@ -65,7 +65,9 @@ The Python runtime reads the `import` lines of the code before it runs it, and i
 1. Packages that are part of Pyodide install from the Pyodide CDN. Pyodide has about 350 packages, such as NumPy, pandas, SciPy and scikit-learn. The [Pyodide package list](https://pyodide.org/en/stable/usage/packages-in-pyodide.html) has them all.
 2. Other imports install from [PyPI](https://pypi.org/) with [micropip](https://micropip.pyodide.org/), under the name of the import. This works for pure Python packages: packages with a wheel that ends in `py3-none-any.whl`.
 
-When the package name is not the import name, add `runnable.packages` to the fence line. For example, `import slugify` needs the `python-slugify` package. Without the attribute, the runtime would install the package called `slugify`, which is a different one. Separate several packages with spaces. A name can have a version, such as `tabulate==0.9.0`. The packages install before the code runs, and a package that does not install shows an error in the panel.
+PyPI reads `_`, `-` and `.` in a package name as the same character, and ignores case. So `import rich_click` installs the `rich-click` package, with no attribute.
+
+When the package name is a different name, not only a different spelling, add `runnable.packages` to the fence line. For example, `import slugify` needs the `python-slugify` package. Without the attribute, the runtime would install the package called `slugify`, which is a different one. Separate several packages with spaces. A name can have a version, such as `tabulate==0.9.0`. The packages install before the code runs, and a package that does not install shows an error in the panel.
 
 For code that cannot run in the browser, such as a command line tool, write its output in the block. The lines after `[!output]` are the output. They leave the code, and the button prints them a line at a time, as if the code ran. `[!output end]` ends the output, for code after it. Without it, the output goes to the next `[!run]` line or the end of the block.
 
@@ -185,6 +187,35 @@ print(slugify("Hello, World: Run Code!"))
 `;
 
 <Example code={packages} layout="tabs" hiddenAttributes="apiLinks=false" />
+
+### A command line tool
+
+A [Click](https://click.palletsprojects.com/) command reads `sys.argv` and calls `sys.exit()` when it finishes. In a code block, give it the arguments as a list, and add `standalone_mode=False`, so that it returns instead of exiting. Without it, the panel shows a `SystemExit` traceback, also for `--help`. The `COLUMNS` environment variable sets the width of the help text. The output panel is not a terminal, so without it Click and Rich use 80 columns, which can be wider than the panel:
+
+export const cli = `
+\`\`\`py runnable
+import os
+
+os.environ["COLUMNS"] = "60"
+
+import click
+
+@click.command()
+@click.option("--count", default=1, help="Number of greetings.")
+@click.argument("name")
+def hello(count, name):
+    """Greet NAME, COUNT times."""
+    for _ in range(count):
+        click.echo(f"Hello, {name}!")
+
+hello(["--help"], prog_name="hello", standalone_mode=False)
+hello(["--count", "2", "Ada"], prog_name="hello", standalone_mode=False)
+\`\`\`
+`;
+
+<Example code={cli} layout="tabs" hiddenAttributes="apiLinks=false" />
+
+`prog_name` sets the command name in the usage line. Without it, the usage line has no command name in the browser. A [Typer](https://typer.tiangolo.com/) app takes the same arguments: `app(["--help"], prog_name="hello", standalone_mode=False)`. Its help text needs two packages that Pyodide does not install with Rich, so add `runnable.packages="markdown-it-py pygments"` to the fence line. Hide the set-up lines with [hidden lines](/starlight-codeblocks/features/hidden-lines/), and use [`runnable.outputLang=ansi`](#output-in-a-language) with `FORCE_COLOR` for the colours of [rich-click](https://ewels.github.io/rich-click/) or Typer.
 
 ### An error
 
