@@ -117,5 +117,5 @@ pre > code[tabindex]:focus-visible {
       },
     },
   };
-  return stylesOnly ? { ...plugin, directives: {}, hooks: {} } : plugin;
+  return stylesOnly ? { ...plugin, name: 'starlight-codeblocks:focus-styles', directives: {}, hooks: {} } : plugin;
 }

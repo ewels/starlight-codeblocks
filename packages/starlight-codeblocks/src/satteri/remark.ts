@@ -9,18 +9,25 @@ type Visitor = (node: Nodes, ctx: MdastVisitorContext) => unknown;
  * It gives the visitors the part of Sätteri's context that this package uses, over a mutable tree.
  */
 export function remarkFromSatteri(entries: MdastPluginEntry[]) {
-  return () => async (tree: Root, file: { path?: string; value?: unknown }) => {
+  const attacher = () => async (tree: Root, file: { path?: string; value?: unknown }) => {
     const factory = {
       fileURL: file.path ? pathToFileURL(file.path) : undefined,
       sourceFormat: file.path?.endsWith('.mdx') ? 'mdx' : 'markdown',
       source: String(file.value ?? ''),
       data: {},
     } as PluginFactoryContext;
-    for (const entry of entries) {
-      const definition = typeof entry === 'function' ? entry(factory) : entry;
-      if (definition && !Array.isArray(definition)) await run(definition as MdastPluginDefinition, tree);
-    }
+    for (const definition of unfold(entries, factory)) await run(definition, tree);
   };
+  // So that `codeblocks()` can find the plugins inside.
+  return Object.defineProperty(attacher, 'mdastPlugins', { value: entries });
+}
+
+/** The definitions in a list of entries, with factories called and nested lists flattened, as Sätteri does. */
+function unfold(entry: MdastPluginEntry, factory: PluginFactoryContext): MdastPluginDefinition[] {
+  if (!entry) return [];
+  if (typeof entry === 'function') return unfold(entry(factory), factory);
+  if (Array.isArray(entry)) return entry.flatMap((e) => unfold(e, factory));
+  return [entry as MdastPluginDefinition];
 }
 
 async function run(definition: MdastPluginDefinition, tree: Root) {

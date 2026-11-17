@@ -56,7 +56,11 @@ test('changes nothing outside code blocks unless the site turns on code tabs or 
   const { processor, scripts } = await setup();
   expect(scripts).toEqual([]);
   expect(processor.options.features?.directive).toBeUndefined();
-  expect(processor.options.mdastPlugins).toHaveLength(1);
+  expect(processor.options.mdastPlugins.map((p) => (p as { name: string }).name)).toEqual([
+    'starlight-codeblocks:whitespace',
+    'starlight-codeblocks:mentions',
+    'starlight-codeblocks:permalinks',
+  ]);
   expect(getRegistry()?.options).toMatchObject({ codeTabs: false, inlineHighlighting: false });
 });
 
@@ -89,6 +93,12 @@ test('fails with a fix when the site also lists expressiveCode(), lists mdx() fi
     '`ec.config.mjs` has its own `plugins` list',
   );
   await expect(setup({}, "export default { plugins: [{ name: 'starlight-codeblocks:core' }] };")).resolves.toBeTruthy();
+});
+
+test('only turns on code tabs and inline code highlighting when it lists them', async () => {
+  const { processor } = await setup({ only: ['codeTabs'] });
+  expect(processor.options.features?.directive).toBe(true);
+  expect(getRegistry()?.options).toMatchObject({ codeTabs: { control: 'tabs' }, inlineHighlighting: false });
 });
 
 test('validates options when the integration is created', () => {

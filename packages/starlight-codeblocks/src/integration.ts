@@ -4,15 +4,16 @@ import { fileURLToPath } from 'node:url';
 import type { ExpressiveCodePlugin } from '@expressive-code/core';
 import type { AstroIntegration } from 'astro';
 import { AstroError } from 'astro/errors';
+import type { MdastPluginEntry } from 'satteri';
 import { apiCardPageStyles, CARD_CSS_ID } from './api-card-page.ts';
 import { readClientModules } from './client-modules.ts';
-import { PLUGIN_PREFIX } from './expressive-code/index.ts';
+import { PLUGIN_PREFIX } from './expressive-code/core.ts';
 import { runtimeFileName, runtimeModules } from './expressive-code/runnable.ts';
 import { proseSwatchStyles, SWATCH_CSS_ID } from './expressive-code/swatches.ts';
 import type { ResolvedOptions } from './options.ts';
 import { loadReadFiles, readFilesDigest } from './read-files.ts';
 import { getRegistry } from './registry.ts';
-import { mdastPlugins } from './satteri/index.ts';
+import { type ListedPlugin, listedMarkdownPlugins, mdastPlugins } from './satteri/index.ts';
 import { INLINE_CSS_ID, inlineStyles } from './satteri/inline-code.ts';
 import { remarkFromSatteri } from './satteri/remark.ts';
 
@@ -60,19 +61,20 @@ export function codeblocksIntegration({
           | undefined;
         const registry = getRegistry();
         if (registry?.cacheDir) registry.readFiles = loadReadFiles(registry.cacheDir);
+        const unified = processor?.name === 'unified';
+        const list = unified ? processor.options?.remarkPlugins : processor?.options?.mdastPlugins;
+        const listed = listedMarkdownPlugins(list).map(({ name, settings }) => [name, settings]);
         // The content layer keeps rendered Markdown until its digest of the Astro config changes. That digest
-        // skips integrations and functions but covers these options, the site's UI texts and the files that
-        // code blocks read, which both processors otherwise ignore.
+        // skips integrations and functions but covers these options, the settings of the Markdown plugins
+        // that the site lists, the site's UI texts and the files that code blocks read.
         refreshDigest = () => {
           if (!processor?.options) return false;
           const files = readFilesDigest(registry?.readFiles?.keys() ?? []);
-          processor.options.starlightCodeblocks = `${optionsDigest(options, registry?.texts)}.${files}`;
+          processor.options.starlightCodeblocks = `${optionsDigest([options, listed], registry?.texts)}.${files}`;
           return true;
         };
         refreshDigest();
-        if (processor?.name === 'unified') {
-          processor.options?.remarkPlugins?.push(remarkFromSatteri(mdastPlugins(options, logger)));
-        } else processor?.options?.mdastPlugins?.push(...mdastPlugins(options, logger));
+        if (list) addMarkdownPlugins(list, mdastPlugins(options, logger), unified);
         const plugins = clientModulePlugins(config.build.assets);
         if (ecConfigOverride) plugins.push(ecConfigPlugin(ecConfigOverride.file));
         if (options.inlineHighlighting) plugins.push(cssPlugin(INLINE_CSS_ID, inlineStyles));
@@ -115,7 +117,7 @@ export function codeblocksIntegration({
   };
 }
 
-const optionsDigest = (options: ResolvedOptions, texts: unknown) =>
+const optionsDigest = (options: unknown, texts: unknown) =>
   createHash('sha256')
     .update(
       JSON.stringify([options, texts], (_, value) =>
@@ -132,7 +134,9 @@ export async function loadEcConfig(root: URL) {
   return { file: fileURLToPath(url), config: (await import(`${url.href}?t=${Date.now()}`)).default };
 }
 
-const isOurs = (plugin: unknown) => (plugin as ExpressiveCodePlugin | undefined)?.name?.startsWith(PLUGIN_PREFIX);
+// An object, so that a Markdown plugin of the package, a function with the same name, is not taken for one.
+const isOurs = (plugin: unknown) =>
+  typeof plugin === 'object' && (plugin as ExpressiveCodePlugin | null)?.name?.startsWith(PLUGIN_PREFIX);
 
 /** A `plugins` list in `ec.config.mjs` replaces the one the plugin adds, so it must hold the preset. */
 export function checkEcConfigPlugins(plugins: unknown[]) {
@@ -141,6 +145,71 @@ export function checkEcConfigPlugins(plugins: unknown[]) {
     'starlight-codeblocks cannot add its Expressive Code plugins, because `ec.config.mjs` has its own `plugins` list.',
     "Add `pluginCodeblocks()` to `plugins` in `ec.config.mjs`. Import it from 'starlight-codeblocks/expressive-code'.",
   );
+}
+
+/**
+ * The site's own `expressiveCode.plugins` with the preset. A plugin of this package in the site's list
+ * takes the place of the preset plugin with the same name, and the preset goes where the site lists its
+ * first one, or after the site's plugins. `plugins` has the real objects, for `<Code>`; `list` hides
+ * the functions of ours, for the Astro config.
+ */
+export function mergeEcPlugins(site: unknown[] = [], preset: ExpressiveCodePlugin[]) {
+  const flat = site.flat(Infinity) as ExpressiveCodePlugin[];
+  const own = new Map(flat.filter(isOurs).map((plugin) => [plugin.name, plugin]));
+  const names = new Set(preset.map((plugin) => plugin.name));
+  const off = [...own.keys()].find((name) => !names.has(name));
+  if (off) {
+    throw new AstroError(
+      `\`expressiveCode.plugins\` has the \`${off}\` plugin, but its feature is off in \`codeblocks()\`.`,
+      'Turn the feature on in the options of `codeblocks()`, or remove the plugin from `plugins`.',
+    );
+  }
+  const first = flat.findIndex(isOurs);
+  const plugins = flat.filter((plugin) => !isOurs(plugin));
+  plugins.splice(first < 0 ? plugins.length : first, 0, ...preset.map((plugin) => own.get(plugin.name) ?? plugin));
+  return { plugins, list: plugins.map((plugin) => (isOurs(plugin) ? hideFunctions(plugin) : plugin)) };
+}
+
+/**
+ * Adds the Markdown plugins of `preset` that the site has not listed. Each goes before the first listed
+ * plugin that comes after it in `preset`, else after the last listed one, so that the order of `preset` holds.
+ */
+function addMarkdownPlugins(list: unknown[], preset: MdastPluginEntry[], unified: boolean) {
+  const nameOf = (entry: unknown) => (entry as ListedPlugin).name;
+  const listed = list.map((entry) => listedMarkdownPlugins(entry).map(nameOf));
+  const names = listed.flat();
+  const on = new Set(preset.map(nameOf));
+  const off = names.find((name) => !on.has(name));
+  if (off) {
+    throw new AstroError(
+      `The Markdown processor has the \`${off}\` plugin, but its feature is off in \`codeblocks()\`.`,
+      'Turn the feature on in the options of `codeblocks()`, or remove the plugin from the Markdown processor.',
+    );
+  }
+  const twice = names.find((name, i) => names.indexOf(name) !== i);
+  if (twice) {
+    throw new AstroError(
+      `The Markdown processor has the \`${twice}\` plugin twice.`,
+      'Remove one of them. `mdastCodeblocks()` holds the plugin of each feature that is on.',
+    );
+  }
+  const inserts = new Map<number, MdastPluginEntry[]>();
+  const put = (at: number, entries: MdastPluginEntry[]) => inserts.set(at, [...(inserts.get(at) ?? []), ...entries]);
+  let pending: MdastPluginEntry[] = [];
+  let after = -1;
+  for (const entry of preset) {
+    const at = listed.findIndex((inEntry) => inEntry.includes(nameOf(entry)));
+    if (at < 0) pending.push(entry);
+    else {
+      put(at, pending);
+      pending = [];
+      after = Math.max(after, at + 1);
+    }
+  }
+  put(after < 0 ? list.length : after, pending);
+  for (const [at, entries] of [...inserts].sort(([a], [b]) => b - a)) {
+    if (entries.length > 0) list.splice(at, 0, ...(unified ? [remarkFromSatteri(entries)] : entries));
+  }
 }
 
 /** The stylesheets for elements outside code blocks, which every page gets. */
@@ -154,7 +223,7 @@ export const pageCssIds = (options: ResolvedOptions, apiCardPage = true) => [
  * Astro serialises the Expressive Code options for `<Code>` and fails on functions.
  * `<Code>` gets the real plugins from the `ec-config` override instead.
  */
-export function hideFunctions(plugin: ExpressiveCodePlugin): ExpressiveCodePlugin {
+function hideFunctions(plugin: ExpressiveCodePlugin): ExpressiveCodePlugin {
   const shell = { name: plugin.name };
   for (const [key, value] of Object.entries(plugin)) {
     if (key !== 'name') Object.defineProperty(shell, key, { value, enumerable: false });

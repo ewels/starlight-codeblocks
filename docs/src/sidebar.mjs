@@ -63,6 +63,7 @@ export const sidebar = [
       'reference/directives',
       'reference/style-settings',
       'reference/expressive-code-plugins',
+      'reference/markdown-plugins',
       'reference/plugin-compatibility',
       'reference/themes',
       'reference/accessibility',

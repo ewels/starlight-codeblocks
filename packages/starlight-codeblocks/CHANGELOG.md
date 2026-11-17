@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- `only` turns on only the features that it lists, and every other feature off: `codeblocks({ only: ['focus', 'codeTabs'] })`. With a feature that reads directives in comments, it also turns on `notation`
+- Plugins of the package in `expressiveCode.plugins` take the place of the ones that `codeblocks()` adds, in place of a second copy. The plugins of `codeblocks()` go where the list has the first one, so other plugins can come after them (#36)
+- Markdown plugins: `starlight-codeblocks/markdown` exports a Markdown plugin for each feature that changes Markdown, such as `mdastCodeTabs()`, and `mdastCodeblocks()` for all of them. `codeblocks()` adds only the ones that the Markdown processor does not already list, in the correct order among them. A listed plugin for a feature that is off stops the build (#36)
 - Split diff: a **Unified** and **Split** switch in the title bar of each block that removes and adds lines. **Split** shows the old code on the left and the new code on the right, as a GitHub pull request does. `splitDiff.view`, `splitDiff.switch` and `splitDiff.sync` set the start view, remove the switch and stop it syncing across the page (#37)
 - Untitled blocks with title bar controls use the tab bar colours of titled blocks (#37)
 

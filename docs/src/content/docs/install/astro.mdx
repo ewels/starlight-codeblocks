@@ -86,6 +86,12 @@ codeblocks({
 }),
 ```
 
+To turn on only some features, list their keys in `only`. Every other feature is then off. A feature in `only` is on, also code tabs and inline code highlighting:
+
+```js title="astro.config.mjs"
+codeblocks({ only: ['focus', 'codeTabs'] }),
+```
+
 An `ec.config.mjs` file works as on a Starlight site. Its options replace the options in `expressiveCode`. If the file has a `plugins` list, add `pluginCodeblocks()` to it, as [Starlight setup](/starlight-codeblocks/install/starlight/#sites-with-an-ecconfigmjs-file) shows.
 
 ## Differences from Starlight
@@ -113,7 +119,7 @@ export default {
 
 The features inside code blocks then work, but these parts are not there:
 
-- Code tabs and inline code highlighting, which need the Markdown plugin.
+- Inline code highlighting, which needs a stylesheet that only `codeblocks()` adds. Code tabs work if you add `mdastCodeTabs()` yourself, as [Markdown plugins](/starlight-codeblocks/reference/markdown-plugins/#without-codeblocks) shows.
 - The built-in runtimes of the **Run code** button. Map each language to the URL of a runtime module, as in [Without codeblocks()](/starlight-codeblocks/reference/expressive-code-plugins/#without-codeblocks).
 
 `tabWidth: 0` keeps tabs in the code. Without it, Expressive Code turns each tab into spaces.

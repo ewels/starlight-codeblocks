@@ -1,5 +1,8 @@
 import { expect, test } from 'vitest';
-import { OptionsError, resolveOptions } from '../src/options.ts';
+import type { CodeblocksPlugin } from '../src/expressive-code/core.ts';
+import { createPlugins } from '../src/expressive-code/index.ts';
+import { type FeatureName, OptionsError, optionsReference, resolveOptions } from '../src/options.ts';
+import { mdastPlugins } from '../src/satteri/index.ts';
 
 test('turns every feature on with defaults, in new objects on each call', () => {
   const options = resolveOptions();
@@ -77,10 +80,40 @@ test('rejects options that are not valid, with an OptionsError that names the op
     [{ apiLinks: { adapters: [{ name: 'x', languages: ['js'] }] } }, '`apiLinks.adapters`'],
     [{ walkthrough: { start: 2 } }, "`walkthrough.start` must be 1 | 'last', got 2"],
     [{ walkthrough: { start: 'first' } }, '`walkthrough.start` must be'],
+    [{ only: 'focus' }, '`only` must be a list of option keys'],
+    [{ only: ['fokus'] }, '`only` must be a list of option keys'],
+    [{ only: ['focus'], codeTabs: {} }, '`codeTabs` has settings, but it is not in `only`'],
   ];
   for (const [options, message] of cases) {
     const resolve = () => resolveOptions(options as never);
     expect(resolve, JSON.stringify(options)).toThrow(OptionsError);
     expect(resolve, JSON.stringify(options)).toThrow(message);
   }
+});
+
+test('only turns on the listed features, and notation with a feature that reads directives', () => {
+  const options = resolveOptions({ only: ['focus', 'codeTabs'], focus: { style: 'dim' }, callouts: false });
+  const on = Object.entries(options).filter(([, value]) => value !== false);
+  expect(on.map(([key]) => key).sort()).toEqual(['codeTabs', 'focus', 'notation']);
+  expect(options.focus).toEqual({ style: 'dim' });
+  expect(resolveOptions({ only: ['brackets'] }).notation).toBe(false);
+  expect(resolveOptions({ only: ['focus'], notation: false }).notation).toBe(false);
+  expect(resolveOptions({ only: ['focus'], notation: { comments: { matlab: ['%'] } } }).notation).toEqual({
+    comments: { matlab: ['%'] },
+  });
+  const names = (list: unknown[]) =>
+    list.map((plugin) => (plugin as { name: string }).name.replace('starlight-codeblocks:', ''));
+  expect(names(createPlugins(options))).toEqual(['core', 'notation', 'focus', 'code-tabs', 'walkthrough']);
+  expect(names(mdastPlugins(options))).toEqual(['code-tabs']);
+});
+
+test('directives marks each feature whose plugin reads directives', () => {
+  const key = (name: string) =>
+    name.replace('starlight-codeblocks:', '').replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase());
+  const reading = createPlugins(resolveOptions())
+    .filter((plugin) => Object.keys((plugin as CodeblocksPlugin).directives ?? {}).length > 0)
+    .map((plugin) => key(plugin.name))
+    .filter((name) => name !== 'notation');
+  const marked = (Object.keys(optionsReference) as FeatureName[]).filter((name) => optionsReference[name].directives);
+  expect(reading.sort()).toEqual(marked.sort());
 });

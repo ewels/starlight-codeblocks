@@ -60,6 +60,9 @@ export function pluginCore(): CodeblocksPlugin {
   };
 }
 
+/** Plugin names start with this, so `codeblocks()` can find its plugins in a site's lists. */
+export const PLUGIN_PREFIX = 'starlight-codeblocks:';
+
 /** The class on every element that a feature adds to a block but that is not code, such as labels and buttons. */
 export const DECORATION = `${PREFIX}-deco`;
 
@@ -390,7 +393,7 @@ export function ensureTextContrast(
  * plugin later picks its lines out of them by position.
  */
 function checkPluginOrder(plugins: readonly { name: string }[]) {
-  const ours = plugins.findIndex((plugin) => plugin.name.startsWith('starlight-codeblocks:'));
+  const ours = plugins.findIndex((plugin) => plugin.name.startsWith(PLUGIN_PREFIX));
   const collapsible = plugins.findIndex((plugin) => plugin.name === 'Collapsible sections');
   if (collapsible > ours) {
     throw new Error(

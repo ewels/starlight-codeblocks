@@ -79,6 +79,8 @@ export interface ApiLinkAdapter {
 }
 
 export interface CodeblocksOptions {
+  /** Turns on only these features, and every other feature off. */
+  only?: FeatureName[];
   focus?: false | { style?: 'blur' | 'dim' };
   lineStates?: false | { states?: Record<string, LineStateDefinition>; prefix?: boolean };
   notation?: false | { comments?: Record<string, string[]> };
@@ -150,11 +152,14 @@ export interface Runtime {
   run(code: string, options: { signal: AbortSignal; session?: boolean }): Promise<{ stdout: string; stderr: string }>;
 }
 
+/** The option key of each feature. */
+export type FeatureName = Exclude<keyof CodeblocksOptions, 'only'>;
+
 type Settings<T> = Exclude<T, false | undefined>;
 
 /** Options after validation: `false` for a feature that is off, its settings with defaults otherwise. */
 export type ResolvedOptions = {
-  [K in keyof CodeblocksOptions]-?: [Settings<CodeblocksOptions[K]>] extends [never]
+  [K in FeatureName]-?: [Settings<CodeblocksOptions[K]>] extends [never]
     ? boolean
     : K extends 'playgrounds'
       ? false | Record<string, PlaygroundDefinition>
@@ -176,6 +181,8 @@ interface Feature {
   page: string;
   /** What stays behind when the option is `false`. */
   off?: string;
+  /** Its plugin reads directives, so `only` turns on `notation` with it. */
+  directives?: true;
   fields?: Record<string, Field>;
   /** For options that are a map of names to definitions, such as `playgrounds`. */
   entries?: Omit<Field, 'default'>;
@@ -212,8 +219,9 @@ const noteStyleField = (marks: string, fallback: 'filled' | 'outline', extra = '
 });
 
 /** Every option, with its type, default and description. The docs reference tables read this. */
-export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
+export const optionsReference: Record<FeatureName, Feature> = {
   focus: {
+    directives: true,
     description: 'Blurs the lines outside a focus range.',
     page: 'features/focus',
     off: '`[!code focus]` then stays in the code as written.',
@@ -228,6 +236,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     },
   },
   lineStates: {
+    directives: true,
     description: 'Tints lines as errors, warnings, notes or successes, with an optional message.',
     page: 'features/line-states',
     off: 'The directives then stay in the code as written.',
@@ -270,12 +279,18 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       },
     },
   },
-  callouts: { description: 'Shows a note in a bubble above a line.', page: 'features/inline-callouts' },
+  callouts: {
+    directives: true,
+    description: 'Shows a note in a bubble above a line.',
+    page: 'features/inline-callouts',
+  },
   squiggles: {
+    directives: true,
     description: 'Draws wavy error, warning and info lines under code, with an optional message.',
     page: 'features/squiggles',
   },
   annotations: {
+    directives: true,
     description: 'Adds numbered markers that open a note.',
     page: 'features/annotations',
     fields: {
@@ -283,6 +298,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     },
   },
   footnotes: {
+    directives: true,
     description: 'Adds numbered badges to lines, with the notes in a list under the block.',
     page: 'features/footnotes',
     fields: {
@@ -297,6 +313,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     },
   },
   hiddenLines: {
+    directives: true,
     description: 'Hides lines that readers need to run the code but not to understand it.',
     page: 'features/hidden-lines',
   },
@@ -492,7 +509,11 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
       },
     },
   },
-  codeLinks: { description: 'Turns text on a line into a link.', page: 'features/code-links' },
+  codeLinks: {
+    directives: true,
+    description: 'Turns text on a line into a link.',
+    page: 'features/code-links',
+  },
   apiLinks: {
     description: 'Links names in code to their reference pages.',
     page: 'features/api-auto-linking',
@@ -549,6 +570,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     },
   },
   mentions: {
+    directives: true,
     description: 'Highlights lines when the reader hovers over a link in the prose.',
     page: 'features/code-mentions',
   },
@@ -610,6 +632,7 @@ export const optionsReference: Record<keyof CodeblocksOptions, Feature> = {
     },
   },
   runnable: {
+    directives: true,
     description: 'Adds a button that runs the code in the browser.',
     page: 'features/run-code',
     off: '`runnable` attributes then have no effect.',
@@ -685,13 +708,15 @@ export function resolveOptions(options: CodeblocksOptions = {}): ResolvedOptions
   if (!isObject(options)) throw new OptionsError(`expected an options object, got ${show(options)}.`);
   const known = Object.keys(optionsReference);
   for (const key of Object.keys(options)) {
-    if (!(key in optionsReference)) {
+    if (key !== 'only' && !(key in optionsReference)) {
       throw new OptionsError(`unknown option \`${key}\`. Known options: ${known.join(', ')}.`);
     }
   }
+  const { only, ...features } = options as Record<string, unknown>;
+  const on = only === undefined ? undefined : resolveOnly(only, features);
   const resolved: Record<string, unknown> = {};
   for (const [key, feature] of Object.entries(optionsReference)) {
-    const value = (options as Record<string, unknown>)[key];
+    const value = on && !on.has(key) ? false : features[key];
     if (value === false) {
       resolved[key] = false;
       continue;
@@ -709,6 +734,19 @@ export function resolveOptions(options: CodeblocksOptions = {}): ResolvedOptions
       : resolveFields(key, feature.fields ?? {}, value ?? {});
   }
   return resolved as ResolvedOptions;
+}
+
+function resolveOnly(only: unknown, features: Record<string, unknown>) {
+  if (!Array.isArray(only) || !only.every((key) => typeof key === 'string' && Object.hasOwn(optionsReference, key))) {
+    throw new OptionsError(
+      `\`only\` must be a list of option keys, got ${show(only)}. Known keys: ${Object.keys(optionsReference).join(', ')}.`,
+    );
+  }
+  const on = new Set<string>(only);
+  if (only.some((key: FeatureName) => optionsReference[key].directives)) on.add('notation');
+  const stray = Object.keys(features).find((key) => !on.has(key) && features[key] !== false);
+  if (stray) throw new OptionsError(`\`${stray}\` has settings, but it is not in \`only\`.`);
+  return on;
 }
 
 function resolveFields(key: string, fields: Record<string, Field>, value: Record<string, unknown>) {

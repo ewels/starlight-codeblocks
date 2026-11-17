@@ -1,7 +1,9 @@
 import { getColorContrast } from '@expressive-code/core';
 import { expect, test } from 'vitest';
-import { findBrackets } from '../src/expressive-code/brackets.ts';
+import { findBrackets, pluginBrackets } from '../src/expressive-code/brackets.ts';
 import { commentSyntaxFor } from '../src/expressive-code/comments.ts';
+import { resolveOptions } from '../src/options.ts';
+import { setRegistry } from '../src/registry.ts';
 import { variants } from './contrast.ts';
 import { block, render } from './render.ts';
 
@@ -93,6 +95,18 @@ test('skips comments in the syntax that notation.comments gives', async () => {
     notation: { comments: { matlab: ['%'] } },
   });
   expect(html.match(/data-scb-pair=/g)).toHaveLength(4);
+});
+
+test('a site-listed pluginBrackets() takes notation.comments from codeblocks()', async () => {
+  setRegistry({ options: resolveOptions({ notation: { comments: { matlab: ['%'] } } }), plugins: [] });
+  try {
+    const { html } = await render(block('matlab brackets', 'y = f(a) % see (note)'), { brackets: false }, [
+      pluginBrackets(),
+    ]);
+    expect(html.match(/data-scb-pair=/g)).toHaveLength(2);
+  } finally {
+    setRegistry(undefined);
+  }
 });
 
 test('keeps a text marker and word diff on a bracket', async () => {

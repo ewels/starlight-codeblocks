@@ -5,9 +5,9 @@ import { createPlugins } from './expressive-code/index.ts';
 import {
   checkEcConfigPlugins,
   codeblocksIntegration,
-  hideFunctions,
   loadEcConfig,
   mergeEcOptions,
+  mergeEcPlugins,
   pageCssIds,
 } from './integration.ts';
 import { type CodeblocksOptions, resolveOptions } from './options.ts';
@@ -33,7 +33,10 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
         }
         const { file: ecConfigFile, config: ecConfig } = await loadEcConfig(astroConfig.root);
         const ec = typeof config.expressiveCode === 'object' ? config.expressiveCode : {};
-        const plugins = createPlugins(options);
+        // `ec.config.mjs` plugins replace the inline list, so only the preset counts then.
+        const preset = createPlugins(options);
+        const ownPlugins = Array.isArray(ecConfig?.plugins);
+        const { plugins, list } = ownPlugins ? { plugins: preset, list: [] } : mergeEcPlugins(ec.plugins, preset);
         setRegistry({
           options,
           plugins,
@@ -51,7 +54,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
         // astro-expressive-code expands tabs to two spaces before any plugin hook runs, which breaks
         // tab-sensitive code such as Makefiles, so keep tabs unless the site chose a `tabWidth`.
         const keepTabs = ec.tabWidth === undefined && ecConfig?.tabWidth === undefined;
-        if (Array.isArray(ecConfig?.plugins)) {
+        if (ownPlugins) {
           checkEcConfigPlugins(ecConfig.plugins);
           updateConfig({ ...css, ...(keepTabs && { expressiveCode: { ...ec, tabWidth: 0 } }) });
           addIntegration(codeblocksIntegration({ options }));
@@ -63,7 +66,7 @@ export default function codeblocks(userOptions: CodeblocksOptions = {}): Starlig
           expressiveCode: {
             ...ec,
             ...(keepTabs && { tabWidth: 0 }),
-            plugins: [...(ec.plugins ?? []), ...plugins.map(hideFunctions)],
+            plugins: list,
           },
         });
         addIntegration(codeblocksIntegration({ options, ecConfigOverride: { file: ecConfigFile } }));

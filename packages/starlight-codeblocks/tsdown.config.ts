@@ -10,6 +10,7 @@ export default defineConfig([
       'src/index.ts',
       'src/astro.ts',
       'src/expressive-code/index.ts',
+      'src/markdown.ts',
       'src/adapters/python.ts',
       'src/adapters/nextflow.ts',
     ],
