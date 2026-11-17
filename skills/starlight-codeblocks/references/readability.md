@@ -49,12 +49,12 @@ Use where an example shows part of a file and leaves code out. A marker takes th
 |---|---|
 | `[!code skip]` | Comment on its own line where the code is left out, or at the end of the line below that place |
 | `[!code skip] text` | The same, with `text` on the marker in place of "Code not shown" |
-| `...` | Comment that holds only `...` (`// ...`, `# ...`), on its own line |
+| `// ...` | Comment that holds only `...`, on its own line, in the comment syntax of the language (`# ...`) |
 | `...` | On its own line, in a language with no comments, such as JSON |
 
 ```js
 app.get('/users', async (req, res) => {
-  // [!code skip] Read the users from the database
+  // [!code skip] Not shown: Read the users from the database
 });
 // [!code skip]
 ```

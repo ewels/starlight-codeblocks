@@ -252,12 +252,12 @@ Show a marker where a code block leaves out code, so readers know the file has m
 ````md
 ```js
 app.get('/users', async (req, res) => {
-  // [!code skip] Read the users from the database
+  // [!code skip] Not shown: Read the users from the database
 });
 ```
 ````
 
-<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/skipped-code.png" alt="A JavaScript block with a dotted line and the text Read the users from the database in place of a function body.">
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/skipped-code.png" alt="A JavaScript block with a dotted line and the text Not shown: Read the users from the database in place of a function body.">
 
 [Skipped code documentation](https://ewels.github.io/starlight-codeblocks/features/skipped-code/)
 

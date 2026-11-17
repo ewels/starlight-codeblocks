@@ -14,7 +14,7 @@ export const basic = `
 const app = express();
 
 app.get('/users', async (req, res) => {
-  // [!code skip] Read the users from the database
+  // [!code skip] Not shown: Read the users from the database
 });
 
 app.post('/users', async (req, res) => {
@@ -35,12 +35,14 @@ The first marker replaces the body of the `get` handler and shows the text after
 |---|---|
 | `[!code skip]` | Comment on its own line, or at the end of a line |
 | `[!code skip] text` | Comment on its own line, or at the end of a line |
-| `...` | Comment that holds only `...`, on its own line |
+| `// ...` | Comment that holds only `...`, on its own line. Use the comment syntax of the language, such as `# ...` |
 | `...` | On its own line, in a language with no comments, such as JSON |
 
 Put the directive on its own line where the code is left out. The marker takes the place of that line, with the same indentation. At the end of a line, the marker goes above that line. Without text, the marker reads "Code not shown". The text can hold inline code, links and bold text.
 
+:::tip
 A comment that holds only `...`, such as `// ...` or `# ...`, is the same as `[!code skip]`. For a marker with text, use `[!code skip] text`. A comment with other text, such as `// ... more`, stays in the code.
+:::
 
 ## Examples
 
@@ -92,7 +94,7 @@ A marker on the first line shows that the example starts in the middle of a file
 
 export const start = `
 \`\`\`py title="report.py"
-# [!code skip] Imports and settings
+# [!code skip] Not shown: Imports and settings
 def summarise(rows):
     totals = {}
     for row in rows:
@@ -114,7 +116,7 @@ services:
     image: nginx:1.27
     ports:
       - "8080:80"
-  # [!code skip] The database and cache services
+  # [!code skip] Not shown: The database and cache services
 volumes:
   data:
 \`\`\`
