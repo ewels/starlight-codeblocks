@@ -39,6 +39,27 @@ Put the directive on its own line where the code is left out. The marker takes t
 
 ## Examples
 
+### Skip code without text
+
+Without text, the marker reads "Code not shown". Use it when the code around the marker tells readers what is left out:
+
+export const noText = `
+\`\`\`ts title="cache.ts"
+export class Cache<T> {
+  private entries = new Map<string, T>();
+
+  // [!code skip]
+
+  get(key: string): T | undefined {
+    return this.entries.get(key);
+  }
+  // [!code skip]
+}
+\`\`\`
+`;
+
+<Example code={noText} layout="tabs" />
+
 ### Skip the start of a file
 
 A marker on the first line shows that the example starts in the middle of a file:
