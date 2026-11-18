@@ -11,6 +11,7 @@
 - Run code: `runnable.args="<arguments>"` gives the code command line arguments. In Python, `sys.argv` holds the title of the block (else `main.py`) and the arguments, so a Click, Typer or argparse tool runs with no change to its code (#43)
 - Run code: in Python, `sys.exit()` ends a run as it ends a program: with no `SystemExit` traceback, and with an exit message that is not a number on standard error. Before, `--help` in a Click command showed a traceback (#43)
 - Run code: the `COLUMNS` environment variable of a Python run is the width of the output panel in characters, so help text from argparse and Rich fits the panel. Custom runtimes get `args`, `file` and `columns` in the options of `run()` (#43)
+- Run code: a Python run with `runnable.outputLang=ansi` has `FORCE_COLOR=1` in its environment, so Rich, rich-click and Typer print colours with no hidden lines. Custom runtimes get `color` in the options of `run()`
 - API links: a starlight-pydocs registry left over from an `astro dev` restart that removed starlight-pydocs from the config is dropped, so Python names no longer link to its old pages
 
 ## 1.4.1

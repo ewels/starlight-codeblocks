@@ -154,10 +154,18 @@ export interface Runtime {
    * `session` is true when `code` is the commands of a session with prompts, which run as a REPL runs them.
    * `args` are the words of the block's `runnable.args` attribute, and `file` is the block's title.
    * `columns` is the width of the output panel in characters.
+   * `color` is true when the panel shows terminal colours, with `runnable.outputLang=ansi`.
    */
   run(
     code: string,
-    options: { signal: AbortSignal; session?: boolean; args?: string[]; file?: string; columns?: number },
+    options: {
+      signal: AbortSignal;
+      session?: boolean;
+      args?: string[];
+      file?: string;
+      columns?: number;
+      color?: boolean;
+    },
   ): Promise<{ stdout: string; stderr: string }>;
 }
 
