@@ -46,6 +46,8 @@ export function pluginCodeTabs(fileIcons?: Partial<FileIconSettings>): Codeblock
   return {
     name: 'starlight-codeblocks:code-tabs',
     baseStyles: ({ cssVar }) => `
+/* Starlight spaces each block after a sibling, even a hidden one, so the block would move when the tab changes. */
+[data-scb-code-tabs] > & { margin-top: 0; }
 .${FIELD} {
   position: relative;
   display: inline-flex;

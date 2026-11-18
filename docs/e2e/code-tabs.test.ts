@@ -26,6 +26,16 @@ test('a tab shows its file, with focus on its tab, and the copy button copies it
   await expect.poll(() => clipboard(page)).toContain('import sys');
 });
 
+test('the block stays in place when the tab changes', async ({ page }) => {
+  await load(page);
+  const top = () => visible(page, 0).evaluate((block) => block.getBoundingClientRect().top + window.scrollY);
+  const first = await top();
+  for (const name of ['greet.py', 'greet.js']) {
+    await visible(page, 0).getByRole('tab', { name }).click();
+    expect(await top()).toBe(first);
+  }
+});
+
 test('label tabs have no icon, and synced blocks switch together and remember the choice', async ({ page }) => {
   await load(page);
   await expect(visible(page, 1).getByRole('tab')).toHaveText(['npm', 'pnpm', 'Yarn']);
