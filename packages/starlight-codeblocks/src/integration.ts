@@ -5,6 +5,7 @@ import type { ExpressiveCodePlugin } from '@expressive-code/core';
 import type { AstroIntegration } from 'astro';
 import { AstroError } from 'astro/errors';
 import type { MdastPluginEntry } from 'satteri';
+import { dropStalePydocsRegistry } from './adapters/python.ts';
 import { apiCardPageStyles, CARD_CSS_ID } from './api-card-page.ts';
 import { readClientModules } from './client-modules.ts';
 import { PLUGIN_PREFIX } from './expressive-code/core.ts';
@@ -59,6 +60,7 @@ export function codeblocksIntegration({
               options?: { mdastPlugins?: unknown[]; remarkPlugins?: unknown[]; starlightCodeblocks?: string };
             }
           | undefined;
+        dropStalePydocsRegistry(config.integrations);
         const registry = getRegistry();
         if (registry?.cacheDir) registry.readFiles = loadReadFiles(registry.cacheDir);
         const unified = processor?.name === 'unified';
