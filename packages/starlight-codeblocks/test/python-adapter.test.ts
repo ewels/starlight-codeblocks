@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 import { afterEach, expect, test, vi } from 'vitest';
-import { type PydocsRegistry, type PydocsSymbol, python } from '../src/adapters/python.ts';
+import { dropStalePydocsRegistry, type PydocsRegistry, type PydocsSymbol, python } from '../src/adapters/python.ts';
 import { readInventory } from '../src/adapters/python-index.ts';
 import { type CodeblocksOptions, resolveOptions } from '../src/options.ts';
 import { setRegistry } from '../src/registry.ts';
@@ -178,6 +178,15 @@ const myproject = () =>
       },
     ],
   ]);
+
+test('drops a starlight-pydocs registry left by a config that no longer has starlight-pydocs', () => {
+  const registry: PydocsRegistry = { version: 1, packages: [] };
+  pydocs(registry);
+  dropStalePydocsRegistry([{ name: 'starlight-pydocs' }]);
+  expect((globalThis as { [PYDOCS]?: PydocsRegistry })[PYDOCS]).toBe(registry);
+  dropStalePydocsRegistry([{ name: 'starlight-codeblocks' }]);
+  expect((globalThis as { [PYDOCS]?: PydocsRegistry })[PYDOCS]).toBeUndefined();
+});
 
 test('links the objects of a starlight-pydocs package through its registry, with the site base', async () => {
   pydocs({ version: 1, packages: [{ name: 'myproject', base: 'api/myproject', symbols: myproject() }] });

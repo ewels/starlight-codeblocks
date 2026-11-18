@@ -83,7 +83,7 @@ const setup = (processor: Processor, options = {}) => {
     p: unknown,
   ) => void;
   hook({
-    config: { markdown: { processor }, base: '/', build: { assets: '_astro' } },
+    config: { markdown: { processor }, base: '/', build: { assets: '_astro' }, integrations: [] },
     updateConfig() {},
     injectScript() {},
     logger: { warn() {} },

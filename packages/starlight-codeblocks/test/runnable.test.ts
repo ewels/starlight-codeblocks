@@ -863,7 +863,13 @@ test('in astro dev, a change to a read file refreshes the content layer and relo
   const noop = () => {};
   await integration.hooks['astro:config:setup']?.({
     command: 'dev',
-    config: { markdown: { processor }, build: { assets: '_astro' }, base: '/', root: new URL('file:///site/') },
+    config: {
+      markdown: { processor },
+      build: { assets: '_astro' },
+      base: '/',
+      root: new URL('file:///site/'),
+      integrations: [],
+    },
     updateConfig: noop,
     injectScript: noop,
     logger: { warn: noop },
