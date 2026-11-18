@@ -1,17 +1,18 @@
 # Changelog
 
-## Unreleased
+## 1.5.0
 
-- `only` turns on only the features that it lists, and every other feature off: `codeblocks({ only: ['focus', 'codeTabs'] })`. With a feature that reads directives in comments, it also turns on `notation`
-- Plugins of the package in `expressiveCode.plugins` take the place of the ones that `codeblocks()` adds, in place of a second copy. The plugins of `codeblocks()` go where the list has the first one, so other plugins can come after them (#36)
-- Markdown plugins: `starlight-codeblocks/markdown` exports a Markdown plugin for each feature that changes Markdown, such as `mdastCodeTabs()`, and `mdastCodeblocks()` for all of them. `codeblocks()` adds only the ones that the Markdown processor does not already list, in the correct order among them. A listed plugin for a feature that is off stops the build (#36)
 - Split diff: a **Unified** and **Split** switch in the title bar of each block that removes and adds lines. **Split** shows the old code on the left and the new code on the right, as a GitHub pull request does. `splitDiff.view`, `splitDiff.switch` and `splitDiff.sync` set the start view, remove the switch and stop it syncing across the page (#37)
-- Untitled blocks with title bar controls use the tab bar colours of titled blocks (#37)
-- Skipped code: `[!code skip]` on its own line shows a marker in place of code that a block leaves out, at the indentation of its line. The text after the directive goes in the marker, else it reads "Code not shown". The line keeps its line number, and copies as a comment with the text, such as `// Not shown: Imports`. A comment that holds only `...`, such as `// ...`, and `...` alone on a line in JSON, also show as markers and copy as written. `skippedCode.commentAliases` and `skippedCode.bareAliases` change these aliases for each language. `skippedCode: false` turns the feature off (#28)
+- Skipped code: `[!code skip]` on its own line shows a marker in place of code that a block leaves out, at the indentation of its line. The text after the directive goes in the marker, else it reads "Code not shown". The line keeps its line number, and copies as a comment with the text, such as `// Not shown: Imports`. A comment that holds only `...`, such as `// ...`, and `...` alone on a line in JSON, also show as markers and copy as written. `skippedCode.commentAliases` and `skippedCode.bareAliases` change these aliases for each language. `skippedCode: false` turns the feature off (#39)
+- Options: `only` turns on only the features that it lists, and every other feature off: `codeblocks({ only: ['focus', 'codeTabs'] })`. With a feature that reads directives in comments, it also turns on `notation` (#38)
+- Expressive Code plugins: plugins of the package in `expressiveCode.plugins` take the place of the ones that `codeblocks()` adds, in place of a second copy. The plugins of `codeblocks()` go where the list has the first one, so other plugins can come after them (#38)
+- Markdown plugins: `starlight-codeblocks/markdown` exports a Markdown plugin for each feature that changes Markdown, such as `mdastCodeTabs()`, and `mdastCodeblocks()` for all of them. `codeblocks()` adds only the ones that the Markdown processor does not already list, in the correct order among them. A listed plugin for a feature that is off stops the build (#38)
 - Run code: `runnable.args="<arguments>"` gives the code command line arguments. In Python, `sys.argv` holds the title of the block (else `main.py`) and the arguments, so a Click, Typer or argparse tool runs with no change to its code (#43)
 - Run code: in Python, `sys.exit()` ends a run as it ends a program: with no `SystemExit` traceback, and with an exit message that is not a number on standard error. Before, `--help` in a Click command showed a traceback (#43)
 - Run code: the `COLUMNS` environment variable of a Python run is the width of the output panel in characters, so help text from argparse and Rich fits the panel. Custom runtimes get `args`, `file` and `columns` in the options of `run()` (#43)
-- API links: a starlight-pydocs registry left over from an `astro dev` restart that removed starlight-pydocs from the config is dropped, so Python names no longer link to its old pages
+- Code tabs: the block stays in place when the tab changes. Before, every tab but the first moved the block down (#45)
+- Untitled blocks with title bar controls use the tab bar colours of titled blocks (#37)
+- API links: a starlight-pydocs registry left over from an `astro dev` restart that removed starlight-pydocs from the config is dropped, so Python names no longer link to its old pages (#44)
 
 ## 1.4.1
 
