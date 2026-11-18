@@ -43,7 +43,11 @@ Put the directive on its own line where the code is left out. That line shows as
 Many pages already use `// ...` for code that they leave out. These lines are the same as `[!code skip]` by default, so existing pages show markers with no changes. A line is an alias if it holds one of these, and nothing else:
 
 - A comment alias: a comment with only the alias in it, in the comment syntax of the language, such as `// ...`, `# ...`, `/* ... */` or `<!-- ... -->`. By default, `...` in every language.
-- A bare alias: the alias with no comment. By default, `...` in JSON, which has no comments, so the directive cannot go in a JSON block.
+- A bare alias: the alias with no comment. By default, `...` in JSON.
+
+:::note[JSON]
+JSON has no comments, so a JSON block cannot hold the `[!code skip]` directive. The default config has a bare alias for JSON, `bareAliases: { json: ['...'] }`, so write `...` alone on a line instead.
+:::
 
 This JSON block shows two markers:
 
@@ -64,14 +68,14 @@ export const json = `
 
 An alias changes only how the line looks. The line keeps its line number, line ranges count it, and the copied code has the `// ...` as written. An alias takes no text: for a marker with text, write `[!code skip] text`.
 
-Set `skippedCode.commentAliases` and `skippedCode.bareAliases` to change the aliases. Each is a list of aliases for each language, and `*` applies to every language without its own entry. Your entries merge over the defaults, and `[]` turns aliases off for a language:
+Set `skippedCode.commentAliases` and `skippedCode.bareAliases` to change the aliases. Each is a list of aliases for each language, and `*` applies to every language without its own entry. The defaults are `commentAliases: { '*': ['...'] }` and `bareAliases: { json: ['...'] }`. Your entries merge over them, and `[]` turns aliases off for a language:
 
 ```js title="astro.config.mjs"
 codeblocks({
   skippedCode: {
-    // `// …` too, in every language, and no comment aliases in Python
+    // [!callout /commentAliases/] `// …` as well as `// ...`, and no comment aliases in Python.
     commentAliases: { '*': ['...', '…'], python: [] },
-    // `...` with no comment in YAML, as well as in JSON
+    // [!callout /bareAliases/] `...` with no comment in YAML. JSON keeps its default.
     bareAliases: { yaml: ['...'] },
   },
 });
@@ -137,6 +141,23 @@ volumes:
 `;
 
 <Example code={config} layout="tabs" />
+
+### Link to lines after a marker
+
+The marker is a line of the block, so it has a line number. With [line permalinks](/starlight-codeblocks/features/line-permalinks/), which the `id` attribute turns on, each number is a link. The `app.get` line below is line 3, as in the source:
+
+export const permalinks = `
+\`\`\`js title="routes.js" id="routes"
+const app = express();
+// [!code skip] Not shown: Middleware and settings
+app.get('/users', async (req, res) => {
+  const users = await db.users.findAll();
+  res.json(users);
+});
+\`\`\`
+`;
+
+<Example code={permalinks} layout="tabs" />
 
 ## Behaviour
 
