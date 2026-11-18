@@ -31,6 +31,8 @@ export interface Registry {
 // A global, because Astro loads the config and renders pages through different module instances.
 // Public: other plugins, such as starlight-pydocs, read it by `astro:config:done`, and
 // `options.inlineHighlighting` and `options.apiLinks` are truthy when those features are on. Keep all three stable.
+// It outlives an `astro dev` restart that drops `codeblocks()` from the config, as no hook of ours runs then, so a
+// reader must also find `starlight-codeblocks` in the `integrations` of its own `astro:config:done`.
 const KEY = Symbol.for('starlight-codeblocks');
 const store = globalThis as { [KEY]?: Registry };
 
