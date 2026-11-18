@@ -100,6 +100,7 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
     controller.signal.addEventListener('abort', () => reject(controller.signal.reason), { once: true });
   });
   const timer = setTimeout(() => controller.abort(new DOMException('Timed out', 'TimeoutError')), timeout);
+  const ansi = figure.hasAttribute('data-scb-runnable-ansi');
   try {
     const options = {
       signal: controller.signal,
@@ -107,10 +108,10 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
       args: JSON.parse(figure.dataset.scbRunnableArgs ?? '[]'),
       file: figure.dataset.scbRunnableFile,
       columns: columns(panel),
+      color: ansi,
     };
     const output = await Promise.race([runtime.run(code, options), stopped]);
     const parts = [];
-    const ansi = figure.hasAttribute('data-scb-runnable-ansi');
     if (output.stdout) parts.push(stdout(output.stdout, ansi));
     if (output.stderr) parts.push(error(t.error, output.stderr, ansi));
     show(panel, ...(parts.length ? parts : [status(t.empty)]));

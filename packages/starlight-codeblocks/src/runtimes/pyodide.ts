@@ -20,13 +20,18 @@ def _scb_session(src, g):
     except BaseException as e:
         tb = None if isinstance(e, SyntaxError) else e.__traceback__.tb_next
         traceback.print_exception(e.with_traceback(tb))
-async def _scb_run(src, g, session, argv, columns):
+async def _scb_run(src, g, session, argv, columns, color):
     sys.argv = list(argv)
     if columns:
         os.environ['COLUMNS'] = str(columns)
     else:
         os.environ.pop('COLUMNS', None)
-    # Rich reads COLUMNS once, for the console that it keeps.
+    # Rich and other libraries print colours only to a terminal, unless FORCE_COLOR is set.
+    if color:
+        os.environ['FORCE_COLOR'] = '1'
+    else:
+        os.environ.pop('FORCE_COLOR', None)
+    # Rich reads COLUMNS and FORCE_COLOR once, for the console that it keeps.
     if 'rich' in sys.modules:
         sys.modules['rich']._console = None
     if session:
@@ -65,7 +70,7 @@ const install = async (py, names) => {
   await py.loadPackage('micropip');
   await py.pyimport('micropip').install(names);
 };
-const handle = async ({ id, url, code, session, args = [], file, columns, prepare, packages = [] }) => {
+const handle = async ({ id, url, code, session, args = [], file, columns, color, prepare, packages = [] }) => {
   try {
     ready ??= import(url + 'pyodide.mjs')
       .then((m) => m.loadPyodide({ indexURL: url }))
@@ -100,7 +105,7 @@ const handle = async ({ id, url, code, session, args = [], file, columns, prepar
     globals.set('__name__', '__main__');
     let failure;
     try {
-      await runCode(code, globals, !!session, [file ?? 'main.py', ...args], columns);
+      await runCode(code, globals, !!session, [file ?? 'main.py', ...args], columns, !!color);
     } catch (e) {
       failure = e;
     } finally {
@@ -118,7 +123,15 @@ const handle = async ({ id, url, code, session, args = [], file, columns, prepar
 };`;
 
 type Message =
-  | { code: string; session: boolean; args?: string[]; file?: string; columns?: number; packages: string[] }
+  | {
+      code: string;
+      session: boolean;
+      args?: string[];
+      file?: string;
+      columns?: number;
+      color?: boolean;
+      packages: string[];
+    }
   | { prepare: string; packages: string[] };
 
 interface Reply {
@@ -198,8 +211,8 @@ export function pyodide({ url = PYODIDE_URL }: { url?: string } = {}): Runtime {
       wanted.set(code, packages);
       await call({ prepare: code, packages });
     },
-    run: async (code, { signal, session = false, args, file, columns }) => {
-      const message = { code, session, args, file, columns, packages: wanted.get(code) ?? [] };
+    run: async (code, { signal, session = false, args, file, columns, color }) => {
+      const message = { code, session, args, file, columns, color, packages: wanted.get(code) ?? [] };
       const { stdout = '', stderr = '' } = await call(message, signal);
       return { stdout, stderr };
     },

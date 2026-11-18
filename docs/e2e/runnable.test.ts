@@ -15,8 +15,9 @@ const MARKS = 10;
 const OUTPUT_ONLY = 11;
 const ANSI = 12;
 const ANSI_RUN = 13;
-const RUN_OTHER = 14;
-const TITLE = 15;
+const ANSI_PYTHON = 14;
+const RUN_OTHER = 15;
+const TITLE = 16;
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/run-code/');
@@ -285,6 +286,18 @@ test('a run with runnable.outputLang=ansi shows the colours that the code prints
   expect(await css(tick, 'color')).not.toBe(await css(stdout, 'color'));
   expect(await css(stdout.getByText('2.1s'), 'fontWeight')).toBe('700');
   expect(await plain.count()).toBe(1);
+});
+
+test('a Python run with runnable.outputLang=ansi gets FORCE_COLOR, so Rich prints colours', async ({ page }) => {
+  once();
+  test.setTimeout(240_000);
+  const block = example(page, ANSI_PYTHON);
+  await block.locator('.scb-run').click();
+  const stdout = block.locator('.scb-run-stdout');
+  await expect(stdout).toHaveText('✔ Built in 2.1s', { timeout: 180_000 });
+  const built = stdout.getByText('✔ Built', { exact: true });
+  expect(await css(built, 'color')).not.toBe(await css(stdout, 'color'));
+  expect(await css(built, 'fontWeight')).toBe('700');
 });
 
 test('an output panel is a focusable region only while its output scrolls', async ({ page }) => {
