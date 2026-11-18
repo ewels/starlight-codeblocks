@@ -87,9 +87,7 @@ export const markerStyles = (
   border: 'dashed' | 'dotted',
 ) => `
 .${marker} {
-  display: flex;
   align-items: center;
-  position: relative;
   margin: 2px 0;
   color: ${cssVar('codeblocks.mutedForeground')};
   user-select: none;
@@ -99,13 +97,8 @@ export const markerStyles = (
   content: '';
   position: absolute;
   top: 50%;
-  inset-inline: calc(var(--scb-gutter, 0px) + ${cssVar('codePaddingInline')}) ${cssVar('codePaddingInline')};
   border-top: 1px ${border} ${cssVar(`${group}.rule`)};
   transform: translateY(-50%);
-}
-/* Where the copy button always shows, it sits over the end of the first line. */
-@media (hover: none) {
-  .${marker}:first-child::before { inset-inline-end: calc(${cssVar('codePaddingInline')} + 2.5rem); }
 }
 .${badge} {
   position: relative;

@@ -18,6 +18,7 @@ import {
   type ElementContent,
   EXIT,
   h,
+  matches,
   type Parents,
   select,
   selectAll,
@@ -96,6 +97,8 @@ const decorations = [
  * Gives each decoration the one class that tools reading the HTML can drop, such as starlight-llms-txt,
  * and keeps it out of the Pagefind index. Keep the list in step with new decorations.
  */
+export const isDecoration = (node: ElementContent) => node.type === 'element' && matches(decorations, node);
+
 export function markDecorations(root: Parents) {
   for (const element of selectAll(decorations, root)) {
     const classes = element.properties.className as string[];
@@ -112,24 +115,17 @@ const lineElements = new WeakMap<ExpressiveCodeLine, Element>();
  */
 export const lineElement = (line: ExpressiveCodeLine) => lineElements.get(line);
 
-function insertAt(offset: number, root: Parents, target: Element, nodes: ElementContent[]) {
+/** Inserts `nodes` before `target`, wherever it is in `root`. */
+export function insertBefore(root: Parents, target: Element, ...nodes: ElementContent[]) {
   visit(
     root,
     (node) => node === target,
     (_, index, parent) => {
-      if (parent && index !== undefined) parent.children.splice(index + offset, 0, ...nodes);
+      if (parent && index !== undefined) parent.children.splice(index, 0, ...nodes);
       return EXIT;
     },
   );
 }
-
-/** Inserts `nodes` before `target`, wherever it is in `root`. */
-export const insertBefore = (root: Parents, target: Element, ...nodes: ElementContent[]) =>
-  insertAt(0, root, target, nodes);
-
-/** Inserts `nodes` after `target`, wherever it is in `root`. */
-export const insertAfter = (root: Parents, target: Element, ...nodes: ElementContent[]) =>
-  insertAt(1, root, target, nodes);
 
 type Context = Pick<ExpressiveCodeHookContextBase, 'codeBlock' | 'config'>;
 

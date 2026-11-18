@@ -72,6 +72,8 @@ export function pluginHiddenLines(): CodeblocksPlugin {
 }
 ${markerStyles(cssVar, `${PREFIX}-hidden-marker`, `${PREFIX}-hidden-marker span`, 'codeblocksHiddenLines', 'dashed')}
 .${PREFIX}-hidden-marker {
+  display: flex;
+  position: relative;
   width: 100%;
   padding: 0;
   border: 0;
@@ -79,6 +81,13 @@ ${markerStyles(cssVar, `${PREFIX}-hidden-marker`, `${PREFIX}-hidden-marker span`
   cursor: pointer;
   font: inherit;
   text-align: left;
+}
+.${PREFIX}-hidden-marker::before {
+  inset-inline: calc(var(--scb-gutter, 0px) + ${cssVar('codePaddingInline')}) ${cssVar('codePaddingInline')};
+}
+/* Where the copy button always shows, it sits over the end of the first line. */
+@media (hover: none) {
+  .${PREFIX}-hidden-marker:first-child::before { inset-inline-end: calc(${cssVar('codePaddingInline')} + 2.5rem); }
 }
 .${PREFIX}-hidden-marker span {
   display: inline-flex;

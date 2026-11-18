@@ -39,6 +39,8 @@ export interface Directive {
   text?: string;
   /** The line of the directive in the code block source, from 1. */
   sourceLine: number;
+  /** Read from an alias, such as `// ...`, not written as a directive. */
+  alias?: boolean;
 }
 
 const wordChar = /[\w$]/;
@@ -276,7 +278,8 @@ export function parseLine(
     for (const { spec, directive } of result.items) {
       directives.push(directive);
       // In `[!code ++ error] text`, the text goes to the first directive that takes text.
-      if (spec.text) textOf ??= directive;
+      // A directive that goes on its own line is dropped from a line with code, so it takes no text there.
+      if (spec.text && !(spec.ownLine && hasCode)) textOf ??= directive;
     }
     removedBefore = true;
   }
@@ -321,8 +324,8 @@ export interface LineAliases {
 }
 
 /** The name of the directive whose alias is all of `line`, or all of a comment that is all of `line`. */
-function aliasOf(line: string, syntaxes: CommentSyntax[], aliases: LineAliases) {
-  const text = line.trim();
+function aliasOf(line: string, syntaxes: CommentSyntax[], aliases: LineAliases, diff: boolean) {
+  const text = (diff ? line.replace(diffPrefix, '') : line).trim();
   const bodies = syntaxes
     .filter(({ open, close }) => text.startsWith(open) && (!close || text.endsWith(close)))
     .map(({ open, close }) => text.slice(open.length, close ? -close.length : undefined).trim());
@@ -371,8 +374,9 @@ export function parseNotation(
   aliases: LineAliases = { comment: [], bare: [] },
 ): ParsedLine[] {
   const parsed = lines.map((text, i): ParsedLine => {
-    const name = aliasOf(diff ? text.replace(diffPrefix, '') : text, syntaxes, aliases);
-    if (name) return { text, removed: false, directives: [{ name, count: 1, args: [], sourceLine: i + 1 }] };
+    const name = aliasOf(text, syntaxes, aliases, diff);
+    if (name)
+      return { text, removed: false, directives: [{ name, count: 1, args: [], sourceLine: i + 1, alias: true }] };
     if (syntaxes.length === 0) return { text, removed: false, directives: [] };
     return parseLine(text, syntaxes, specs, report, i + 1, diff);
   });
@@ -410,7 +414,9 @@ const notationData = new AttachedPluginData<{
   run: ExpressiveCodeLine[];
   specs: DirectiveSpecs;
   diffIndent: Map<ExpressiveCodeLine, number>;
-}>(() => ({ directives: [], removed: [], output: [], run: [], specs: {}, diffIndent: new Map() }));
+  /** A diff that Expressive Code leaves as written, so its lines keep their `+` and `-`. */
+  realDiff: boolean;
+}>(() => ({ directives: [], removed: [], output: [], run: [], specs: {}, diffIndent: new Map(), realDiff: false }));
 
 /** The directives in a code block, optionally only those with one name, such as `code focus`. */
 export function getDirectives(codeBlock: ExpressiveCodeBlock, name?: string): BlockDirective[] {
@@ -516,12 +522,11 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
         const { codeBlock, config } = context;
         const syntaxes = commentSyntaxFor(codeBlock.language, comments);
         const { specs, aliases } = specsOf(config.plugins, codeBlock.language);
-        const hasDirectives = syntaxes.length > 0 && /\[\\?!/.test(codeBlock.code);
-        const candidates = syntaxes.length > 0 ? [...aliases.bare, ...aliases.comment] : aliases.bare;
-        if (!hasDirectives && !candidates.some(([alias]) => codeBlock.code.includes(alias))) return;
         const lines = codeBlock.getLines();
         // The text markers plugin reads the `useDiffSyntax` meta option only in `preprocessMetadata`.
         const diff = codeBlock.metaOptions.getBoolean('useDiffSyntax') ?? Boolean(codeBlock.props.useDiffSyntax);
+        const hasDirectives = syntaxes.length > 0 && /\[\\?!/.test(codeBlock.code);
+        if (!hasDirectives && !lines.some(({ text }) => aliasOf(text, syntaxes, aliases, diff))) return;
         const parsed = parseNotation(
           lines.map((line) => line.text),
           syntaxes,
@@ -560,6 +565,7 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
         data.removed = lines.filter((_, i) => parsed[i]?.removed);
         data.output = output;
         data.run = run;
+        data.realDiff = diff && !diffColumns(lines.map((line) => line.text));
         if (code.length < lines.length) remapCollapse(codeBlock, lines, code);
         parsed.forEach(({ directives }, i) => {
           if (directives.length === 0) return;
@@ -569,11 +575,14 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
           const target = area.indexOf(line);
           for (const directive of directives) {
             if (area !== code && specs[directive.name]?.ownLine) {
-              warn(
-                context,
-                `\`[!${directive.name}]\` is not in the code, so it shows as a comment.`,
-                directive.sourceLine,
-              );
+              // Output can hold `# ...` of its own.
+              if (!directive.alias) {
+                warn(
+                  context,
+                  `\`[!${directive.name}]\` is not in the code, so it shows as a comment.`,
+                  directive.sourceLine,
+                );
+              }
               continue;
             }
             data.directives.push({ ...directive, lines: area.slice(target, target + directive.count) });
@@ -605,13 +614,12 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
       },
       preprocessCode({ codeBlock }) {
         const syntaxes = commentSyntaxFor(codeBlock.language, comments);
-        const { removed, specs, diffIndent } = notationData.getOrCreateFor(codeBlock);
+        const { removed, specs, diffIndent, realDiff } = notationData.getOrCreateFor(codeBlock);
         for (const [line, columns] of diffIndent) line.editText(0, columns, '');
         if (syntaxes.length > 0 && /\[\\?!/.test(codeBlock.code)) {
-          const diff = Boolean(codeBlock.props.useDiffSyntax);
           for (const line of codeBlock.getLines()) {
             // Other plugins can edit lines after the first parse, so parse the current text again.
-            const { text, removed: gone } = parseLine(line.text, syntaxes, specs, () => {}, 1, diff);
+            const { text, removed: gone } = parseLine(line.text, syntaxes, specs, () => {}, 1, realDiff);
             // The first parse kept this line, and blanking it would leave an empty line behind.
             if (gone && !removed.includes(line)) continue;
             if (text !== line.text) line.editText(0, line.text.length, text);
@@ -626,7 +634,7 @@ export function pluginNotation({ comments }: NotationOptions = {}): CodeblocksPl
   };
 }
 
-const diffLine = /^(([+-](?![+-]))?\s*)(.*)$/;
+export const diffLine = /^(([+-](?![+-]))?\s*)(.*)$/;
 
 /**
  * The columns that Expressive Code's diff syntax removes from a line of a block with `lines`,

@@ -94,7 +94,6 @@ export function createPlugins(options: ResolvedOptions, base?: string): Expressi
     ...(options.placeholders ? [pluginPlaceholders(options.placeholders)] : []),
     ...(options.mentions ? [pluginMentions()] : []),
     ...(options.permalinks ? [pluginPermalinks()] : []),
-    // Before hidden lines, so that its marker sits above a hidden lines marker on the same line.
     ...(options.skippedCode ? [pluginSkippedCode(options.skippedCode)] : []),
     ...(options.hiddenLines ? [pluginHiddenLines()] : []),
     ...(options.expandable ? [pluginExpandable(options.expandable)] : []),

@@ -1,9 +1,9 @@
 import { type ExpressiveCodeLine, PluginStyleSettings, type UnresolvedStyleValue } from '@expressive-code/core';
 import { addClassName, h, select } from '@expressive-code/core/hast';
 import { uiTexts } from '../translations.ts';
-import { type CodeblocksPlugin, lineElement } from './core.ts';
+import { type CodeblocksPlugin, isDecoration, lineElement } from './core.ts';
 import { inlineMarkdown } from './inline-markdown.ts';
-import { getRenderedDirectives } from './notation.ts';
+import { diffLine, getRenderedDirectives } from './notation.ts';
 import { markerColours, markerStyles, PREFIX } from './styles.ts';
 
 export interface SkippedCodeStyleSettings {
@@ -59,8 +59,9 @@ export function pluginSkippedCode({
 ${markerStyles(cssVar, `${PREFIX}-skip-marker`, `${PREFIX}-skip-text`, 'codeblocksSkippedCode', 'dotted')}
 /* Not zero width or in a flex container: Chromium leaves either out of a manual selection. */
 .${PREFIX}-skip-source { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: pre; }
-.${PREFIX}-skip-marker { display: inline-flex; position: static; }
+.${PREFIX}-skip-marker { display: inline-flex; }
 .${PREFIX}-skip-marker::before { inset-inline: ${cssVar('codePaddingInline')}; }
+/* Where the copy button always shows, it sits over the end of the first line. */
 @media (hover: none) {
   .ec-line:first-child .${PREFIX}-skip-marker::before { inset-inline-end: calc(${cssVar('codePaddingInline')} + 2.5rem); }
 }
@@ -75,14 +76,20 @@ ${markerStyles(cssVar, `${PREFIX}-skip-marker`, `${PREFIX}-skip-text`, 'codebloc
           if (!code) continue;
           addClassName(el, `${PREFIX}-skip-line`);
           // A real diff keeps its `+` or `-` prefix in the text.
-          const indent = line.text.match(/^(?:[+-](?![+-]))?\s*/)?.[0] ?? '';
-          code.children = [
+          const indent = line.text.match(diffLine)?.[1] ?? '';
+          // Other plugins' labels, such as a line state message, stay around the code.
+          const first = code.children.findIndex((node) => !isDecoration(node));
+          const last = code.children.findLastIndex((node) => !isDecoration(node));
+          if (first === -1) continue;
+          code.children.splice(
+            first,
+            last - first + 1,
             ...(indent ? [{ type: 'text' as const, value: indent }] : []),
             h('span', { class: `${PREFIX}-skip-source`, ariaHidden: 'true' }, line.text.slice(indent.length)),
             h('span', { class: `${PREFIX}-skip-marker` }, [
               h('span', { class: `${PREFIX}-skip-text` }, text ? inlineMarkdown(text) : say('skippedCode.marker')),
             ]),
-          ];
+          );
         }
       },
     },

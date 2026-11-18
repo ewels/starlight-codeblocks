@@ -1,5 +1,8 @@
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
+import { fromHtml } from 'hast-util-from-html';
 import { expect, test } from 'vitest';
+import { readTokens } from '../src/components/tokens.ts';
+import { markDecorations } from '../src/expressive-code/core.ts';
 import { block, render } from './render.ts';
 
 const skipLines = (html: string) =>
@@ -112,4 +115,38 @@ test('renders as without the feature when a block skips nothing, and leaves the 
   const { copyText, warnings } = await render(block('js', 'a() // [!code skip]'), { skippedCode: false });
   expect(copyText).toBe('a() // [!code skip]');
   expect(warnings).toHaveLength(1);
+});
+
+test('keeps the line state message of a [!code skip] line', async () => {
+  const { html } = await render(block('js', 'a();', '// [!code warn] Careful', '// [!code skip]', 'b();'));
+  expect(skipLines(html)).toEqual([
+    '<div class="ec-line scb-state scb-state-warning scb-skip-line"><div class="code"><span class="scb-state-prefix scb-sr-only">Warning:</span><span class="scb-skip-source" aria-hidden="true">// ...</span><span class="scb-skip-marker"><span class="scb-skip-text">Code not shown</span></span><span class="scb-state-label"><strong aria-hidden="true">Warning</strong> Careful</span></div></div>',
+  ]);
+});
+
+test('reads no diff prefix in a line that the diff syntax already shortened', async () => {
+  const { html, warnings } = await render(block('diff lang="yaml"', ' a:', ' - # [!code highlight]', '+  b: 1'));
+  expect(html).not.toContain('[!code');
+  expect(warnings).toEqual([]);
+});
+
+test('gives no warning for an alias in output, and leaves it as written', async () => {
+  const sh = await render(block('sh', 'make', '# [!output]', 'built', '# ...'));
+  expect(sh.warnings).toEqual([]);
+  expect(sh.copyText).toBe('make');
+  expect(sh.html).toContain('# ...');
+});
+
+test('gives the text of a dropped [!code skip] to the next directive that takes text', async () => {
+  const { html, warnings } = await render(block('js', 'a(); // [!code skip error] Bad call'));
+  expect(skipLines(html)).toEqual([]);
+  expect(html).toMatch(/scb-state-label[^>]*>.*Bad call/);
+  expect(warnings).toEqual([expect.stringContaining('goes on a line of its own')]);
+});
+
+test('reads the comment of a [!code skip] line as its tokens', async () => {
+  const { html } = await render(block('js', 'a();', '  // [!code skip]', 'b();'));
+  const tree = fromHtml(html, { fragment: true });
+  markDecorations(tree);
+  expect(readTokens(tree as never).code).toBe('a();\n  // ...\nb();');
 });
