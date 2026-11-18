@@ -26,6 +26,9 @@ async def _scb_run(src, g, session, argv, columns):
         os.environ['COLUMNS'] = str(columns)
     else:
         os.environ.pop('COLUMNS', None)
+    # Rich reads COLUMNS once, for the console that it keeps.
+    if 'rich' in sys.modules:
+        sys.modules['rich']._console = None
     if session:
         return _scb_session(src, g)
     try:
