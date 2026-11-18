@@ -260,6 +260,8 @@ test('has no accessibility violations apart from the fade', { tag: '@theme' }, a
   await page.waitForFunction(() =>
     [...document.querySelectorAll('pre')].every((pre) => pre.scrollWidth <= pre.clientWidth || pre.tabIndex === 0),
   );
+  // The hero captions fade in as the divider sweeps, so axe would see them part transparent.
+  await expect(page.locator('.hero-slider .handle')).toHaveAttribute('aria-valuenow', '38');
   // Expressive Code gives each block the same landmark name, which is an upstream issue.
   const { violations } = await new AxeBuilder({ page }).include('main').disableRules(['landmark-unique']).analyze();
   const contrast = violations.find((v) => v.id === 'color-contrast');
