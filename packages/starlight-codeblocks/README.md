@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/logotype.svg" width="800" alt="starlight-codeblocks">
 </h1>
 
-A Starlight and Astro plugin that adds 28 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
+A Starlight and Astro plugin that adds 29 features to code blocks, such as focus, line states, annotations, links to API docs and runnable examples. It builds on Expressive Code, so the code blocks you already have keep working.
 
 Using an agent? [Point it at the bundled skill](https://ewels.github.io/starlight-codeblocks/agent-skill/).
 
@@ -241,6 +241,25 @@ Hide the imports and set-up that readers need to run an example but not to under
 <img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/hidden-lines.webp" alt="A Python block with dashed lines in place of hidden lines. Clicking a dashed line shows the hidden imports.">
 
 [Hidden lines documentation](https://ewels.github.io/starlight-codeblocks/features/hidden-lines/)
+
+</details>
+
+<details>
+<summary>Skipped code</summary>
+
+Show a marker where a code block leaves out code, so readers know the file has more lines there. The copied code has no marker.
+
+````md
+```js
+app.get('/users', async (req, res) => {
+  // [!code skip] Not shown: Read the users from the database
+});
+```
+````
+
+<img src="https://raw.githubusercontent.com/ewels/starlight-codeblocks/main/.github/assets/readme/skipped-code.png" alt="A JavaScript block with a dotted line and the text Not shown: Read the users from the database in place of a function body.">
+
+[Skipped code documentation](https://ewels.github.io/starlight-codeblocks/features/skipped-code/)
 
 </details>
 

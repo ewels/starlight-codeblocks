@@ -14,6 +14,7 @@ test('turns every feature on with defaults, in new objects on each call', () => 
   expect(options.footnotes).toEqual({ sticky: false, style: 'outline' });
   expect(options.shellCopy).toEqual({ prompts: ['$ ', '> '] });
   expect(options.expandable).toEqual({ lines: 12, auto: false });
+  expect(options.skippedCode).toEqual({ commentAliases: { '*': ['...'] }, bareAliases: { json: ['...'] } });
   expect(options.inlineHighlighting).toEqual({ defaultLanguage: false });
   expect(options.playgrounds).toEqual({});
   expect(options.walkthrough).toEqual({ start: 1 });
@@ -62,6 +63,9 @@ test('rejects options that are not valid, with an OptionsError that names the op
     [{ annotations: { style: 'solid' } }, '`annotations.style` must be'],
     [{ footnotes: { style: 'solid' } }, '`footnotes.style` must be'],
     [{ expandable: { lines: 0 } }, '`expandable.lines` must be number, got 0'],
+    [{ skippedCode: { aliases: ['...'] } }, 'unknown option `skippedCode.aliases`'],
+    [{ skippedCode: { commentAliases: { '*': [' '] } } }, '`skippedCode.commentAliases` must be'],
+    [{ skippedCode: { bareAliases: { json: '...' } } }, '`skippedCode.bareAliases` must be'],
     [{ wordDiff: { minSimilarity: 2 } }, '`wordDiff.minSimilarity`'],
     [{ lineStates: { states: { todo: { label: 'To do', colour: '#fff' } } } }, '`lineStates.states` must be'],
     [{ lineStates: { states: { focus: { label: 'F', colour } } } }, '`lineStates.states`'],

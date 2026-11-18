@@ -35,14 +35,17 @@ export interface CommentSyntax {
   close?: string;
 }
 
-export function commentSyntaxFor(language: string, overrides: Record<string, string[]> = {}): CommentSyntax[] {
+/** The entry of `map` for `language`, under its name or a Shiki alias of it. */
+export function forLanguage<T>(language: string, map: Record<string, T>): T | undefined {
   const key = language.toLowerCase();
   const info = bundledLanguage(key);
   const keys = [key, ...(info ? [info.id, ...(info.aliases ?? [])] : [])];
-  const own = (syntaxes: Record<string, string[]>) =>
-    keys.map((k) => (Object.hasOwn(syntaxes, k) ? syntaxes[k] : undefined)).find(Boolean);
-  const syntax = own(overrides) ?? own(defaultCommentSyntax) ?? [];
-  return syntax.map((entry) => {
+  return keys.map((k) => (Object.hasOwn(map, k) ? map[k] : undefined)).find(Boolean);
+}
+
+export function commentSyntaxFor(language: string, overrides: Record<string, string[]> = {}): CommentSyntax[] {
+  const syntax = forLanguage(language, overrides) ?? forLanguage(language, defaultCommentSyntax);
+  return (syntax ?? []).map((entry) => {
     const [open = '', close] = entry.trim().split(/\s+/);
     return { open, close };
   });

@@ -67,6 +67,7 @@ const features = [
       await rec.hold(1000);
     },
   },
+  { slug: 'skipped-code' },
   {
     slug: 'smart-shell-copy',
     run: async (page, rec) => {

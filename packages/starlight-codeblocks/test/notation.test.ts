@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { commentSyntaxFor } from '../src/expressive-code/comments.ts';
-import { type DirectiveSpecs, parseLine, parseNotation } from '../src/expressive-code/notation.ts';
+import { commentSyntaxFor, forLanguage } from '../src/expressive-code/comments.ts';
+import { aliasesFor, type DirectiveSpecs, parseLine, parseNotation } from '../src/expressive-code/notation.ts';
 
 const specs: DirectiveSpecs = {
   'code focus': {},
@@ -10,6 +10,11 @@ const specs: DirectiveSpecs = {
   mention: {},
   callout: { text: true },
   link: {},
+  'code skip': {
+    text: true,
+    ownLine: true,
+    aliases: { comment: { '*': ['...'], md: [] }, bare: { json: ['...'], yaml: ['…'] } },
+  },
 };
 const js = commentSyntaxFor('js');
 
@@ -157,12 +162,50 @@ describe('parseNotation', () => {
       [expect.stringContaining('has no line below it'), 2],
     ]);
   });
+
+  test('keeps the line of an ownLine directive, as a comment with its text', () => {
+    const { parsed, problems } = parseBlock(['a()', '  // [!code skip] Rest', '/* [!code skip] */']);
+    expect(problems).toEqual([]);
+    expect(parsed.map(({ text, removed }) => [text, removed])).toEqual([
+      ['a()', false],
+      ['  // Rest', false],
+      ['/* ... */', false],
+    ]);
+    expect(parsed[1]?.directives).toMatchObject([{ name: 'code skip', text: 'Rest' }]);
+    expect(parseLine('+  // [!code skip]', js, specs, () => {}, 1, true).text).toBe('+  // ...');
+  });
+
+  test('drops an ownLine directive on a line with code, or with a count', () => {
+    const { parsed, problems } = parseBlock(['a() // [!code skip]', '// [!code skip:2]', 'b()']);
+    expect(parsed[0]).toMatchObject({ text: 'a()', directives: [] });
+    expect(parsed[1]).toMatchObject({ text: '// [!code skip:2]', directives: [] });
+    expect(problems).toEqual([
+      [expect.stringContaining('goes on a line of its own'), 1],
+      [expect.stringContaining('takes no count'), 2],
+    ]);
+  });
+
+  test('reads a line that holds only an alias, in a comment or bare, by language', () => {
+    const skip = (lines: string[], lang = 'js') =>
+      parseNotation(lines, commentSyntaxFor(lang), specs, () => {}, false, aliasesFor(specs, lang)).map(
+        ({ removed, directives }) => (removed ? 'removed' : directives.map((d) => d.name).join()),
+      );
+    expect(skip(['a()', '  // ...', 'b()'])).toEqual(['', 'code skip', '']);
+    expect(skip(['a()', '/* ... */'])).toEqual(['', 'code skip']);
+    expect(skip(['{', '  ...', '}'], 'json')).toEqual(['', 'code skip', '']);
+    expect(skip(['a() // ...', '// ... more', '...', '//...x', '[...a]'])).toEqual(['', '', '', '', '']);
+    expect(skip(['def f():', '    ...', '# ...'], 'py')).toEqual(['', '', 'code skip']);
+    expect(skip(['<!-- ... -->'], 'md')).toEqual(['']);
+    expect(skip(['a: 1', '…', '...', '# ...'], 'yml')).toEqual(['', 'code skip', '', 'code skip']);
+  });
 });
 
 test('commentSyntaxFor uses the built-in map, Shiki aliases and the options', () => {
   expect(commentSyntaxFor('Python')).toEqual([{ open: '#', close: undefined }]);
   expect(commentSyntaxFor('css')).toEqual([{ open: '/*', close: '*/' }]);
   expect(commentSyntaxFor('json')).toEqual([]);
+  expect(forLanguage('yml', { yaml: 1 })).toBe(1);
+  expect(forLanguage('fsharp', { json: 1 })).toBeUndefined();
   expect(commentSyntaxFor('pwsh')).toEqual(commentSyntaxFor('powershell'));
   expect(commentSyntaxFor('shellsession')).toEqual([{ open: '#', close: undefined }]);
   expect(commentSyntaxFor('pwsh', { powershell: ['//'] })).toEqual([{ open: '//', close: undefined }]);

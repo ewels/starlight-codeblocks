@@ -16,7 +16,7 @@ codeblocks({
 });
 ```
 
-To turn on only some features, list their keys in `only`. Every other feature is then off. A feature that reads directives in comments also turns on `notation`, unless `notation: false`. These are focus, line states, callouts, squiggles, annotations, footnotes, hidden lines, code links, code mentions and run code. Settings for a feature that is not in `only` stop the build.
+To turn on only some features, list their keys in `only`. Every other feature is then off. A feature that reads directives in comments also turns on `notation`, unless `notation: false`. These are focus, line states, callouts, squiggles, annotations, footnotes, hidden lines, skipped code, code links, code mentions and run code. Settings for a feature that is not in `only` stop the build.
 
 ```js
 codeblocks({ only: ['focus', 'codeTabs'], codeTabs: { control: 'menu' } });
@@ -32,6 +32,7 @@ codeblocks({ only: ['focus', 'codeTabs'], codeTabs: { control: 'menu' } });
 | `annotations` | `style`: `'filled'` or `'outline'`, default `'filled'` | Annotations and side annotations |
 | `footnotes` | `sticky`: default `false`. `style`: `'filled'` or `'outline'`, default `'outline'` | Footnotes |
 | `hiddenLines` | None | Hidden lines |
+| `skippedCode` | `commentAliases`: comments that are the same as `[!code skip]`, by language, with `*` for the others, default `{ '*': ['...'] }`. `bareAliases`: lines with no comment, default `{ json: ['...'] }`. Keys merge over the defaults; `[]` turns a language off | Skipped code |
 | `shellCopy` | `prompts`: default `['$ ', '> ']`. Python `>>>` sessions need no prompt setting | Smart shell copy |
 | `wordDiff` | `minSimilarity`: from 0 to 1, default `0.4` | Word-level diff |
 | `splitDiff` | `view`: `'unified'` or `'split'`, default `'unified'`. `switch`: default `true`. `sync`: default `true` | Split diff |

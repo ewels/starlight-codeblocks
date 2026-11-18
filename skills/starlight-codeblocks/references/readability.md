@@ -3,6 +3,7 @@
 Seven features make a block, or the code in the prose, easier to read. None of them changes the copied text.
 
 - If lines are needed to run the code but not to understand it, hide them with hidden lines.
+- If the example leaves code out, mark the place with skipped code, in place of a `// ...` comment.
 - If the whole file matters but readers scan it, cap it with an expandable block.
 - If every line matters but a few matter more, use focus, in [draw-attention.md](draw-attention.md).
 - If the exact whitespace changes the meaning, show it with visible whitespace.
@@ -37,6 +38,34 @@ createServer(handler).listen(port);
 - Without JavaScript, hidden lines stay hidden.
 - Option: `hiddenLines: false` ignores `hidden` and leaves `[!code hide]` in the code.
 - Expressive Code's `collapse={range}` comes from `@expressive-code/plugin-collapsible-sections`. It keeps a summary line for each section and works without JavaScript. Hidden lines take only a thin marker, have a directive and a show-all button, and need JavaScript to open. The docs compare them: https://ewels.github.io/starlight-codeblocks/features/hidden-lines/#hidden-lines-or-collapsible-sections
+
+## Skipped code
+
+Docs: https://ewels.github.io/starlight-codeblocks/features/skipped-code/
+
+Use where an example shows part of a file and leaves code out. The `// ...` line shows as a marker, so readers do not read it as code. Use hidden lines instead if the copied code must run.
+
+| Syntax | Where |
+|---|---|
+| `[!code skip]` | Comment on its own line where the code is left out |
+| `[!code skip] text` | The same, with `text` on the marker in place of "Code not shown" |
+
+```js
+app.get('/users', async (req, res) => {
+  // [!code skip] Not shown: Read the users from the database
+});
+// [!code skip]
+```
+
+- The marker is a dotted rule with a badge, at the indentation of the directive line. It is not a button.
+- The marker is a line of the block: it has a line number, and line ranges count it.
+- The copied code has the marker as a comment: `// text`, or `// ...` without text. It has no skipped code. Do not use it in a block with a playground or the **Run code** button.
+- On a line with code, or with a count (`:N`), the directive logs a warning and does nothing.
+- Aliases: lines that are the same as `[!code skip]`. `skippedCode.commentAliases` (default `{ '*': ['...'] }`) reads a comment that holds only an alias (`// ...`, `# ...`). `skippedCode.bareAliases` (default `{ json: ['...'] }`) reads the alias alone on its line, with no comment. Both are by language: `*` applies to every language without its own entry, your keys merge over the defaults, and `[]` turns a language off. For a bare `...` in YAML, set `bareAliases: { yaml: ['...'] }`.
+- An alias changes only how the line looks. Line numbers, ranges and the copied code stay the same.
+- A comment with other text, such as `// ... and so on`, stays in the code. Use it to keep `// ...` as code in one block. For a marker with text, use `[!code skip] text`.
+- During the animation of a code walkthrough or scrollycoding step, a marker line shows empty.
+- `skippedCode: false` leaves `[!code skip]` in the code.
 
 ## Expandable blocks
 

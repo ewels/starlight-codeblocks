@@ -42,8 +42,8 @@ export function animate(group: HTMLElement, from: StepTokens, to: StepTokens) {
   if (real.length !== lines(to).length - 1) return () => {};
   // The tokens have no line backgrounds or diff markers, so a diff would lose them until the animation ends.
   if (code.querySelector('.ec-line:is(.ins, .del)')) return () => {};
-  // Callouts, hidden-line markers and section summaries take up height but have no tokens, so the block would jump.
-  const rows = code.querySelectorAll(':scope > :not(.ec-line, details), summary');
+  // Callouts, hidden-line and skipped code markers, and section summaries change the height of the block, so it would jump.
+  const rows = code.querySelectorAll(':scope > :not(.ec-line, details), summary, .scb-skip-line');
   if ([...rows].some((row) => row.checkVisibility())) return () => {};
   const style = getComputedStyle(group.querySelector('figure') ?? group);
   const i = style.getPropertyValue('--ec-codeblocksWalkthrough-themeIndex').trim() || '0';

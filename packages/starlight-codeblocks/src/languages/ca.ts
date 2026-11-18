@@ -24,6 +24,7 @@ export default {
   'hiddenLines.hide_one': 'Amagar {{count}} línia',
   'hiddenLines.hide_many': 'Amagar {{count}} de línies',
   'hiddenLines.hide_other': 'Amagar {{count}} línies',
+  'skippedCode.marker': 'Codi no mostrat',
   'expandable.showAll_one': 'Mostrar {{count}} línia',
   'expandable.showAll_many': 'Mostrar {{count}} de línies',
   'expandable.showAll_other': 'Mostrar les {{count}} línies',

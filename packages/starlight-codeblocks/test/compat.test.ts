@@ -99,6 +99,8 @@ test('colours keep their contrast when a theme sets the code background to a CSS
     }
     const badge = get('codeblocksHiddenLines.badgeBackground');
     expect(getColorContrast(get('codeblocks.mutedForeground'), badge), `${name} hidden`).toBeGreaterThanOrEqual(4.5);
+    const skipBadge = get('codeblocksSkippedCode.badgeBackground');
+    expect(getColorContrast(get('codeblocks.mutedForeground'), skipBadge), `${name} skip`).toBeGreaterThanOrEqual(4.5);
     expect(getColorContrast(get('codeblocksPermalinks.foreground'), bg), `${name} permalink`).toBeGreaterThanOrEqual(
       4.5,
     );

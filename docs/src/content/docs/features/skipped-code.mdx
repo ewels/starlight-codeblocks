@@ -1,0 +1,197 @@
+---
+title: Skipped code
+description: Show a marker where a code block leaves out code, so readers know the file has more lines there.
+---
+
+import { LinkCard } from '@astrojs/starlight/components';
+import Example from '../../../components/Example.astro';
+import Options from '../../../components/Options.astro';
+
+An example often shows only part of a file. Authors then write a comment such as `// ...` where code is left out, and readers can mistake it for code. Skipped code draws that line as a marker, which looks different from the code. The line keeps its line number, and copies as a plain comment. Write the `[!code skip]` directive, with optional text. Existing `// ...` comments also show as markers, through [aliases](#aliases).
+
+export const basic = `
+\`\`\`js title="routes.js"
+const app = express();
+
+app.get('/users', async (req, res) => {
+  // [!code skip] Not shown: Read the users from the database
+});
+
+app.post('/users', async (req, res) => {
+  const user = await db.users.create(req.body);
+  res.status(201).json(user);
+});
+// [!code skip]
+\`\`\`
+`;
+
+<Example code={basic} />
+
+The first marker replaces the body of the `get` handler and shows the text after the directive. The second marker shows that the file goes on after the last line. Copying the block gives each marker as a comment, such as `// Not shown: Read the users from the database`.
+
+## Syntax
+
+| Syntax | Where |
+|---|---|
+| `[!code skip]` | Comment on its own line |
+| `[!code skip] text` | Comment on its own line |
+
+Put the directive on its own line where the code is left out. That line shows as the marker, at the same indentation. Without text, the marker reads "Code not shown". The text can hold inline code, links and bold text.
+
+## Aliases
+
+Many pages already use `// ...` for code that they leave out. These lines are the same as `[!code skip]` by default, so existing pages show markers with no changes. A line is an alias if it holds one of these, and nothing else:
+
+- A comment alias: a comment with only the alias in it, in the comment syntax of the language, such as `// ...`, `# ...`, `/* ... */` or `<!-- ... -->`. By default, `...` in every language.
+- A bare alias: the alias with no comment. By default, `...` in JSON.
+
+:::note[JSON]
+JSON has no comments, so a JSON block cannot hold the `[!code skip]` directive. The default config has a bare alias for JSON, `bareAliases: { json: ['...'] }`, so write `...` alone on a line instead.
+:::
+
+This JSON block shows two markers:
+
+export const json = `
+\`\`\`json title="package.json"
+{
+  "name": "my-site",
+  "scripts": {
+    "dev": "astro dev",
+    ...
+  },
+  ...
+}
+\`\`\`
+`;
+
+<Example code={json} layout="tabs" />
+
+An alias changes only how the line looks. The line keeps its line number, line ranges count it, and the copied code has the `// ...` as written. An alias takes no text: for a marker with text, write `[!code skip] text`.
+
+Set `skippedCode.commentAliases` and `skippedCode.bareAliases` to change the aliases. Each is a list of aliases for each language, and `*` applies to every language without its own entry. The defaults are `commentAliases: { '*': ['...'] }` and `bareAliases: { json: ['...'] }`. Your entries merge over them, and `[]` turns aliases off for a language:
+
+```js title="astro.config.mjs"
+codeblocks({
+  skippedCode: {
+    // [!callout /commentAliases/] `// …` as well as `// ...`, and no comment aliases in Python.
+    commentAliases: { '*': ['...', '…'], python: [] },
+    // [!callout /bareAliases/] `...` with no comment in YAML. JSON keeps its default.
+    bareAliases: { yaml: ['...'] },
+  },
+});
+```
+
+A language name or its alias works as a key: `yaml` also applies to ` ```yml `. To keep `// ...` as code in one block, add text to the comment, such as `// ... and so on`. A language with `[]` in `notation.comments` has no comment syntax, so it reads no comment aliases.
+
+## Examples
+
+### Skip code without text
+
+Without text, the marker reads "Code not shown". Use it when the code around the marker tells readers what is left out:
+
+export const noText = `
+\`\`\`ts title="cache.ts"
+export class Cache<T> {
+  private entries = new Map<string, T>();
+
+  // [!code skip]
+
+  get(key: string): T | undefined {
+    return this.entries.get(key);
+  }
+  // [!code skip]
+}
+\`\`\`
+`;
+
+<Example code={noText} layout="tabs" />
+
+### Skip the start of a file
+
+A marker on the first line shows that the example starts in the middle of a file:
+
+export const start = `
+\`\`\`py title="report.py"
+# [!code skip] Not shown: Imports and settings
+def summarise(rows):
+    totals = {}
+    for row in rows:
+        totals[row["status"]] = totals.get(row["status"], 0) + 1
+    return totals
+\`\`\`
+`;
+
+<Example code={start} layout="tabs" hiddenAttributes="apiLinks=false" />
+
+### Skip a section of a configuration file
+
+YAML uses `#` comments. For JSON, use `jsonc`, because JSON has no comments:
+
+export const config = `
+\`\`\`yaml title="docker-compose.yml"
+services:
+  web:
+    image: nginx:1.27
+    ports:
+      - "8080:80"
+  # [!code skip] Not shown: The database and cache services
+volumes:
+  data:
+\`\`\`
+`;
+
+<Example code={config} layout="tabs" />
+
+### Link to lines after a marker
+
+The marker is a line of the block, so it has a line number. With [line permalinks](/starlight-codeblocks/features/line-permalinks/), which the `id` attribute turns on, each number is a link. The `app.get` line below is line 3, as in the source:
+
+export const permalinks = `
+\`\`\`js title="routes.js" id="routes"
+const app = express();
+// [!code skip] Not shown: Middleware and settings
+app.get('/users', async (req, res) => {
+  const users = await db.users.findAll();
+  res.json(users);
+});
+\`\`\`
+`;
+
+<Example code={permalinks} layout="tabs" />
+
+## Behaviour
+
+- The marker:
+  - A dotted rule across the line, with the text in a badge at the indentation of the directive line.
+  - The marker is not a button. Readers cannot open it, because the code is not in the block.
+- Line numbers and ranges:
+  - The marker is a line of the block. It has a line number, and line ranges such as `{4}` count it.
+  - The line numbers do not jump over the skipped code.
+- Copy and selection:
+  - The copy button and a manual selection copy the marker as a comment, such as `// ...`. The comment holds the text of the directive, or `...` when it has none. An alias line copies as written.
+- Screen readers:
+  - Screen readers read the text of the marker in its place among the lines, and not the comment.
+- Print:
+  - Markers print.
+
+## Options
+
+<Options />
+
+Turn the feature off for the whole site with `skippedCode: false`. The plugin then does not know the `[!code skip]` directive. It leaves the directive in the code as written, and logs a build warning.
+
+<LinkCard title="Configuration" description="Learn how to set options for the whole site, or for a single code block." href="/starlight-codeblocks/configuration/" />
+
+## Limitations
+
+- The directive needs a comment. JSON has no comments and can use only bare aliases, so its markers have no text.
+- The directive goes on a line of its own. On a line with code, the plugin logs a warning and leaves it out.
+- During the animation of a code walkthrough or scrollycoding step, a marker line shows empty.
+- Line numbers do not jump over the skipped code. To start a block at a later number, use the `startLineNumber` attribute of Expressive Code.
+- The copied code is incomplete, so it can fail to run. Do not use skipped code in a block with a **Run code** or playground button.
+
+## Related
+
+- [Hidden lines](/starlight-codeblocks/features/hidden-lines/): keep the lines in the block and the copied code, behind a marker that readers can open.
+- [Expandable blocks](/starlight-codeblocks/features/expandable-blocks/): show a full file, cut to its first lines until the reader asks for the rest.
+- [Comment notation](/starlight-codeblocks/comment-notation/): the directive syntax that `[!code skip]` uses.

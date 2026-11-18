@@ -21,6 +21,7 @@ export default {
   'hiddenLines.show_other': 'Vis {{count}} skjulte linjer',
   'hiddenLines.hide_one': 'Skjul {{count}} linje',
   'hiddenLines.hide_other': 'Skjul {{count}} linjer',
+  'skippedCode.marker': 'Kode utelatt',
   'expandable.showAll_one': 'Vis {{count}} linje',
   'expandable.showAll_other': 'Vis alle {{count}} linjene',
   'expandable.showFewer': 'Vis færre linjer',

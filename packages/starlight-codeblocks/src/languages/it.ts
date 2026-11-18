@@ -24,6 +24,7 @@ export default {
   'hiddenLines.hide_one': 'Nascondi {{count}} riga',
   'hiddenLines.hide_many': 'Nascondi {{count}} di righe',
   'hiddenLines.hide_other': 'Nascondi {{count}} righe',
+  'skippedCode.marker': 'Codice omesso',
   'expandable.showAll_one': 'Mostra {{count}} riga',
   'expandable.showAll_many': 'Mostra {{count}} di righe',
   'expandable.showAll_other': 'Mostra tutte le {{count}} righe',

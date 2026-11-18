@@ -2,6 +2,7 @@ import { nextflow } from './adapters/nextflow.ts';
 import { python } from './adapters/python.ts';
 import type { FileIconLanguage, FileIconSet, FileIconStyle } from './expressive-code/file-icons.ts';
 import { fileIconSets, isCssColour } from './expressive-code/file-icons.ts';
+import { defaultSkipAliases } from './expressive-code/skipped-code.ts';
 import {
   type SwatchDelimiters,
   type SwatchFormat,
@@ -89,6 +90,7 @@ export interface CodeblocksOptions {
   annotations?: false | { style?: 'filled' | 'outline' };
   footnotes?: false | { sticky?: boolean; style?: 'filled' | 'outline' };
   hiddenLines?: false;
+  skippedCode?: false | { commentAliases?: Record<string, string[]>; bareAliases?: Record<string, string[]> };
   shellCopy?: false | { prompts?: string[] };
   wordDiff?: false | { minSimilarity?: number };
   splitDiff?: false | { view?: 'unified' | 'split'; switch?: boolean; sync?: boolean };
@@ -194,6 +196,8 @@ const isString = (value: unknown) => typeof value === 'string';
 const isStringArray = (value: unknown) => Array.isArray(value) && value.every(isString);
 const isRecordOf = (valid: (value: unknown) => boolean) => (value: unknown) =>
   isObject(value) && Object.values(value).every(valid);
+const isAliasList = (value: unknown) =>
+  isStringArray(value) && (value as string[]).every((alias) => alias.trim() !== '');
 const oneOf =
   (...values: string[]) =>
   (value: unknown) =>
@@ -206,7 +210,7 @@ const isDelimiters = (value: unknown) =>
 
 // Attributes and directives of other features, which a custom state name would clash with.
 const reservedStateNames = new Set(
-  'title frame mark ins del collapse wrap lang focus hidden hide highlight whitespace brackets swatches expandable playground id placeholder annotations footnotes label prefix step runnable note warn'.split(
+  'title frame mark ins del collapse wrap lang focus hidden hide skip highlight whitespace brackets swatches expandable playground id placeholder annotations footnotes label prefix step runnable note warn'.split(
     ' ',
   ),
 );
@@ -316,6 +320,28 @@ export const optionsReference: Record<FeatureName, Feature> = {
     directives: true,
     description: 'Hides lines that readers need to run the code but not to understand it.',
     page: 'features/hidden-lines',
+  },
+  skippedCode: {
+    directives: true,
+    description: 'Shows a marker in place of code that a block leaves out.',
+    page: 'features/skipped-code',
+    off: '`[!code skip]` then stays in the code as written.',
+    fields: {
+      commentAliases: {
+        type: 'Record<string, string[]>',
+        default: defaultSkipAliases.comment,
+        description:
+          'Comments that stand for `[!code skip]` when they hold only an alias, such as `// ...`, by language. `*` applies to every language without its own entry, and `[]` turns aliases off for a language. Your keys merge over the defaults.',
+        valid: isRecordOf(isAliasList),
+      },
+      bareAliases: {
+        type: 'Record<string, string[]>',
+        default: defaultSkipAliases.bare,
+        description:
+          'Lines that stand for `[!code skip]` when they hold only an alias, with no comment, by language, such as `...` in JSON. `*` applies to every language without its own entry, and `[]` turns aliases off for a language. Your keys merge over the defaults.',
+        valid: isRecordOf(isAliasList),
+      },
+    },
   },
   shellCopy: {
     description: 'Adds a Copy commands button to terminal blocks with prompts, which copies the commands only.',

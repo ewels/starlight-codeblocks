@@ -21,6 +21,7 @@ export default {
   'hiddenLines.show_other': '{{count}} verborgene Zeilen anzeigen',
   'hiddenLines.hide_one': '{{count}} Zeile verbergen',
   'hiddenLines.hide_other': '{{count}} Zeilen verbergen',
+  'skippedCode.marker': 'Code ausgelassen',
   'expandable.showAll_one': '{{count}} Zeile anzeigen',
   'expandable.showAll_other': 'Alle {{count}} Zeilen anzeigen',
   'expandable.showFewer': 'Weniger Zeilen anzeigen',

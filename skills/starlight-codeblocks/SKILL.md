@@ -1,12 +1,12 @@
 ---
 name: starlight-codeblocks
-description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, squiggles, comment notation directives, annotations, footnotes, inline callouts, side annotations, scrollycoding, code mentions, word-level diff, split diff, code walkthrough, hidden lines, expandable blocks, visible whitespace, colourised brackets, colour swatches, file icons, inline code highlighting, code links, API auto-linking, line permalinks, code tabs, fill-in placeholders, smart shell copy, open in playground and run code. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
+description: Write, choose and configure code block features on Astro Starlight sites that use the starlight-codeblocks plugin. Covers focus, line states, squiggles, comment notation directives, annotations, footnotes, inline callouts, side annotations, scrollycoding, code mentions, word-level diff, split diff, code walkthrough, hidden lines, skipped code, expandable blocks, visible whitespace, colourised brackets, colour swatches, file icons, inline code highlighting, code links, API auto-linking, line permalinks, code tabs, fill-in placeholders, smart shell copy, open in playground and run code. Use when you install or configure starlight-codeblocks, when you write or edit code blocks in .md, .mdx or .mdoc pages of a site that has it, when you add these features to the existing pages of a site, or when you must choose how to explain, highlight, compare, shorten, link or run code in Starlight docs.
 license: MIT
 ---
 
 # starlight-codeblocks
 
-starlight-codeblocks is a Starlight plugin. It adds 28 features to the code blocks that Expressive Code renders. A feature starts only when a code block uses its attribute or its directive, so the plugin does not change existing pages. A few features apply to every block of a type: they are in [Features that start on their own](#features-that-start-on-their-own).
+starlight-codeblocks is a Starlight plugin. It adds 29 features to the code blocks that Expressive Code renders. A feature starts only when a code block uses its attribute or its directive, so the plugin does not change existing pages. A few features apply to every block of a type: they are in [Features that start on their own](#features-that-start-on-their-own).
 
 Full docs: https://ewels.github.io/starlight-codeblocks/. Each page has a Markdown version at the same address with `.md` at the end. https://ewels.github.io/starlight-codeblocks/llms-full.txt has every page in one file.
 
@@ -77,6 +77,7 @@ Use scrollycoding when prose explains the code step by step as the reader scroll
 | Goal | Use | Why |
 |---|---|---|
 | Imports and set-up that readers need to run the code but not to understand it | Hidden lines: `hidden={1-3}` or `[!code hide]` | Named lines go behind a marker. The copy button still copies them. |
+| Code that the example leaves out, where authors write `// ...` | Skipped code: `[!code skip]`, or `// ...`, which is an alias by default | The line shows as a marker and copies as a comment. The copied code is incomplete. |
 | A long file that readers scan | Expandable block: `expandable` or `expandable={N}` | Shows the first lines, with a button that shows the rest. |
 | Indentation or tabs change the meaning (Make, Python, YAML) | Visible whitespace: `whitespace` or `whitespace="all"` | Shows spaces and tabs as faint glyphs. |
 | Deep nesting on dense lines | Colourised brackets: `brackets` | Colours bracket pairs by depth. |
@@ -165,6 +166,7 @@ These features need no attribute. Know them, because they can change a block tha
 - File icons apply to every block with a title in an editor frame. Turn them off for a block with `icon=false`, or for a file type or a language with `false` in `fileIcons.files` or `fileIcons.languages`.
 - Expandable blocks apply to every block longer than `expandable.auto` lines, if the site sets that option. Turn it off for a block with `expandable=false`.
 - Inline code highlighting applies to all inline code, if the site sets `inlineHighlighting.defaultLanguage`. Keep one piece plain with `{:txt}`.
+- Skipped code reads every comment that holds only `...`, such as `// ...` or `# ...`, as a marker by default. It also reads `...` alone on its line in JSON. `skippedCode.commentAliases` and `skippedCode.bareAliases` change these per language. Only the look of those lines changes: they keep their line numbers and copy as written. To keep `// ...` as code in one block, add text to the comment, such as `// ... and so on`.
 
 If a page shows one feature, keep the others out of its examples with these attributes.
 
@@ -175,7 +177,7 @@ If a page shows one feature, keep the others out of its examples with these attr
 - For inline code highlighting, put the suffix inside the backticks: `` `res.ok{:js}` ``. MDX reads `` `res.ok`{:js} `` as a JavaScript expression and the build fails.
 - A directive with an unknown name, or of a feature that is off, stays in the code and logs a build warning. So does a directive outside a comment that the block's language reads. Read the build warnings after every change: each gives the file, the block and the line.
 - Each `id` for line permalinks must be unique on the page, and must not match a heading id.
-- Hidden lines still run in the copied code, in playgrounds and with `runnable`. Code for a playground or the **Run code** button must be complete.
+- Hidden lines still run in the copied code, in playgrounds and with `runnable`. Code for a playground or the **Run code** button must be complete, so it cannot use `[!code skip]`.
 - Fill-in placeholder values stay in the browser's `localStorage` by default. For secrets such as API tokens, set `placeholders: { storage: 'session' }`.
 - In Markdoc (`.mdoc`) files, put attributes in a `meta` attribute: `` ```js {% meta="focus={2}" %} ``. Code tabs and inline code highlighting do not work there.
 - The `<Code>` component of Starlight gets every feature inside a block. Give the attributes in its `meta` prop.

@@ -16,6 +16,8 @@ export interface Token {
 
 // Decorations that other features add inside a line. Keep in step with their unselectable elements.
 const DECORATIONS = `button, input, select, [popover], [aria-hidden="true"], .${DECORATION}`;
+// The comment that a skipped code marker stands for, which is the line's code.
+const SKIP_SOURCE = '.scb-skip-source';
 
 /** The code lines of a block, without the lines that other plugins add, such as a collapsed section's summary. */
 export function codeLines(root: Element): Element[] {
@@ -44,7 +46,7 @@ export function readTokens(figure: Element): { code: string; lines: Token[][] } 
           if (!content) continue;
           tokens.push({ content, offset, htmlStyle: styles.join(';') || undefined });
           offset += content.length;
-        } else if (node.type === 'element' && !matches(DECORATIONS, node)) {
+        } else if (node.type === 'element' && (matches(SKIP_SOURCE, node) || !matches(DECORATIONS, node))) {
           const style = String(node.properties.style ?? '');
           walk(node.children, style.startsWith('--') ? [...styles, style] : styles);
         }

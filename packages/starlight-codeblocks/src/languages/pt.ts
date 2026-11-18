@@ -24,6 +24,7 @@ export default {
   'hiddenLines.hide_one': 'Ocultar {{count}} linha',
   'hiddenLines.hide_many': 'Ocultar {{count}} de linhas',
   'hiddenLines.hide_other': 'Ocultar {{count}} linhas',
+  'skippedCode.marker': 'Código omitido',
   'expandable.showAll_one': 'Mostrar {{count}} linha',
   'expandable.showAll_many': 'Mostrar {{count}} de linhas',
   'expandable.showAll_other': 'Mostrar todas as {{count}} linhas',

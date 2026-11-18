@@ -775,6 +775,19 @@ export const styleSettingsReference: Record<string, StyleGroupDoc> = {
       openOpacity: { description: 'The opacity of the code of a hidden line that shows.' },
     },
   },
+  codeblocksSkippedCode: {
+    page: 'features/skipped-code',
+    settings: {
+      badgeBackground: {
+        description: 'The background of the text on a marker.',
+        derived: '`codeblocks.mutedForeground` at 10% opacity on the code background.',
+      },
+      rule: {
+        description: 'The dotted rule of a marker.',
+        derived: '`codeblocks.mutedForeground` at 35% opacity.',
+      },
+    },
+  },
   codeblocksRunnable: {
     page: 'features/run-code',
     settings: {

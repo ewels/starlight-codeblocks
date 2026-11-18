@@ -191,7 +191,7 @@ app.listen(3000);
 - Leave an empty line after `<CodeWalkthrough>` and before `</CodeWalkthrough>`. Each code block is one step, in order. Each keeps its other attributes, such as `title`.
 - The walkthrough opens on its first step. For a Before and After pair, put Before first and add `start="last"`: the reader sees and copies After, and **Next** animates the change. `start="2"` in quotes works too. Any other value, or a number outside the steps, logs a build warning and opens the first step.
 - The copy button copies the code of the current step.
-- Arrow keys move between steps when a numbered step has focus. Under reduced motion, steps change without the animation. A step with removed or added lines also changes without it, so the diff colours stay.
+- Arrow keys move between steps when a numbered step has focus. Under reduced motion, steps change without the animation. A step with removed or added lines also changes without it, so the diff colours stay. So does a step with a callout or a hidden lines marker.
 - A line that is new in a step flashes the theme's green, then fades out in 1 second. There is no flash under reduced motion.
 - Without JavaScript, and when the page prints, each step shows as a separate block with its label after the title.
 - The page loads the animation library, about 3 kB, only on pages with `<CodeWalkthrough>`.

@@ -2,9 +2,7 @@ import {
   AttachedPluginData,
   type ExpressiveCodeBlock,
   type ExpressiveCodeLine,
-  onBackground,
   PluginStyleSettings,
-  type StyleResolverFn,
   setAlpha,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
@@ -13,7 +11,7 @@ import { clientJsModules } from '../client-modules.ts';
 import { uiTexts } from '../translations.ts';
 import { addTitleBarControl, blockUid, type CodeblocksPlugin, insertBefore, lineElement } from './core.ts';
 import { markedLines } from './notation.ts';
-import { PREFIX, solidCodeBackground, solidCodeForeground } from './styles.ts';
+import { markerColours, markerStyles, PREFIX, solidCodeForeground } from './styles.ts';
 
 export interface HiddenLinesStyleSettings {
   badgeBackground: UnresolvedStyleValue;
@@ -33,9 +31,7 @@ declare module '@expressive-code/core' {
 const styleSettings = new PluginStyleSettings({
   defaultValues: {
     codeblocksHiddenLines: {
-      badgeBackground: (context: Parameters<StyleResolverFn>[0]) =>
-        onBackground(setAlpha(context.resolveSetting('codeblocks.mutedForeground'), 0.1), solidCodeBackground(context)),
-      rule: ({ resolveSetting }) => setAlpha(resolveSetting('codeblocks.mutedForeground'), 0.35),
+      ...markerColours,
       ruleHover: ({ resolveSetting }) => resolveSetting('codeblocks.mutedForeground'),
       ruleOpen: ({ resolveSetting }) => setAlpha(resolveSetting('codeblocks.mutedForeground'), 0.22),
       openBackground: (context) => setAlpha(solidCodeForeground(context), 0.04),
@@ -74,46 +70,30 @@ export function pluginHiddenLines(): CodeblocksPlugin {
   background: ${cssVar('codeblocksHiddenLines.openBackground')};
   opacity: ${cssVar('codeblocksHiddenLines.openOpacity')};
 }
+${markerStyles(cssVar, `${PREFIX}-hidden-marker`, `${PREFIX}-hidden-marker span`, 'codeblocksHiddenLines', 'dashed')}
 .${PREFIX}-hidden-marker {
   display: flex;
-  align-items: center;
-  width: 100%;
   position: relative;
-  margin: 2px 0;
+  width: 100%;
   padding: 0;
   border: 0;
   background: none;
-  color: ${cssVar('codeblocks.mutedForeground')};
   cursor: pointer;
   font: inherit;
   text-align: left;
-  user-select: none;
-  -webkit-user-select: none;
 }
 .${PREFIX}-hidden-marker::before {
-  content: '';
-  position: absolute;
-  top: 50%;
   inset-inline: calc(var(--scb-gutter, 0px) + ${cssVar('codePaddingInline')}) ${cssVar('codePaddingInline')};
-  border-top: 1px dashed ${cssVar('codeblocksHiddenLines.rule')};
-  transform: translateY(-50%);
 }
 /* Where the copy button always shows, it sits over the end of the first line. */
 @media (hover: none) {
   .${PREFIX}-hidden-marker:first-child::before { inset-inline-end: calc(${cssVar('codePaddingInline')} + 2.5rem); }
 }
 .${PREFIX}-hidden-marker span {
-  position: relative;
-  z-index: 1;
   display: inline-flex;
   align-items: center;
   /* The gutter width is in ch of the code font; the division undoes this span's smaller font size. */
   margin-inline-start: calc(var(--scb-gutter, 0px) / 0.8125 + ${cssVar('codePaddingInline')});
-  padding: 0.05em 0.65em;
-  border-radius: 999px;
-  background: ${cssVar('codeblocksHiddenLines.badgeBackground')};
-  font-size: 0.8125em;
-  line-height: 1.6;
 }
 .${PREFIX}-hidden-marker:hover, .${PREFIX}-hidden-marker:focus-visible {
   color: ${cssVar('codeForeground')};

@@ -29,6 +29,7 @@ export const sidebar = [
     label: 'Make code easier to read',
     items: [
       'features/hidden-lines',
+      'features/skipped-code',
       'features/expandable-blocks',
       'features/visible-whitespace',
       'features/colourised-brackets',

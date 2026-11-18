@@ -4,7 +4,7 @@ description: A plugin for Starlight and Astro that adds focus, line states, anno
 template: splash
 hero:
   tagline: |
-    This plugin adds 28 features to the <a href="https://expressive-code.com">Expressive Code</a> blocks of
+    This plugin adds 29 features to the <a href="https://expressive-code.com">Expressive Code</a> blocks of
     <a href="https://starlight.astro.build">Starlight</a> and <a href="/starlight-codeblocks/install/astro/">Astro</a> sites.
     Use them to enrich code blocks.
     <span class="agent-skill">Using an agent? <a href="/starlight-codeblocks/agent-skill/">Point it at the bundled skill</a>.</span>
@@ -227,6 +227,24 @@ for key, value in config.items():
     if key.startswith("_"):
         continue
     print(f"{key} = {value}")
+```
+
+</Feature>
+
+<Feature page="features/skipped-code">
+
+```js title="routes.js"
+const app = express();
+
+app.get('/users', async (req, res) => {
+  // [!code skip] Not shown: Read the users from the database
+});
+
+app.post('/users', async (req, res) => {
+  const user = await db.users.create(req.body);
+  res.status(201).json(user);
+});
+// [!code skip]
 ```
 
 </Feature>

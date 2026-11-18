@@ -27,6 +27,7 @@ export default {
   'hiddenLines.hide_few': 'Ukryj {{count}} wiersze',
   'hiddenLines.hide_many': 'Ukryj {{count}} wierszy',
   'hiddenLines.hide_other': 'Ukryj {{count}} wiersza',
+  'skippedCode.marker': 'Pominięty kod',
   'expandable.showAll_one': 'Pokaż {{count}} wiersz',
   'expandable.showAll_few': 'Pokaż wszystkie {{count}} wiersze',
   'expandable.showAll_many': 'Pokaż wszystkie {{count}} wierszy',

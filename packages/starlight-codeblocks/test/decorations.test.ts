@@ -11,6 +11,7 @@ const blocks = [
   block('js title="a.js" hidden={1} id="x" playground="typescript" run', 'setup();', 'main();'),
   block('js annotations="side"', 'run(a); // [!annotate] Runs it.'),
   block('sh placeholder="TOKEN"', 'curl -H "Bearer TOKEN"'),
+  block('js', 'a();', '// [!code skip]', 'b();', '// [!code skip] **Rest**'),
 ];
 
 /** The text of each element that matches `selector` without the marked decorations, as a tool that drops `.scb-deco` reads it. */

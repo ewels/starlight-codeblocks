@@ -18,6 +18,7 @@ import {
   type ElementContent,
   EXIT,
   h,
+  matches,
   type Parents,
   select,
   selectAll,
@@ -79,6 +80,7 @@ const decorations = [
   'squiggle-popover',
   'squiggle-list',
   'hidden-marker',
+  'skip-marker',
   'expandable-bar',
   'steps-stepper',
   'steps-controls',
@@ -95,6 +97,8 @@ const decorations = [
  * Gives each decoration the one class that tools reading the HTML can drop, such as starlight-llms-txt,
  * and keeps it out of the Pagefind index. Keep the list in step with new decorations.
  */
+export const isDecoration = (node: ElementContent) => node.type === 'element' && matches(decorations, node);
+
 export function markDecorations(root: Parents) {
   for (const element of selectAll(decorations, root)) {
     const classes = element.properties.className as string[];
