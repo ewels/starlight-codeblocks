@@ -3,17 +3,39 @@ import type { Runtime } from '../options.ts';
 const PYODIDE_VERSION = '314.0.7';
 export const PYODIDE_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
 
-// Runs each top-level statement as the Python REPL does, so that expression values are shown.
-const sessionSource = `
-import ast, traceback
+// A session runs each top-level statement as the Python REPL does, so that expression values are shown.
+// sys.exit() ends a run as it ends \`python main.py\`: with no traceback, and only a message that is not a number.
+const runSource = `
+import ast, os, sys, traceback
+from pyodide.code import eval_code_async
+def _scb_exit(e):
+    if e.code is not None and not isinstance(e.code, int):
+        print(e.code, file=sys.stderr)
 def _scb_session(src, g):
     try:
         for node in ast.parse(src, '<stdin>').body:
             exec(compile(ast.Interactive([node]), '<stdin>', 'single'), g)
+    except SystemExit as e:
+        _scb_exit(e)
     except BaseException as e:
         tb = None if isinstance(e, SyntaxError) else e.__traceback__.tb_next
         traceback.print_exception(e.with_traceback(tb))
-_scb_session
+async def _scb_run(src, g, session, argv, columns):
+    sys.argv = list(argv)
+    if columns:
+        os.environ['COLUMNS'] = str(columns)
+    else:
+        os.environ.pop('COLUMNS', None)
+    # Rich reads COLUMNS once, for the console that it keeps.
+    if 'rich' in sys.modules:
+        sys.modules['rich']._console = None
+    if session:
+        return _scb_session(src, g)
+    try:
+        await eval_code_async(src, g)
+    except SystemExit as e:
+        _scb_exit(e)
+_scb_run
 `;
 
 // Top-level imports that are neither in the standard library nor installed.
@@ -33,7 +55,7 @@ _scb_missing
 // Each run gets fresh globals, so that one block's names do not leak into the next.
 const workerSource = `
 let ready;
-let interactive;
+let runCode;
 let missing;
 let queue = Promise.resolve();
 onmessage = ({ data }) => {
@@ -43,12 +65,13 @@ const install = async (py, names) => {
   await py.loadPackage('micropip');
   await py.pyimport('micropip').install(names);
 };
-const handle = async ({ id, url, code, session, prepare, packages = [] }) => {
+const handle = async ({ id, url, code, session, args = [], file, columns, prepare, packages = [] }) => {
   try {
     ready ??= import(url + 'pyodide.mjs')
       .then((m) => m.loadPyodide({ indexURL: url }))
       .then((py) => {
-        interactive = py.runPython(${JSON.stringify(sessionSource)});
+        // Not the reader's \`<exec>\`, so that the trimming of the traceback drops these frames.
+        runCode = py.runPython(${JSON.stringify(runSource)}, { filename: '<scb>' });
         missing = py.runPython(${JSON.stringify(missingSource)});
         return py;
       });
@@ -77,8 +100,7 @@ const handle = async ({ id, url, code, session, prepare, packages = [] }) => {
     globals.set('__name__', '__main__');
     let failure;
     try {
-      if (session) interactive(code, globals);
-      else await py.runPythonAsync(code, { globals });
+      await runCode(code, globals, !!session, [file ?? 'main.py', ...args], columns);
     } catch (e) {
       failure = e;
     } finally {
@@ -95,7 +117,9 @@ const handle = async ({ id, url, code, session, prepare, packages = [] }) => {
   }
 };`;
 
-type Message = { code: string; session: boolean; packages: string[] } | { prepare: string; packages: string[] };
+type Message =
+  | { code: string; session: boolean; args?: string[]; file?: string; columns?: number; packages: string[] }
+  | { prepare: string; packages: string[] };
 
 interface Reply {
   id: number;
@@ -174,8 +198,9 @@ export function pyodide({ url = PYODIDE_URL }: { url?: string } = {}): Runtime {
       wanted.set(code, packages);
       await call({ prepare: code, packages });
     },
-    run: async (code, { signal, session = false }) => {
-      const { stdout = '', stderr = '' } = await call({ code, session, packages: wanted.get(code) ?? [] }, signal);
+    run: async (code, { signal, session = false, args, file, columns }) => {
+      const message = { code, session, args, file, columns, packages: wanted.get(code) ?? [] };
+      const { stdout = '', stderr = '' } = await call(message, signal);
       return { stdout, stderr };
     },
   };

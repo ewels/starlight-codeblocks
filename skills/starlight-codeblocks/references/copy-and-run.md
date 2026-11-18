@@ -90,6 +90,7 @@ Use for short Python, JavaScript or TypeScript examples that readers can run in 
 |---|---|
 | `runnable` | Code block fence line |
 | `runnable.packages="<name> <name>"` | Code block fence line |
+| `runnable.args="<arguments>"` | Code block fence line |
 | `runnable.button="below"`, `runnable.button="title"`, `runnable.button="both"` | Code block fence line |
 | `[!run]`, `[!run lang=<language>]`, `[!run end]` | Comment in the code, on its own line |
 | `[!output]`, `[!output stdout]`, `[!output stderr]`, `[!output end]`, with `lang=<language>` after the stream | Comment in the code, on its own line |
@@ -128,5 +129,6 @@ ERROR ~ Error executing process > 'sayHello' # [!code error]
 ```
 ````
 - Python packages: the runtime reads the `import` lines and installs Pyodide's packages (NumPy, pandas and about 350 more). It installs any other import from PyPI with micropip, under the import name. PyPI reads `_`, `-` and `.` as the same character and ignores case, so `import rich_click` installs `rich-click`. PyPI packages must be pure Python. When the package name differs from the import name, name it: ` ```py runnable runnable.packages="python-slugify" ` for `import slugify`. Separate several names with spaces; `name==1.2` pins a version.
+- Command line tools: `runnable.args="--count 2 'Ada Lovelace'"` gives the code its arguments, split as a shell splits them. In Python, `sys.argv` is the block title (else `main.py`) and the arguments. Write the tool as in a real file, with `if __name__ == "__main__": main()`. Set `title="hello.py"` for the program name in the usage line. Do not add `standalone_mode=False` or `prog_name` to Click or Typer calls. `sys.exit()` ends the run with no traceback. `COLUMNS` is the panel width, so argparse and Rich help fits the panel; Click help is at least 50 characters wide. One block runs one command line; use one block for each. Typer help needs `runnable.packages="markdown-it-py pygments"`.
 - Options: `runnable.timeout` (default `10000` ms), `runnable.button` and `runnable.outputDelay` set the defaults for blocks. `runnable.outputLabel: true` shows an **Output** label above the output. `runnable.runtimes` is a map of language to a runtime module (a package path or a path from the project root). To wrap or replace a built-in runtime, import it from `starlight-codeblocks/runtimes/pyodide`, `/javascript` or `/typescript`. Guide: https://ewels.github.io/starlight-codeblocks/extend/add-a-runtime/
 - Limits: Pyodide loads from the jsDelivr CDN and packages from PyPI. Every runtime runs its worker from a `blob:` URL. A Content Security Policy must allow all three. Without JavaScript, the button is hidden.

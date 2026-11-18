@@ -242,12 +242,13 @@ export function blockSetting<T>(
   parse: (raw: string) => T | undefined,
   fallback: T,
   expected: string,
+  otherwise = 'The block uses the site setting.',
 ): T {
   const option = context.codeBlock.metaOptions.list(key).at(-1);
   if (!option) return fallback;
   const value = parse(String(option.value));
   if (value !== undefined) return value;
-  warn(context, `\`${option.raw.trim()}\` must be ${expected}. The block uses the site setting.`);
+  warn(context, `\`${option.raw.trim()}\` must be ${expected}. ${otherwise}`);
   return fallback;
 }
 

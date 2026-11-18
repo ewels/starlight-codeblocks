@@ -30,6 +30,7 @@ Click **Run code**. The first time, the browser downloads Python (Pyodide, a bui
 | `runnable.label="<text>"`, `runnable.againLabel="<text>"` | Code block fence line |
 | `runnable.timeout=<ms>` | Code block fence line |
 | `runnable.packages="<name> <name>"` | Code block fence line |
+| `runnable.args="<arguments>"` | Code block fence line |
 | `runnable.button="below"`, `runnable.button="title"`, `runnable.button="both"` | Code block fence line |
 | `[!run]`, `[!run lang=<language>]`, `[!run end]` | Comment in the code, on its own line |
 | `[!output]`, `[!output stdout]`, `[!output stderr]`, `[!output end]`, with `lang=<language>` after the stream | Comment in the code, on its own line |
@@ -78,6 +79,17 @@ The block needs no `runnable` attribute and no runtime, so it works in every lan
 `[!code highlight]` and the [line state](/starlight-codeblocks/features/line-states/) directives mark a line of output, as they mark a line of code. `[!wait]` and a mark can share one comment, such as `# [!wait 1000] [!code highlight]`. Ranges on the fence line, such as `{2}`, count the lines of code only.
 
 `runnable.output` on the fence line does the same, with `\n` for each new line.
+
+### Command line arguments
+
+`runnable.args` gives the code the arguments of a command line. Separate the arguments with spaces, and put quotes around an argument that has spaces, such as `runnable.args="--name 'Ada Lovelace'"`. The title of the block is the name of the program. A block without a title runs as `main.py`.
+
+In Python, `sys.argv` holds the name and the arguments, as it does for `python hello.py --count 2`. So a command line tool made with [argparse](https://docs.python.org/3/library/argparse.html), [Click](https://click.palletsprojects.com/) or [Typer](https://typer.tiangolo.com/) runs with no change to its code:
+
+- `sys.exit()` ends the run as it ends a program, with no traceback. An exit message that is not a number shows as standard error.
+- The `COLUMNS` environment variable is the width of the output panel, in characters. Help text that reads it, such as the help of argparse and Rich, fits the panel. Click makes its help at least 50 characters wide, so on a narrow screen its help can scroll.
+
+The JavaScript and TypeScript runtimes do not read the arguments.
 
 ### Output from a file
 
@@ -187,6 +199,31 @@ print(slugify("Hello, World: Run Code!"))
 `;
 
 <Example code={packages} layout="tabs" hiddenAttributes="apiLinks=false" />
+
+### A command line tool
+
+The title gives the program name in the usage line, and `runnable.args` gives the arguments. The code is the same as in a file that runs in a terminal:
+
+export const cli = `
+\`\`\`py runnable title="hello.py" runnable.args="--help"
+import click
+
+@click.command()
+@click.option("--count", default=1, help="Number of greetings.")
+@click.argument("name")
+def hello(count, name):
+    """Greet NAME, COUNT times."""
+    for _ in range(count):
+        click.echo(f"Hello, {name}!")
+
+if __name__ == "__main__":
+    hello()
+\`\`\`
+`;
+
+<Example code={cli} layout="tabs" hiddenAttributes="apiLinks=false" />
+
+The help of a [Typer](https://typer.tiangolo.com/) app needs two packages that Pyodide does not install with Rich, so add `runnable.packages="markdown-it-py pygments"` to the fence line. For the colours of [rich-click](https://ewels.github.io/rich-click/) or Typer, add [`runnable.outputLang=ansi`](#output-in-a-language), and set `FORCE_COLOR` in a [hidden line](/starlight-codeblocks/features/hidden-lines/).
 
 ### An error
 

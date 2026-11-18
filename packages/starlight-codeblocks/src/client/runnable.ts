@@ -31,6 +31,20 @@ const status = (text: string) => line('p', 'scb-run-status', text);
 const stdout = (text: string, ansi = false) => line('pre', 'scb-run-stdout', text, { ansi });
 const error = (prefix: string, text: string, ansi = false) => line('pre', 'scb-run-stderr', text, { prefix, ansi });
 
+/** The number of characters that fit on a line of the panel. */
+function columns(panel: HTMLElement) {
+  const probe = stdout('0'.repeat(10));
+  // The panel is a live region.
+  probe.setAttribute('aria-hidden', 'true');
+  panel.append(probe);
+  const range = document.createRange();
+  range.selectNodeContents(probe);
+  // Both widths include any transform on the page, so that it cancels out.
+  const n = Math.floor((probe.getBoundingClientRect().width * 10) / range.getBoundingClientRect().width);
+  probe.remove();
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}
+
 /** Prints the output that the author wrote, a line at a time, as if the code ran. */
 async function replay(figure: HTMLElement, panel: HTMLElement, output: string) {
   const delay = Number(figure.dataset.scbRunnableDelay) || 0;
@@ -87,7 +101,14 @@ async function run(figure: HTMLElement, panel: HTMLElement) {
   });
   const timer = setTimeout(() => controller.abort(new DOMException('Timed out', 'TimeoutError')), timeout);
   try {
-    const output = await Promise.race([runtime.run(code, { signal: controller.signal, session }), stopped]);
+    const options = {
+      signal: controller.signal,
+      session,
+      args: JSON.parse(figure.dataset.scbRunnableArgs ?? '[]'),
+      file: figure.dataset.scbRunnableFile,
+      columns: columns(panel),
+    };
+    const output = await Promise.race([runtime.run(code, options), stopped]);
     const parts = [];
     const ansi = figure.hasAttribute('data-scb-runnable-ansi');
     if (output.stdout) parts.push(stdout(output.stdout, ansi));

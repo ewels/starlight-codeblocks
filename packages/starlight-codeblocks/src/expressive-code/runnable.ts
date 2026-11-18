@@ -274,6 +274,21 @@ async function readOutputFile(context: Parameters<typeof warn>[0], path: string)
   }
 }
 
+const SHELL_WORD = /(?:"(?:[^"\\]|\\.)*"|'[^']*'|\\.|[^\s"'\\])+/g;
+
+/**
+ * Splits text into words as a shell does: quotes keep spaces in a word, and a backslash escapes the next character.
+ * `undefined` for a quote that does not close.
+ */
+function shellWords(raw: string): string[] | undefined {
+  if (raw.replace(SHELL_WORD, '').trim()) return undefined;
+  return (raw.match(SHELL_WORD) ?? []).map((word) =>
+    word.replace(/"((?:[^"\\]|\\.)*)"|'([^']*)'|\\(.)/g, (_, double, single, escaped) =>
+      double !== undefined ? double.replace(/\\([\\"$`])/g, '$1') : (single ?? escaped),
+    ),
+  );
+}
+
 const NEEDS_OUTPUT = '`runnable.static` needs output: `[!output]` lines, `runnable.output` or `runnable.outputFile`.';
 
 /**
@@ -481,6 +496,8 @@ export function pluginRunnable({
           metaOptions.getString('runnable.outputLang')?.trim() || (/\.ansi$/i.test(path ?? '') ? 'ansi' : undefined);
         if (scripted !== undefined && run.length > 0)
           warn(context, '`[!run]` has no effect in a block with scripted output: the button prints the output.');
+        if (scripted !== undefined && metaOptions.list('runnable.args').length > 0)
+          warn(context, '`runnable.args` has no effect in a block with scripted output: the button prints the output.');
         const say = uiTexts(context.locale);
         const buttonText = blockSetting(context, 'runnable.label', text, label ?? say('runnable.run'), 'some text');
         const again = blockSetting(
@@ -644,8 +661,26 @@ export function pluginRunnable({
           (raw) => raw.trim().split(/\s+/).join(' ') || undefined,
           '',
           'one or more package names',
+          'The block installs only the packages of its imports.',
         );
         if (packages) figure.properties.dataScbRunnablePackages = packages;
+        const name = bundledLanguage(language)?.name ?? language;
+        const args = blockSetting(
+          context,
+          'runnable.args',
+          shellWords,
+          [],
+          'words, with quotes that close',
+          'The block runs with no arguments.',
+        );
+        if (
+          args.length > 0 &&
+          language !== 'python' &&
+          modules[language] === BUILT_IN[language as keyof typeof BUILT_IN]
+        )
+          warn(context, `The ${name} runtime does not read \`runnable.args\`. The block runs without them.`);
+        if (args.length > 0) figure.properties.dataScbRunnableArgs = JSON.stringify(args);
+        if (codeBlock.props.title) figure.properties.dataScbRunnableFile = codeBlock.props.title;
         keepCopiedText(renderData.blockAst, codeBlock.code);
         if (run.length > 0) {
           figure.properties.dataScbRunnableCode = encodeCode(run.map((line) => line.text).join('\n'));
@@ -657,7 +692,6 @@ export function pluginRunnable({
               [...session].map(([line, prompt]) => line.text.slice(prompt.length)).join('\n'),
             );
         }
-        const name = bundledLanguage(language)?.name ?? language;
         addButtons(
           livePanel({
             loading: say('runnable.loading', { language: name }),
