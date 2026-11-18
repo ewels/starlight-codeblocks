@@ -34,10 +34,13 @@ const error = (prefix: string, text: string, ansi = false) => line('pre', 'scb-r
 /** The number of characters that fit on a line of the panel. */
 function columns(panel: HTMLElement) {
   const probe = stdout('0'.repeat(10));
+  // The panel is a live region.
+  probe.setAttribute('aria-hidden', 'true');
   panel.append(probe);
   const range = document.createRange();
   range.selectNodeContents(probe);
-  const n = Math.floor((probe.clientWidth * 10) / range.getBoundingClientRect().width);
+  // Both widths include any transform on the page, so that it cancels out.
+  const n = Math.floor((probe.getBoundingClientRect().width * 10) / range.getBoundingClientRect().width);
   probe.remove();
   return Number.isFinite(n) && n > 0 ? n : undefined;
 }

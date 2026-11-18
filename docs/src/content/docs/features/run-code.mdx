@@ -87,7 +87,7 @@ The block needs no `runnable` attribute and no runtime, so it works in every lan
 In Python, `sys.argv` holds the name and the arguments, as it does for `python hello.py --count 2`. So a command line tool made with [argparse](https://docs.python.org/3/library/argparse.html), [Click](https://click.palletsprojects.com/) or [Typer](https://typer.tiangolo.com/) runs with no change to its code:
 
 - `sys.exit()` ends the run as it ends a program, with no traceback. An exit message that is not a number shows as standard error.
-- The `COLUMNS` environment variable is the width of the output panel, in characters. Help text that reads it, such as the help of argparse, Click and Rich, fits the panel.
+- The `COLUMNS` environment variable is the width of the output panel, in characters. Help text that reads it, such as the help of argparse and Rich, fits the panel. Click makes its help at least 50 characters wide, so on a narrow screen its help can scroll.
 
 The JavaScript and TypeScript runtimes do not read the arguments.
 
