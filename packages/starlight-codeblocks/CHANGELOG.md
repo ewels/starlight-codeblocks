@@ -8,6 +8,9 @@
 - Split diff: a **Unified** and **Split** switch in the title bar of each block that removes and adds lines. **Split** shows the old code on the left and the new code on the right, as a GitHub pull request does. `splitDiff.view`, `splitDiff.switch` and `splitDiff.sync` set the start view, remove the switch and stop it syncing across the page (#37)
 - Untitled blocks with title bar controls use the tab bar colours of titled blocks (#37)
 - Skipped code: `[!code skip]` on its own line shows a marker in place of code that a block leaves out, at the indentation of its line. The text after the directive goes in the marker, else it reads "Code not shown". The line keeps its line number, and copies as a comment with the text, such as `// Not shown: Imports`. A comment that holds only `...`, such as `// ...`, and `...` alone on a line in JSON, also show as markers and copy as written. `skippedCode.commentAliases` and `skippedCode.bareAliases` change these aliases for each language. `skippedCode: false` turns the feature off (#28)
+- Run code: `runnable.args="<arguments>"` gives the code command line arguments. In Python, `sys.argv` holds the title of the block (else `main.py`) and the arguments, so a Click, Typer or argparse tool runs with no change to its code (#43)
+- Run code: in Python, `sys.exit()` ends a run as it ends a program: with no `SystemExit` traceback, and with an exit message that is not a number on standard error. Before, `--help` in a Click command showed a traceback (#43)
+- Run code: the `COLUMNS` environment variable of a Python run is the width of the output panel in characters, so help text from argparse, Click and Rich fits the panel. Custom runtimes get `args`, `file` and `columns` in the options of `run()` (#43)
 
 ## 1.4.1
 

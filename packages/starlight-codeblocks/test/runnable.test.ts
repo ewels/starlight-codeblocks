@@ -404,6 +404,25 @@ test('runnable.packages lists the packages to install, with single spaces', asyn
   expect(none.html).not.toContain('data-scb-runnable-packages');
 });
 
+test('runnable.args gives the arguments as shell words, and the title gives the program name', async () => {
+  const py = { runnable: { runtimes: { python: '/py.js' } } };
+  const { html, warnings } = await render(
+    block(`py runnable title="hello.py" runnable.args="--name 'Ada Lovelace' -n='2 3' x"`, 'x'),
+    py,
+  );
+  expect(html).toContain(
+    'data-scb-runnable-args="[&#x22;--name&#x22;,&#x22;Ada Lovelace&#x22;,&#x22;-n=2 3&#x22;,&#x22;x&#x22;]"',
+  );
+  expect(html).toContain('data-scb-runnable-file="hello.py"');
+  expect(warnings).toEqual([]);
+  const none = await render(block('py runnable', 'x'), py);
+  expect(none.html).not.toContain('data-scb-runnable-args');
+  expect(none.html).not.toContain('data-scb-runnable-file');
+  const open = await render(block(`py runnable runnable.args="'Ada"`, 'x'), py);
+  expect(open.html).not.toContain('data-scb-runnable-args');
+  expect(open.warnings).toEqual([expect.stringContaining('must be words, with quotes that close')]);
+});
+
 test('blocks without runnable render the same with the feature off', async () => {
   const plain = block('js title="a.js"', 'console.log(1)');
   expect((await render(plain, js)).html).toBe((await render(plain, { runnable: false })).html);

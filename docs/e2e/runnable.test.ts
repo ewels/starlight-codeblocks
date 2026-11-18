@@ -6,16 +6,17 @@ const JS = 1;
 const TS = 2;
 const PYPI = 3;
 const PACKAGES = 4;
-const ERROR = 5;
-const LOOP = 6;
-const SCRIPTED = 7;
-const FAILED = 8;
-const MARKS = 9;
-const OUTPUT_ONLY = 10;
-const ANSI = 11;
-const ANSI_RUN = 12;
-const RUN_OTHER = 13;
-const TITLE = 14;
+const CLI = 5;
+const ERROR = 6;
+const LOOP = 7;
+const SCRIPTED = 8;
+const FAILED = 9;
+const MARKS = 10;
+const OUTPUT_ONLY = 11;
+const ANSI = 12;
+const ANSI_RUN = 13;
+const RUN_OTHER = 14;
+const TITLE = 15;
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./features/run-code/');
@@ -137,6 +138,15 @@ test('installs Python packages from PyPI, by import name or from runnable.packag
   const named = example(page, PACKAGES);
   await named.locator('.scb-run').click();
   await expect(named.locator('.scb-run-stdout')).toHaveText('hello-world-run-code', { timeout: 120_000 });
+});
+
+test('a command line tool gets its arguments and program name, and sys.exit() shows no traceback', async ({ page }) => {
+  once();
+  test.setTimeout(240_000);
+  const cli = example(page, CLI);
+  await cli.locator('.scb-run').click();
+  await expect(cli.locator('.scb-run-stdout')).toContainText('Usage: hello.py [OPTIONS] NAME', { timeout: 180_000 });
+  await expect(cli.locator('.scb-run-stderr')).toHaveCount(0);
 });
 
 test('the button sits under the block, or in the title bar with runnable.button', async ({ page }) => {

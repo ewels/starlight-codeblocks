@@ -274,6 +274,14 @@ async function readOutputFile(context: Parameters<typeof warn>[0], path: string)
   }
 }
 
+const SHELL_WORD = /(?:"[^"]*"|'[^']*'|[^\s"'])+/g;
+
+/** Splits text into words as a shell does, with quotes around a word that has spaces. `undefined` for a quote that does not close. */
+function shellWords(raw: string): string[] | undefined {
+  if (raw.replace(SHELL_WORD, '').trim()) return undefined;
+  return (raw.match(SHELL_WORD) ?? []).map((word) => word.replace(/"([^"]*)"|'([^']*)'/g, '$1$2'));
+}
+
 const NEEDS_OUTPUT = '`runnable.static` needs output: `[!output]` lines, `runnable.output` or `runnable.outputFile`.';
 
 /**
@@ -646,6 +654,9 @@ export function pluginRunnable({
           'one or more package names',
         );
         if (packages) figure.properties.dataScbRunnablePackages = packages;
+        const args = blockSetting(context, 'runnable.args', shellWords, [], 'words, with quotes that close');
+        if (args.length > 0) figure.properties.dataScbRunnableArgs = JSON.stringify(args);
+        if (codeBlock.props.title) figure.properties.dataScbRunnableFile = codeBlock.props.title;
         keepCopiedText(renderData.blockAst, codeBlock.code);
         if (run.length > 0) {
           figure.properties.dataScbRunnableCode = encodeCode(run.map((line) => line.text).join('\n'));

@@ -150,8 +150,15 @@ export interface Runtime {
    * `packages` are the names in the block's `runnable.packages` attribute.
    */
   load(code: string, options?: { packages?: string[] }): Promise<void>;
-  /** `session` is true when `code` is the commands of a session with prompts, which run as a REPL runs them. */
-  run(code: string, options: { signal: AbortSignal; session?: boolean }): Promise<{ stdout: string; stderr: string }>;
+  /**
+   * `session` is true when `code` is the commands of a session with prompts, which run as a REPL runs them.
+   * `args` are the words of the block's `runnable.args` attribute, and `file` is the block's title.
+   * `columns` is the width of the output panel in characters.
+   */
+  run(
+    code: string,
+    options: { signal: AbortSignal; session?: boolean; args?: string[]; file?: string; columns?: number },
+  ): Promise<{ stdout: string; stderr: string }>;
 }
 
 /** The option key of each feature. */

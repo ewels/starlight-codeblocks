@@ -348,6 +348,18 @@ export const attributesReference: AttributeDoc[] = [
     },
   },
   {
+    name: 'runnable.args',
+    syntax: ['runnable.args="<arguments>"'],
+    description:
+      'Command line arguments for the code, separated by spaces, with quotes around an argument that has spaces. In Python, `sys.argv` holds the title of the block, or `main.py`, and the arguments.',
+    page: 'features/run-code',
+    example: {
+      lang: 'py',
+      meta: 'runnable title="greet.py" runnable.args="Ada"',
+      code: 'import sys\nprint(f"Hello, {sys.argv[1]}!")',
+    },
+  },
+  {
     name: 'runnable.button',
     syntax: ['runnable.button="below"', 'runnable.button="title"', 'runnable.button="both"'],
     description:
