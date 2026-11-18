@@ -35,26 +35,18 @@ export interface CommentSyntax {
   close?: string;
 }
 
-function commentEntry(language: string, overrides: Record<string, string[]>) {
+/** The entry of `map` for `language`, under its name or a Shiki alias of it. */
+export function forLanguage<T>(language: string, map: Record<string, T>): T | undefined {
   const key = language.toLowerCase();
   const info = bundledLanguage(key);
   const keys = [key, ...(info ? [info.id, ...(info.aliases ?? [])] : [])];
-  const own = (syntaxes: Record<string, string[]>) =>
-    keys.map((k) => (Object.hasOwn(syntaxes, k) ? syntaxes[k] : undefined)).find(Boolean);
-  return { keys, syntax: own(overrides) ?? own(defaultCommentSyntax) };
+  return keys.map((k) => (Object.hasOwn(map, k) ? map[k] : undefined)).find(Boolean);
 }
 
 export function commentSyntaxFor(language: string, overrides: Record<string, string[]> = {}): CommentSyntax[] {
-  return (commentEntry(language, overrides).syntax ?? []).map((entry) => {
+  const syntax = forLanguage(language, overrides) ?? forLanguage(language, defaultCommentSyntax);
+  return (syntax ?? []).map((entry) => {
     const [open = '', close] = entry.trim().split(/\s+/);
     return { open, close };
   });
-}
-
-/**
- * JSON, unless the site gives it a comment syntax. Other languages with no entry may still have comments (F#, Elixir).
- */
-export function hasNoComments(language: string, overrides: Record<string, string[]> = {}) {
-  const { keys, syntax } = commentEntry(language, overrides);
-  return !syntax && keys.includes('json');
 }

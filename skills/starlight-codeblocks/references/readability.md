@@ -43,11 +43,11 @@ createServer(handler).listen(port);
 
 Docs: https://ewels.github.io/starlight-codeblocks/features/skipped-code/
 
-Use where an example shows part of a file and leaves code out. A marker takes the place of a `// ...` comment, so readers do not read it as code. Use hidden lines instead if the copied code must run.
+Use where an example shows part of a file and leaves code out. The `// ...` line shows as a marker, so readers do not read it as code. Use hidden lines instead if the copied code must run.
 
 | Syntax | Where |
 |---|---|
-| `[!code skip]` | Comment on its own line where the code is left out, or at the end of the line below that place |
+| `[!code skip]` | Comment on its own line where the code is left out |
 | `[!code skip] text` | The same, with `text` on the marker in place of "Code not shown" |
 
 ```js
@@ -58,13 +58,13 @@ app.get('/users', async (req, res) => {
 ```
 
 - The marker is a dotted rule with a badge, at the indentation of the directive line. It is not a button.
-- A directive line at the end of the block puts the marker after the last line.
-- The copied code has no marker, and no skipped code. Do not use it in a block with a playground or the **Run code** button.
-- Line numbers do not jump over the marker.
-- Aliases: `skippedCode.aliases` (default `[]`) sets the lines that are the same as `[!code skip]`. By default, `// ...` stays in the code as written. `['...']` reads a line that holds only a comment with only `...` in it (`// ...`, `# ...`) as a marker. In JSON, which has no comments, it reads `...` alone on its line. In Python and YAML, a bare `...` stays as code.
-- The aliases change existing pages: the `// ...` lines leave the code, so line ranges after them, such as `{4}` or `ins={4}`, count different lines. Check those blocks when you set the option.
-- With the aliases, a comment with other text, such as `// ... and so on`, stays in the code. Use it to keep `// ...` as code in one block. For a marker with text, use `[!code skip] text`.
-- A code walkthrough or scrollycoding step with a marker changes without the animation.
+- The marker is a line of the block: it has a line number, and line ranges count it.
+- The copied code has the marker as a comment: `// text`, or `// ...` without text. It has no skipped code. Do not use it in a block with a playground or the **Run code** button.
+- On a line with code, or with a count (`:N`), the directive logs a warning and does nothing.
+- Aliases: lines that are the same as `[!code skip]`. `skippedCode.commentAliases` (default `{ '*': ['...'] }`) reads a comment that holds only an alias (`// ...`, `# ...`). `skippedCode.bareAliases` (default `{ json: ['...'] }`) reads the alias alone on its line, with no comment. Both are by language: `*` applies to every language without its own entry, your keys merge over the defaults, and `[]` turns a language off. For a bare `...` in YAML, set `bareAliases: { yaml: ['...'] }`.
+- An alias changes only how the line looks. Line numbers, ranges and the copied code stay the same.
+- A comment with other text, such as `// ... and so on`, stays in the code. Use it to keep `// ...` as code in one block. For a marker with text, use `[!code skip] text`.
+- During the animation of a code walkthrough or scrollycoding step, a marker line shows empty.
 - `skippedCode: false` leaves `[!code skip]` in the code.
 
 ## Expandable blocks

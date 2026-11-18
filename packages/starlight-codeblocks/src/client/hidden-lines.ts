@@ -17,11 +17,7 @@ function setRun(block: Element, marker: Element, open: boolean) {
       line.nextElementSibling.classList.toggle(OPEN, open);
     // Opens a collapsed expandable block or collapsible section that holds the line.
     if (open && line) unhide(line);
-    for (
-      let el = line?.previousElementSibling;
-      el?.matches('.scb-callout, .scb-skip-marker');
-      el = el.previousElementSibling
-    ) {
+    for (let el = line?.previousElementSibling; el?.matches('.scb-callout'); el = el.previousElementSibling) {
       el.classList.toggle(OPEN, open);
     }
   }

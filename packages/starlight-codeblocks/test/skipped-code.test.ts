@@ -1,101 +1,109 @@
+import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
 import { expect, test } from 'vitest';
 import { block, render } from './render.ts';
 
-const marker = (html: string) => html.match(/<div class="scb-skip-marker[^"]*">.*?<\/div>/g) ?? [];
-const dots = { skippedCode: { aliases: ['...'] } };
+const skipLines = (html: string) =>
+  html.match(/<div class="ec-line[^"]*scb-skip-line[^"]*"[^>]*>.*?<\/div><\/div>/g) ?? [];
 
-test('puts a marker where a [!code skip] line was, and leaves it out of the copied text', async () => {
+test('draws a [!code skip] line as a marker, and copies it as a comment', async () => {
   const { html, copyText, warnings } = await render(
     block('js', 'function connect() {', '  // [!code skip]', '  return socket;', '}'),
   );
-  expect(marker(html)).toEqual([
-    '<div class="scb-skip-marker"><span class="scb-skip-indent">  </span><span class="scb-skip-text">Code not shown</span></div>',
+  expect(skipLines(html)).toEqual([
+    '<div class="ec-line scb-skip-line"><div class="code">  <span class="scb-skip-source" aria-hidden="true">// ...</span><span class="scb-skip-marker"><span class="scb-skip-text">Code not shown</span></span></div></div>',
   ]);
-  expect(html.indexOf('scb-skip-marker')).toBeLessThan(html.indexOf('return'));
-  expect(html.indexOf('scb-skip-marker')).toBeGreaterThan(html.indexOf('connect'));
-  expect(copyText).toBe('function connect() {\n  return socket;\n}');
+  expect(copyText).toBe('function connect() {\n  // ...\n  return socket;\n}');
   expect(warnings).toEqual([]);
 });
 
-test('takes the marker text from the directive, with inline Markdown', async () => {
-  const { html } = await render(block('py', 'import os', '# [!code skip] The `main()` function', 'main()'));
-  expect(marker(html)).toEqual([
-    '<div class="scb-skip-marker"><span class="scb-skip-text">The <code>main()</code> function</span></div>',
+test('takes the marker text from the directive, with inline Markdown, and copies the text in the comment', async () => {
+  const { html, copyText } = await render(block('py', 'import os', '# [!code skip] The `main()` function', 'main()'));
+  expect(skipLines(html)).toEqual([expect.stringContaining('The <code>main()</code> function</span>')]);
+  expect(copyText).toBe('import os\n# The `main()` function\nmain()');
+});
+
+test('counts a [!code skip] line in line numbers and ranges', async () => {
+  const { html } = await render(block('js {3}', 'a();', '// [!code skip]', 'b();'));
+  expect(html).toMatch(/<div class="ec-line highlight[^"]*"><div class="code">.*?b<\/span>/);
+  const numbered = await render(block('js showLineNumbers', 'a();', '// [!code skip]', 'b();'), {}, [
+    pluginLineNumbers(),
   ]);
+  expect(skipLines(numbered.html)).toEqual([expect.stringMatching(/class="ln"[^>]*>2</)]);
+  const end = await render(block('js', 'a();', '// [!code skip] More'));
+  expect(end.html).toMatch(/>a<.*scb-skip-line.*More<\/span><\/span><\/div><\/div><\/code>/);
 });
 
-test('puts a marker after the last line, from a [!code skip] line at the end', async () => {
-  const { html, copyText, warnings } = await render(block('js', 'const a = 1;', '// [!code skip] More'));
-  expect(html).toMatch(/>1<.*<div class="scb-skip-marker"><span class="scb-skip-text">More<\/span><\/div><\/code>/);
-  expect(copyText).toBe('const a = 1;');
-  expect(warnings).toEqual([]);
-});
-
-test('puts a marker above a line with a trailing [!code skip]', async () => {
-  const { html } = await render(block('js', 'a();', 'b(); // [!code skip]'));
-  expect(html).toMatch(/>a<.*scb-skip-marker.*>b</);
-});
-
-test('puts markers at the end of a block in source order', async () => {
-  const { html } = await render(block('js', 'a();', '// [!code skip] One', '// [!code skip] Two'));
-  expect(html).toMatch(/One.*Two/);
-});
-
-test('hides a marker between hidden lines with them, but not one above a run', async () => {
+test('hides a [!code skip] line in a hidden run with the run', async () => {
   const { html } = await render(block('js hidden={2-4}', 'a();', 'b();', '// [!code skip] Inside', 'c();', 'd();'));
-  expect(marker(html)).toEqual([expect.stringContaining('scb-skip-marker scb-skip-hidden">')]);
-  const above = await render(block('js hidden={2-3}', 'a();', '// [!code skip] Above', 'b();', 'c();'));
-  expect(marker(above.html)).toEqual([expect.stringContaining('class="scb-skip-marker">')]);
+  expect(skipLines(html)).toEqual([expect.stringContaining('scb-skip-line scb-hidden-line scb-no-print')]);
 });
 
-test('reads a directive line with a diff prefix, at the indentation that readers see', async () => {
-  const { html, copyText } = await render(
-    block('diff lang="js"', ' function f() {', '+  // ...', '+  return 1;', ' }'),
-    dots,
-  );
-  expect(marker(html)).toEqual([expect.stringContaining('<span class="scb-skip-indent">  </span>')]);
-  expect(copyText).toBe('function f() {\n  return 1;\n}');
+test('warns about a [!code skip] on a line with code, with a count, or in output', async () => {
+  const { html, warnings } = await render(block('js', 'a(); // [!code skip]', '// [!code skip:2]', 'b();'));
+  expect(skipLines(html)).toEqual([]);
+  expect(warnings).toEqual([
+    expect.stringContaining('goes on a line of its own'),
+    expect.stringContaining('`[!code skip:2]` takes no count'),
+  ]);
+  const output = await render(block('sh', 'make', '# [!output]', 'built', '# [!code skip]'));
+  expect(output.warnings).toEqual([expect.stringContaining('is not in the code, so it shows as a comment')]);
 });
 
-test('puts a marker at the end of a block after the last line of code, not after output lines', async () => {
-  const { html, warnings } = await render(block('sh', 'make', '# [!output]', 'built', '# [!code skip]'));
+test('keeps a [!code skip] line before [!output] in the code', async () => {
+  const { html, warnings } = await render(block('sh', 'make', '# [!code skip] More', '# [!output]', 'built'));
   expect(warnings).toEqual([]);
-  expect(html).toMatch(/make.*scb-skip-marker/);
+  expect(skipLines(html)).toEqual([expect.stringContaining('More')]);
 });
 
-test('leaves `...` lines as written by default, so ranges keep their lines', async () => {
-  const md = block('js {3}', 'a();', '// ...', 'b();');
-  expect((await render(md)).html).toBe((await render(md, { skippedCode: false })).html);
+test('keeps the diff prefix and indentation of a [!code skip] line', async () => {
+  const short = await render(block('diff lang="js"', ' function f() {', '+  // ...', '+  return 1;', ' }'));
+  expect(skipLines(short.html)).toEqual([expect.stringContaining('<div class="code">  <span class="scb-skip-source"')]);
+  expect(short.copyText).toBe('function f() {\n  // ...\n  return 1;\n}');
+  const real = await render(
+    block(
+      'diff lang="js"',
+      '--- a/x.js',
+      '+++ b/x.js',
+      '@@ -1 +1 @@',
+      ' function f() {',
+      '+  // [!code skip]',
+      '+  return 1;',
+    ),
+  );
+  expect(skipLines(real.html)).toEqual([expect.stringContaining('<div class="code">+  <span class="scb-skip-source"')]);
+  expect(real.copyText).toContain('\n+  // ...\n');
 });
 
-test('reads `...` alone in a comment, or alone on its line in a language with no comments, with the alias', async () => {
-  const js = await render(block('js', 'function connect() {', '  // ...', '  return socket;', '}'), dots);
+test('reads `// ...` in every language with comments, and bare `...` in JSON, by default, and copies them as written', async () => {
+  const js = await render(block('js', 'function connect() {', '  // ...', '  return socket;', '}'));
   const directive = await render(block('js', 'function connect() {', '  // [!code skip]', '  return socket;', '}'));
   expect(js.html).toBe(directive.html);
-  const json = await render(block('json', '{', '  "a": 1,', '  ...', '}'), dots);
-  expect(marker(json.html)).toHaveLength(1);
-  expect(json.copyText).toBe('{\n  "a": 1,\n}');
+  const json = await render(block('json', '{', '  "a": 1,', '  ...', '}'));
+  expect(skipLines(json.html)).toHaveLength(1);
+  expect(json.copyText).toBe('{\n  "a": 1,\n  ...\n}');
   expect(json.warnings).toEqual([]);
 });
 
-test('leaves `...` that is code, or that has more text, as written', async () => {
+test('leaves `...` with no alias for its language, or with more text, as written', async () => {
   for (const md of [
     block('py', 'def f():', '    ...'),
     block('yaml', 'a: 1', '...'),
-    block('js', 'f(...args) // ...', '// ... more', '// [...]'),
+    block('js', 'f(...args) // ...', '// ... more', '// [...]', '...'),
     block('json', '[', '  "..."', ']'),
-    block('fsharp', 'let f () =', '    ...'),
   ]) {
-    expect(marker((await render(md, dots)).html)).toEqual([]);
+    expect(skipLines((await render(md)).html)).toEqual([]);
   }
 });
 
-test('takes custom aliases, and none by default', async () => {
-  const md = block('js', 'a();', '// …', '// [...]', 'b();');
-  expect(marker((await render(md, { skippedCode: { aliases: ['…', '[...]'] } })).html)).toHaveLength(2);
-  const { html, copyText } = await render(block('js', 'a();', '// ...', 'b();'));
-  expect(marker(html)).toEqual([]);
-  expect(copyText).toBe('a();\n// ...\nb();');
+test('takes aliases by language, with `*` for the others, merged over the defaults', async () => {
+  const skippedCode = { commentAliases: { '*': ['…'], py: [] }, bareAliases: { yml: ['...'] } };
+  const lines = async (md: string) => skipLines((await render(md, { skippedCode })).html).length;
+  expect(await lines(block('js', 'a();', '// …', '// ...', 'b();'))).toBe(1);
+  expect(await lines(block('py', 'a()', '# …'))).toBe(0);
+  expect(await lines(block('yaml', 'a: 1', '...', '# …'))).toBe(2);
+  expect(await lines(block('json', '{', '  ...', '}'))).toBe(1);
+  const custom = await render(block('js', 'a();', '// …', 'b();'), { skippedCode });
+  expect(custom.copyText).toBe('a();\n// …\nb();');
 });
 
 test('renders as without the feature when a block skips nothing, and leaves the directive when it is off', async () => {

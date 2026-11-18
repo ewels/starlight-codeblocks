@@ -100,7 +100,7 @@ export const markerStyles = (
   position: absolute;
   top: 50%;
   inset-inline: calc(var(--scb-gutter, 0px) + ${cssVar('codePaddingInline')}) ${cssVar('codePaddingInline')};
-  border-top: 1px ${border} ${cssVar(`${group}.rule` as never)};
+  border-top: 1px ${border} ${cssVar(`${group}.rule`)};
   transform: translateY(-50%);
 }
 /* Where the copy button always shows, it sits over the end of the first line. */
@@ -112,7 +112,7 @@ export const markerStyles = (
   z-index: 1;
   padding: 0.05em 0.65em;
   border-radius: 999px;
-  background: ${cssVar(`${group}.badgeBackground` as never)};
+  background: ${cssVar(`${group}.badgeBackground`)};
   font-size: 0.8125em;
   line-height: 1.6;
 }`;

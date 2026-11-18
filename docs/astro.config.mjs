@@ -38,7 +38,6 @@ export default defineConfig({
         codeblocks({
           // Markdown blocks on this site show the source that authors write, so their directives must stay as text.
           notation: { comments: { md: [], markdown: [], mdx: [] } },
-          skippedCode: { aliases: ['...'] },
           shellCopy: { prompts: ['$ ', '> ', 'PS> '] },
           swatches: { prose: true },
           fileIcons: {

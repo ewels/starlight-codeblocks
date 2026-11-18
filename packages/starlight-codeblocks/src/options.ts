@@ -2,6 +2,7 @@ import { nextflow } from './adapters/nextflow.ts';
 import { python } from './adapters/python.ts';
 import type { FileIconLanguage, FileIconSet, FileIconStyle } from './expressive-code/file-icons.ts';
 import { fileIconSets, isCssColour } from './expressive-code/file-icons.ts';
+import { defaultSkipAliases } from './expressive-code/skipped-code.ts';
 import {
   type SwatchDelimiters,
   type SwatchFormat,
@@ -89,7 +90,7 @@ export interface CodeblocksOptions {
   annotations?: false | { style?: 'filled' | 'outline' };
   footnotes?: false | { sticky?: boolean; style?: 'filled' | 'outline' };
   hiddenLines?: false;
-  skippedCode?: false | { aliases?: string[] };
+  skippedCode?: false | { commentAliases?: Record<string, string[]>; bareAliases?: Record<string, string[]> };
   shellCopy?: false | { prompts?: string[] };
   wordDiff?: false | { minSimilarity?: number };
   splitDiff?: false | { view?: 'unified' | 'split'; switch?: boolean; sync?: boolean };
@@ -195,6 +196,8 @@ const isString = (value: unknown) => typeof value === 'string';
 const isStringArray = (value: unknown) => Array.isArray(value) && value.every(isString);
 const isRecordOf = (valid: (value: unknown) => boolean) => (value: unknown) =>
   isObject(value) && Object.values(value).every(valid);
+const isAliasList = (value: unknown) =>
+  isStringArray(value) && (value as string[]).every((alias) => alias.trim() !== '');
 const oneOf =
   (...values: string[]) =>
   (value: unknown) =>
@@ -324,12 +327,19 @@ export const optionsReference: Record<FeatureName, Feature> = {
     page: 'features/skipped-code',
     off: '`[!code skip]` then stays in the code as written.',
     fields: {
-      aliases: {
-        type: 'string[]',
-        default: [],
+      commentAliases: {
+        type: 'Record<string, string[]>',
+        default: defaultSkipAliases.comment,
         description:
-          "Lines that stand for `[!code skip]`: a comment that holds only an alias, such as `// ...`, or the alias alone on its line in JSON, which has no comments. `['...']` reads the `// ...` comments of existing pages as markers, which changes those pages: see the feature page.",
-        valid: (value) => isStringArray(value) && (value as string[]).every((alias) => alias.trim() !== ''),
+          'Comments that stand for `[!code skip]` when they hold only an alias, such as `// ...`, by language. `*` applies to every language without its own entry, and `[]` turns aliases off for a language. Your keys merge over the defaults.',
+        valid: isRecordOf(isAliasList),
+      },
+      bareAliases: {
+        type: 'Record<string, string[]>',
+        default: defaultSkipAliases.bare,
+        description:
+          'Lines that stand for `[!code skip]` when they hold only an alias, with no comment, by language, such as `...` in JSON. `*` applies to every language without its own entry, and `[]` turns aliases off for a language. Your keys merge over the defaults.',
+        valid: isRecordOf(isAliasList),
       },
     },
   },
