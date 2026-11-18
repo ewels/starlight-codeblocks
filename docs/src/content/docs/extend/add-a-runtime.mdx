@@ -17,7 +17,7 @@ interface Runtime {
   load(code: string, options?: { packages?: string[] }): Promise<void>;
   run(
     code: string,
-    options: { signal: AbortSignal; session?: boolean; args?: string[]; file?: string; columns?: number },
+    options: { signal: AbortSignal; session?: boolean; args?: string[]; file?: string; columns?: number; color?: boolean },
   ): Promise<{ stdout: string; stderr: string }>;
 }
 ```
@@ -31,7 +31,7 @@ The browser imports the module when a reader clicks **Run code** for the first t
 
 When the block is a session with prompts, `code` is its commands and `session` is `true`. Run the commands as the language's REPL does, so that the output shows the value of each expression, as the block does.
 
-`args` holds the words of the block's `runnable.args` attribute, and `file` the title of the block, for a runtime with command line arguments. `columns` is the width of the output panel in characters, for code that fits its output to a terminal. The Python runtime gives them to the code as `sys.argv` and the `COLUMNS` environment variable.
+`args` holds the words of the block's `runnable.args` attribute, and `file` the title of the block, for a runtime with command line arguments. `columns` is the width of the output panel in characters, for code that fits its output to a terminal. `color` is true when the panel shows terminal colours, with `runnable.outputLang=ansi`. The Python runtime gives these to the code as `sys.argv`, the `COLUMNS` environment variable and `FORCE_COLOR=1`.
 
 The `signal` of `run()` aborts when the run takes longer than `runnable.timeout`. The runtime must then stop the code and reject the promise. The plugin shows the timeout message, and calls `load()` again before the next run.
 

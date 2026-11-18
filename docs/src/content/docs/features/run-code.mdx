@@ -109,7 +109,7 @@ The file is the whole output, as in `runnable.output`. Directives in it, such as
 
 `runnable.outputLang` on the fence line highlights the scripted output in a language. With `ansi`, the terminal colour codes in the output become colours, as in a terminal. Other languages, such as `json` or `yaml`, highlight as code does.
 
-With `ansi`, the output of a real run shows its colours too. Python libraries such as Rich print colours only to a terminal, so set the `FORCE_COLOR` environment variable in the code, or in [hidden lines](/starlight-codeblocks/features/hidden-lines/).
+With `ansi`, the output of a real run shows its colours too. Python libraries such as Rich print colours only to a terminal. So the Python runtime sets the `FORCE_COLOR` environment variable for a run with `ansi` output.
 
 `lang=` on an `[!output]` line sets the language of the lines after it, up to the next `[!output]` line. For example, `[!output stderr lang=txt]` keeps an error in plain text in a block of `ansi` output. `txt` and `plaintext` keep the stream colours.
 
@@ -223,7 +223,7 @@ if __name__ == "__main__":
 
 <Example code={cli} layout="tabs" hiddenAttributes="apiLinks=false" />
 
-The help of a [Typer](https://typer.tiangolo.com/) app needs two packages that Pyodide does not install with Rich, so add `runnable.packages="markdown-it-py pygments"` to the fence line. For the colours of [rich-click](https://ewels.github.io/rich-click/) or Typer, add [`runnable.outputLang=ansi`](#output-in-a-language), and set `FORCE_COLOR` in a [hidden line](/starlight-codeblocks/features/hidden-lines/).
+The help of a [Typer](https://typer.tiangolo.com/) app needs two packages that Pyodide does not install with Rich, so add `runnable.packages="markdown-it-py pygments"` to the fence line. For the colours of [rich-click](https://ewels.github.io/rich-click/) or Typer, add [`runnable.outputLang=ansi`](#output-in-a-language).
 
 ### An error
 
@@ -361,6 +361,18 @@ console.log(\`\${green('✔')} Built in \${bold('2.1s')}\`);
 `;
 
 <Example code={ansiRun} layout="tabs" />
+
+In Python, [Rich](https://rich.readthedocs.io/) prints its colours, because the runtime sets `FORCE_COLOR` for a run with `ansi` output:
+
+export const ansiRunPython = `
+\`\`\`py runnable runnable.outputLang=ansi
+from rich import print
+
+print("[bold green]✔ Built[/bold green] in 2.1s")
+\`\`\`
+`;
+
+<Example code={ansiRunPython} layout="tabs" hiddenAttributes="apiLinks=false" />
 
 ### A command that runs Python
 

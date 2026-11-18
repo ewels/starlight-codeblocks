@@ -10,6 +10,7 @@
 - Run code: `runnable.args` passes command line arguments, read by `sys.argv` in Python ([#43](https://github.com/ewels/starlight-codeblocks/pull/43))
 - Run code: `sys.exit()` in Python ends a run with no traceback ([#43](https://github.com/ewels/starlight-codeblocks/pull/43))
 - Run code: `COLUMNS` matches the width of the output panel ([#43](https://github.com/ewels/starlight-codeblocks/pull/43))
+- Run code: `FORCE_COLOR` is set for Python runs with `runnable.outputLang=ansi` ([#47](https://github.com/ewels/starlight-codeblocks/pull/47))
 - Code tabs: the block no longer moves when the tab changes ([#45](https://github.com/ewels/starlight-codeblocks/pull/45))
 - Title bar: untitled blocks with controls use the tab bar colours ([#37](https://github.com/ewels/starlight-codeblocks/pull/37))
 - API links: a stale starlight-pydocs registry is dropped after a dev restart ([#44](https://github.com/ewels/starlight-codeblocks/pull/44))
