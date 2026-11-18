@@ -36,6 +36,13 @@ export interface PydocsSymbol {
 
 const PYDOCS = Symbol.for('starlight-pydocs');
 
+/** Drops the starlight-pydocs registry when the config has no starlight-pydocs: as a global, it outlives a dev restart. */
+export function dropStalePydocsRegistry(integrations: readonly { name: string }[]) {
+  if (!integrations.some((integration) => integration.name === 'starlight-pydocs')) {
+    delete (globalThis as { [PYDOCS]?: PydocsRegistry })[PYDOCS];
+  }
+}
+
 const pydocsRegistry = () => {
   const registry = (globalThis as { [PYDOCS]?: PydocsRegistry })[PYDOCS];
   return registry?.version === 1 ? registry : undefined;
