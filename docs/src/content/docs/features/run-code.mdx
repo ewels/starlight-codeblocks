@@ -188,35 +188,6 @@ print(slugify("Hello, World: Run Code!"))
 
 <Example code={packages} layout="tabs" hiddenAttributes="apiLinks=false" />
 
-### A command line tool
-
-A [Click](https://click.palletsprojects.com/) command reads `sys.argv` and calls `sys.exit()` when it finishes. In a code block, give it the arguments as a list, and add `standalone_mode=False`, so that it returns instead of exiting. Without it, the panel shows a `SystemExit` traceback, also for `--help`. The `COLUMNS` environment variable sets the width of the help text. The output panel is not a terminal, so without it Click and Rich use 80 columns, which can be wider than the panel:
-
-export const cli = `
-\`\`\`py runnable
-import os
-
-os.environ["COLUMNS"] = "60"
-
-import click
-
-@click.command()
-@click.option("--count", default=1, help="Number of greetings.")
-@click.argument("name")
-def hello(count, name):
-    """Greet NAME, COUNT times."""
-    for _ in range(count):
-        click.echo(f"Hello, {name}!")
-
-hello(["--help"], prog_name="hello", standalone_mode=False)
-hello(["--count", "2", "Ada"], prog_name="hello", standalone_mode=False)
-\`\`\`
-`;
-
-<Example code={cli} layout="tabs" hiddenAttributes="apiLinks=false" />
-
-`prog_name` sets the command name in the usage line. Without it, the usage line has no command name in the browser. A [Typer](https://typer.tiangolo.com/) app takes the same arguments: `app(["--help"], prog_name="hello", standalone_mode=False)`. Its help text needs two packages that Pyodide does not install with Rich, so add `runnable.packages="markdown-it-py pygments"` to the fence line. Hide the set-up lines with [hidden lines](/starlight-codeblocks/features/hidden-lines/), and use [`runnable.outputLang=ansi`](#output-in-a-language) with `FORCE_COLOR` for the colours of [rich-click](https://ewels.github.io/rich-click/) or Typer.
-
 ### An error
 
 An error in Python shows the traceback, from the line of the example that failed:
